@@ -5,12 +5,15 @@
   box-sizing: border-box;
   font-family: "Arial", sans-serif;
 }
-
+//Colors
+$primary-color: #3ca8a0;
+$secondary-color: #0046b2;
+$icon-color: #3076ce;
+$card-bg-color: #f0f4fb;
 body {
   font-size: 16px;
   line-height: 1.5;
   background-color: #f4f4f4;
-  color: #333;
 }
 
 a {
@@ -27,7 +30,6 @@ h5,
 h6 {
   font-weight: bold;
   margin-bottom: 20px;
-  color: #2c3e50;
 }
 
 h1 {
@@ -57,7 +59,6 @@ h6 {
 
 p {
   font-size: 1rem;
-  color: #555;
   line-height: 1.8;
   margin-bottom: 15px;
 }
@@ -86,30 +87,25 @@ ul li::before {
   content: "•";
   position: absolute;
   left: 0;
-  color: #3498db;
 }
 
 ol li::before {
   content: counter(list-item) ". ";
   position: absolute;
   left: 0;
-  color: #3498db;
 }
 
 /* Links */
 a {
-  color: #3498db;
   font-weight: bold;
   transition: color 0.3s ease;
 }
 
 a:hover {
-  color: #2980b9;
 }
 
 a:focus {
   outline: none;
-  border-bottom: 2px solid #3498db;
 }
 
 /* General Layout */
@@ -129,7 +125,7 @@ h2 {
 }
 
 button {
-  background-color: #3498db;
+  background-color: #259b8a;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -139,7 +135,7 @@ button {
 }
 
 button:hover {
-  background-color: #2980b9;
+  background-color: #196458;
 }
 
 /* Test Card Styling */
