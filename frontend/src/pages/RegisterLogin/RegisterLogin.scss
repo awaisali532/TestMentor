@@ -1,8 +1,7 @@
-@import "../../../App.scss";
+@import "../../App.scss";
 .container-wrapper {
   background: #f0f4ff;
 }
-
 .login-register-card {
   width: 1000px; /* ⬅️ Wider */
   height: 600px; /* ⬆️ Taller */
@@ -50,14 +49,7 @@
       border-radius: 25px;
       padding: 8px 20px;
       font-weight: 500;
-      background-color: white;
-      color: $secondary-color;
       transition: 0.3s;
-
-      &:hover {
-        background-color: $secondary-color;
-        color: white;
-      }
     }
   }
 }
@@ -92,20 +84,6 @@
     font-size: 0.9rem;
     color: #888;
     cursor: pointer;
-  }
-
-  .action-btn {
-    background: #4a90e2;
-    border: none;
-    border-radius: 25px;
-    padding: 10px;
-    font-weight: bold;
-    transition: 0.3s;
-
-    &:hover {
-      background: #3977c0;
-      transform: scale(1.05);
-    }
   }
 
   .social-icons {

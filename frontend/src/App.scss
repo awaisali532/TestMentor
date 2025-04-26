@@ -7,6 +7,7 @@
 }
 //Colors
 $primary-color: #3ca8a0;
+$primary-color-dark: #135f5a;
 $secondary-color: #0046b2;
 $icon-color: #3076ce;
 $card-bg-color: #f0f4fb;
@@ -124,8 +125,8 @@ h2 {
   margin-bottom: 20px;
 }
 
-button {
-  background-color: #259b8a;
+.button-primary {
+  background-color: $primary-color;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -133,9 +134,9 @@ button {
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
-
-button:hover {
-  background-color: #196458;
+.button-primary:hover {
+  background-color: $primary-color-dark;
+  transform: scale(1.05);
 }
 
 /* Test Card Styling */

@@ -29,14 +29,14 @@ const LoginRegisterPage = () => {
             <p>Master every test with confidence!</p>
             {isLogin ? (
               <button
-                className="btn switch-btn"
+                className="btn button-primary switch-btn"
                 onClick={() => setIsLogin(false)}
               >
                 Register
               </button>
             ) : (
               <button
-                className="btn switch-btn"
+                className="btn button-primary switch-btn"
                 onClick={() => setIsLogin(true)}
               >
                 Login
@@ -123,7 +123,7 @@ const LoginRegisterPage = () => {
 
           {isLogin && <p className="text-end mb-3 forgot">Forgot password?</p>}
 
-          <button className="btn action-btn w-100 mb-3">
+          <button className="btn button-primary w-100 mb-3">
             {isLogin ? "Login" : "Register"}
           </button>
 

@@ -3,10 +3,10 @@ import "./App.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Routes, Route } from "react-router-dom";
-import Home from "./assets/pages/Home/Home";
-import RegisterLogin from "./assets/pages/RegisterLogin/RegisterLogin";
-import StudentDashboard from "./assets/pages/Student/StudentDashboard";
-import TeacherDashboard from "./assets/pages/Teacher/TeacherDashboard";
+import Home from "./pages/Home/Home";
+import RegisterLogin from "./pages/RegisterLogin/RegisterLogin";
+import StudentDashboard from "./pages/Student/StudentDashboard";
+import TeacherDashboard from "./pages/Teacher/TeacherDashboard";
 const App = () => {
   return (
     <div>
