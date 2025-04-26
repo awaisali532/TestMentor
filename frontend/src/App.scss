@@ -103,6 +103,7 @@ a {
 }
 
 a:hover {
+  color: $primary-color;
 }
 
 a:focus {
@@ -137,6 +138,7 @@ h2 {
 .button-primary:hover {
   background-color: $primary-color-dark;
   transform: scale(1.05);
+  color: white;
 }
 
 /* Test Card Styling */
