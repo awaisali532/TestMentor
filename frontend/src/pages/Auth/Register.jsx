@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./Auth.scss";
+import "./Auth.css";
 import { Link } from "react-router-dom";
 import registerimg from "../../assets/imeages/registerimg/registerimg.png";
 import {
@@ -33,7 +33,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="container-wrapper d-flex justify-content-center align-items-center vh-100">
+    <div className="container-wrapper d-flex justify-content-center align-items-center ">
       <div className="login-register-card d-flex flex-column flex-md-row">
         {/* Left Panel */}
         <div className="left-panel">
@@ -45,7 +45,7 @@ const RegisterPage = () => {
             />
             <h2 className="mt-4">Join TestMentor</h2>
             <p>Master every test with confidence!</p>
-            <Link className="button-primary btn" to={"/login"}>
+            <Link className="button-primary" to={"/login"}>
               Login
             </Link>
           </div>
@@ -135,7 +135,7 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            <button type="submit" className="btn button-primary w-100 mb-3">
+            <button type="submit" className="button-primary w-100 mb-3">
               Register
             </button>
           </form>

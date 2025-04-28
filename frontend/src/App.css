@@ -1,0 +1,154 @@
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Poppins, sans-serif;
+}
+
+/* Colors (Converted directly) */
+:root {
+  --primary-color: #3ca8a0;
+  --primary-color-dark: #135f5a;
+  --secondary-color: #0046b2;
+  --icon-color: #3076ce;
+  --card-bg-color: #f0f4fb;
+}
+
+/* Buttons */
+.button-primary {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+}
+
+.button-primary:hover {
+  background-color: var(--primary-color-dark);
+  transform: scale(1.05);
+  color: white;
+}
+
+Link {
+  text-decoration: none;
+}
+
+/* Base font size */
+html {
+  font-size: 16px;
+  /* 1rem = 16px */
+}
+
+h1 {
+  font-size: 3rem;
+  /* 48px */
+}
+
+h2 {
+  font-size: 2.5rem;
+  /* 40px */
+}
+
+h3 {
+  font-size: 2rem;
+  /* 32px */
+}
+
+h4 {
+  font-size: 1.5rem;
+  /* 24px */
+}
+
+h5 {
+  font-size: 1.25rem;
+  /* 20px */
+}
+
+h6 {
+  font-size: 1rem;
+  /* 16px */
+}
+
+p {
+  font-size: 1.125rem;
+  /* 18px */
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+    /* 40px */
+  }
+
+  h2 {
+    font-size: 2rem;
+    /* 32px */
+  }
+
+  h3 {
+    font-size: 1.75rem;
+    /* 28px */
+  }
+
+  h4 {
+    font-size: 1.25rem;
+    /* 20px */
+  }
+
+  h5 {
+    font-size: 1rem;
+    /* 16px */
+  }
+
+  h6 {
+    font-size: 0.875rem;
+    /* 14px */
+  }
+
+  p {
+    font-size: 1rem;
+    /* 16px */
+  }
+}
+
+@media (max-width: 576px) {
+  h1 {
+    font-size: 2rem;
+    /* 32px */
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    /* 28px */
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    /* 24px */
+  }
+
+  h4 {
+    font-size: 1.125rem;
+    /* 18px */
+  }
+
+  h5 {
+    font-size: 1rem;
+    /* 16px */
+  }
+
+  h6 {
+    font-size: 0.875rem;
+    /* 14px */
+  }
+
+  p {
+    font-size: 0.875rem;
+    /* 14px */
+  }
+}

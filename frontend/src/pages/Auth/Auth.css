@@ -1,0 +1,190 @@
+:root {
+  --primary-color: #3ca8a0;
+  --secondary-color: #0046b2;
+}
+
+.container-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 150px; /* Retained padding for desktop */
+  overflow: hidden;
+}
+
+.login-register-card {
+  width: 1000px;
+  max-width: 100%;
+  height: 600px;
+  max-height: 100%;
+  background: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  transform: perspective(1200px) rotateX(2deg) rotateY(-2deg);
+  transition: transform 0.5s;
+}
+
+.left-panel {
+  width: 40%;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.left-panel .overlay {
+  text-align: center;
+}
+
+.left-panel .overlay .illustration {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+}
+
+.left-panel .overlay h2 {
+  margin-top: 20px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.left-panel .overlay p {
+  margin: 10px 0;
+}
+
+.left-panel .overlay .switch-btn {
+  border-radius: 25px;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.right-panel {
+  width: 55%;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.right-panel h2 {
+  font-weight: 700;
+  text-align: center;
+  color: #4a90e2;
+}
+
+.right-panel .form-group .input-group .input-group-text {
+  background: #e9ecef;
+  border-right: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.right-panel .form-group .input-group .form-control {
+  border-left: none;
+}
+
+.right-panel .forgot {
+  font-size: 0.9rem;
+  color: #146a75;
+  cursor: pointer;
+}
+
+.right-panel .forgot:hover {
+  text-decoration: underline;
+}
+
+.right-panel .social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.right-panel .social-icons .icon {
+  font-size: 35px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  padding: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.right-panel .social-icons .icon:hover {
+  background: #dcdcdc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container-wrapper {
+    padding: 0; /* Removed padding on mobile */
+  }
+
+  .login-register-card {
+    flex-direction: column; /* Stack panels vertically */
+    height: auto; /* Adjust height */
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    flex-wrap: nowrap; /* Prevent wrapping */
+    border-radius: 0%;
+    transform: none;
+    /* Only enable scrolling if content overflows */
+    overflow-y: auto;
+  }
+
+  .left-panel {
+    width: 100%; /* Full width for mobile */
+    height: 50%; /* Reduce height for left panel */
+    box-sizing: border-box;
+  }
+
+  .left-panel .overlay {
+    position: relative;
+  }
+
+  .left-panel .overlay .switch-btn {
+    position: absolute;
+    bottom: 20px; /* Position the button at the bottom */
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .right-panel {
+    width: 100%; /* Full width for right panel */
+    height: 50%; /* Adjust height for right panel */
+    box-sizing: border-box;
+    margin-top: 0;
+  }
+
+  .right-panel h2 {
+    font-size: 24px;
+  }
+
+  .right-panel .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .right-panel .social-icons .icon {
+    font-size: 30px;
+    background: #f0f0f0;
+    border-radius: 50%;
+    padding: 10px;
+  }
+
+  .right-panel .social-icons .icon:hover {
+    background: #dcdcdc;
+  }
+}

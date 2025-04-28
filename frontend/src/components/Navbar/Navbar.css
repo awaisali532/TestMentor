@@ -1,0 +1,128 @@
+:root {
+  --primary-color: #3ca8a0;
+  --primary-color-dark: #135f5a;
+  --secondary-color: #0046b2;
+}
+
+.custom-navbar {
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.custom-navbar .container {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-navbar .logo {
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(
+    to right,
+    var(--primary-color-dark),
+    var(--secondary-color)
+  );
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  height: 60px;
+}
+
+.custom-navbar .hamburger-icon {
+  display: none;
+  font-size: 24px;
+  color: var(--primary-color-dark);
+}
+
+.custom-navbar .menu-items-container {
+  display: flex;
+  align-items: center;
+}
+
+.custom-navbar .menu-items-container .menu-items {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.custom-navbar .menu-items-container .menu-items li {
+  margin: 0 10px;
+}
+
+.custom-navbar .menu-items-container .menu-items li a {
+  text-decoration: none;
+  color: var(--primary-color-dark);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.custom-navbar .menu-items-container .menu-items li a:hover {
+  color: var(--secondary-color);
+}
+
+.custom-navbar .menu-items-container .login-btn {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+  padding: 8px 20px;
+}
+
+.custom-navbar .menu-items-container .login-btn:hover {
+  background-color: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+}
+
+/* Hamburger Menu for Mobile View */
+@media (max-width: 992px) {
+  .custom-navbar .hamburger-icon {
+    display: block;
+  }
+
+  .custom-navbar .menu-items-container {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+  }
+
+  .custom-navbar .menu-items-container.open {
+    display: flex;
+  }
+
+  .custom-navbar .menu-items-container .menu-items {
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+  }
+
+  .custom-navbar .menu-items-container .menu-items li {
+    margin: 10px 0;
+  }
+
+  .custom-navbar .menu-items-container .login-btn {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+  }
+}
+
+/* Desktop View */
+@media (min-width: 992px) {
+  .custom-navbar .menu-items-container {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .custom-navbar .menu-items-container .menu-items {
+    display: flex;
+    list-style: none;
+  }
+}

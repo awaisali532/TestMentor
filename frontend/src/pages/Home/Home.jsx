@@ -1,8 +1,14 @@
 import React from "react";
-// import Navbar from "../../components/Navbar/Navbar";
+import HeroSection from "../../components/HeroSection/HeroSection";
+import AvailableCourses from "../../components/AvailableCourse/AvailableCourse";
 
 const Home = () => {
-  return <div></div>;
+  return (
+    <div>
+      <HeroSection />
+      <AvailableCourses />
+    </div>
+  );
 };
 
 export default Home;
