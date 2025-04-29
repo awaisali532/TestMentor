@@ -1,114 +1,76 @@
-/* Section background and padding */
-.available-courses {
-    padding: 60px 0;
-    background-color: #f1f1f1;
-}
-
-.courses-heading {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 40px;
-}
-
 .course-card {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border: none;
-    margin-bottom: 30px;
-    height: 100%;
-    /* Ensure the card uses the full height available */
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    /* Make the card a flex container */
-    justify-content: center;
-    /* Center content vertically */
-    align-items: center;
-    /* Center content horizontally */
-    padding: 20px;
-    transition: transform 0.3s ease;
+  width: 200px; /* Fix choti width */
+  height: 280px; /* Fix choti height */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: none;
+  margin: 15px auto; /* Center in column */
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Good space distribution */
+  align-items: center;
+  padding: 15px;
+  transition: transform 0.3s ease;
+  background-color: var(--card-bg-color);
 }
 
 .course-card:hover {
-    transform: translateY(-5px);
-    /* Add hover effect for card */
+  transform: translateY(-5px);
 }
 
 .course-card img {
-    max-width: 100%;
-    height: 150px;
-    /* Set fixed height for images */
-    object-fit: contain;
-    margin-bottom: 15px;
-    border-radius: 8px;
+  max-width: 100%;
+  height: 100px; /* Choti image height */
+  object-fit: contain;
+  margin-bottom: 10px;
+  border-radius: 8px;
 }
 
 .course-card .card-title {
-    font-size: 1.25rem;
-    /* Reduced size for title */
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 10px;
+  font-size: 1rem; /* Thoda chota title */
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .course-card .card-text {
-    font-size: 0.875rem;
-    /* Smaller font size for description */
-    color: #555;
-    text-align: center;
+  font-size: 0.8rem;
+  color: #555;
+  text-align: center;
 }
 
 .course-card .btn {
-    width: 80%;
-    /* Set button width relative to card */
-    border-radius: 20px;
-    padding: 12px;
-    font-size: 1rem;
-    align-self: center;
-    /* Center button */
+  width: 90%;
+  border-radius: 20px;
+  padding: 8px;
+  font-size: 0.9rem;
+  align-self: center;
 }
 
 .card-body {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.fit-content {
-    height: fit-content;
-}
-
-/* Media Queries for responsiveness */
-@media (max-width: 1024px) {
-    .course-card {
-        width: 90%;
-        /* Adjust card width for medium screens */
-    }
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-    .courses-heading {
-        font-size: 2rem;
-    }
+  .course-card {
+    width: 150px;
+    height: 250px;
+    padding: 10px;
+  }
 
-    .course-card {
-        width: 100%;
-        /* Full width for mobile */
-        margin-bottom: 20px;
-        /* Space between cards on mobile */
-    }
+  .course-card img {
+    height: 80px;
+  }
 
-    .course-card img {
-        height: 120px;
-        /* Smaller image for mobile */
-    }
+  .course-card .card-title {
+    font-size: 0.9rem;
+  }
 
-    .course-card .card-title {
-        font-size: 1.1rem;
-        /* Smaller title for mobile */
-    }
-
-    .course-card .card-text {
-        font-size: 0.85rem;
-        /* Smaller text for mobile */
-    }
+  .course-card .card-text {
+    font-size: 0.75rem;
+  }
 }

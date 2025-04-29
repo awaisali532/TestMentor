@@ -23,7 +23,10 @@ const AvailableCourses = () => {
         <h2 className="courses-heading">Available Courses</h2>
         <div className="row fit-content">
           {courses.map((course, index) => (
-            <div key={index} className="col-md-3 col-sm-6 fit-content">
+            <div
+              key={index}
+              className="col-6 col-md-3 d-flex justify-content-center"
+            >
               <Card className="course-card">
                 <Card.Img variant="top" src={course.image} />
                 <Card.Body>
