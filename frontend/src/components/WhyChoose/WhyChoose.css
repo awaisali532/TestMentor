@@ -1,0 +1,60 @@
+.why-choose {
+  padding: 60px 0;
+  background-color: #fff;
+  /* display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center; */
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 40px;
+}
+
+.feature-wrapper {
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.icon-container {
+  font-size: 2rem;
+  color: #0d6efd; /* Bootstrap primary color */
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.feature-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.feature-description {
+  font-size: 0.95rem;
+  color: #555;
+  width: 70%;
+}
+
+/* Mobile adjustments */
+@media (max-width: 576px) {
+  .section-title {
+    font-size: 1.6rem;
+  }
+
+  .feature-title {
+    font-size: 1rem;
+  }
+
+  .feature-description {
+    font-size: 0.85rem;
+    width: 90%;
+  }
+
+  .icon-container {
+    font-size: 1.8rem;
+  }
+}

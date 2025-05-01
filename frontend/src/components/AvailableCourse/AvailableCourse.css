@@ -1,13 +1,14 @@
 .course-card {
-  width: 200px; /* Fix choti width */
-  height: 280px; /* Fix choti height */
+  width: 200px;
+  /* Remove fixed height */
+  min-height: 280px; /* Optional: ensures decent minimum */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   border: none;
-  margin: 15px auto; /* Center in column */
+  margin: 15px auto;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Good space distribution */
+  justify-content: flex-start; /* Let content flow top to bottom */
   align-items: center;
   padding: 15px;
   transition: transform 0.3s ease;
@@ -40,6 +41,7 @@
 }
 
 .course-card .btn {
+  margin-top: auto; /* Push to bottom inside card body */
   width: 90%;
   border-radius: 20px;
   padding: 8px;
@@ -49,28 +51,28 @@
 
 .card-body {
   display: flex;
-  align-items: center;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-between; /* Button stays at bottom */
+  flex-grow: 1;
+  width: 100%;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .course-card {
-    width: 150px;
-    height: 250px;
-    padding: 10px;
+    width: 160px; /* slightly wider for better text wrap */
+    padding: 12px;
   }
 
   .course-card img {
     height: 80px;
   }
+}
 
-  .course-card .card-title {
-    font-size: 0.9rem;
-  }
+.course-card .card-title {
+  font-size: 0.9rem;
+}
 
-  .course-card .card-text {
-    font-size: 0.75rem;
-  }
+.course-card .card-text {
+  font-size: 0.75rem;
 }
