@@ -59,7 +59,7 @@ const Navbar = () => {
         >
           <ul className="menu-items">
             <li>
-              <Link to={"/home"}>Home</Link>
+              <Link to={"/"}>Home</Link>
             </li>
             <li>
               <Link to={"/subjects"}>Subjects</Link>

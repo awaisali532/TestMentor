@@ -7,13 +7,13 @@ const AvailableCourses = () => {
   const courses = [
     {
       image: pctb, // Replace with actual image
-      title: "Course 1",
-      description: "This is a short description of Course 1.",
+      title: "PTB",
+      description: "9th - 12th",
     },
     {
       image: fbise, // Replace with actual image
-      title: "Course 2",
-      description: "This is a short description of Course 2.",
+      title: "Fedral",
+      description: "Comming Soon",
     },
   ];
 

@@ -1,0 +1,72 @@
+.footer {
+  background-color: #343a40;
+}
+
+.footer a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+  transform: translateX(2px);
+}
+
+/* Footer Brand */
+.footer-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Social Icons - base style */
+.footer .social-icons a,
+.footer .d-flex a {
+  font-size: 1.25rem;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+/* Social Hover Colors */
+.footer a:hover:nth-child(1) {
+  color: #1877f2;
+} /* Facebook Blue */
+.footer a:hover:nth-child(2) {
+  color: #1da1f2;
+} /* Twitter Blue */
+.footer a:hover:nth-child(3) {
+  color: #e4405f;
+} /* Instagram Pink-Red */
+
+/* Optional: slight scale on hover */
+.footer .d-flex a:hover {
+  transform: scale(1.2);
+}
+
+/* General text and list */
+.footer p,
+.footer ul {
+  margin: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+  .footer-brand {
+    font-size: 1.25rem;
+  }
+
+  .footer h6 {
+    font-size: 1rem;
+  }
+
+  .footer p,
+  .footer ul li,
+  .footer a {
+    font-size: 0.9rem;
+  }
+
+  .footer .d-flex {
+    justify-content: center !important;
+  }
+}
