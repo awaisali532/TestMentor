@@ -7,7 +7,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 150px; /* Retained padding for desktop */
   overflow: hidden;
 }
 

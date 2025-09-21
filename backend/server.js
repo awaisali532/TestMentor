@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
+const subjectRoutes = require("./routes/subjectRoutes"); // no .js needed
 
 dotenv.config();
 connectDB();
@@ -11,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/subjects", subjectRoutes); // ✅ mount it
 
 app.get("/", (req, res) => {
   res.send("🚀 TestMentor Backend is running...");

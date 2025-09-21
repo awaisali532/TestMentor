@@ -1,25 +1,27 @@
 import React, { useState } from "react";
 import "./Auth.css";
 import loginimg from "../../assets/imeages/login/login.png";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { FaLock, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { useUser } from "../../context/UserContext"; // 👈 Import context
-
+import { toast } from "react-toastify"; // 👈 Import toast for notifications
+import { useNavigate } from "react-router-dom"; // 👈 Import useNavigate for redirection
 const LoginPage = () => {
   const { login } = useUser(); // 👈 get login function from context
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const navigate = useNavigate(); // 👈 Initialize useNavigate
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const response = await login(email, password);
-      alert(response.message); // 👈 You can replace this with a toast or navigate to dashboard
+      toast.success("Login Successfully!");
+      navigate("/"); // Redirect to home page after successful login
     } catch (err) {
-      alert(err.message || "Login failed");
+      toast.error(err.message || "Login failed");
     }
   };
 

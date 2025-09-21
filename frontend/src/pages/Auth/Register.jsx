@@ -10,13 +10,15 @@ import {
   FaGithub,
   FaLinkedinIn,
 } from "react-icons/fa";
+import { toast } from "react-toastify"; // 👈 Import toast for notifications
+import { useNavigate } from "react-router-dom"; // 👈 Import useNavigate for redirection
 import { FcGoogle } from "react-icons/fc";
 import { MdEmail } from "react-icons/md";
 import { useUser } from "../../context/UserContext"; // ✅ Correct import
 
 const RegisterPage = () => {
   const { register } = useUser(); // ✅ Use context properly
-
+  const navigate = useNavigate(); // 👈 Initialize useNavigate
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,9 +28,9 @@ const RegisterPage = () => {
     e.preventDefault();
     try {
       const response = await register(name, email, password, role);
-      alert(response.message);
+      toast.success(response.message);
     } catch (err) {
-      alert(err);
+      toast.error(err);
     }
   };
 
