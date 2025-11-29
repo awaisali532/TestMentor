@@ -16,7 +16,7 @@ router.post("/add", upload.single("image"), addSubject);
 
 router.get("/", getSubjects);
 router.get("/:id", getSubjectById);
-router.put("/:id", updateSubject); // Update mein bhi image ho sakti hai, future mein yahan bhi lagana
+router.put("/:id", upload.single("image"), updateSubject); // Update mein bhi image ho sakti hai, future mein yahan bhi lagana
 router.delete("/:id", deleteSubject);
 
 module.exports = router;

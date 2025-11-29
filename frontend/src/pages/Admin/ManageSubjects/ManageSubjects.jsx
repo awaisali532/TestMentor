@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./ManageSubjects.css";
+import toast, { Toaster } from "react-hot-toast";
+import Swal from "sweetalert2";
 
 const ManageSubjects = () => {
-  // --- 1. CONFIGURATION ---
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // --- 2. STATES ---
-  const [loading, setLoading] = useState(false); // <--- LOADER STATE
-  const [operation, setOperation] = useState("add"); // 'add', 'delete'
+  const [loading, setLoading] = useState(false);
+  const [operation, setOperation] = useState("add");
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
-  // Data Lists
-  const [allSubjects, setAllSubjects] = useState([]);
-  const [filterClass, setFilterClass] = useState(""); // Delete filter
+  // 🆕 NEW STATE: Image Loading ke liye
+  const [isImgLoading, setIsImgLoading] = useState(false);
 
-  // Form Data
+  const [allSubjects, setAllSubjects] = useState([]);
+  const [filterClass, setFilterClass] = useState("");
+
   const [formData, setFormData] = useState({
     subjectName: "",
     className: "",
@@ -24,7 +25,8 @@ const ManageSubjects = () => {
     subjectId: "",
   });
 
-  // --- 3. EFFECTS ---
+  const [originalData, setOriginalData] = useState(null);
+
   useEffect(() => {
     fetchSubjects();
   }, []);
@@ -34,25 +36,44 @@ const ManageSubjects = () => {
       const res = await axios.get(`${BASE_URL}/api/subjects`);
       setAllSubjects(res.data);
     } catch (err) {
-      console.error("Error fetching subjects:", err);
+      console.error(err);
     }
   };
 
-  // --- 4. HELPER FUNCTIONS ---
-  // Button text dynamic karne ke liye
+  const resetForm = () => {
+    setPreviewUrl(null);
+    setFile(null);
+    setFilterClass("");
+    setFormData({ subjectName: "", className: "", year: "", subjectId: "" });
+    setOriginalData(null);
+    setLoading(false);
+    setIsImgLoading(false); // Reset loader too
+
+    const fileInput = document.getElementById("fileInput");
+    if (fileInput) fileInput.value = "";
+  };
+
   const getButtonText = () => {
-    if (loading) {
-      return operation === "delete" ? "Deleting..." : "Adding...";
-    }
-    return operation === "add" ? "Add Subject" : "Delete Subject";
+    if (loading)
+      return operation === "delete"
+        ? "Deleting..."
+        : operation === "update"
+        ? "Updating..."
+        : "Adding...";
+    return operation === "add"
+      ? "Add Subject"
+      : operation === "update"
+      ? "Update Subject"
+      : "Delete Subject";
   };
 
-  // --- 5. HANDLERS ---
+  // --- HANDLERS ---
   const handleImageChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
       setPreviewUrl(URL.createObjectURL(selectedFile));
+      // Local file foran load hoti hai, isliye yahan loading dikhane ki zaroorat nahi
     }
   };
 
@@ -60,170 +81,224 @@ const ManageSubjects = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Delete ke liye Filter Logic
-  const filteredSubjects = filterClass
-    ? allSubjects.filter((sub) => sub.className === filterClass)
-    : [];
-
   const handleSubjectSelect = (e) => {
     const selectedId = e.target.value;
     const selectedSubject = allSubjects.find((sub) => sub._id === selectedId);
 
-    setFormData({ ...formData, subjectId: selectedId });
-
     if (selectedSubject) {
-      setPreviewUrl(selectedSubject.image.url);
+      const initialData = {
+        subjectId: selectedId,
+        subjectName: selectedSubject.subjectName,
+        className: selectedSubject.className,
+        year: selectedSubject.year,
+      };
+
+      setFormData(initialData);
+      setOriginalData(initialData);
+
+      if (operation === "update" || operation === "delete") {
+        // 🆕 Logic: Pehle loader chalao, phir URL set karo
+        setIsImgLoading(true);
+        setPreviewUrl(selectedSubject.image.url);
+      }
     } else {
+      setFormData({ ...formData, subjectId: "" });
+      setOriginalData(null);
       setPreviewUrl(null);
+      setIsImgLoading(false);
     }
   };
 
-  // --- 6. SUBMIT LOGIC (MAIN) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Agar pehle se load ho rha hai to rok do (Double Click Protection)
     if (loading) return;
 
-    setLoading(true); // START LOADER
+    if (operation === "update") {
+      const isNameChanged = formData.subjectName !== originalData?.subjectName;
+      const isClassChanged = formData.className !== originalData?.className;
+      const isYearChanged = formData.year !== originalData?.year;
+      const isImageChanged = file !== null;
+
+      if (
+        !isNameChanged &&
+        !isClassChanged &&
+        !isYearChanged &&
+        !isImageChanged
+      ) {
+        Swal.fire({
+          title: "No changes detected",
+          text: "Do you want to reset the form?",
+          icon: "info",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, Reset",
+        }).then((result) => {
+          if (result.isConfirmed) resetForm();
+        });
+        return;
+      }
+    }
+
+    if (operation === "delete") {
+      if (!formData.subjectId)
+        return toast.error("Please select a subject first!");
+
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+      });
+
+      if (!result.isConfirmed) return;
+    }
+
+    setLoading(true);
+    const toastId = toast.loading("Processing...");
 
     try {
-      if (operation === "add") {
-        // --- ADD LOGIC ---
-        const data = new FormData();
-        data.append("image", file);
+      const data = new FormData();
+      if (operation !== "delete") {
         data.append("subjectName", formData.subjectName);
         data.append("className", formData.className);
         data.append("year", formData.year);
+        if (file) data.append("image", file);
+      }
 
+      if (operation === "add") {
+        if (!file) throw new Error("Image is required for new subjects");
         await axios.post(`${BASE_URL}/api/subjects/add`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("Subject Added Successfully!");
-
-        // List refresh karo
-        fetchSubjects();
-        // --- RESET LOGIC ---
-        setPreviewUrl(null);
-        setFile(null);
-        setFormData({
-          subjectName: "",
-          className: "",
-          year: "",
-          subjectId: "",
-        });
-
-        // 🟢 FIX: Browser ka input bhi zabardasti khali karo
-        const fileInput = document.getElementById("fileInput");
-        if (fileInput) fileInput.value = "";
+        toast.success("Subject Added Successfully!", { id: toastId });
+      } else if (operation === "update") {
+        if (!formData.subjectId) throw new Error("Select a subject first");
+        await axios.put(
+          `${BASE_URL}/api/subjects/${formData.subjectId}`,
+          data,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        toast.success("Subject Updated Successfully!", { id: toastId });
       } else if (operation === "delete") {
-        // --- DELETE LOGIC ---
-        if (!formData.subjectId) {
-          setLoading(false);
-          return alert("Please select a subject first");
-        }
-
         await axios.delete(`${BASE_URL}/api/subjects/${formData.subjectId}`);
-        alert("Subject Deleted Successfully!");
-
-        // Reset UI specific to delete
-        fetchSubjects();
-        setPreviewUrl(null);
-        setFilterClass("");
-        setFormData({ ...formData, subjectId: "" });
+        toast.success("Subject Deleted Successfully!", { id: toastId });
       }
 
-      // --- RESET COMMON FIELDS (Only for Add) ---
-      if (operation === "add") {
-        setPreviewUrl(null);
-        setFile(null);
-        setFormData({
-          subjectName: "",
-          className: "",
-          year: "",
-          subjectId: "",
-        });
-      }
+      fetchSubjects();
+      resetForm();
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err.response?.data?.error || err.message}`);
+      toast.error(err.response?.data?.error || err.message, { id: toastId });
     } finally {
-      setLoading(false); // STOP LOADER (Hamesha chalega chahe error ho ya success)
+      setLoading(false);
     }
   };
 
   return (
     <div className="admin-wrapper">
+      <Toaster position="top-right" reverseOrder={false} />
+
       <div className="admin-card">
-        {/* --- LEFT: Image Section --- */}
+        {/* LEFT: Image Preview (UPDATED) */}
         <div className="image-section">
           <div className="image-preview-box">
-            {previewUrl ? (
-              <img src={previewUrl} alt="Preview" />
-            ) : (
-              <span className="placeholder-text">Image Preview</span>
+            {/* 🆕 Condition 1: Agar URL hai hi nahi */}
+            {!previewUrl && <span className="placeholder-text">Preview</span>}
+
+            {/* 🆕 Condition 2: Agar URL hai */}
+            {previewUrl && (
+              <>
+                {/* Jab tak load ho rha hai, spinner dikhao */}
+                {isImgLoading && (
+                  <div className="img-loader-container">
+                    <span
+                      className="spinner"
+                      style={{
+                        borderColor: "#007bff",
+                        borderTopColor: "transparent",
+                      }}
+                    ></span>
+                  </div>
+                )}
+
+                {/* Asli Image (Hidden until loaded) */}
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  onLoad={() => setIsImgLoading(false)} // Load hone par spinner gayab
+                  onError={() => setIsImgLoading(false)} // Error par bhi spinner gayab (taaki phans na jaye)
+                  style={{ display: isImgLoading ? "none" : "block" }} // Loading ke waqt chupao
+                />
+              </>
             )}
           </div>
 
-          {/* Sirf 'Add' mode mein upload button dikhao */}
-          {operation === "add" && (
+          {(operation === "add" ||
+            (operation === "update" && formData.subjectId)) && (
             <>
               <input
                 type="file"
                 id="fileInput"
+                onClick={(e) => (e.target.value = null)}
                 onChange={handleImageChange}
                 className="hidden-input"
               />
               <label htmlFor="fileInput" className="upload-btn">
-                Select Image
+                {operation === "update"
+                  ? "Change Image (Optional)"
+                  : "Select Image"}
               </label>
             </>
           )}
         </div>
 
-        {/* --- RIGHT: Form Section --- */}
+        {/* RIGHT: Form */}
         <div className="form-section">
           <form onSubmit={handleSubmit}>
-            {/* Operation Selector */}
             <div className="form-group">
               <label>Select Operation</label>
               <select
                 value={operation}
                 onChange={(e) => {
                   setOperation(e.target.value);
-                  setPreviewUrl(null);
-                  setFormData({ ...formData, subjectId: "" });
+                  resetForm();
                 }}
                 className="action-dropdown"
               >
                 <option value="add">Add New Subject</option>
+                <option value="update">Update Subject</option>
                 <option value="delete">Delete Subject</option>
               </select>
             </div>
 
-            {/* --- DYNAMIC FIELDS --- */}
-
-            {/* DELETE MODE */}
-            {operation === "delete" ? (
+            {(operation === "delete" || operation === "update") && (
               <div
                 style={{
-                  backgroundColor: "#fff5f5",
+                  backgroundColor:
+                    operation === "delete" ? "#fff5f5" : "#f0f9ff",
                   padding: "15px",
                   borderRadius: "8px",
-                  border: "1px solid #ffcccc",
+                  marginBottom: "20px",
+                  border: "1px solid #ddd",
                 }}
               >
-                <h4 style={{ marginTop: 0, color: "#c00" }}>Delete Subject</h4>
+                <h4 style={{ marginTop: 0, color: "#555" }}>
+                  {operation === "delete" ? "Delete Subject" : "Edit Subject"}
+                </h4>
 
-                {/* Step 1: Class Filter */}
                 <div className="form-group">
-                  <label>Step 1: Filter by Class</label>
+                  <label>Step 1: Filter Class</label>
                   <select
                     value={filterClass}
                     onChange={(e) => {
                       setFilterClass(e.target.value);
                       setFormData({ ...formData, subjectId: "" });
-                      setPreviewUrl(null);
                     }}
                   >
                     <option value="">-- Select Class --</option>
@@ -233,35 +308,29 @@ const ManageSubjects = () => {
                   </select>
                 </div>
 
-                {/* Step 2: Subject Select */}
                 <div className="form-group">
                   <label>Step 2: Select Subject</label>
                   <select
                     name="subjectId"
                     onChange={handleSubjectSelect}
                     disabled={!filterClass}
-                    style={{ cursor: filterClass ? "pointer" : "not-allowed" }}
+                    value={formData.subjectId}
                   >
-                    <option value="">
-                      {filterClass
-                        ? `-- Select ${filterClass} Subject --`
-                        : "-- First Select a Class --"}
-                    </option>
-                    {filteredSubjects.map((sub) => (
-                      <option key={sub._id} value={sub._id}>
-                        {sub.subjectName} ({sub.year})
-                      </option>
-                    ))}
+                    <option value="">-- Select Subject --</option>
+                    {allSubjects
+                      .filter((sub) => sub.className === filterClass)
+                      .map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.subjectName} ({sub.year})
+                        </option>
+                      ))}
                   </select>
-                  {filterClass && filteredSubjects.length === 0 && (
-                    <small style={{ color: "orange" }}>
-                      No subjects found for this class.
-                    </small>
-                  )}
                 </div>
               </div>
-            ) : (
-              // ADD MODE
+            )}
+
+            {(operation === "add" ||
+              (operation === "update" && formData.subjectId)) && (
               <>
                 <div className="form-group">
                   <label>Subject Name</label>
@@ -269,8 +338,8 @@ const ManageSubjects = () => {
                     type="text"
                     name="subjectName"
                     value={formData.subjectName}
-                    placeholder="e.g. Physics"
                     onChange={handleInputChange}
+                    placeholder="e.g. Physics"
                   />
                 </div>
                 <div className="form-group">
@@ -292,14 +361,13 @@ const ManageSubjects = () => {
                     type="text"
                     name="year"
                     value={formData.year}
-                    placeholder="e.g. 2025-2026"
                     onChange={handleInputChange}
+                    placeholder="e.g. 2025-2026"
                   />
                 </div>
               </>
             )}
 
-            {/* --- SUBMIT BUTTON WITH LOADER --- */}
             <button
               type="submit"
               className={`submit-btn btn-${operation} ${
@@ -309,8 +377,7 @@ const ManageSubjects = () => {
             >
               {loading ? (
                 <div className="loader-row">
-                  <span className="spinner"></span>
-                  {getButtonText()}
+                  <span className="spinner"></span> {getButtonText()}
                 </div>
               ) : (
                 getButtonText()

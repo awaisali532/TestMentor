@@ -107,17 +107,60 @@ const deleteSubject = async (req, res) => {
 
 // UPDATE (Logic change needed)
 const updateSubject = async (req, res) => {
-  // Update thora complex hai kyunke agar nayi image aayi to purani delete karni paregi.
-  // Filhal tumhara simple update theek hai, lekin future mein isay behtar karna parega.
   try {
-    const updated = await Subject.findByIdAndUpdate(
-      req.params.id,
-      req.body, // Poora body update
-      { new: true }
-    );
-    if (!updated) return res.status(404).json({ error: "Subject not found" });
-    res.json(updated);
+    const { id } = req.params;
+    // Sirf text fields nikalo body se
+    const { className, subjectName, year } = req.body;
+
+    // 1. Database mein subject dhundo
+    const subject = await Subject.findById(id);
+    if (!subject) return res.status(404).json({ error: "Subject not found" });
+
+    // 2. Update Object banao (Sirf text data ke sath)
+    let updateData = { className, subjectName, year };
+
+    // --- SMART IMAGE LOGIC ---
+
+    // Check: Kya user ne nayi image bheji hai?
+    if (req.file) {
+      console.log("New image detected, updating...");
+
+      // A. Agar purani image Cloudinary par hai, to usay delete karo
+      if (subject.image && subject.image.public_id) {
+        await cloudinary.uploader.destroy(subject.image.public_id);
+      }
+
+      // B. Nayi image upload karo
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "subjects_images",
+      });
+
+      // C. updateData mein image add karo
+      updateData.image = {
+        url: result.secure_url,
+        public_id: result.public_id,
+      };
+
+      // D. Local folder se safai
+      fs.unlinkSync(req.file.path);
+    } else {
+      console.log("No new image, keeping the old one.");
+    }
+
+    // -------------------------
+
+    // 3. Final Database Update
+    const updatedSubject = await Subject.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    res.json(updatedSubject);
   } catch (err) {
+    // Agar error aaye aur file upload ho chuki ho locally, to delete kar do
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    console.error("Update Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
