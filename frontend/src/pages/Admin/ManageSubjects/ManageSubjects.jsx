@@ -7,21 +7,21 @@ import Swal from "sweetalert2";
 const ManageSubjects = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
+  // --- STATES ---
   const [loading, setLoading] = useState(false);
   const [operation, setOperation] = useState("add");
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-
-  // 🆕 NEW STATE: Image Loading ke liye
   const [isImgLoading, setIsImgLoading] = useState(false);
 
   const [allSubjects, setAllSubjects] = useState([]);
+  const [classOptions, setClassOptions] = useState([]); // Classes List
   const [filterClass, setFilterClass] = useState("");
 
   const [formData, setFormData] = useState({
     subjectName: "",
     className: "",
-    year: "",
+    year: "2025-2026",
     subjectId: "",
   });
 
@@ -29,6 +29,7 @@ const ManageSubjects = () => {
 
   useEffect(() => {
     fetchSubjects();
+    fetchClasses();
   }, []);
 
   const fetchSubjects = async () => {
@@ -40,6 +41,84 @@ const ManageSubjects = () => {
     }
   };
 
+  const fetchClasses = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/subjects/classes/all`);
+      setClassOptions(res.data);
+    } catch (err) {
+      console.error("Error fetching classes", err);
+    }
+  };
+
+  // --- NEW: EDIT CLASS FUNCTION ---
+  const handleEditClass = async () => {
+    // 1. Check karo koi class select hai ya nahi
+    if (!filterClass)
+      return toast.error("Please select a class to edit first!");
+
+    // 2. Class ki ID dhundo (Kyunke state mein sirf naam hai)
+    const selectedClassObj = classOptions.find((c) => c.name === filterClass);
+    if (!selectedClassObj) return;
+
+    // 3. SweetAlert Popup with Input
+    const { value: newName } = await Swal.fire({
+      title: "Edit Class Name",
+      input: "text",
+      inputLabel: `Change name for "${filterClass}"`,
+      inputValue: filterClass, // Purana naam pehle se likha hoga
+      showCancelButton: true,
+      confirmButtonText: "Update",
+      inputValidator: (value) => {
+        if (!value) return "Class name cannot be empty!";
+      },
+    });
+
+    // 4. API Call
+    if (newName && newName !== filterClass) {
+      try {
+        await axios.put(
+          `${BASE_URL}/api/subjects/classes/${selectedClassObj._id}`,
+          { name: newName }
+        );
+
+        toast.success("Class Name Updated!");
+
+        // 5. Update UI
+        setFilterClass(newName); // Dropdown mein naya naam dikhao
+        setFormData({ ...formData, className: newName }); // Form mein bhi update karo
+        fetchClasses(); // List refresh karo
+        fetchSubjects(); // Subjects bhi refresh karo (taaki unka filter na toote)
+      } catch (err) {
+        toast.error(err.response?.data?.error || "Failed to update class");
+      }
+    }
+  };
+
+  // --- NEW: ADD CLASS FUNCTION ---
+  const handleAddNewClass = async () => {
+    const { value: newClassName } = await Swal.fire({
+      title: "Add New Class",
+      input: "text",
+      inputLabel: "Enter Class Name (e.g. 11th Class)",
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) return "You need to write something!";
+      },
+    });
+
+    if (newClassName) {
+      try {
+        await axios.post(`${BASE_URL}/api/subjects/classes/add`, {
+          name: newClassName,
+        });
+        toast.success(`${newClassName} Added Successfully!`);
+        fetchClasses();
+      } catch (err) {
+        toast.error(err.response?.data?.error || "Failed to add class");
+      }
+    }
+  };
+
   const resetForm = () => {
     setPreviewUrl(null);
     setFile(null);
@@ -47,8 +126,7 @@ const ManageSubjects = () => {
     setFormData({ subjectName: "", className: "", year: "", subjectId: "" });
     setOriginalData(null);
     setLoading(false);
-    setIsImgLoading(false); // Reset loader too
-
+    setIsImgLoading(false);
     const fileInput = document.getElementById("fileInput");
     if (fileInput) fileInput.value = "";
   };
@@ -73,7 +151,6 @@ const ManageSubjects = () => {
     if (selectedFile) {
       setFile(selectedFile);
       setPreviewUrl(URL.createObjectURL(selectedFile));
-      // Local file foran load hoti hai, isliye yahan loading dikhane ki zaroorat nahi
     }
   };
 
@@ -92,12 +169,10 @@ const ManageSubjects = () => {
         className: selectedSubject.className,
         year: selectedSubject.year,
       };
-
       setFormData(initialData);
       setOriginalData(initialData);
 
       if (operation === "update" || operation === "delete") {
-        // 🆕 Logic: Pehle loader chalao, phir URL set karo
         setIsImgLoading(true);
         setPreviewUrl(selectedSubject.image.url);
       }
@@ -130,8 +205,6 @@ const ManageSubjects = () => {
           text: "Do you want to reset the form?",
           icon: "info",
           showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
           confirmButtonText: "Yes, Reset",
         }).then((result) => {
           if (result.isConfirmed) resetForm();
@@ -143,17 +216,14 @@ const ManageSubjects = () => {
     if (operation === "delete") {
       if (!formData.subjectId)
         return toast.error("Please select a subject first!");
-
       const result = await Swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
         confirmButtonText: "Yes, delete it!",
       });
-
       if (!result.isConfirmed) return;
     }
 
@@ -205,16 +275,12 @@ const ManageSubjects = () => {
       <Toaster position="top-right" reverseOrder={false} />
 
       <div className="admin-card">
-        {/* LEFT: Image Preview (UPDATED) */}
+        {/* LEFT: Image Preview */}
         <div className="image-section">
           <div className="image-preview-box">
-            {/* 🆕 Condition 1: Agar URL hai hi nahi */}
             {!previewUrl && <span className="placeholder-text">Preview</span>}
-
-            {/* 🆕 Condition 2: Agar URL hai */}
             {previewUrl && (
               <>
-                {/* Jab tak load ho rha hai, spinner dikhao */}
                 {isImgLoading && (
                   <div className="img-loader-container">
                     <span
@@ -226,19 +292,16 @@ const ManageSubjects = () => {
                     ></span>
                   </div>
                 )}
-
-                {/* Asli Image (Hidden until loaded) */}
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  onLoad={() => setIsImgLoading(false)} // Load hone par spinner gayab
-                  onError={() => setIsImgLoading(false)} // Error par bhi spinner gayab (taaki phans na jaye)
-                  style={{ display: isImgLoading ? "none" : "block" }} // Loading ke waqt chupao
+                  onLoad={() => setIsImgLoading(false)}
+                  onError={() => setIsImgLoading(false)}
+                  style={{ display: isImgLoading ? "none" : "block" }}
                 />
               </>
             )}
           </div>
-
           {(operation === "add" ||
             (operation === "update" && formData.subjectId)) && (
             <>
@@ -277,6 +340,7 @@ const ManageSubjects = () => {
               </select>
             </div>
 
+            {/* SELECTION AREA (Delete/Update) */}
             {(operation === "delete" || operation === "update") && (
               <div
                 style={{
@@ -294,18 +358,42 @@ const ManageSubjects = () => {
 
                 <div className="form-group">
                   <label>Step 1: Filter Class</label>
-                  <select
-                    value={filterClass}
-                    onChange={(e) => {
-                      setFilterClass(e.target.value);
-                      setFormData({ ...formData, subjectId: "" });
-                    }}
-                  >
-                    <option value="">-- Select Class --</option>
-                    <option value="9th">9th Class</option>
-                    <option value="10th">10th Class</option>
-                    <option value="11th">11th Class</option>
-                  </select>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <select
+                      style={{ flex: 1 }}
+                      value={filterClass}
+                      onChange={(e) => {
+                        setFilterClass(e.target.value);
+                        setFormData({ ...formData, subjectId: "" });
+                      }}
+                    >
+                      <option value="">-- Select Class --</option>
+                      {classOptions.map((cls) => (
+                        <option key={cls._id} value={cls.name}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* ✏️ EDIT CLASS BUTTON (Only shows when class is selected) */}
+                    {filterClass && (
+                      <button
+                        type="button"
+                        onClick={handleEditClass}
+                        title="Edit Class Name"
+                        style={{
+                          padding: "0 12px",
+                          backgroundColor: "#ffc107",
+                          border: "1px solid #e0a800",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "16px",
+                        }}
+                      >
+                        ✏️
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -329,6 +417,7 @@ const ManageSubjects = () => {
               </div>
             )}
 
+            {/* INPUT FIELDS (Add/Update) */}
             {(operation === "add" ||
               (operation === "update" && formData.subjectId)) && (
               <>
@@ -342,19 +431,77 @@ const ManageSubjects = () => {
                     placeholder="e.g. Physics"
                   />
                 </div>
+
+                {/* DYNAMIC CLASS SELECTION WITH ADD & EDIT BUTTONS */}
                 <div className="form-group">
-                  <label>Class Level</label>
-                  <select
-                    name="className"
-                    value={formData.className}
-                    onChange={handleInputChange}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
                   >
-                    <option value="">Select Class</option>
-                    <option value="9th">9th Class</option>
-                    <option value="10th">10th Class</option>
-                    <option value="11th">11th Class</option>
-                  </select>
+                    <label>Class Level</label>
+                    <button
+                      type="button"
+                      onClick={handleAddNewClass}
+                      style={{
+                        fontSize: "12px",
+                        padding: "2px 8px",
+                        background: "#007bff",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        marginBottom: "5px",
+                      }}
+                    >
+                      + Add Class
+                    </button>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <select
+                      style={{ flex: 1 }}
+                      name="className"
+                      value={formData.className}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        setFilterClass(e.target.value);
+                      }}
+                    >
+                      <option value="">Select Class</option>
+                      {classOptions.map((cls) => (
+                        <option key={cls._id} value={cls.name}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* EDIT BUTTON (Also here in Add Mode) */}
+                    {formData.className && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterClass(formData.className); // Ensure filter is synced for edit
+                          handleEditClass();
+                        }}
+                        title="Edit Class Name"
+                        style={{
+                          padding: "0 12px",
+                          backgroundColor: "#ffc107",
+                          border: "1px solid #e0a800",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "16px",
+                        }}
+                      >
+                        ✏️
+                      </button>
+                    )}
+                  </div>
                 </div>
+
                 <div className="form-group">
                   <label>Academic Year</label>
                   <input

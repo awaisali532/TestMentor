@@ -4,7 +4,7 @@ const subjectSchema = new mongoose.Schema(
   {
     className: { type: String, required: true }, // e.g., "9th"
     subjectName: { type: String, required: true }, // e.g., "Physics"
-    year: { type: String, required: true },
+    year: { type: String, required: true, default: "2025-2026" },
 
     // Image ko object banao taaki URL aur ID dono save ho sakein
     image: {

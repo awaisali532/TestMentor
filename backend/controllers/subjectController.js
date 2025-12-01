@@ -2,6 +2,7 @@ const Subject = require("../models/subjectModel.js");
 // Cloudinary config file import karo (jahan tumne API keys rakhi hain)
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs"); // File delete karne ke liye (Node native module)
+const ClassLevel = require("../models/classLevel");
 // CREATE
 const addSubject = async (req, res) => {
   try {
@@ -164,11 +165,65 @@ const updateSubject = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// 1. Add Class
+const addClassLevel = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: "Class name is required" });
 
+    // Ab ye 'new ClassLevel' dekhne mein professional lag raha hai
+    const newClass = new ClassLevel({ name });
+
+    await newClass.save();
+    res.status(201).json(newClass);
+  } catch (err) {
+    if (err.code === 11000)
+      return res.status(400).json({ error: "Class already exists" });
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// 2. Get All Classes
+const getClassLevels = async (req, res) => {
+  try {
+    // Variable use karte waqt bhi Capital
+    const classes = await ClassLevel.find().sort({ name: 1 });
+    res.json(classes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+// 3. Update Class Name
+const updateClassLevel = async (req, res) => {
+  try {
+    const { id } = req.params; // Class ki ID URL se ayegi
+    const { name } = req.body; // Naya naam body se ayega
+
+    if (!name) return res.status(400).json({ error: "Class name is required" });
+
+    const updatedClass = await ClassLevel.findByIdAndUpdate(
+      id,
+      { name },
+      { new: true } // Return updated document
+    );
+
+    if (!updatedClass)
+      return res.status(404).json({ error: "Class not found" });
+
+    res.json(updatedClass);
+  } catch (err) {
+    if (err.code === 11000)
+      return res.status(400).json({ error: "This class name already exists" });
+    res.status(500).json({ error: err.message });
+  }
+};
 module.exports = {
   addSubject,
   getSubjects,
   getSubjectById,
   updateSubject,
   deleteSubject,
+  addClassLevel,
+  getClassLevels,
+  updateClassLevel,
 };
