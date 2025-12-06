@@ -17,7 +17,7 @@ const QuestionTypes = () => {
       <div className="d-flex flex-wrap justify-content-center gap-3 question-wrapper">
         {questionTypes.map((type, index) => (
           <div
-            className="question-card d-flex flex-column align-items-center"
+            className="q-type-card d-flex flex-column align-items-center"
             key={index}
           >
             <FaCheckCircle className="check-icon mb-2" />

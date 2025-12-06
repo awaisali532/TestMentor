@@ -1,0 +1,31 @@
+/* List Item Styling */
+.topic-list-item {
+    transition: all 0.2s ease-in-out;
+    border-left: 4px solid transparent;
+    /* Default hidden border */
+}
+
+.topic-list-item:hover {
+    background-color: #f8f9fa;
+    border-left: 4px solid #0d6efd;
+    /* Blue border on hover */
+    transform: translateX(2px);
+    /* Thora sa right shift */
+}
+
+/* Badge Styling (Topic Number 1.1) */
+.topic-badge {
+    font-size: 0.9rem;
+    font-weight: 700;
+    width: 50px;
+    text-align: center;
+}
+
+/* Add Form Card */
+.add-topic-card {
+    position: sticky;
+    top: 20px;
+    /* List scroll hogi, magar ye form chipka rahega */
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}

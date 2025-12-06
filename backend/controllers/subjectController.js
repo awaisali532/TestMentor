@@ -3,6 +3,10 @@ const Subject = require("../models/subjectModel.js");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs"); // File delete karne ke liye (Node native module)
 const ClassLevel = require("../models/classLevel");
+const Chapter = require("../models/Chapter");
+const Topic = require("../models/topic");
+const Question = require("../models/question");
+
 // CREATE
 const addSubject = async (req, res) => {
   try {
@@ -86,21 +90,47 @@ const getSubjectById = async (req, res) => {
 };
 
 // DELETE (Most Important Change)
+// DELETE SUBJECT (FULL CLEANUP)
 const deleteSubject = async (req, res) => {
   try {
-    // 1. Pehle subject dhundo
-    const subject = await Subject.findById(req.params.id);
+    const { id } = req.params; // Subject ID
+
+    const subject = await Subject.findById(id);
     if (!subject) return res.status(404).json({ error: "Subject not found" });
 
-    // 2. Cloudinary se image delete karo
+    // 1. Cloudinary se Subject Image delete (Already tha)
     if (subject.image && subject.image.public_id) {
       await cloudinary.uploader.destroy(subject.image.public_id);
     }
 
-    // 3. Ab Database se delete karo
-    await Subject.findByIdAndDelete(req.params.id);
+    // --- CASCADE DELETE LOGIC START ---
 
-    res.json({ message: "Subject and Image deleted successfully" });
+    // A. Is subject ke saare Chapters dhundo
+    const chapters = await Chapter.find({ subject: id });
+    const chapterIds = chapters.map((c) => c._id);
+
+    if (chapterIds.length > 0) {
+      // B. Un Chapters ke saare Topics dhundo
+      const topics = await Topic.find({ chapter: { $in: chapterIds } });
+      const topicIds = topics.map((t) => t._id);
+
+      if (topicIds.length > 0) {
+        // C. Sab se pehle QUESTIONS delete karo (Level 3)
+        await Question.deleteMany({ topic: { $in: topicIds } });
+
+        // D. Phir TOPICS delete karo (Level 2)
+        await Topic.deleteMany({ chapter: { $in: chapterIds } });
+      }
+
+      // E. Phir CHAPTERS delete karo (Level 1)
+      await Chapter.deleteMany({ subject: id });
+    }
+    // --- CASCADE DELETE LOGIC END ---
+
+    // 2. Finally SUBJECT delete karo (Root)
+    await Subject.findByIdAndDelete(id);
+
+    res.json({ message: "Subject and ALL related data deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -217,6 +247,67 @@ const updateClassLevel = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// 4. Delete Class (GRAND CASCADE DELETE)
+const deleteClassLevel = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Pehle Class dhundo (Kyunke humein uska NAAM chahiye)
+    const classToDelete = await ClassLevel.findById(id);
+    if (!classToDelete)
+      return res.status(404).json({ error: "Class not found" });
+
+    const className = classToDelete.name; // e.g., "9th Class"
+
+    // 2. Is Class ke saare SUBJECTS dhundo
+    const subjects = await Subject.find({ className: className });
+    const subjectIds = subjects.map((sub) => sub._id);
+
+    // Agar Subjects mile, to safai shuru karo
+    if (subjectIds.length > 0) {
+      // A. Pehle Cloudinary se Images saaf karo (Loop chala kar)
+      for (const sub of subjects) {
+        if (sub.image && sub.image.public_id) {
+          await cloudinary.uploader.destroy(sub.image.public_id);
+        }
+      }
+
+      // B. Ab Chapters dhundo jo in Subjects ke hain
+      const chapters = await Chapter.find({ subject: { $in: subjectIds } });
+      const chapterIds = chapters.map((c) => c._id);
+
+      if (chapterIds.length > 0) {
+        // C. Ab Topics dhundo
+        const topics = await Topic.find({ chapter: { $in: chapterIds } });
+        const topicIds = topics.map((t) => t._id);
+
+        if (topicIds.length > 0) {
+          // D. Sabse pehle QUESTIONS delete (Level 4)
+          await Question.deleteMany({ topic: { $in: topicIds } });
+
+          // E. Phir TOPICS delete (Level 3)
+          await Topic.deleteMany({ chapter: { $in: chapterIds } });
+        }
+
+        // F. Phir CHAPTERS delete (Level 2)
+        await Chapter.deleteMany({ subject: { $in: subjectIds } });
+      }
+
+      // G. Phir SUBJECTS delete (Level 1)
+      await Subject.deleteMany({ _id: { $in: subjectIds } });
+    }
+
+    // 3. Akhir mein CLASS delete (Root Level)
+    await ClassLevel.findByIdAndDelete(id);
+
+    res.json({
+      message: `Class '${className}' and ALL related data deleted successfully`,
+    });
+  } catch (err) {
+    console.error("Delete Class Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
 module.exports = {
   addSubject,
   getSubjects,
@@ -226,4 +317,5 @@ module.exports = {
   addClassLevel,
   getClassLevels,
   updateClassLevel,
+  deleteClassLevel,
 };

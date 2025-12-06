@@ -1,201 +1,60 @@
-/* src/pages/Admin/ManageSubjects/ManageSubjects.css */
-/* ManageSubjects.css ke Top par */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    /* Sabse Important line: Padding ab width/height kharab nahi karegi */
-}
+/* ManageSubjects.css */
 
-/* Main Wrapper to center everything */
+/* Sirf wo cheezein jo Bootstrap mein default nahi hain */
+
 .admin-wrapper {
+    min-height: calc(100vh - 80px);
+    /* Navbar ki jagah chor kar */
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 60px);
-    width: 100%;
-    /* padding: 20px; */
-    background-color: #f4f6f8;
-    overflow: auto;
+    background-color: #f8f9fa;
+    /* Bootstrap light bg */
+    padding: 20px;
 }
 
-/* The Card looking container */
 .admin-card {
-    display: flex;
-    gap: 30px;
     background: white;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
+    /* Thora bara kiya */
 }
 
-/* --- Left Side (Image) --- */
-.image-section {
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
+/* Image Upload Box Custom Design */
 .image-preview-box {
     height: 300px;
     width: fit-content;
     min-width: 200px;
-    border: 2px dashed #ddd;
+    border: 2px dashed #dee2e6;
+    /* Bootstrap gray */
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #f8f9fa;
+    position: relative;
     overflow: hidden;
-    background-color: #fafafa;
-    margin-bottom: 15px;
+    margin: 0 auto 15px auto;
+    /* Center align */
 }
 
 .image-preview-box img {
     height: 100%;
     width: auto;
     object-fit: contain;
-    display: block;
-}
-
-.placeholder-text {
-    color: #bbb;
-    font-weight: 500;
-    padding: 0 20px;
-}
-
-.hidden-input {
-    display: none;
-}
-
-.upload-btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: 0.2s;
-}
-
-.upload-btn:hover {
-    background-color: #0056b3;
-}
-
-/* --- Right Side (Form) --- */
-.form-section {
-    flex: 1;
-}
-
-.form-group {
-    margin-bottom: 18px;
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group label {
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #333;
-    font-size: 14px;
-}
-
-.form-group input,
-.form-group select {
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 15px;
-    transition: border 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: #007bff;
-    outline: none;
-}
-
-/* Special Dropdown Style */
-.action-dropdown {
-    background-color: #eef2f7;
-    font-weight: bold;
-    color: #333;
-    border: 2px solid #ced4da !important;
-}
-
-/* Submit Button Variants */
-.submit-btn {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-.btn-add {
-    background-color: #28a745;
-    /* Green */
-}
-
-.btn-add:hover {
-    background-color: #218838;
-}
-
-.btn-delete {
-    background-color: #dc3545;
-    /* Red */
-}
-
-.btn-delete:hover {
-    background-color: #c82333;
-}
-
-.btn-update {
-    background-color: #ffc107;
-    /* Yellow */
-    color: black;
-}
-
-/* --- Responsive (Mobile) --- */
-@media (max-width: 768px) {
-    .admin-card {
-        flex-direction: column;
-    }
-
-    .image-section {
-        width: 100%;
-    }
-}
-
-/* ManageSubjects.css ke end mein paste karein */
-
-.btn-disabled {
-    opacity: 0.7;
-    cursor: not-allowed !important;
-    pointer-events: none;
-}
-
-.loader-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
 }
 
 .spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0d6efd;
+    /* Bootstrap Primary Color */
     border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
+    animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -204,23 +63,25 @@
     }
 }
 
-/* Image Loader Specific Styles */
-
-.img-loader-container {
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
+    z-index: 1050;
+    backdrop-filter: blur(2px);
 }
 
-/* Spinner ka rang thora dark kiya taaki white background par nazar aaye */
-.img-loader-container .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    /* Blue Spinner */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.modal-content-custom {
+    background: white;
+    width: 500px;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }

@@ -1,0 +1,63 @@
+/* QuestionBank Page Wrapper */
+.qb-wrapper {
+    min-height: calc(100vh - 80px);
+    /* Navbar height minus */
+    background-color: #f4f6f8;
+}
+
+/* White Content Area */
+.qb-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    /* Taaki corners round rahein */
+    border: 1px solid #e0e0e0;
+}
+
+/* --- CUSTOM TABS STYLING --- */
+.qb-tabs {
+    display: flex;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.qb-tab-btn {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    background: none;
+    font-weight: 600;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    /* Hidden underline by default */
+}
+
+.qb-tab-btn:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+/* Active Tab Style */
+.qb-tab-btn.active {
+    color: #0d6efd;
+    /* Bootstrap Primary Blue */
+    background-color: white;
+    border-bottom: 3px solid #0d6efd;
+}
+
+/* Empty State Area */
+.qb-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #adb5bd;
+}
+
+.qb-empty-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+    display: block;
+    opacity: 0.5;
+}

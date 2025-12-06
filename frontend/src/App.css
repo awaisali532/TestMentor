@@ -152,3 +152,22 @@ p {
     /* 14px */
   }
 }
+
+/* Starik ko bara aur align karne ke liye magic class */
+.required-mark {
+  color: #dc3545;
+  /* Red Color */
+  font-size: 1.4rem;
+  /* Size bara (apni marzi se adjust karein) */
+  font-weight: bold;
+  /* Thora mota */
+  line-height: 0;
+  /* Sabse Important: Ye line ki height kharab nahi hone dega */
+  vertical-align: middle;
+  /* Text ke sath center mein rahega */
+  margin-left: 4px;
+  /* Text se thora fasla */
+  position: relative;
+  top: 3px;
+  /* Thora sa neeche lane ke liye (Fine tuning) */
+}

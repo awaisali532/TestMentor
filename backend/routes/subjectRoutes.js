@@ -11,6 +11,7 @@ const {
   addClassLevel,
   getClassLevels,
   updateClassLevel,
+  deleteClassLevel,
 } = require("../controllers/subjectController.js");
 
 // ==========================================
@@ -21,7 +22,7 @@ const {
 router.get("/classes/all", getClassLevels); // GET All Classes
 router.post("/classes/add", addClassLevel); // Add Class
 router.put("/classes/:id", updateClassLevel); // Edit Class
-
+router.delete("/classes/:id", deleteClassLevel);
 // ==========================================
 // ✅ 2. SUBJECT ROUTES (General)
 // ==========================================

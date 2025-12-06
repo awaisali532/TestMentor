@@ -15,6 +15,7 @@ import Contact from "./pages/Contact/Contact";
 import Navbar from "./components/Navbar/Navbar";
 import VerifyEmail from "./pages/Auth/EmailVerify";
 import ManageSubjects from "./pages/Admin/ManageSubjects/ManageSubjects";
+import QuestionBank from "./pages/Admin/QuestionBank/QuestionBank";
 const App = () => {
   return (
     <div>
@@ -32,6 +33,7 @@ const App = () => {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/subjects" element={<ManageSubjects />} />
+          <Route path="/admin/question-bank" element={<QuestionBank />} />
         </Routes>
         <ToastContainer /> {/* 👈 Required for showing toasts */}
       </UserProvider>

@@ -2,11 +2,10 @@ const mongoose = require("mongoose");
 
 const questionSchema = new mongoose.Schema(
   {
-    // 1. Hierarchy (Kis class/subject/chapter ka hai)
-    classLevel: { type: String, required: true }, // Filter ke liye direct access
-    subject: {
+    // 1. Hierarchy
+    topic: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Subject",
+      ref: "Topic",
       required: true,
     },
     chapter: {
@@ -14,12 +13,24 @@ const questionSchema = new mongoose.Schema(
       ref: "Chapter",
       required: true,
     },
+    subject: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subject",
+      required: true,
+    },
+    classLevel: { type: String, required: true },
 
-    // 2. Question Details
+    // 2. Question Types & Category
     type: {
       type: String,
-      enum: ["MCQ", "Short", "Long"],
+      enum: ["MCQ", "SHORT", "LONG"],
       required: true,
+    },
+    // ✅ NEW FIELD: QUESTION CATEGORY
+    questionCategory: {
+      type: String,
+      enum: ["TEXT", "EXERCISE", "EXAMPLE", "NUMERICAL", "REVIEW"],
+      default: "TEXT", // Default Theory wala sawal hoga
     },
     difficulty: {
       type: String,
@@ -27,26 +38,29 @@ const questionSchema = new mongoose.Schema(
       default: "Medium",
     },
 
-    // 3. Content (Urdu/Eng/Math mix)
-    questionText: { type: String, required: true }, // Isme LaTeX bhi ayega
+    // 3. Content (Dual Medium)
+    statement: {
+      en: { type: String },
+      ur: { type: String },
+    },
     image: {
       url: String,
       public_id: String,
-    }, // Optional diagram
+    },
 
-    // 4. Sirf MCQs ke liye
+    // 4. Options (For MCQs)
     options: [
       {
-        text: { type: String }, // Option text
-        image: { url: String, public_id: String }, // Option mein bhi image ho sakti hai
+        en: { type: String },
+        ur: { type: String },
         isCorrect: { type: Boolean, default: false },
       },
     ],
 
     // 5. Metadata
     marks: { type: Number, default: 1 },
-    important: { type: Boolean, default: false }, // "Guess Paper" ke liye
-    boardTag: [String], // e.g. ['Lahore', 'Federal'] - taaki Past Papers bana sako
+    important: { type: Boolean, default: false },
+    boardTags: [String],
   },
   { timestamps: true }
 );
