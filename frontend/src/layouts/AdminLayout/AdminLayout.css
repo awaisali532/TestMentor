@@ -1,0 +1,31 @@
+.admin-layout-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f4f6f8;
+    align-items: stretch;
+    /* Ensures full height */
+}
+
+.admin-main-content {
+    margin-left: 250px;
+    /* Width of Sidebar */
+    width: calc(100% - 250px);
+
+    /* ✅ MOVED STYLES HERE */
+    padding: 1.5rem;
+    /* This is equal to p-4 */
+    background-color: #F3F4F6;
+
+    /* This ensures padding is included in the height calculation */
+    box-sizing: border-box;
+
+    transition: all 0.3s;
+}
+
+/* Mobile Fix */
+@media (max-width: 768px) {
+    .admin-main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}

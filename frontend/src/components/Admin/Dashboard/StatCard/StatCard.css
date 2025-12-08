@@ -1,0 +1,61 @@
+/* src/components/Admin/Dashboard/StatCard/StatCard.css */
+
+.custom-card {
+    height: 140px;
+    /* Keep fixed height as requested */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    /* Ensure no border */
+}
+
+.custom-card:hover {
+    transform: translateY(-5px);
+    /* Slight lift effect */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* --- GRADIENTS --- */
+/* We mix the original color with a slightly lighter/different shade */
+
+.gradient-blue {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+.gradient-green {
+    background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+}
+
+.gradient-orange {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+}
+
+.gradient-cyan {
+    background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+}
+
+/* --- TYPOGRAPHY --- */
+/* Font weights handles by Bootstrap, specific sizing here */
+
+.card-title {
+    font-size: 17px;
+    /* Adjusted for better fit */
+    letter-spacing: 0.5px;
+}
+
+.card-value {
+    font-size: 32px;
+    line-height: 1.2;
+}
+
+/* --- ICON WRAPPER --- */
+.card-icon-wrapper {
+    width: 55px;
+    height: 55px;
+    background-color: rgba(255, 255, 255, 0.2);
+    /* White transparent looks cleaner on gradients */
+    backdrop-filter: blur(5px);
+    /* Optional: Adds a glassmorphism effect */
+    border-radius: 12px;
+    /* Soft square */
+    font-size: 26px;
+}

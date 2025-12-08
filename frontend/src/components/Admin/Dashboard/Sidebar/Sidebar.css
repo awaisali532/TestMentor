@@ -1,0 +1,83 @@
+.sidebar {
+    width: 260px;
+    /* Exact standard width */
+    height: 100vh;
+    background-color: #111827;
+    /* Deep Navy/Black */
+    color: #ffffff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    z-index: 1000;
+}
+
+.sidebar-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    padding-left: 10px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    /* Rounded corners like image */
+    text-decoration: none;
+    color: #9CA3AF;
+    /* Muted Grey Text */
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.menu-icon {
+    font-size: 18px;
+    margin-right: 12px;
+}
+
+/* Hover State */
+.menu-link:hover {
+    background-color: #1F2937;
+    color: #F3F4F6;
+}
+
+/* Active State (The Blue Button Look) */
+.menu-link.active {
+    background-color: #3B82F6;
+    /* Bright Blue */
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+logout-btn {
+    width: 100%;
+}
+
+/* .logout-btn {
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+    padding-left: 16px;
+} */
+
+/* .logout-btn:hover {
+    color: #EF4444;
+   
+} */

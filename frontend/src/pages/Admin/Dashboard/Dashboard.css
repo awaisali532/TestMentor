@@ -1,0 +1,11 @@
+/* src/pages/Admin/Dashboard/Dashboard.css */
+
+/* Only needed if you want to force the specific font family */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Optional: Smooth hover effect for the rows if needed */
+tbody tr:hover {
+    background-color: #f8f9fa;
+}

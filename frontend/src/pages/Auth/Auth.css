@@ -27,11 +27,9 @@
 
 .left-panel {
   width: 40%;
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--secondary-color)
-  );
+  background: linear-gradient(135deg,
+      var(--primary-color),
+      var(--secondary-color));
   color: white;
   display: flex;
   align-items: center;
@@ -125,16 +123,20 @@
 /* Responsive */
 @media (max-width: 768px) {
   .container-wrapper {
-    padding: 0; /* Removed padding on mobile */
+    padding: 0;
+    /* Removed padding on mobile */
   }
 
   .login-register-card {
-    flex-direction: column; /* Stack panels vertically */
-    height: auto; /* Adjust height */
+    flex-direction: column;
+    /* Stack panels vertically */
+    height: auto;
+    /* Adjust height */
     width: 100%;
     max-width: 100%;
     margin: 0;
-    flex-wrap: nowrap; /* Prevent wrapping */
+    flex-wrap: nowrap;
+    /* Prevent wrapping */
     border-radius: 0%;
     transform: none;
     /* Only enable scrolling if content overflows */
@@ -142,8 +144,10 @@
   }
 
   .left-panel {
-    width: 100%; /* Full width for mobile */
-    height: 50%; /* Reduce height for left panel */
+    width: 100%;
+    /* Full width for mobile */
+    height: 50%;
+    /* Reduce height for left panel */
     box-sizing: border-box;
   }
 
@@ -153,14 +157,17 @@
 
   .left-panel .overlay .switch-btn {
     position: absolute;
-    bottom: 20px; /* Position the button at the bottom */
+    bottom: 20px;
+    /* Position the button at the bottom */
     left: 50%;
     transform: translateX(-50%);
   }
 
   .right-panel {
-    width: 100%; /* Full width for right panel */
-    height: 50%; /* Adjust height for right panel */
+    width: 100%;
+    /* Full width for right panel */
+    height: 50%;
+    /* Adjust height for right panel */
     box-sizing: border-box;
     margin-top: 0;
   }
@@ -185,5 +192,20 @@
 
   .right-panel .social-icons .icon:hover {
     background: #dcdcdc;
+  }
+}
+
+/* Add to Auth.css */
+.icon-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
