@@ -21,4 +21,4 @@ const topicSchema = new mongoose.Schema(
 // Ek Chapter mein "1.1" do dafa nahi ho sakta.
 topicSchema.index({ chapter: 1, topicNumber: 1 }, { unique: true });
 
-module.exports = mongoose.model("Topic", topicSchema);
+module.exports = mongoose.models.Topic || mongoose.model("Topic", topicSchema);

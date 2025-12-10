@@ -17,4 +17,5 @@ const chapterSchema = new mongoose.Schema(
 // Ek Subject mein Chapter Number duplicate na ho (e.g. Physics 9th mein Chapter 1 do dafa na aye)
 chapterSchema.index({ subject: 1, chapterNumber: 1 }, { unique: true });
 
-module.exports = mongoose.model("Chapter", chapterSchema);
+module.exports =
+  mongoose.models.Chapter || mongoose.model("Chapter", chapterSchema);

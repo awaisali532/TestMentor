@@ -18,4 +18,5 @@ const subjectSchema = new mongoose.Schema(
 // Yeh line duplicates rokegi (Ek class mein same subject do dafa nahi aayega)
 subjectSchema.index({ className: 1, subjectName: 1 }, { unique: true });
 
-module.exports = mongoose.model("Subject", subjectSchema);
+module.exports =
+  mongoose.models.Subject || mongoose.model("Subject", subjectSchema);

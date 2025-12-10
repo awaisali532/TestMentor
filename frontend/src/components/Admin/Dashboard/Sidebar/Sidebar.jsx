@@ -61,10 +61,14 @@ const Sidebar = () => {
           </Link>
         </li>
         <li>
-          <a href="#" className="menu-link">
-            <FaUser className="menu-icon" />
+          <Link
+            to="/admin/users"
+            className={`menu-link ${isActive("/admin/users")}`} // This handles the blue active color
+          >
+            <FaUser className="menu-icon" />{" "}
+            {/* Or FaUsers depending on your import */}
             <span>User Management</span>
-          </a>
+          </Link>
         </li>
         <li>
           <Link

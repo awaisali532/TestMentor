@@ -6,6 +6,8 @@ const subjectRoutes = require("./routes/subjectRoutes"); // no .js needed
 const chapterRoutes = require("./routes/chapterRoutes");
 const topicRoutes = require("./routes/topicRoutes");
 const questionRoutes = require("./routes/questionRoutes");
+const userRoutes = require("./routes/userRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 dotenv.config();
 connectDB();
 
@@ -18,6 +20,8 @@ app.use("/api/subjects", subjectRoutes); // ✅ mount it
 app.use("/api/chapters", chapterRoutes);
 app.use("/api/topics", topicRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/admin", dashboardRoutes); // URL will be: /api/admin/stats
 app.get("/", (req, res) => {
   res.send("🚀 TestMentor Backend is running...");
 });

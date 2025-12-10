@@ -14,7 +14,7 @@ import ManageSubjects from "./pages/Admin/ManageSubjects/ManageSubjects";
 import QuestionBank from "./pages/Admin/QuestionBank/QuestionBank";
 import Dashboard from "./pages/Admin/Dashboard/Dashboard";
 import RecentActivity from "./pages/Admin/RecentActivity/RecentActivity";
-
+import UserManagement from "./pages/Admin/UserManagement/UserManagement";
 // Security Guards
 import AdminRoute from "./components/AdminRoute/AdminRoute";
 import PublicRoute from "./components/PublicRoute/PublicRoute";
@@ -51,6 +51,7 @@ const App = () => {
                 path="/admin/recent-activity"
                 element={<RecentActivity />}
               />
+              <Route path="/admin/users" element={<UserManagement />} />
             </Route>
           </Route>
 

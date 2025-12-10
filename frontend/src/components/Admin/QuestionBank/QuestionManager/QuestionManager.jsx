@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast"; // ❌ Removed { Toaster } from import
 import Swal from "sweetalert2";
 import "./QuestionManager.css";
 import {
@@ -16,7 +16,7 @@ import {
 
 // Imports
 import RenderText from "../../../../components/common/RenderText";
-import BulkUpload from "../BulkUpload/BulkUpload"; // <--- NEW COMPONENT IMPORT
+import BulkUpload from "../BulkUpload/BulkUpload";
 
 const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -27,7 +27,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const [selectedTopicId, setSelectedTopicId] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState("single"); // 'single' | 'bulk'
+  const [mode, setMode] = useState("single");
   const [editingId, setEditingId] = useState(null);
 
   // Form Data
@@ -110,7 +110,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
   const handleEdit = (question) => {
     setEditingId(question._id);
-    setMode("single"); // Force single mode when editing
+    setMode("single");
     setFormData({
       type: question.type,
       questionCategory: question.questionCategory,
@@ -148,7 +148,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     data.append("subjectId", subjectId);
     data.append("classLevel", classLevel);
 
-    // Append all fields...
     data.append("type", formData.type);
     data.append("questionCategory", formData.questionCategory);
     data.append("difficulty", formData.difficulty);
@@ -173,7 +172,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         });
         toast.success("Question Updated!");
         setEditingId(null);
-        // Smart Reset for Edit (Full Reset)
         setFormData(initialFormState);
       } else {
         await axios.post(`${BASE_URL}/api/questions/add`, data, {
@@ -181,7 +179,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         });
         toast.success("Question Saved!");
 
-        // Smart Reset for Add (Keep Settings, Clear Text)
         setFormData((prev) => ({
           ...prev,
           statement: { en: "", ur: "" },
@@ -217,7 +214,8 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
   return (
     <div className="row g-4">
-      <Toaster position="top-right" reverseOrder={false} />
+      {/* ❌ REMOVED: <Toaster /> component from here */}
+
       {/* LEFT: LIST */}
       <div className="col-md-7">
         <div className="filter-box">
@@ -248,84 +246,76 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 : "Select a topic first."}
             </div>
           ) : (
-            questions.map(
-              (
-                q,
-                index // <--- Added 'index' here
-              ) => (
-                <div
-                  key={q._id}
-                  className={`question-card type-${q.type} ${
-                    editingId === q._id ? "border-primary bg-light" : ""
-                  }`}
-                >
-                  <div className="d-flex justify-content-between mb-2">
-                    <div>
-                      {/* NUMBERING ADDED HERE */}
-                      <span className="fw-bold fs-5 me-2 text-secondary">
-                        #{index + 1}
-                      </span>
+            questions.map((q, index) => (
+              <div
+                key={q._id}
+                className={`question-card type-${q.type} ${
+                  editingId === q._id ? "border-primary bg-light" : ""
+                }`}
+              >
+                <div className="d-flex justify-content-between mb-2">
+                  <div>
+                    <span className="fw-bold fs-5 me-2 text-secondary">
+                      #{index + 1}
+                    </span>
 
-                      <span className="badge bg-dark me-1">{q.type}</span>
-                      <span className="badge bg-info text-dark me-1">
-                        {q.questionCategory}
-                      </span>
-                      <span className="badge bg-secondary">
-                        {q.marks} Marks
-                      </span>
-                    </div>
-                    <div className="d-flex gap-2">
-                      <button
-                        className="btn btn-sm btn-outline-warning"
-                        onClick={() => handleEdit(q)}
-                      >
-                        <FaPen />
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(q._id)}
-                      >
-                        <FaTrashAlt />
-                      </button>
-                    </div>
+                    <span className="badge bg-dark me-1">{q.type}</span>
+                    <span className="badge bg-info text-dark me-1">
+                      {q.questionCategory}
+                    </span>
+                    <span className="badge bg-secondary">{q.marks} Marks</span>
                   </div>
-
-                  {q.statement.en && (
-                    <p className="q-statement-en">
-                      <RenderText text={q.statement.en} />
-                    </p>
-                  )}
-                  {q.statement.ur && (
-                    <p className="q-statement-ur">
-                      <RenderText text={q.statement.ur} />
-                    </p>
-                  )}
-
-                  {q.type === "MCQ" && (
-                    <div className="mcq-options-grid">
-                      {q.options.map((opt, i) => (
-                        <div
-                          key={i}
-                          className={`mcq-option ${
-                            opt.isCorrect ? "correct" : ""
-                          }`}
-                        >
-                          <span className="fw-bold me-2">
-                            {String.fromCharCode(65 + i)}.
-                          </span>
-                          <RenderText text={opt.en} />
-                          {opt.ur && (
-                            <span className="opt-ur">
-                              (<RenderText text={opt.ur} />)
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-sm btn-outline-warning"
+                      onClick={() => handleEdit(q)}
+                    >
+                      <FaPen />
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleDelete(q._id)}
+                    >
+                      <FaTrashAlt />
+                    </button>
+                  </div>
                 </div>
-              )
-            )
+
+                {q.statement.en && (
+                  <p className="q-statement-en">
+                    <RenderText text={q.statement.en} />
+                  </p>
+                )}
+                {q.statement.ur && (
+                  <p className="q-statement-ur">
+                    <RenderText text={q.statement.ur} />
+                  </p>
+                )}
+
+                {q.type === "MCQ" && (
+                  <div className="mcq-options-grid">
+                    {q.options.map((opt, i) => (
+                      <div
+                        key={i}
+                        className={`mcq-option ${
+                          opt.isCorrect ? "correct" : ""
+                        }`}
+                      >
+                        <span className="fw-bold me-2">
+                          {String.fromCharCode(65 + i)}.
+                        </span>
+                        <RenderText text={opt.en} />
+                        {opt.ur && (
+                          <span className="opt-ur">
+                            (<RenderText text={opt.ur} />)
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -377,8 +367,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
           {mode === "single" ? (
             <form onSubmit={handleSingleSubmit}>
-              {/* ... (Single Form Fields - Same as before) ... */}
-              {/* ... Pasting abbreviated for brevity, logic remains identical to previous Single Form ... */}
+              {/* Type & Category */}
               <div className="row g-2 mb-2">
                 <div className="col-6">
                   <label className="form-label small fw-bold">Type</label>
@@ -415,6 +404,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 </div>
               </div>
 
+              {/* Difficulty */}
               <div className="mb-2">
                 <label className="form-label small fw-bold d-block">
                   Difficulty
@@ -449,6 +439,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 </div>
               </div>
 
+              {/* Statement */}
               <div className="mb-2">
                 <label className="form-label small fw-bold">Statement</label>
                 <small
@@ -473,6 +464,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 ></textarea>
               </div>
 
+              {/* MCQ Options */}
               {formData.type === "MCQ" && (
                 <div className="mb-2 bg-light p-2 rounded border">
                   <label className="small fw-bold text-muted">
@@ -515,6 +507,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 </div>
               )}
 
+              {/* Image & Tags */}
               <div className="row g-2 mb-3">
                 <div className="col-6">
                   <label className="small fw-bold">Image</label>
@@ -538,6 +531,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 </div>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 className={`btn w-100 fw-bold ${
@@ -557,7 +551,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
               </button>
             </form>
           ) : (
-            /* 4. NEW BULK COMPONENT HERE */
             <BulkUpload
               topicId={selectedTopicId}
               chapterId={chapterId}
@@ -565,7 +558,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
               classLevel={classLevel}
               onSuccess={() => {
                 fetchQuestions();
-                setMode("single"); // Switch back after success
+                setMode("single");
               }}
             />
           )}

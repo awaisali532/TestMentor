@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
+const User = require("../models/User");
 
 // --- REGISTER (FIXED: Now with Encryption) ---
 exports.register = async (req, res) => {
@@ -55,18 +55,22 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: "Invalid Email" });
     }
-
+    // ✅ 2. CHECK IF BANNED (New Code)
+    // Agar user active nahi hai, to yehi se wapis bhej do
+    if (user.isActive === false) {
+      return res
+        .status(403)
+        .json({ message: "You are banned by Admin! Contact support." });
+    }
     // 🔒 COMPARE: Plain Input vs Database Hash
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+        .json({ success: false, message: "Wrong Password" });
     }
 
     // JWT Token Generation

@@ -1,87 +1,363 @@
-/* ManageSubjects.css */
-
-/* Sirf wo cheezein jo Bootstrap mein default nahi hain */
+/* src/pages/Admin/ManageSubjects/ManageSubjects.css */
 
 .admin-wrapper {
-    min-height: calc(100vh - 80px);
-    /* Navbar ki jagah chor kar */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f8f9fa;
-    /* Bootstrap light bg */
-    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
-.admin-card {
+.accordion-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- SECTION HEADER (Collapsed State) --- */
+.section-header {
+    background: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border-left: 6px solid #6c757d;
+    transition: all 0.2s ease;
+}
+
+.section-header:hover {
+    background: #f1f5f9;
+    transform: translateX(5px);
+}
+
+.step-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.step-badge.done {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* --- EXPANDED CARD (Main Area) --- */
+.section-card {
     background: white;
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    width: 100%;
-    max-width: 1000px;
-    /* Thora bara kiya */
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.4s ease;
+    border: 1px solid #e2e8f0;
 }
 
-/* Image Upload Box Custom Design */
-.image-preview-box {
-    height: 300px;
-    width: fit-content;
-    min-width: 200px;
-    border: 2px dashed #dee2e6;
-    /* Bootstrap gray */
-    border-radius: 8px;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #1e293b;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* --- SELECTION CARDS (The Subject/Class Boxes) --- */
+.selection-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 100%;
+    min-height: 240px;
+    /* ✅ Increased Height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* Spreads content (Image top, Text bottom) */
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.selection-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* --- ACTION BUTTONS (Edit/Delete on Hover) --- */
+.card-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+    opacity: 0;
+    /* Hidden by default */
+    transition: opacity 0.2s;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px;
+    border-radius: 20px;
+}
+
+.selection-card:hover .card-actions {
+    opacity: 1;
+    /* Show on hover */
+}
+
+.icon-btn {
+    background: white;
+    border: 1px solid #eee;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    background: #fee2e2;
+}
+
+/* --- ADD NEW BUTTON (Dashed Box) --- */
+.add-card-btn {
+    border: 2px dashed #cbd5e1;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    height: 100%;
+    min-height: 240px;
+    /* Same height as other cards */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.add-card-btn:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.icon-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f8f9fa;
-    position: relative;
-    overflow: hidden;
-    margin: 0 auto 15px auto;
-    /* Center align */
+    font-size: 18px;
 }
 
-.image-preview-box img {
+/* --- IMAGES & ICONS --- */
+.icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Colors */
+.bg-orange-light {
+    background: #fff7ed;
+}
+
+.text-orange {
+    color: #f97316;
+}
+
+.bg-green-light {
+    background: #f0fdf4;
+}
+
+.text-green {
+    color: #16a34a;
+}
+
+/* --- IMAGE STYLING (Display Card) --- */
+.card-img-top-custom {
+    width: 100%;
+    height: 140px;
+    /* ✅ Big height for viewing */
+    object-fit: contain;
+    /* Ensures full image is visible */
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background-color: #f8fafc;
+}
+
+/* --- IMAGE PREVIEW (Upload Form) --- */
+.image-upload-box {
+    width: 100%;
+    height: 180px;
+    /* ✅ Big height for uploading */
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.image-upload-box:hover {
+    border-color: #3b82f6;
+}
+
+.image-upload-box img {
     height: 100%;
-    width: auto;
+    width: 100%;
     object-fit: contain;
 }
 
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #0d6efd;
-    /* Bootstrap Primary Color */
-    border-radius: 50%;
+/* Spin Animation */
+.icon-spin {
     animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
     to {
         transform: rotate(360deg);
     }
 }
 
-/* Modal Overlay */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
+/* --- CLASS LEVEL CARDS (Small & Gradient) --- */
+.class-card {
+    border-radius: 16px;
+    /* Smooth corners */
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    min-height: 130px;
+    /* ✅ FIXED: Much smaller height */
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 1050;
-    backdrop-filter: blur(2px);
+    position: relative;
+    color: white;
+    /* White text for contrast */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: none;
 }
 
-.modal-content-custom {
+.class-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Icon inside the Class Card */
+.class-icon-circle {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.2);
+    /* Semi-transparent */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    backdrop-filter: blur(5px);
+}
+
+/* --- GRADIENTS --- */
+.grad-0 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Purple */
+.grad-1 {
+    background: linear-gradient(135deg, #2af598 0%, #009efd 100%);
+}
+
+/* Blue-Green */
+.grad-2 {
+    background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+}
+
+/* Pink-Red */
+.grad-3 {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Pink-Orange */
+.grad-4 {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Cyan-Blue */
+.grad-5 {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Yellow-Orange */
+
+/* Action buttons on Class Card (White background) */
+.class-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.class-card:hover .class-actions {
+    opacity: 1;
+}
+
+.class-btn {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.class-btn:hover {
     background: white;
-    width: 500px;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    color: #d33;
 }
