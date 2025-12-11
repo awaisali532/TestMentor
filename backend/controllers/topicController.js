@@ -1,64 +1,70 @@
 const Topic = require("../models/topic");
-const Question = require("../models/question");
-// 1. CREATE: Add New Topic
+const Question = require("../models/Question");
+
+// 1. CREATE: Add Single Topic
 const addTopic = async (req, res) => {
   try {
-    const { chapterId, topicNumber, name, description } = req.body;
+    const { chapterId, topicNumber, name } = req.body;
 
-    // Validation
-    if (!chapterId || !topicNumber || !name) {
-      return res
-        .status(400)
-        .json({ error: "Chapter, Topic Number, and Name are required" });
+    // Strict Validation
+    if (!chapterId || !topicNumber || !name || !name.en) {
+      return res.status(400).json({
+        error: "Chapter, Topic Number, and English Name are required",
+      });
     }
 
-    // Logic: Database mein save karo
     const newTopic = new Topic({
-      chapter: chapterId, // Frontend se hum chapterId bhejenge
+      chapter: chapterId,
       topicNumber,
-      name,
-      description,
+      name: {
+        en: name.en,
+        ur: name.ur || "",
+      },
     });
 
     await newTopic.save();
     res.status(201).json(newTopic);
   } catch (err) {
-    // Duplicate Error Handling
     if (err.code === 11000) {
       return res
         .status(400)
-        .json({ error: "This topic number already exists in this chapter!" });
+        .json({ error: "Topic Number already exists in this chapter!" });
     }
     res.status(500).json({ error: err.message });
   }
 };
 
-// 2. READ: Get Topics by Chapter ID
+// 2. READ: Get Topics
 const getTopicsByChapter = async (req, res) => {
   try {
-    const { chapterId } = req.params; // URL se chapter ID ayegi
-
-    // Logic: Sirf wo topics laao jinki chapter ID match kare, aur sort karo
+    const { chapterId } = req.params;
+    // Sort logic for strings like "1.1", "1.2" might need collation,
+    // but standard sort works for basic cases.
     const topics = await Topic.find({ chapter: chapterId }).sort({
       topicNumber: 1,
     });
-
     res.json(topics);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// 3. UPDATE: Edit Topic Name/Number
+// 3. UPDATE: Edit Topic
 const updateTopic = async (req, res) => {
   try {
-    const { id } = req.params; // Topic ki ID
-    const { topicNumber, name, description } = req.body; // Naya data
+    const { id } = req.params;
+    const { topicNumber, name } = req.body;
 
     const updatedTopic = await Topic.findByIdAndUpdate(
       id,
-      { topicNumber, name, description },
-      { new: true } // new: true ka matlab hai updated data wapis karo
+      {
+        topicNumber,
+        name: {
+          en: name.en,
+          ur: name.ur,
+        },
+      },
+      { new: true, runValidators: true }
     );
 
     if (!updatedTopic)
@@ -66,31 +72,67 @@ const updateTopic = async (req, res) => {
 
     res.json(updatedTopic);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Topic Number already exists!" });
+    }
     res.status(500).json({ error: err.message });
   }
 };
 
-// 4. DELETE TOPIC (WITH CASCADE DELETE)
+// 4. DELETE: Cascade Delete
 const deleteTopic = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Pehle check karo Topic hai bhi ya nahi
     const topic = await Topic.findById(id);
     if (!topic) return res.status(404).json({ error: "Topic not found" });
 
-    // 2. 🔥 CLEANUP: Is Topic ke saare sawal delete karo
-    // Cloudinary se images delete karna bohot heavy ho jayega,
-    // filhal hum sirf database se records ura rahe hain.
+    // Cleanup Questions
     await Question.deleteMany({ topic: id });
 
-    // 3. Ab Topic delete karo
+    // Delete Topic
     await Topic.findByIdAndDelete(id);
 
-    res.json({ message: "Topic and all its Questions deleted successfully" });
+    res.json({ message: "Topic and its Questions deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-module.exports = { addTopic, getTopicsByChapter, updateTopic, deleteTopic };
+// 5. BULK UPLOAD
+const addBulkTopics = async (req, res) => {
+  try {
+    const { topics } = req.body;
+
+    if (!topics || topics.length === 0) {
+      return res.status(400).json({ error: "No topics provided" });
+    }
+
+    // Insert Many (ordered: false allows partial success)
+    const result = await Topic.insertMany(topics, { ordered: false });
+
+    res.status(201).json({
+      message: "Bulk upload successful",
+      count: result.length,
+      data: result,
+    });
+  } catch (error) {
+    // Handle Partial Success (Some duplicates skipped)
+    if (error.writeErrors) {
+      return res.status(201).json({
+        message: `Partial Success: ${error.insertedDocs.length} added. Others were duplicates.`,
+        count: error.insertedDocs.length,
+      });
+    }
+    console.error(error);
+    res.status(500).json({ error: "Bulk upload failed" });
+  }
+};
+
+module.exports = {
+  addTopic,
+  getTopicsByChapter,
+  updateTopic,
+  deleteTopic,
+  addBulkTopics,
+};

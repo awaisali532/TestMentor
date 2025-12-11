@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./FilterBar.css"; // Custom CSS
+import "./FilterBar.css";
 
 // React Icons
 import { FaFilter, FaLayerGroup, FaBook, FaBookmark } from "react-icons/fa";
@@ -18,7 +18,7 @@ const FilterBar = ({ onFilterChange }) => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
 
-  // Loading States (UX ke liye)
+  // Loading States
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingChapters, setLoadingChapters] = useState(false);
 
@@ -41,7 +41,6 @@ const FilterBar = ({ onFilterChange }) => {
       setLoadingSubjects(true);
       const fetchSubjects = async () => {
         try {
-          // Backend par filter laga rahe hain (?className=9th)
           const res = await axios.get(
             `${BASE_URL}/api/subjects?className=${selectedClass}`
           );
@@ -57,11 +56,11 @@ const FilterBar = ({ onFilterChange }) => {
       setSubjects([]);
     }
 
-    // RESET DOWNSTREAM (Chain Reaction)
+    // RESET DOWNSTREAM
     setSelectedSubject("");
     setSelectedChapter("");
     setChapters([]);
-    onFilterChange(null, null, null); // Parent ko batao ke reset ho gaya
+    onFilterChange(null, null, null);
   }, [selectedClass]);
 
   // 3. WHEN SUBJECT CHANGES -> Fetch Related Chapters
@@ -87,22 +86,20 @@ const FilterBar = ({ onFilterChange }) => {
 
     // RESET DOWNSTREAM
     setSelectedChapter("");
-    onFilterChange(selectedClass, selectedSubject, ""); // Chapter abhi select nahi hua
+    onFilterChange(selectedClass, selectedSubject, "");
   }, [selectedSubject]);
 
-  // 4. WHEN CHAPTER CHANGES -> Final Notify Parent
+  // 4. WHEN CHAPTER CHANGES -> Notify Parent
   const handleChapterChange = (e) => {
     const chapterId = e.target.value;
     setSelectedChapter(chapterId);
-
-    // Yahan hum Parent (QuestionBank Page) ko bata rahe hain ke sab select ho gaya
     onFilterChange(selectedClass, selectedSubject, chapterId);
   };
 
   return (
     <div className="card filter-card mb-4">
       <div className="card-body p-4">
-        {/* Header with Icon */}
+        {/* Header */}
         <div className="d-flex align-items-center mb-3">
           <div className="bg-primary bg-opacity-10 p-2 rounded me-2 text-primary">
             <FaFilter />
@@ -142,7 +139,7 @@ const FilterBar = ({ onFilterChange }) => {
               className="form-select"
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
-              disabled={!selectedClass} // Disable agar Class select nahi hai
+              disabled={!selectedClass}
             >
               <option value="">
                 {loadingSubjects ? "Loading..." : "-- Select Subject --"}
@@ -155,7 +152,7 @@ const FilterBar = ({ onFilterChange }) => {
             </select>
           </div>
 
-          {/* 3. CHAPTER DROPDOWN */}
+          {/* 3. CHAPTER DROPDOWN (✅ FIXED HERE) */}
           <div className="col-md-4">
             <label className="filter-label">
               <FaBookmark className="me-1" /> Chapter{" "}
@@ -164,19 +161,29 @@ const FilterBar = ({ onFilterChange }) => {
             <select
               className={`form-select ${
                 selectedChapter ? "border-primary border-2" : ""
-              }`} // Highlight when selected
+              }`}
               value={selectedChapter}
               onChange={handleChapterChange}
-              disabled={!selectedSubject} // Disable agar Subject select nahi hai
+              disabled={!selectedSubject}
             >
               <option value="">
                 {loadingChapters ? "Loading..." : "-- Select Chapter --"}
               </option>
-              {chapters.map((ch) => (
-                <option key={ch._id} value={ch._id}>
-                  Ch {ch.chapterNumber}: {ch.name}
-                </option>
-              ))}
+              {chapters.map((ch) => {
+                // ✅ LOGIC FIX: Handle Object vs String Name
+                const chapterName =
+                  typeof ch.name === "object" ? ch.name.en : ch.name;
+                const urduName =
+                  typeof ch.name === "object" && ch.name.ur
+                    ? ` (${ch.name.ur})`
+                    : "";
+
+                return (
+                  <option key={ch._id} value={ch._id}>
+                    Ch {ch.chapterNumber}: {chapterName} {urduName}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>

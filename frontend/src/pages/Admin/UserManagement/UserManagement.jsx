@@ -35,14 +35,6 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // 👇 DEBUGGING LOGS (Check Console F12)
-      console.log("1. Token from Storage:", token);
-
-      if (!token) {
-        toast.error("No token found! Please Login again.");
-        return;
-      }
-
       const { data } = await axios.get(`${BASE_URL}/api/users/all`, {
         headers: {
           Authorization: `Bearer ${token}`, // Manually attaching token

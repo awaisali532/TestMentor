@@ -1,31 +1,29 @@
-/* List Item Styling */
+/* Minimal Custom CSS */
+
 .topic-list-item {
-    transition: all 0.2s ease-in-out;
-    border-left: 4px solid transparent;
-    /* Default hidden border */
+    transition: background-color 0.2s;
 }
 
 .topic-list-item:hover {
     background-color: #f8f9fa;
-    border-left: 4px solid #0d6efd;
-    /* Blue border on hover */
-    transform: translateX(2px);
-    /* Thora sa right shift */
 }
 
-/* Badge Styling (Topic Number 1.1) */
-.topic-badge {
-    font-size: 0.9rem;
-    font-weight: 700;
-    width: 50px;
-    text-align: center;
+.urdu-font {
+    font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif;
+    font-size: 1.1em;
 }
 
-/* Add Form Card */
-.add-topic-card {
-    position: sticky;
-    top: 20px;
-    /* List scroll hogi, magar ye form chipka rahega */
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* Spinner Animation */
+.icon-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

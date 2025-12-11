@@ -5,18 +5,13 @@ const {
   getTopicsByChapter,
   updateTopic,
   deleteTopic,
+  addBulkTopics, // Import this
 } = require("../controllers/topicController");
 
-// Create
 router.post("/add", addTopic);
-
-// Read (Specific Chapter ke topics lene ke liye)
+router.post("/add-bulk", addBulkTopics); // New Route
 router.get("/chapter/:chapterId", getTopicsByChapter);
-
-// Update
 router.put("/:id", updateTopic);
-
-// Delete
 router.delete("/:id", deleteTopic);
 
 module.exports = router;

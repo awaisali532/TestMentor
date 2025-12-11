@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast from "react-hot-toast"; // ❌ Removed { Toaster } from import
+import toast from "react-hot-toast"; // ✅ Correct: Only import 'toast' function
 import Swal from "sweetalert2";
 import "./QuestionManager.css";
 import {
@@ -69,6 +69,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       setTopics(res.data);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to load topics");
     }
   };
 
@@ -214,7 +215,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
   return (
     <div className="row g-4">
-      {/* ❌ REMOVED: <Toaster /> component from here */}
+      {/* ⚠️ Note: No <Toaster /> here. It must be in App.jsx */}
 
       {/* LEFT: LIST */}
       <div className="col-md-7">
@@ -228,11 +229,20 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
             onChange={(e) => setSelectedTopicId(e.target.value)}
           >
             <option value="">-- Select Topic --</option>
-            {topics.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.topicNumber} - {t.name}
-              </option>
-            ))}
+            {topics.map((t) => {
+              // ✅ FIX: Handle Object vs String Name
+              const topicName = typeof t.name === "object" ? t.name.en : t.name;
+              const topicUrdu =
+                typeof t.name === "object" && t.name.ur
+                  ? ` (${t.name.ur})`
+                  : "";
+
+              return (
+                <option key={t._id} value={t._id}>
+                  {t.topicNumber} - {topicName} {topicUrdu}
+                </option>
+              );
+            })}
           </select>
         </div>
 

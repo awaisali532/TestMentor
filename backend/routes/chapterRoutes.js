@@ -5,12 +5,13 @@ const {
   getChaptersBySubject,
   updateChapter,
   deleteChapter,
+  addBulkChapters,
 } = require("../controllers/chapterController");
 
 // Existing Routes...
 router.post("/add", addChapter);
 router.get("/subject/:subjectId", getChaptersBySubject);
-
+router.post("/add-bulk", addBulkChapters);
 // ✅ NEW ROUTE FOR UPDATE
 router.put("/:id", updateChapter);
 router.delete("/:id", deleteChapter);

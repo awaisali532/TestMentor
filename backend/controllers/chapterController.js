@@ -1,16 +1,19 @@
-const Chapter = require("../models/Chapter");
-const Subject = require("../models/subjectModel"); // Subject check karne ke liye
-const Topic = require("../models/topic");
-const Question = require("../models/question");
-// 1. Add Chapter (Updated with Auto-Topic)
+const Chapter = require("../models/chapter");
+const Subject = require("../models/subjectModel");
+const Topic = require("../models/Topic");
+const Question = require("../models/Question");
+
+// 1. ADD SINGLE CHAPTER (With Validation & Auto-Topic)
 const addChapter = async (req, res) => {
   try {
-    const { subjectId, chapterNumber, name, description } = req.body;
+    const { subjectId, chapterNumber, name } = req.body;
 
-    if (!subjectId || !chapterNumber || !name) {
+    // ✅ FIX 1: Strict Validation for English Name
+    // Since 'name' is an object, we must check name.en
+    if (!subjectId || !chapterNumber || !name || !name.en) {
       return res
         .status(400)
-        .json({ error: "Subject, Chapter No, and Name are required" });
+        .json({ error: "Subject, Chapter No, and English Name are required" });
     }
 
     const exists = await Chapter.findOne({ subject: subjectId, chapterNumber });
@@ -24,17 +27,19 @@ const addChapter = async (req, res) => {
     const newChapter = new Chapter({
       subject: subjectId,
       chapterNumber,
-      name,
-      description,
+      name: {
+        en: name.en,
+        ur: name.ur || "",
+      },
     });
     await newChapter.save();
 
     // 2. AUTOMATICALLY Create "General" Topic
+    // ⚠️ NOTE: Ensure your Topic Model supports a simple string for 'name'
     const defaultTopic = new Topic({
       chapter: newChapter._id,
-      topicNumber: "0.0", // Keeps it at the top
+      topicNumber: "0.0",
       name: "General / Exercise Questions",
-      description: "Questions covering the entire chapter or book exercises.",
     });
     await defaultTopic.save();
 
@@ -44,39 +49,36 @@ const addChapter = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-// 2. Get Chapters by Subject ID
+
+// 2. GET CHAPTERS
 const getChaptersBySubject = async (req, res) => {
   try {
     const { subjectId } = req.params;
-
-    // Chapters ko number wise sort karo (1, 2, 3...)
     const chapters = await Chapter.find({ subject: subjectId }).sort({
       chapterNumber: 1,
     });
-
     res.json(chapters);
   } catch (err) {
     console.error("Get Chapter Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
-// 3. Update Chapter (Edit Name, Number, Description)
+
+// 3. UPDATE CHAPTER
 const updateChapter = async (req, res) => {
   try {
-    const { id } = req.params; // Chapter ki ID URL se ayegi
-    const { chapterNumber, name, description } = req.body;
-
-    // Validation
-    if (!chapterNumber || !name) {
-      return res
-        .status(400)
-        .json({ error: "Chapter Number and Name are required" });
-    }
+    const { chapterNumber, name } = req.body;
 
     const updatedChapter = await Chapter.findByIdAndUpdate(
-      id,
-      { chapterNumber, name, description },
-      { new: true, runValidators: true } // new: true se updated data wapis milega
+      req.params.id,
+      {
+        chapterNumber,
+        name: {
+          en: name.en,
+          ur: name.ur,
+        },
+      },
+      { new: true, runValidators: true }
     );
 
     if (!updatedChapter) {
@@ -84,18 +86,17 @@ const updateChapter = async (req, res) => {
     }
 
     res.json(updatedChapter);
-  } catch (err) {
-    // Duplicate Error Handle (Agar user wahi number rakh de jo pehle se kisi aur chapter ka hai)
-    if (err.code === 11000) {
+  } catch (error) {
+    if (error.code === 11000) {
       return res
         .status(400)
-        .json({ error: "This chapter number already exists in this subject!" });
+        .json({ error: "Chapter Number already exists in this Subject!" });
     }
-    console.error("Update Chapter Error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Update failed" });
   }
 };
-// 4. DELETE CHAPTER (WITH CASCADE DELETE)
+
+// 4. DELETE CHAPTER (Cascade)
 const deleteChapter = async (req, res) => {
   try {
     const { id } = req.params;
@@ -103,30 +104,93 @@ const deleteChapter = async (req, res) => {
     const chapter = await Chapter.findById(id);
     if (!chapter) return res.status(404).json({ error: "Chapter not found" });
 
-    // 1. Is Chapter ke saare Topics dhundo
+    // Find Topics
     const topics = await Topic.find({ chapter: id });
-
-    // Un Topics ki IDs nikalo array mein
     const topicIds = topics.map((t) => t._id);
 
-    // 2. 🔥 CLEANUP: Un sab Topics ke Questions ura do
+    // Cleanup Questions & Topics
     await Question.deleteMany({ topic: { $in: topicIds } });
-
-    // 3. 🔥 CLEANUP: Ab wo Topics ura do
     await Topic.deleteMany({ chapter: id });
 
-    // 4. Finally Chapter ura do
+    // Delete Chapter
     await Chapter.findByIdAndDelete(id);
 
-    res.json({
-      message: "Chapter, Topics, and Questions deleted successfully",
-    });
+    res.json({ message: "Chapter and all its data deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+// 5. BULK UPLOAD (Improved Error Handling)
+const addBulkChapters = async (req, res) => {
+  try {
+    const { chapters } = req.body;
+
+    if (!chapters || chapters.length === 0) {
+      return res.status(400).json({ error: "No chapters provided" });
+    }
+
+    // 1. Insert Chapters
+    const result = await Chapter.insertMany(chapters, { ordered: false });
+
+    // 2. Create Topics
+    if (result.length > 0) {
+      const topicsPayload = result.map((ch) => ({
+        chapter: ch._id,
+        topicNumber: "0.0",
+        name: "General / Exercise Questions",
+      }));
+      await Topic.insertMany(topicsPayload);
+    }
+
+    res.status(201).json({
+      message: "Bulk upload successful",
+      count: result.length,
+      data: result,
+    });
+  } catch (error) {
+    // 🛑 Handle Write Errors (Validation OR Duplicate)
+    if (error.writeErrors) {
+      // Check if it's actually a DUPLICATE error (code 11000)
+      const isDuplicate = error.writeErrors.some((e) => e.code === 11000);
+
+      if (isDuplicate) {
+        // Agar duplicate hain, to dekho kitne success huye
+        const insertedDocs = error.insertedDocs || [];
+
+        // Jo success huye unke topics banao
+        if (insertedDocs.length > 0) {
+          const topicsPayload = insertedDocs.map((ch) => ({
+            chapter: ch._id,
+            topicNumber: "0.0",
+            name: "General / Exercise Questions",
+          }));
+          await Topic.insertMany(topicsPayload);
+        }
+
+        return res.status(201).json({
+          message: `Partial Success: ${insertedDocs.length} added. Others were duplicates.`,
+          count: insertedDocs.length,
+        });
+      } else {
+        // Agar Duplicate nahi hai, to ye Validation Error hai (Jese subject missing)
+        console.error("Validation Error:", error.writeErrors[0].err);
+        return res.status(400).json({
+          error: `Validation Failed: ${
+            error.writeErrors[0].err.errmsg || "Check Data Fields"
+          }`,
+        });
+      }
+    }
+
+    console.error("Bulk Error:", error);
+    res.status(500).json({ error: "Bulk upload failed" });
+  }
+};
+
 module.exports = {
   addChapter,
+  addBulkChapters,
   getChaptersBySubject,
   updateChapter,
   deleteChapter,

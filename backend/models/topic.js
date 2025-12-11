@@ -2,23 +2,26 @@ const mongoose = require("mongoose");
 
 const topicSchema = new mongoose.Schema(
   {
-    // 1. Link to Chapter (Foreign Key)
+    // Link to Chapter
     chapter: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Chapter", // Yeh Chapter Model se juda hua hai
+      ref: "Chapter",
       required: true,
     },
 
-    // 2. Topic Details
-    topicNumber: { type: String, required: true }, // e.g., "1.1", "1.2"
-    name: { type: String, required: true, trim: true }, // e.g., "Introduction to Physics"
-    description: { type: String }, // Optional detail
+    // Topic Details
+    topicNumber: { type: String, required: true }, // e.g., "1.1"
+
+    // Name (English + Urdu) - No Description
+    name: {
+      en: { type: String, required: true, trim: true },
+      ur: { type: String, trim: true },
+    },
   },
   { timestamps: true }
 );
 
-// 3. Unique Constraint
-// Ek Chapter mein "1.1" do dafa nahi ho sakta.
+// Unique Constraint (Chapter + Topic Number must be unique)
 topicSchema.index({ chapter: 1, topicNumber: 1 }, { unique: true });
 
 module.exports = mongoose.models.Topic || mongoose.model("Topic", topicSchema);
