@@ -14,30 +14,56 @@ const {
   deleteClassLevel,
 } = require("../controllers/subjectController.js");
 
-// ==========================================
-// ✅ 1. SPECIFIC ROUTES (Classes) - YEH PEHLE AAYENGE
-// ==========================================
-// Inko sabse upar rakhna zaroori hai taaki "classes" ko koi ID na samjhe
+// Import Middleware
+const { protect, hasPermission } = require("../middleware/authMiddleware");
 
-router.get("/classes/all", getClassLevels); // GET All Classes
-router.post("/classes/add", addClassLevel); // Add Class
-router.put("/classes/:id", updateClassLevel); // Edit Class
-router.delete("/classes/:id", deleteClassLevel);
+// ✅ 1. Apply Protection
+router.use(protect);
+
+// ==========================================
+// ✅ 1. SPECIFIC ROUTES (Classes)
+// ==========================================
+
+// Read Classes (Open to all logged in)
+router.get("/classes/all", getClassLevels);
+
+// Manage Classes (Restricted)
+router.post("/classes/add", hasPermission("manage_subjects"), addClassLevel);
+router.put("/classes/:id", hasPermission("manage_subjects"), updateClassLevel);
+router.delete(
+  "/classes/:id",
+  hasPermission("manage_subjects"),
+  deleteClassLevel
+);
+
 // ==========================================
 // ✅ 2. SUBJECT ROUTES (General)
 // ==========================================
 
-router.post("/add", upload.single("image"), addSubject);
+// Read Subjects (Open to all)
 router.get("/", getSubjects);
 
-// ==========================================
-// ⚠️ 3. DYNAMIC ID ROUTES (Sabse End Mein)
-// ==========================================
-// Yeh "Net" ki tarah hain, jo bacha kucha hoga wo yahan pakra jayega.
-// Agar inko upar rakha to "/classes/all" block ho jayega.
+// Add Subject (Restricted)
+router.post(
+  "/add",
+  hasPermission("manage_subjects"),
+  upload.single("image"),
+  addSubject
+);
 
-router.get("/:id", getSubjectById);
-router.put("/:id", upload.single("image"), updateSubject);
-router.delete("/:id", deleteSubject);
+// ==========================================
+// ⚠️ 3. DYNAMIC ID ROUTES
+// ==========================================
+
+router.get("/:id", getSubjectById); // Read specific subject
+
+// Update/Delete Subject (Restricted)
+router.put(
+  "/:id",
+  hasPermission("manage_subjects"),
+  upload.single("image"),
+  updateSubject
+);
+router.delete("/:id", hasPermission("manage_subjects"), deleteSubject);
 
 module.exports = router;

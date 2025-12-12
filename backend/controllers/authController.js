@@ -1,8 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../models/user");
 
-// --- REGISTER (FIXED: Now with Encryption) ---
+// --- REGISTER ---
 exports.register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -21,20 +21,17 @@ exports.register = async (req, res) => {
         .json({ success: false, message: "User already exists" });
     }
 
-    // 🔒 SECURITY FIX: Encrypt the Password!
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
     // Validate Role
     let userRole = "student";
     if (role === "teacher") userRole = "teacher";
 
-    // Create User with HASHED Password
+    // ✅ FIX: Do NOT hash password here. The User Model will do it automatically.
     const user = await User.create({
       name,
       email,
-      password: hashedPassword, // <--- SAVING THE HASH, NOT PLAIN TEXT
+      password, // Send plain password, Model will encrypt it
       role: userRole,
+      image: "", // Default empty image
     });
 
     res
@@ -48,7 +45,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// --- LOGIN (Standard Check) ---
+// --- LOGIN ---
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -57,14 +54,15 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid Email" });
     }
-    // ✅ 2. CHECK IF BANNED (New Code)
-    // Agar user active nahi hai, to yehi se wapis bhej do
+
+    // ✅ 2. CHECK IF BANNED
     if (user.isActive === false) {
       return res
         .status(403)
         .json({ message: "You are banned by Admin! Contact support." });
     }
-    // 🔒 COMPARE: Plain Input vs Database Hash
+
+    // 🔒 COMPARE
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -84,11 +82,15 @@ exports.login = async (req, res) => {
       success: true,
       message: "Login successful",
       token,
+      // ✅ THIS IS PERFECT: Sending image back on login
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        image: user.image || "",
+        isSuperAdmin: user.isSuperAdmin || false,
+        permissions: user.permissions || [],
       },
     });
   } catch (err) {

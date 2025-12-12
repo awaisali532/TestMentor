@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-// ✅ Added FaEye and FaEyeSlash
 import { FaTimes, FaSave, FaSpinner, FaEye, FaEyeSlash } from "react-icons/fa";
 import toast from "react-hot-toast";
 
@@ -9,10 +8,17 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
     email: "",
     role: "student",
     password: "",
+    permissions: [], // ✅ New State for Permissions
   });
 
-  // ✅ State for Password Visibility
   const [showPassword, setShowPassword] = useState(false);
+
+  // Available Permissions List
+  const permissionOptions = [
+    { id: "manage_questions", label: "Manage Question Bank" },
+    { id: "manage_subjects", label: "Manage Subjects" },
+    { id: "manage_users", label: "Manage Users" },
+  ];
 
   useEffect(() => {
     if (show) {
@@ -22,6 +28,8 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
           email: editingUser.email,
           role: editingUser.role,
           password: "",
+          // ✅ Load existing permissions if user is admin
+          permissions: editingUser.permissions || [],
         });
       } else {
         setFormData({
@@ -29,14 +37,31 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
           email: "",
           role: "student",
           password: "",
+          permissions: [],
         });
       }
-      // Reset visibility when modal opens
       setShowPassword(false);
     }
   }, [show, editingUser]);
 
   if (!show) return null;
+
+  // ✅ Handle Permission Checkbox Change
+  const handlePermissionChange = (permId) => {
+    setFormData((prev) => {
+      const isSelected = prev.permissions.includes(permId);
+      if (isSelected) {
+        // Remove permission
+        return {
+          ...prev,
+          permissions: prev.permissions.filter((p) => p !== permId),
+        };
+      } else {
+        // Add permission
+        return { ...prev, permissions: [...prev.permissions, permId] };
+      }
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -56,6 +81,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
       }
     }
 
+    // Pass data to parent
     onSave(formData);
   };
 
@@ -75,7 +101,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         </div>
 
         {/* Body */}
-        <div className="p-4">
+        <div className="p-4" style={{ maxHeight: "80vh", overflowY: "auto" }}>
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <label className="form-label small fw-bold">Full Name</label>
@@ -123,13 +149,36 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               </select>
             </div>
 
-            {/* Password Field with Eye Button */}
+            {/* ✅ PERMISSIONS SECTION (Only for Admin) */}
+            {formData.role === "admin" && (
+              <div className="mb-4 bg-light p-3 rounded border">
+                <label className="small fw-bold text-primary mb-2 d-block">
+                  Assign Permissions
+                </label>
+                {permissionOptions.map((perm) => (
+                  <div key={perm.id} className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={perm.id}
+                      checked={formData.permissions.includes(perm.id)}
+                      onChange={() => handlePermissionChange(perm.id)}
+                      disabled={loading}
+                    />
+                    <label className="form-check-label small" htmlFor={perm.id}>
+                      {perm.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Password Field */}
             {!editingUser && (
               <div className="mb-4">
                 <label className="form-label small fw-bold">Password</label>
                 <div className="input-group">
                   <input
-                    // ✅ Dynamic Type (Text or Password)
                     type={showPassword ? "text" : "password"}
                     className="form-control"
                     placeholder="******"
@@ -140,7 +189,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                     }
                     disabled={loading}
                   />
-                  {/* ✅ Toggle Button */}
                   <button
                     className="btn btn-outline-secondary"
                     type="button"

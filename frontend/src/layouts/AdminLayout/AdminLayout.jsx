@@ -1,17 +1,17 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import Sidebar from "../../components/Admin/Dashboard/Sidebar/Sidebar"; // Adjust path to your Sidebar
+import Sidebar from "../../components/Admin/Dashboard/Sidebar/Sidebar"; // Verify this path
 import "./AdminLayout.css";
 
 const AdminLayout = () => {
   return (
     <div className="admin-layout-container">
-      {/* 1. Sidebar Hamesha Yahan Rahega */}
+      {/* 1. Sidebar (Includes the TopBar) */}
       <Sidebar />
 
-      {/* 2. Right Side Content Area */}
+      {/* 2. Main Content Area (Where pages load) */}
       <div className="admin-main-content">
-        {/* <Outlet /> wo jagah hai jahan Dashboard/QuestionBank render honge */}
+        {/* <Outlet /> is the placeholder where Dashboard, Users, etc., appear */}
         <Outlet />
       </div>
     </div>

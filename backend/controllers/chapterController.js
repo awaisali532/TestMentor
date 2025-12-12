@@ -3,13 +3,12 @@ const Subject = require("../models/subjectModel");
 const Topic = require("../models/Topic");
 const Question = require("../models/Question");
 
-// 1. ADD SINGLE CHAPTER (With Validation & Auto-Topic)
+// 1. ADD SINGLE CHAPTER (Fixed Topic Creation)
 const addChapter = async (req, res) => {
   try {
     const { subjectId, chapterNumber, name } = req.body;
 
-    // ✅ FIX 1: Strict Validation for English Name
-    // Since 'name' is an object, we must check name.en
+    // Validation
     if (!subjectId || !chapterNumber || !name || !name.en) {
       return res
         .status(400)
@@ -23,7 +22,7 @@ const addChapter = async (req, res) => {
         .json({ error: `Chapter ${chapterNumber} already exists!` });
     }
 
-    // 1. Create Chapter
+    // 1. Create Chapter (Ye Successfully Save ho rha tha)
     const newChapter = new Chapter({
       subject: subjectId,
       chapterNumber,
@@ -35,13 +34,16 @@ const addChapter = async (req, res) => {
     await newChapter.save();
 
     // 2. AUTOMATICALLY Create "General" Topic
-    // ⚠️ NOTE: Ensure your Topic Model supports a simple string for 'name'
+    // 🛑 FIX: Yahan 'name' string nahi, object hona chahiye jesa Chapter me hai
     const defaultTopic = new Topic({
       chapter: newChapter._id,
       topicNumber: "0.0",
-      name: "General / Exercise Questions",
+      name: {
+        en: "General / Exercise Questions",
+        ur: "General / Mashqi Sawalaat", // Optional Urdu translation
+      },
     });
-    await defaultTopic.save();
+    await defaultTopic.save(); // Ab ye fail nahi hoga
 
     res.status(201).json(newChapter);
   } catch (err) {
@@ -50,7 +52,7 @@ const addChapter = async (req, res) => {
   }
 };
 
-// 2. GET CHAPTERS
+// 2. GET CHAPTERS (No Change)
 const getChaptersBySubject = async (req, res) => {
   try {
     const { subjectId } = req.params;
@@ -64,7 +66,7 @@ const getChaptersBySubject = async (req, res) => {
   }
 };
 
-// 3. UPDATE CHAPTER
+// 3. UPDATE CHAPTER (No Change)
 const updateChapter = async (req, res) => {
   try {
     const { chapterNumber, name } = req.body;
@@ -96,7 +98,7 @@ const updateChapter = async (req, res) => {
   }
 };
 
-// 4. DELETE CHAPTER (Cascade)
+// 4. DELETE CHAPTER (No Change)
 const deleteChapter = async (req, res) => {
   try {
     const { id } = req.params;
@@ -104,15 +106,11 @@ const deleteChapter = async (req, res) => {
     const chapter = await Chapter.findById(id);
     if (!chapter) return res.status(404).json({ error: "Chapter not found" });
 
-    // Find Topics
     const topics = await Topic.find({ chapter: id });
     const topicIds = topics.map((t) => t._id);
 
-    // Cleanup Questions & Topics
     await Question.deleteMany({ topic: { $in: topicIds } });
     await Topic.deleteMany({ chapter: id });
-
-    // Delete Chapter
     await Chapter.findByIdAndDelete(id);
 
     res.json({ message: "Chapter and all its data deleted successfully" });
@@ -121,7 +119,7 @@ const deleteChapter = async (req, res) => {
   }
 };
 
-// 5. BULK UPLOAD (Improved Error Handling)
+// 5. BULK UPLOAD (Fixed Topic Creation here too)
 const addBulkChapters = async (req, res) => {
   try {
     const { chapters } = req.body;
@@ -138,7 +136,11 @@ const addBulkChapters = async (req, res) => {
       const topicsPayload = result.map((ch) => ({
         chapter: ch._id,
         topicNumber: "0.0",
-        name: "General / Exercise Questions",
+        // 🛑 FIX: Name Object format mein
+        name: {
+          en: "General / Exercise Questions",
+          ur: "General / Mashqi Sawalaat",
+        },
       }));
       await Topic.insertMany(topicsPayload);
     }
@@ -149,13 +151,11 @@ const addBulkChapters = async (req, res) => {
       data: result,
     });
   } catch (error) {
-    // 🛑 Handle Write Errors (Validation OR Duplicate)
+    // 🛑 Handle Write Errors
     if (error.writeErrors) {
-      // Check if it's actually a DUPLICATE error (code 11000)
       const isDuplicate = error.writeErrors.some((e) => e.code === 11000);
 
       if (isDuplicate) {
-        // Agar duplicate hain, to dekho kitne success huye
         const insertedDocs = error.insertedDocs || [];
 
         // Jo success huye unke topics banao
@@ -163,7 +163,11 @@ const addBulkChapters = async (req, res) => {
           const topicsPayload = insertedDocs.map((ch) => ({
             chapter: ch._id,
             topicNumber: "0.0",
-            name: "General / Exercise Questions",
+            // 🛑 FIX: Name Object format mein yahan bhi
+            name: {
+              en: "General / Exercise Questions",
+              ur: "General / Mashqi Sawalaat",
+            },
           }));
           await Topic.insertMany(topicsPayload);
         }
@@ -173,7 +177,6 @@ const addBulkChapters = async (req, res) => {
           count: insertedDocs.length,
         });
       } else {
-        // Agar Duplicate nahi hai, to ye Validation Error hai (Jese subject missing)
         console.error("Validation Error:", error.writeErrors[0].err);
         return res.status(400).json({
           error: `Validation Failed: ${

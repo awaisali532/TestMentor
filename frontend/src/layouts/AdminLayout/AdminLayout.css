@@ -1,31 +1,49 @@
+/* Define Variables to match Sidebar.css */
+:root {
+    --header-height: 60px;
+    /* Must match TopBar height */
+    --sidebar-width: 260px;
+    /* Must match Sidebar width */
+    --bg-color: #f3f4f6;
+    /* Light Grey Background */
+}
+
 .admin-layout-container {
     display: flex;
     min-height: 100vh;
-    background-color: #f4f6f8;
-    align-items: stretch;
-    /* Ensures full height */
+    background-color: var(--bg-color);
 }
 
 .admin-main-content {
-    margin-left: 250px;
-    /* Width of Sidebar */
-    width: calc(100% - 250px);
+    flex-grow: 1;
+    /* Takes up remaining space */
 
-    /* ✅ MOVED STYLES HERE */
-    padding: 1.5rem;
-    /* This is equal to p-4 */
-    background-color: #F3F4F6;
+    /* ✅ FIX 1: Push content to the right (Desktop) */
+    margin-left: var(--sidebar-width);
 
-    /* This ensures padding is included in the height calculation */
+    /* ✅ FIX 2: Push content DOWN so it's not hidden behind TopBar */
+    padding-top: calc(var(--header-height) + 20px);
+
+    /* Standard Padding for content */
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+
+    /* Smooth resizing */
+    transition: margin-left 0.3s ease;
     box-sizing: border-box;
-
-    transition: all 0.3s;
 }
 
-/* Mobile Fix */
-@media (max-width: 768px) {
+/* --- RESPONSIVE FIX (Mobile/Tablet) --- */
+/* Match this pixel value (992px) with your Sidebar.jsx logic */
+@media (max-width: 992px) {
     .admin-main-content {
-        margin-left: 0;
-        width: 100%;
+        /* On mobile, Sidebar is hidden/overlay, so remove margin */
+        margin-left: 0 !important;
+
+        /* Keep padding-top so content doesn't hide behind Mobile Header */
+        padding-top: calc(var(--header-height) + 15px);
+        padding-left: 15px;
+        padding-right: 15px;
     }
 }

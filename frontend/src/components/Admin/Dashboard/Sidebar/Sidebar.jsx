@@ -1,99 +1,192 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useUser } from "../../../../context/UserContext";
-// Using specific icons to match the image exactly
-import { MdSpaceDashboard } from "react-icons/md"; // Dashboard Grid
+import { MdSpaceDashboard } from "react-icons/md";
 import {
   FaFolder,
   FaBook,
   FaUser,
-  FaCog,
+  FaUserCog,
   FaSignOutAlt,
   FaHistory,
+  FaLock,
+  FaBars, // Hamburger
 } from "react-icons/fa";
 import "./Sidebar.css";
 
 const Sidebar = () => {
   const location = useLocation();
-  const { logout } = useUser();
+  const { user, logout } = useUser();
+
+  // ✅ State: Desktop (Open by default), Mobile (Closed by default)
+  const [isOpen, setIsOpen] = useState(window.innerWidth > 992);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
+
+  // Screen Resize Listener (To auto-adjust)
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 992;
+      setIsMobile(mobile);
+      if (!mobile) setIsOpen(true); // Force open on desktop resize
+      else setIsOpen(false); // Force close on mobile resize
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Helper to toggle sidebar
+  const toggleSidebar = () => setIsOpen(!isOpen);
+
+  // Close only if mobile
+  const handleLinkClick = () => {
+    if (isMobile) setIsOpen(false);
+  };
 
   const isActive = (path) => (location.pathname === path ? "active" : "");
 
+  const canAccess = (perm) => {
+    if (!user) return false;
+    if (
+      user.role === "admin" &&
+      (user.isSuperAdmin || user.permissions?.includes(perm))
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const SidebarItem = ({ to, icon: Icon, label, permission }) => {
+    const hasAccess = !permission || canAccess(permission);
+    const linkActive = isActive(to);
+
+    return (
+      <li>
+        {hasAccess ? (
+          <Link
+            to={to}
+            className={`menu-link ${linkActive}`}
+            onClick={handleLinkClick}
+            title={!isOpen && !isMobile ? label : ""} // Tooltip when collapsed
+          >
+            <Icon className="menu-icon" />
+            {/* Show Text only if Open */}
+            <span
+              className={`link-text ${!isOpen && !isMobile ? "d-none" : ""}`}
+            >
+              {label}
+            </span>
+          </Link>
+        ) : (
+          <div
+            className="menu-link disabled-link"
+            title="Access Denied"
+            style={{ cursor: "not-allowed", opacity: 0.5 }}
+          >
+            <Icon className="menu-icon" />
+            <span
+              className={`d-flex justify-content-between align-items-center w-100 link-text ${
+                !isOpen && !isMobile ? "d-none" : ""
+              }`}
+            >
+              {label} <FaLock size={10} />
+            </span>
+          </div>
+        )}
+      </li>
+    );
+  };
+
   return (
-    <div className="sidebar">
-      {/* 1. Brand Logo */}
-      <div className="sidebar-header">
-        <h3>
-          QuestBank{" "}
-          <span style={{ fontWeight: 300, fontSize: "14px", opacity: 0.7 }}>
-            Admin
-          </span>
-        </h3>
+    <>
+      {/* =========================================
+          ✅ 1. FIXED TOP BAR (Modern Header)
+      ========================================= */}
+      <div className="top-header">
+        <div className="d-flex align-items-center">
+          {/* Toggle Button */}
+          <button className="toggle-btn" onClick={toggleSidebar}>
+            <FaBars />
+          </button>
+
+          {/* Brand Logo */}
+          <h3 className="brand-logo m-0 ms-3">
+            QuestBank <span className="brand-subtitle">Admin</span>
+          </h3>
+        </div>
       </div>
 
-      {/* 2. Menu Items */}
-      <ul className="sidebar-menu">
-        <li>
-          <Link
+      {/* =========================================
+          ✅ 2. SIDEBAR CONTAINER
+      ========================================= */}
+
+      {/* Mobile Overlay (Click to close) */}
+      {isMobile && isOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsOpen(false)}></div>
+      )}
+
+      <div
+        className={`sidebar ${isOpen ? "open" : "collapsed"} ${
+          isMobile ? "mobile" : "desktop"
+        }`}
+      >
+        {/* Menu Items */}
+        <ul className="sidebar-menu">
+          <SidebarItem
             to="/admin/dashboard"
-            className={`menu-link ${isActive("/admin/dashboard")}`}
-          >
-            <MdSpaceDashboard className="menu-icon" />
-            <span>Dashboard</span>
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/admin/question-bank"
-            className={`menu-link ${isActive("/admin/question-bank")}`}
-          >
-            <FaFolder className="menu-icon" />
-            <span>Question Bank</span>
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/admin/subjects"
-            className={`menu-link ${isActive("/admin/subjects")}`}
-          >
-            <FaBook className="menu-icon" />
-            <span>Manage Subjects</span>
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/admin/users"
-            className={`menu-link ${isActive("/admin/users")}`} // This handles the blue active color
-          >
-            <FaUser className="menu-icon" />{" "}
-            {/* Or FaUsers depending on your import */}
-            <span>User Management</span>
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/admin/recent-activity"
-            className={`menu-link ${isActive("/admin/recent-activity")}`}
-          >
-            <FaHistory className="menu-icon" />
-            <span>Recent Activity</span>
-          </Link>
-        </li>
-        <li>
-          <a href="#" className="menu-link">
-            <FaCog className="menu-icon" />
-            <span>Settings</span>
-          </a>
-        </li>
-      </ul>
+            icon={MdSpaceDashboard}
+            label="Dashboard"
+          />
 
-      {/* 3. Logout (Bottom) */}
-      <div className="sidebar-footer">
-        <button onClick={logout} className="btn btn-danger">
-          <FaSignOutAlt className="menu-icon" /> Logout
-        </button>
+          <SidebarItem
+            to="/admin/question-bank"
+            icon={FaFolder}
+            label="Question Bank"
+            permission="manage_questions"
+          />
+
+          <SidebarItem
+            to="/admin/subjects"
+            icon={FaBook}
+            label="Manage Subjects"
+            permission="manage_subjects"
+          />
+
+          <SidebarItem
+            to="/admin/users"
+            icon={FaUser}
+            label="User Management"
+            permission="manage_users"
+          />
+
+          <SidebarItem
+            to="/admin/recent-activity"
+            icon={FaHistory}
+            label="Recent Activity"
+          />
+
+          <SidebarItem
+            to="/admin/profile-settings"
+            icon={FaUserCog}
+            label="Profile & Settings"
+          />
+        </ul>
+
+        {/* Footer (Logout) */}
+        <div className="sidebar-footer">
+          <button
+            onClick={logout}
+            className="btn btn-danger w-100 d-flex justify-content-center align-items-center"
+          >
+            <FaSignOutAlt className="menu-icon" />
+            <span
+              className={`link-text ${!isOpen && !isMobile ? "d-none" : ""}`}
+            >
+              Logout
+            </span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

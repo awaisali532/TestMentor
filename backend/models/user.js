@@ -7,22 +7,32 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
 
-    // ✅ MAKE SURE THESE TWO FIELDS EXIST
     role: {
       type: String,
       enum: ["student", "teacher", "admin"],
       default: "student",
     },
-    isActive: { type: Boolean, default: true }, // For Ban/Unban functionality
+    isActive: { type: Boolean, default: true },
+    image: { type: String, default: "" },
+
+    // ✅ NEW: Permissions Logic
+    permissions: {
+      type: [String],
+      default: [], // Stores ["manage_questions", "manage_subjects"] etc.
+    },
+    isSuperAdmin: {
+      type: Boolean,
+      default: false, // Only YOU will have this true
+    },
   },
   { timestamps: true }
 );
 
-// (Keep your existing password hashing logic here)
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 module.exports = mongoose.models.User || mongoose.model("User", userSchema);
