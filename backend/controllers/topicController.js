@@ -34,15 +34,18 @@ const addTopic = async (req, res) => {
   }
 };
 
-// 2. READ: Get Topics
+// 2. READ: Get Topics (✅ FIXED SORTING)
 const getTopicsByChapter = async (req, res) => {
   try {
     const { chapterId } = req.params;
-    // Sort logic for strings like "1.1", "1.2" might need collation,
-    // but standard sort works for basic cases.
-    const topics = await Topic.find({ chapter: chapterId }).sort({
-      topicNumber: 1,
-    });
+
+    // ✅ FIX: Added .collation() with numericOrdering: true
+    // This tells MongoDB to treat the string numbers as actual numbers during sort.
+    // Result: 1.1, 1.2, ... 1.9, 1.10 (Correct Order)
+    const topics = await Topic.find({ chapter: chapterId })
+      .collation({ locale: "en", numericOrdering: true })
+      .sort({ topicNumber: 1 });
+
     res.json(topics);
   } catch (err) {
     res.status(500).json({ error: err.message });
