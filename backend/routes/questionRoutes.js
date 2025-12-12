@@ -7,6 +7,8 @@ const {
   deleteQuestion,
   updateQuestion,
   addBulkQuestions,
+  deleteQuestionsBulk,
+  deleteAllQuestionsInTopic,
 } = require("../controllers/questionController");
 
 // Import Middleware
@@ -28,6 +30,16 @@ router.post(
   addQuestion
 );
 router.post("/bulk-add", hasPermission("manage_questions"), addBulkQuestions);
+router.post(
+  "/delete-bulk",
+  hasPermission("manage_questions"),
+  deleteQuestionsBulk
+);
+router.delete(
+  "/topic/:topicId/delete-all",
+  hasPermission("manage_questions"),
+  deleteAllQuestionsInTopic
+);
 router.put(
   "/:id",
   hasPermission("manage_questions"),

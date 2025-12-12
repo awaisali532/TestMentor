@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast from "react-hot-toast"; // ✅ Correct: Only import 'toast' function
+import toast, { Toaster } from "react-hot-toast"; // ✅ Ensure Toaster is imported
 import Swal from "sweetalert2";
 import "./QuestionManager.css";
 import {
@@ -11,7 +11,8 @@ import {
   FaFilter,
   FaSave,
   FaTimes,
-  FaCheckCircle,
+  FaCheckSquare,
+  FaSquare,
 } from "react-icons/fa";
 
 // Imports
@@ -24,14 +25,19 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   // STATES
   const [topics, setTopics] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [selectedTopicId, setSelectedTopicId] = useState("");
+  const [filterTopicId, setFilterTopicId] = useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // For fetching data
+  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ For Save/Update buttons
   const [mode, setMode] = useState("single");
   const [editingId, setEditingId] = useState(null);
 
+  // ✅ New State for Bulk Selection
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
+
   // Form Data
   const initialFormState = {
+    selectedTopicIds: [],
     type: "MCQ",
     questionCategory: "TEXT",
     difficulty: "Medium",
@@ -56,9 +62,13 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   }, [chapterId]);
 
   useEffect(() => {
-    if (selectedTopicId) fetchQuestions();
-    else setQuestions([]);
-  }, [selectedTopicId]);
+    if (filterTopicId) {
+      fetchQuestions();
+      setSelectedQuestionIds([]); // Reset selection on topic change
+    } else {
+      setQuestions([]);
+    }
+  }, [filterTopicId]);
 
   // API CALLS
   const fetchTopics = async () => {
@@ -77,7 +87,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/questions/topic/${selectedTopicId}`
+        `${BASE_URL}/api/questions/topic/${filterTopicId}`
       );
       setQuestions(res.data);
     } catch (err) {
@@ -109,10 +119,25 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     setFormData({ ...formData, options: newOpts });
   };
 
+  const toggleTopicSelection = (topicId) => {
+    setFormData((prev) => {
+      const current = prev.selectedTopicIds;
+      if (current.includes(topicId)) {
+        return {
+          ...prev,
+          selectedTopicIds: current.filter((id) => id !== topicId),
+        };
+      } else {
+        return { ...prev, selectedTopicIds: [...current, topicId] };
+      }
+    });
+  };
+
   const handleEdit = (question) => {
     setEditingId(question._id);
     setMode("single");
     setFormData({
+      selectedTopicIds: question.topics || [],
       type: question.type,
       questionCategory: question.questionCategory,
       difficulty: question.difficulty,
@@ -136,19 +161,95 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     setImageFile(null);
   };
 
-  // SINGLE SUBMIT
+  // ✅ HANDLER: Checkbox Logic
+  const toggleQuestionSelection = (qId) => {
+    setSelectedQuestionIds((prev) =>
+      prev.includes(qId) ? prev.filter((id) => id !== qId) : [...prev, qId]
+    );
+  };
+
+  const selectAllQuestions = () => {
+    if (selectedQuestionIds.length === questions.length) {
+      setSelectedQuestionIds([]); // Deselect All
+    } else {
+      setSelectedQuestionIds(questions.map((q) => q._id)); // Select All
+    }
+  };
+
+  // ✅ HANDLER: Bulk Delete Selected
+  const handleDeleteSelected = async () => {
+    if (selectedQuestionIds.length === 0) return;
+
+    const res = await Swal.fire({
+      title: `Delete ${selectedQuestionIds.length} Questions?`,
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, delete them!",
+    });
+
+    if (res.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.post(
+          `${BASE_URL}/api/questions/delete-bulk`,
+          { ids: selectedQuestionIds },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Selected questions deleted!");
+        fetchQuestions();
+        setSelectedQuestionIds([]);
+      } catch (err) {
+        toast.error("Failed to delete selected questions.");
+      }
+    }
+  };
+
+  // ✅ HANDLER: Delete All in Topic
+  const handleDeleteAllInTopic = async () => {
+    if (!filterTopicId) return;
+
+    const res = await Swal.fire({
+      title: "Delete ALL Questions?",
+      text: "This will remove EVERY question in this topic. Are you sure?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, Delete Everything!",
+    });
+
+    if (res.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(
+          `${BASE_URL}/api/questions/topic/${filterTopicId}/delete-all`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("All questions deleted successfully!");
+        fetchQuestions();
+        setSelectedQuestionIds([]);
+      } catch (err) {
+        toast.error("Failed to delete all questions.");
+      }
+    }
+  };
+
+  // SINGLE SUBMIT (Updated Loading Logic)
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedTopicId) return toast.error("Please select a Topic!");
+    if (formData.selectedTopicIds.length === 0)
+      return toast.error("Please select at least one Topic!");
     if (!formData.statement.en && !formData.statement.ur)
       return toast.error("Statement is empty!");
 
+    setIsSubmitting(true); // ✅ Start Loading
+
     const data = new FormData();
-    data.append("topicId", selectedTopicId);
+    data.append("topics", JSON.stringify(formData.selectedTopicIds));
     data.append("chapterId", chapterId);
     data.append("subjectId", subjectId);
     data.append("classLevel", classLevel);
-
     data.append("type", formData.type);
     data.append("questionCategory", formData.questionCategory);
     data.append("difficulty", formData.difficulty);
@@ -167,19 +268,24 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     data.append("boardTags", JSON.stringify(tags));
 
     try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      };
+
       if (editingId) {
         await axios.put(`${BASE_URL}/api/questions/${editingId}`, data, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers,
         });
         toast.success("Question Updated!");
         setEditingId(null);
         setFormData(initialFormState);
       } else {
-        await axios.post(`${BASE_URL}/api/questions/add`, data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.post(`${BASE_URL}/api/questions/add`, data, { headers });
         toast.success("Question Saved!");
 
+        // Reset form but keep topics selected
         setFormData((prev) => ({
           ...prev,
           statement: { en: "", ur: "" },
@@ -187,11 +293,13 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           boardTags: "",
         }));
       }
-      fetchQuestions();
+      if (filterTopicId) fetchQuestions();
       setImageFile(null);
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.error || "Operation Failed");
+    } finally {
+      setIsSubmitting(false); // ✅ Stop Loading
     }
   };
 
@@ -204,7 +312,10 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     });
     if (res.isConfirmed) {
       try {
-        await axios.delete(`${BASE_URL}/api/questions/${id}`);
+        const token = localStorage.getItem("token");
+        await axios.delete(`${BASE_URL}/api/questions/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         toast.success("Deleted");
         fetchQuestions();
       } catch (err) {
@@ -215,45 +326,86 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
   return (
     <div className="row g-4">
-      {/* ⚠️ Note: No <Toaster /> here. It must be in App.jsx */}
-
-      {/* LEFT: LIST */}
+      <Toaster position="top-right" /> {/* ✅ Ensuring Toaster is here */}
+      {/* LEFT: LIST (Filter by Topic) */}
       <div className="col-md-7">
-        <div className="filter-box">
+        {/* Filter Box */}
+        <div className="filter-box-q bg-white p-3 rounded shadow-sm border mb-3">
           <label className="fw-bold small text-secondary mb-1">
-            <FaFilter className="me-1" /> Select Topic
+            <FaFilter className="me-1" /> Filter Questions by Topic
           </label>
-          <select
-            className="form-select border-primary"
-            value={selectedTopicId}
-            onChange={(e) => setSelectedTopicId(e.target.value)}
-          >
-            <option value="">-- Select Topic --</option>
-            {topics.map((t) => {
-              // ✅ FIX: Handle Object vs String Name
-              const topicName = typeof t.name === "object" ? t.name.en : t.name;
-              const topicUrdu =
-                typeof t.name === "object" && t.name.ur
-                  ? ` (${t.name.ur})`
-                  : "";
-
-              return (
+          <div className="d-flex gap-2">
+            <select
+              className="form-select border-primary"
+              value={filterTopicId}
+              onChange={(e) => setFilterTopicId(e.target.value)}
+            >
+              <option value="">-- Select Topic to View Questions --</option>
+              {topics.map((t) => (
                 <option key={t._id} value={t._id}>
-                  {t.topicNumber} - {topicName} {topicUrdu}
+                  {t.topicNumber} -{" "}
+                  {typeof t.name === "object" ? t.name.en : t.name}
                 </option>
-              );
-            })}
-          </select>
+              ))}
+            </select>
+
+            {/* 🔴 Delete All Button (Only if topic selected) */}
+            {filterTopicId && questions.length > 0 && (
+              <button
+                className="btn btn-danger text-nowrap"
+                title="Delete All in Topic"
+                onClick={handleDeleteAllInTopic}
+              >
+                <FaTrashAlt /> All
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* ✅ Bulk Actions Bar */}
+        {selectedQuestionIds.length > 0 && (
+          <div className="bg-danger bg-opacity-10 text-danger p-2 mb-3 rounded d-flex justify-content-between align-items-center border border-danger">
+            <span className="fw-bold ms-2">
+              {selectedQuestionIds.length} Questions Selected
+            </span>
+            <button
+              className="btn btn-sm btn-danger fw-bold"
+              onClick={handleDeleteSelected}
+            >
+              <FaTrashAlt className="me-1" /> Delete Selected
+            </button>
+          </div>
+        )}
+
+        {/* List Header (Select All) */}
+        {questions.length > 0 && (
+          <div className="d-flex align-items-center mb-2 px-2">
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="selectAll"
+                checked={selectedQuestionIds.length === questions.length}
+                onChange={selectAllQuestions}
+              />
+              <label
+                className="form-check-label small fw-bold text-secondary cursor-pointer"
+                htmlFor="selectAll"
+              >
+                Select All
+              </label>
+            </div>
+          </div>
+        )}
 
         <div className="q-list-container">
           {loading ? (
             <div className="text-center py-5">Loading...</div>
           ) : questions.length === 0 ? (
             <div className="text-center text-muted py-5 border rounded bg-light border-dashed">
-              {selectedTopicId
-                ? "No questions found."
-                : "Select a topic first."}
+              {filterTopicId
+                ? "No questions found in this topic."
+                : "Select a topic above to view questions."}
             </div>
           ) : (
             questions.map((q, index) => (
@@ -261,14 +413,26 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 key={q._id}
                 className={`question-card type-${q.type} ${
                   editingId === q._id ? "border-primary bg-light" : ""
+                } ${
+                  selectedQuestionIds.includes(q._id)
+                    ? "border-danger bg-danger bg-opacity-10"
+                    : ""
                 }`}
               >
                 <div className="d-flex justify-content-between mb-2">
-                  <div>
+                  <div className="d-flex align-items-center">
+                    {/* ✅ Individual Checkbox */}
+                    <input
+                      type="checkbox"
+                      className="form-check-input me-2"
+                      style={{ width: "1.2em", height: "1.2em" }}
+                      checked={selectedQuestionIds.includes(q._id)}
+                      onChange={() => toggleQuestionSelection(q._id)}
+                    />
+
                     <span className="fw-bold fs-5 me-2 text-secondary">
                       #{index + 1}
                     </span>
-
                     <span className="badge bg-dark me-1">{q.type}</span>
                     <span className="badge bg-info text-dark me-1">
                       {q.questionCategory}
@@ -329,20 +493,12 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           )}
         </div>
       </div>
-
-      {/* RIGHT: FORM */}
+      {/* RIGHT: FORM (Add/Edit) */}
       <div className="col-md-5">
-        <div className="q-form-sticky">
+        <div className="q-form-sticky bg-white p-3 rounded shadow-sm border">
           <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
             <h5 className={`m-0 fw-bold ${editingId ? "text-primary" : ""}`}>
-              {editingId ? (
-                <>
-                  <FaPen className="me-2" />
-                  Edit Question
-                </>
-              ) : (
-                "Add New Question"
-              )}
+              {editingId ? "Edit Question" : "Add New Question"}
             </h5>
             {editingId && (
               <button
@@ -377,6 +533,39 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
           {mode === "single" ? (
             <form onSubmit={handleSingleSubmit}>
+              {/* ✅ MULTI-SELECT TOPICS */}
+              <div className="mb-3">
+                <label className="form-label small fw-bold d-block">
+                  Select Topics (Multiple)
+                </label>
+                <div
+                  className="topic-multiselect-box border rounded p-2"
+                  style={{ maxHeight: "150px", overflowY: "auto" }}
+                >
+                  {topics.map((t) => (
+                    <div key={t._id} className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`topic-${t._id}`}
+                        checked={formData.selectedTopicIds.includes(t._id)}
+                        onChange={() => toggleTopicSelection(t._id)}
+                      />
+                      <label
+                        className="form-check-label small"
+                        htmlFor={`topic-${t._id}`}
+                      >
+                        {t.topicNumber} -{" "}
+                        {typeof t.name === "object" ? t.name.en : t.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {formData.selectedTopicIds.length === 0 && (
+                  <div className="text-danger small mt-1">* Required</div>
+                )}
+              </div>
+
               {/* Type & Category */}
               <div className="row g-2 mb-2">
                 <div className="col-6">
@@ -452,12 +641,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
               {/* Statement */}
               <div className="mb-2">
                 <label className="form-label small fw-bold">Statement</label>
-                <small
-                  className="d-block text-muted mb-1"
-                  style={{ fontSize: "11px" }}
-                >
-                  Tip: Wrap math in <b>$</b>. Example: <code>{"$10^{2}$"}</code>
-                </small>
                 <textarea
                   className="form-control form-control-sm mb-1"
                   rows="2"
@@ -541,15 +724,19 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit Button (Updated Logic) */}
               <button
                 type="submit"
                 className={`btn w-100 fw-bold ${
                   editingId ? "btn-warning text-white" : "btn-primary"
                 }`}
-                disabled={!selectedTopicId}
+                disabled={
+                  isSubmitting || formData.selectedTopicIds.length === 0
+                }
               >
-                {editingId ? (
+                {isSubmitting ? (
+                  <span>Loading...</span> // You can add a Spinner Icon here
+                ) : editingId ? (
                   <>
                     <FaSave className="me-2" /> Update Question
                   </>
@@ -562,7 +749,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
             </form>
           ) : (
             <BulkUpload
-              topicId={selectedTopicId}
+              topicId={formData.selectedTopicIds[0]}
               chapterId={chapterId}
               subjectId={subjectId}
               classLevel={classLevel}

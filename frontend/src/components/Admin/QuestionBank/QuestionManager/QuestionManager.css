@@ -10,7 +10,7 @@
 }
 
 /* --- FILTER BOX (Left Top) --- */
-.filter-box {
+.filter-box-q {
     background: white;
     padding: 15px;
     border-radius: 8px;
@@ -125,7 +125,7 @@
     padding: 20px;
     border: 1px solid #dee2e6;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    height: calc(100vh - 140px);
+    /* height: calc(100vh - 140px); */
     overflow-y: auto;
 }
 

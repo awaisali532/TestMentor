@@ -3,11 +3,14 @@ const mongoose = require("mongoose");
 const questionSchema = new mongoose.Schema(
   {
     // 1. Hierarchy
-    topic: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Topic",
-      required: true,
-    },
+    // 🔄 CHANGED: 'topic' is now 'topics' (Array) to support Many-to-Many
+    topics: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Topic",
+        required: true,
+      },
+    ],
     chapter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chapter",
@@ -26,11 +29,10 @@ const questionSchema = new mongoose.Schema(
       enum: ["MCQ", "SHORT", "LONG"],
       required: true,
     },
-    // ✅ NEW FIELD: QUESTION CATEGORY
     questionCategory: {
       type: String,
       enum: ["TEXT", "EXERCISE", "EXAMPLE", "NUMERICAL", "REVIEW"],
-      default: "TEXT", // Default Theory wala sawal hoga
+      default: "TEXT",
     },
     difficulty: {
       type: String,
