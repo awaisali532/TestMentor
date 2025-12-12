@@ -1,4 +1,5 @@
 const Question = require("../models/question"); // Ensure casing matches file
+const Topic = require("../models/topic");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 
@@ -192,43 +193,85 @@ const updateQuestion = async (req, res) => {
   }
 };
 
-// 5. BULK ADD
+// 5. BULK ADD (Smart Topic Mapping)
 const addBulkQuestions = async (req, res) => {
   try {
-    // 🔄 Accept 'topics' (Array) OR 'topicId' (Single) for backward compatibility
-    const { questions, topicId, topics, chapterId, subjectId, classLevel } =
-      req.body;
+    const { questions, chapterId, subjectId, classLevel } = req.body;
 
     if (!questions || !Array.isArray(questions) || questions.length === 0) {
       return res.status(400).json({ error: "Invalid data format." });
     }
 
-    // Determine the topics array
-    let assignedTopics = [];
-    if (topics && Array.isArray(topics)) {
-      assignedTopics = topics;
-    } else if (topicId) {
-      assignedTopics = [topicId];
-    } else {
-      return res.status(400).json({ error: "Topic ID is required." });
+    // 1️⃣ Fetch ALL Topics of this Chapter (For ID Lookup)
+    // Hum database se check krenge k "1.1" ki ID kya hai
+    const chapterTopics = await Topic.find({ chapter: chapterId });
+
+    // Performance Hack: Create a Map for fast lookup
+    // Example: { "1.1": "ObjectId(...)", "1.2": "ObjectId(...)" }
+    const topicMap = {};
+    chapterTopics.forEach((t) => {
+      topicMap[t.topicNumber] = t._id;
+    });
+
+    const formattedQuestions = [];
+    const errors = [];
+
+    // 2️⃣ Loop through each question in JSON
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      let assignedTopicIds = [];
+
+      // Agar JSON main "topics" ["1.1", "1.2"] majood hain
+      if (q.topics && Array.isArray(q.topics)) {
+        q.topics.forEach((num) => {
+          if (topicMap[num]) {
+            assignedTopicIds.push(topicMap[num]);
+          } else {
+            // Agar Topic Number database main nahi mila
+            console.warn(`Topic Number ${num} not found in DB`);
+          }
+        });
+      }
+
+      // Fallback: Agar JSON main topic nahi, to kya karein?
+      // Filhal hum skip krdenge ya error denge.
+      if (assignedTopicIds.length === 0) {
+        errors.push(
+          `Question #${
+            i + 1
+          }: No valid topics found (Check Topic Numbers like 1.1, 1.2)`
+        );
+        continue; // Is question ko skip kro
+      }
+
+      formattedQuestions.push({
+        ...q,
+        topics: assignedTopicIds, // ✅ Asli IDs assign ho gayin
+        chapter: chapterId,
+        subject: subjectId,
+        classLevel: classLevel,
+        difficulty: q.difficulty || "Medium",
+        type: q.type || "MCQ",
+        questionCategory: q.questionCategory || "TEXT",
+      });
     }
 
-    const formattedQuestions = questions.map((q) => ({
-      ...q,
-      topics: assignedTopics, // 🔄 Assign Array
-      chapter: chapterId,
-      subject: subjectId,
-      classLevel: classLevel,
-      difficulty: q.difficulty || "Medium",
-      type: q.type || "MCQ",
-      questionCategory: q.questionCategory || "TEXT",
-    }));
+    if (formattedQuestions.length === 0) {
+      return res.status(400).json({
+        error: "No questions could be mapped. Check your Topic Numbers!",
+        details: errors,
+      });
+    }
 
+    // 3️⃣ Insert into DB
     await Question.insertMany(formattedQuestions);
-    res
-      .status(201)
-      .json({ message: `${formattedQuestions.length} Questions added!` });
+
+    res.status(201).json({
+      message: `${formattedQuestions.length} Questions added successfully!`,
+      warnings: errors.length > 0 ? errors : null,
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
