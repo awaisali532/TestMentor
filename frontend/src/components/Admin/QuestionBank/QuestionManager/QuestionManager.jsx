@@ -599,6 +599,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     <option value="EXAMPLE">Example</option>
                     <option value="NUMERICAL">Numerical</option>
                     <option value="REVIEW">Review Ex</option>
+                    <option value="CONCEPTUAL">Conceptual</option>
                   </select>
                 </div>
               </div>
