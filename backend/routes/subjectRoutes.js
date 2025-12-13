@@ -12,22 +12,32 @@ const {
   getClassLevels,
   updateClassLevel,
   deleteClassLevel,
+  getFullSubjectDetails,
 } = require("../controllers/subjectController.js");
 
 // Import Middleware
 const { protect, hasPermission } = require("../middleware/authMiddleware");
 
-// ✅ 1. Apply Protection
-router.use(protect);
-
 // ==========================================
-// ✅ 1. SPECIFIC ROUTES (Classes)
+// 🔓 PUBLIC ROUTES (No Login Required)
 // ==========================================
+// Move these ABOVE 'router.use(protect)'
 
-// Read Classes (Open to all logged in)
+// Read Classes
 router.get("/classes/all", getClassLevels);
 
-// Manage Classes (Restricted)
+// Read Subjects
+router.get("/", getSubjects);
+router.get("/:id/full-details", getFullSubjectDetails); // ✅ NEW ROUTE
+router.get("/:id", getSubjectById);
+
+// ==========================================
+// 🔒 PROTECTED ROUTES (Login Required)
+// ==========================================
+// Everything below this line requires a token
+router.use(protect);
+
+// --- CLASS MANAGEMENT (Restricted) ---
 router.post("/classes/add", hasPermission("manage_subjects"), addClassLevel);
 router.put("/classes/:id", hasPermission("manage_subjects"), updateClassLevel);
 router.delete(
@@ -36,28 +46,13 @@ router.delete(
   deleteClassLevel
 );
 
-// ==========================================
-// ✅ 2. SUBJECT ROUTES (General)
-// ==========================================
-
-// Read Subjects (Open to all)
-router.get("/", getSubjects);
-
-// Add Subject (Restricted)
+// --- SUBJECT MANAGEMENT (Restricted) ---
 router.post(
   "/add",
   hasPermission("manage_subjects"),
   upload.single("image"),
   addSubject
 );
-
-// ==========================================
-// ⚠️ 3. DYNAMIC ID ROUTES
-// ==========================================
-
-router.get("/:id", getSubjectById); // Read specific subject
-
-// Update/Delete Subject (Restricted)
 router.put(
   "/:id",
   hasPermission("manage_subjects"),

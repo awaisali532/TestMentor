@@ -1,0 +1,50 @@
+/* Page Layout */
+.details-wrapper {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding-bottom: 50px;
+}
+
+/* Header */
+.details-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 60px 0 40px;
+  text-align: center;
+}
+
+/* Accordion Styles */
+.chapter-item {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.chapter-header {
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chapter-header:hover {
+  background: #f8fafc;
+}
+
+.chapter-header.active {
+  background: #f1f5f9;
+}
+
+.topic-row:last-child {
+  border-bottom: none !important;
+}
+
+.topic-row:hover {
+  background-color: #fcfcfc;
+}
+
+/* Utilities */
+.cursor-pointer {
+  cursor: pointer;
+}

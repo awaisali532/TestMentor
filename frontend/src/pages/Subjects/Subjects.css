@@ -1,0 +1,132 @@
+/* --- PAGE LAYOUT --- */
+.subjects-page-wrapper {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding-bottom: 50px;
+}
+
+/* --- HERO HEADER --- */
+.subjects-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: white;
+  padding: 60px 0 40px;
+  text-align: center;
+}
+
+/* --- TABS Styling --- */
+.tabs-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 20px 0;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  background-color: #f8f9fa;
+  z-index: 100;
+}
+
+.tab-btn {
+  border: none;
+  background: white;
+  color: #64748b;
+  padding: 10px 25px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.tab-btn:hover {
+  background-color: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+.tab-btn.active {
+  background-color: #3b82f6;
+  color: white;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+/* --- CARD STYLING --- */
+.subject-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  border: 1px solid #f1f5f9;
+  cursor: pointer;
+  height: 100%; /* ✅ Ensures card takes full height in grid */
+}
+
+.subject-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* --- IMAGE HANDLING UPDATES --- */
+.card-img-wrapper {
+  height: 220px; /* ✅ INCREASED HEIGHT (was 160px) */
+  width: 100%;
+  background-color: #fff; /* White background looks better with contain */
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px; /* ✅ Added padding so image doesn't touch edges */
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.subject-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ✅ SHOWS FULL IMAGE (No cropping) */
+  transition: transform 0.3s ease;
+}
+
+.subject-card:hover .subject-img {
+  transform: scale(1.05);
+}
+
+/* Placeholder */
+.placeholder-img {
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Overlay */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.subject-card:hover .overlay {
+  opacity: 1;
+}
+
+/* --- LOADING --- */
+.loading-screen {
+  height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #64748b;
+  font-weight: 600;
+}

@@ -10,7 +10,7 @@ const RecommendedClasses = () => {
       <h1 className="section-title mb-4">Most Recommended Classes</h1>
       <div className="d-flex flex-wrap justify-content-center gap-3 recommended-wrapper">
         {classes.map((className, index) => (
-          <div className="class-card" key={index}>
+          <div className="class-card-home" key={index}>
             <strong>{className}</strong>
           </div>
         ))}

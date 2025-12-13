@@ -256,7 +256,44 @@ const deleteClassLevel = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// ✅ NEW: Get Full Details (Subject -> Chapters -> Topics)
+const getFullSubjectDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    // 1. Fetch Subject
+    const subject = await Subject.findById(id);
+    if (!subject) return res.status(404).json({ error: "Subject not found" });
+
+    // 2. Fetch Chapters (Sorted by Number)
+    const chapters = await Chapter.find({ subject: id }).sort({
+      chapterNumber: 1,
+    });
+
+    // 3. Fetch Topics for ALL these chapters (Optimized Query)
+    const chapterIds = chapters.map((c) => c._id);
+    const topics = await Topic.find({ chapter: { $in: chapterIds } })
+      .collation({ locale: "en", numericOrdering: true }) // Natural Sort (1.1, 1.2, 1.10)
+      .sort({ topicNumber: 1 });
+
+    // 4. Merge Topics into Chapters
+    const hierarchy = chapters.map((chapter) => {
+      // Find topics belonging to this chapter
+      const chapterTopics = topics.filter(
+        (t) => t.chapter.toString() === chapter._id.toString()
+      );
+      return {
+        ...chapter.toObject(),
+        topics: chapterTopics,
+      };
+    });
+
+    res.json({ subject, hierarchy });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
 module.exports = {
   addSubject,
   getSubjects,
@@ -267,4 +304,5 @@ module.exports = {
   getClassLevels,
   updateClassLevel,
   deleteClassLevel,
+  getFullSubjectDetails,
 };

@@ -4,7 +4,7 @@
   /* font-size: 1.25rem; ≈ 20px on default base */
 }
 
-.class-card {
+.class-card-home {
   width: 11.5rem;
   height: 4.375rem; /* 70px */
   background-color: white;
@@ -19,13 +19,13 @@
 }
 
 /* Hover effect */
-.class-card:hover {
+.class-card-home:hover {
   transform: scale(1.05);
 }
 
 /* Responsive: Stack vertically on small screens */
 @media (max-width: 576px) {
-  .class-card {
+  .class-card-home {
     width: 100%;
     max-width: 18.75rem; /* 300px */
     margin: 0 auto;
