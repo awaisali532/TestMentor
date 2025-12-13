@@ -26,5 +26,10 @@ app.get("/", (req, res) => {
   res.send("🚀 TestMentor Backend is running...");
 });
 
+//for live on versal need to set port
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Only run listen locally, Vercel handles it in production
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => console.log(`Server running on port ${port}`));
+}
+module.exports = app; // <--- THIS IS THE MOST IMPORTANT LINE

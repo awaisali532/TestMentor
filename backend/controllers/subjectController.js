@@ -3,7 +3,7 @@ const Subject = require("../models/subjectModel.js");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs"); // File delete karne ke liye (Node native module)
 const ClassLevel = require("../models/classLevel");
-const Chapter = require("../models/Chapter");
+const Chapter = require("../models/chapter");
 const Topic = require("../models/topic");
 const Question = require("../models/question");
 

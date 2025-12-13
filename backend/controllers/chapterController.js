@@ -1,7 +1,7 @@
 const Chapter = require("../models/chapter");
 const Subject = require("../models/subjectModel");
-const Topic = require("../models/Topic");
-const Question = require("../models/Question");
+const Topic = require("../models/topic");
+const Question = require("../models/question");
 
 // 1. ADD SINGLE CHAPTER (Fixed Topic Creation)
 const addChapter = async (req, res) => {
