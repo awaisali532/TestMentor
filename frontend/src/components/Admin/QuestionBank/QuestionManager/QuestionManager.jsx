@@ -89,7 +89,17 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       const res = await axios.get(
         `${BASE_URL}/api/questions/topic/${filterTopicId}`
       );
-      setQuestions(res.data);
+
+      // ✅ SORTING LOGIC HERE
+      const typePriority = { MCQ: 1, SHORT: 2, LONG: 3 };
+
+      const sortedQuestions = res.data.sort((a, b) => {
+        const priorityA = typePriority[a.type] || 4; // Default to 4 if type is unknown
+        const priorityB = typePriority[b.type] || 4;
+        return priorityA - priorityB;
+      });
+
+      setQuestions(sortedQuestions); // Set the sorted data
     } catch (err) {
       toast.error("Failed to load questions");
     } finally {
