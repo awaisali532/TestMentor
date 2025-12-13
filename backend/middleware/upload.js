@@ -1,17 +1,10 @@
 const multer = require("multer");
 const path = require("path");
 
-// Storage Config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Image yahan save hogi temporary
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Unique naam
-  },
-});
+// CHANGE: diskStorage ki jagah memoryStorage (Vercel ke liye zaroori)
+const storage = multer.memoryStorage();
 
-// File Filter (Sirf Images allow karo)
+// File Filter (Same rahega)
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image")) {
     cb(null, true);

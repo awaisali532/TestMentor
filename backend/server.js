@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 //for live on versal need to set port
-const PORT = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 // Only run listen locally, Vercel handles it in production
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => console.log(`Server running on port ${port}`));

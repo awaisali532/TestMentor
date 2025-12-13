@@ -1,46 +1,47 @@
 const Subject = require("../models/subjectModel.js");
-// Cloudinary config file import karo (jahan tumne API keys rakhi hain)
 const cloudinary = require("../config/cloudinary");
-const fs = require("fs"); // File delete karne ke liye (Node native module)
+// const fs = require("fs"); // <--- ISKI AB ZAROORAT NAHI HAI (Remove it)
 const ClassLevel = require("../models/classLevel");
 const Chapter = require("../models/chapter");
 const Topic = require("../models/topic");
 const Question = require("../models/question");
 
+// --- HELPER FUNCTION: Buffer to Base64 ---
+// Ye function image ko us format mein badalta hai jo Cloudinary ko chahiye
+const bufferToDataURI = (buffer, mimetype) => {
+  const b64 = Buffer.from(buffer).toString("base64");
+  return "data:" + mimetype + ";base64," + b64;
+};
+
 // CREATE
 const addSubject = async (req, res) => {
   try {
-    // 1. Sabse pehle check karo ke file aayi hai ya nahi
+    // 1. Check file existence
     if (!req.file) {
       return res.status(400).json({ error: "Image is required" });
     }
 
     const { className, subjectName, year } = req.body;
 
-    // --- NEW LOGIC START (Optimization) ---
-
-    // 2. Cloudinary jane se pehle Database check karo
+    // 2. Duplicate Check
     const existingSubject = await Subject.findOne({ className, subjectName });
 
     if (existingSubject) {
-      // Agar duplicate mil gaya:
-      // A. Local folder (uploads/) se file delete karo
-      fs.unlinkSync(req.file.path);
-
-      // B. Error return karo (Cloudinary upload skip ho gaya!)
+      // Ab yahan fs.unlinkSync ki zaroorat nahi, kyunki file disk pe hai hi nahi
       return res
         .status(400)
         .json({ error: "This subject already exists in this class!" });
     }
 
-    // --- NEW LOGIC END ---
+    // 3. Convert Buffer to Base64 (Ram se format change)
+    const dataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
 
-    // 3. Ab sab clear hai, to Cloudinary par upload karo
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    // 4. Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(dataURI, {
       folder: "subjects_images",
     });
 
-    // 4. Database mein save karo
+    // 5. Save to DB
     const subject = new Subject({
       className,
       subjectName,
@@ -53,32 +54,27 @@ const addSubject = async (req, res) => {
 
     await subject.save();
 
-    // 5. Local file cleanup
-    fs.unlinkSync(req.file.path);
-
+    // fs.unlinkSync ki zaroorat nahi
     res.status(201).json(subject);
   } catch (err) {
-    // Error handling
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
     console.error("Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
-// READ (Get All)
+
+// READ (Get All) - No Change
 const getSubjects = async (req, res) => {
   try {
     const { className } = req.query;
     const filter = className ? { className } : {};
-    const subjects = await Subject.find(filter).sort({ createdAt: -1 }); // Latest pehle
+    const subjects = await Subject.find(filter).sort({ createdAt: -1 });
     res.json(subjects);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// READ (Single) - Same as yours
+// READ (Single) - No Change
 const getSubjectById = async (req, res) => {
   try {
     const subject = await Subject.findById(req.params.id);
@@ -89,121 +85,96 @@ const getSubjectById = async (req, res) => {
   }
 };
 
-// DELETE (Most Important Change)
-// DELETE SUBJECT (FULL CLEANUP)
+// DELETE - No Change (Cloudinary logic same rahegi)
 const deleteSubject = async (req, res) => {
   try {
-    const { id } = req.params; // Subject ID
-
+    const { id } = req.params;
     const subject = await Subject.findById(id);
     if (!subject) return res.status(404).json({ error: "Subject not found" });
 
-    // 1. Cloudinary se Subject Image delete (Already tha)
+    // 1. Cloudinary Cleanup
     if (subject.image && subject.image.public_id) {
       await cloudinary.uploader.destroy(subject.image.public_id);
     }
 
-    // --- CASCADE DELETE LOGIC START ---
-
-    // A. Is subject ke saare Chapters dhundo
+    // 2. Cascade Delete Logic
     const chapters = await Chapter.find({ subject: id });
     const chapterIds = chapters.map((c) => c._id);
 
     if (chapterIds.length > 0) {
-      // B. Un Chapters ke saare Topics dhundo
       const topics = await Topic.find({ chapter: { $in: chapterIds } });
       const topicIds = topics.map((t) => t._id);
 
       if (topicIds.length > 0) {
-        // C. Sab se pehle QUESTIONS delete karo (Level 3)
         await Question.deleteMany({ topic: { $in: topicIds } });
-
-        // D. Phir TOPICS delete karo (Level 2)
         await Topic.deleteMany({ chapter: { $in: chapterIds } });
       }
-
-      // E. Phir CHAPTERS delete karo (Level 1)
       await Chapter.deleteMany({ subject: id });
     }
-    // --- CASCADE DELETE LOGIC END ---
 
-    // 2. Finally SUBJECT delete karo (Root)
     await Subject.findByIdAndDelete(id);
-
     res.json({ message: "Subject and ALL related data deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// UPDATE (Logic change needed)
+// UPDATE (Updated for Memory Storage)
 const updateSubject = async (req, res) => {
   try {
     const { id } = req.params;
-    // Sirf text fields nikalo body se
     const { className, subjectName, year } = req.body;
 
-    // 1. Database mein subject dhundo
     const subject = await Subject.findById(id);
     if (!subject) return res.status(404).json({ error: "Subject not found" });
 
-    // 2. Update Object banao (Sirf text data ke sath)
     let updateData = { className, subjectName, year };
 
-    // --- SMART IMAGE LOGIC ---
-
-    // Check: Kya user ne nayi image bheji hai?
+    // Check: New Image?
     if (req.file) {
       console.log("New image detected, updating...");
 
-      // A. Agar purani image Cloudinary par hai, to usay delete karo
+      // A. Delete Old Image from Cloudinary
       if (subject.image && subject.image.public_id) {
         await cloudinary.uploader.destroy(subject.image.public_id);
       }
 
-      // B. Nayi image upload karo
-      const result = await cloudinary.uploader.upload(req.file.path, {
+      // B. Upload New Image (Buffer Logic)
+      const dataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
+
+      const result = await cloudinary.uploader.upload(dataURI, {
         folder: "subjects_images",
       });
 
-      // C. updateData mein image add karo
       updateData.image = {
         url: result.secure_url,
         public_id: result.public_id,
       };
 
-      // D. Local folder se safai
-      fs.unlinkSync(req.file.path);
+      // fs.unlinkSync ki zaroorat nahi
     } else {
       console.log("No new image, keeping the old one.");
     }
 
-    // -------------------------
-
-    // 3. Final Database Update
     const updatedSubject = await Subject.findByIdAndUpdate(id, updateData, {
       new: true,
     });
 
     res.json(updatedSubject);
   } catch (err) {
-    // Agar error aaye aur file upload ho chuki ho locally, to delete kar do
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
     console.error("Update Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
-// 1. Add Class
+
+// Class Logic (Add, Get, Update, Delete) - SAME AS BEFORE
+// (Isko change karne ki zaroorat nahi kyunki ye images deal nahi kar raha directly)
+
 const addClassLevel = async (req, res) => {
   try {
     const { name } = req.body;
     if (!name) return res.status(400).json({ error: "Class name is required" });
-
-    // Ab ye 'new ClassLevel' dekhne mein professional lag raha hai
     const newClass = new ClassLevel({ name });
-
     await newClass.save();
     res.status(201).json(newClass);
   } catch (err) {
@@ -213,33 +184,27 @@ const addClassLevel = async (req, res) => {
   }
 };
 
-// 2. Get All Classes
 const getClassLevels = async (req, res) => {
   try {
-    // Variable use karte waqt bhi Capital
     const classes = await ClassLevel.find().sort({ name: 1 });
     res.json(classes);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-// 3. Update Class Name
+
 const updateClassLevel = async (req, res) => {
   try {
-    const { id } = req.params; // Class ki ID URL se ayegi
-    const { name } = req.body; // Naya naam body se ayega
-
+    const { id } = req.params;
+    const { name } = req.body;
     if (!name) return res.status(400).json({ error: "Class name is required" });
-
     const updatedClass = await ClassLevel.findByIdAndUpdate(
       id,
       { name },
-      { new: true } // Return updated document
+      { new: true }
     );
-
     if (!updatedClass)
       return res.status(404).json({ error: "Class not found" });
-
     res.json(updatedClass);
   } catch (err) {
     if (err.code === 11000)
@@ -247,59 +212,42 @@ const updateClassLevel = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-// 4. Delete Class (GRAND CASCADE DELETE)
+
 const deleteClassLevel = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // 1. Pehle Class dhundo (Kyunke humein uska NAAM chahiye)
     const classToDelete = await ClassLevel.findById(id);
     if (!classToDelete)
       return res.status(404).json({ error: "Class not found" });
 
-    const className = classToDelete.name; // e.g., "9th Class"
-
-    // 2. Is Class ke saare SUBJECTS dhundo
+    const className = classToDelete.name;
     const subjects = await Subject.find({ className: className });
     const subjectIds = subjects.map((sub) => sub._id);
 
-    // Agar Subjects mile, to safai shuru karo
     if (subjectIds.length > 0) {
-      // A. Pehle Cloudinary se Images saaf karo (Loop chala kar)
+      // Delete Cloudinary Images
       for (const sub of subjects) {
         if (sub.image && sub.image.public_id) {
           await cloudinary.uploader.destroy(sub.image.public_id);
         }
       }
 
-      // B. Ab Chapters dhundo jo in Subjects ke hain
+      // Cascade Delete Logic (Same as before)
       const chapters = await Chapter.find({ subject: { $in: subjectIds } });
       const chapterIds = chapters.map((c) => c._id);
-
       if (chapterIds.length > 0) {
-        // C. Ab Topics dhundo
         const topics = await Topic.find({ chapter: { $in: chapterIds } });
         const topicIds = topics.map((t) => t._id);
-
         if (topicIds.length > 0) {
-          // D. Sabse pehle QUESTIONS delete (Level 4)
           await Question.deleteMany({ topic: { $in: topicIds } });
-
-          // E. Phir TOPICS delete (Level 3)
           await Topic.deleteMany({ chapter: { $in: chapterIds } });
         }
-
-        // F. Phir CHAPTERS delete (Level 2)
         await Chapter.deleteMany({ subject: { $in: subjectIds } });
       }
-
-      // G. Phir SUBJECTS delete (Level 1)
       await Subject.deleteMany({ _id: { $in: subjectIds } });
     }
 
-    // 3. Akhir mein CLASS delete (Root Level)
     await ClassLevel.findByIdAndDelete(id);
-
     res.json({
       message: `Class '${className}' and ALL related data deleted successfully`,
     });
@@ -308,6 +256,7 @@ const deleteClassLevel = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 module.exports = {
   addSubject,
   getSubjects,
