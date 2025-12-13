@@ -2,6 +2,12 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
 
+// ✅ CHANGE 1: Helper function add kiya (Buffer ko convert karne ke liye)
+const bufferToDataURI = (buffer, mimetype) => {
+  const b64 = Buffer.from(buffer).toString("base64");
+  return "data:" + mimetype + ";base64," + b64;
+};
+
 // --- HELPER: Extract Public ID ---
 const getPublicIdFromUrl = (url) => {
   try {
@@ -71,7 +77,7 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// 4. DELETE USER (Keep as is - Logic was correct)
+// 4. DELETE USER (Keep as is)
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -112,7 +118,7 @@ exports.toggleUserStatus = async (req, res) => {
   }
 };
 
-// ✅ 6. UPDATE PROFILE (Updated Return Data)
+// ✅ 6. UPDATE PROFILE (Major Changes Here)
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -128,8 +134,11 @@ exports.updateProfile = async (req, res) => {
           if (oldId) await cloudinary.uploader.destroy(oldId);
         }
 
-        // Upload new
-        const result = await cloudinary.uploader.upload(req.file.path, {
+        // ✅ CHANGE 2: req.file.path hata kar dataURI use kiya
+        const dataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
+
+        // Upload new (Using dataURI instead of path)
+        const result = await cloudinary.uploader.upload(dataURI, {
           folder: "avatars",
           width: 300,
           crop: "scale",
@@ -151,7 +160,6 @@ exports.updateProfile = async (req, res) => {
       email: updatedUser.email,
       role: updatedUser.role,
       image: updatedUser.image,
-      // 🔥 FIX: Send these back so permissions don't break on frontend
       isSuperAdmin: updatedUser.isSuperAdmin,
       permissions: updatedUser.permissions,
       token: req.headers.authorization.split(" ")[1],
@@ -162,7 +170,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// ✅ 7. REMOVE PROFILE IMAGE (New Function)
+// ✅ 7. REMOVE PROFILE IMAGE (Keep as is)
 exports.removeProfileImage = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -182,7 +190,6 @@ exports.removeProfileImage = async (req, res) => {
       email: updatedUser.email,
       role: updatedUser.role,
       image: "",
-      // 🔥 FIX: Send permissions back here too
       isSuperAdmin: updatedUser.isSuperAdmin,
       permissions: updatedUser.permissions,
       token: req.headers.authorization.split(" ")[1],
