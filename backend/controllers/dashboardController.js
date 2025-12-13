@@ -1,7 +1,7 @@
-const User = require("../models/User");
-const Subject = require("../models/SubjectModel");
-const Question = require("../models/Question");
-const ClassModel = require("../models/ClassLevel");
+const User = require("../models/user");
+const Subject = require("../models/subjectModel");
+const Question = require("../models/question");
+const ClassModel = require("../models/classLevel");
 
 exports.getDashboardStats = async (req, res) => {
   try {

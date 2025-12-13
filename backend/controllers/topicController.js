@@ -1,5 +1,5 @@
 const Topic = require("../models/topic");
-const Question = require("../models/Question");
+const Question = require("../models/question");
 
 // 1. CREATE: Add Single Topic
 const addTopic = async (req, res) => {
