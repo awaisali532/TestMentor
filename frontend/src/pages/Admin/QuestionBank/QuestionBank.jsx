@@ -1,13 +1,11 @@
 import React, { useState } from "react";
+import { FaLayerGroup } from "react-icons/fa";
 import "./QuestionBank.css";
 
 // 👇 COMPONENTS IMPORT
 import FilterBar from "../../../components/Admin/QuestionBank/FilterBar/FilterBar";
-
-// ⚠️ ABHI INKO COMMENT KAR DO (Kyunke ye files abhi nahi banin)
 import TopicManager from "../../../components/Admin/QuestionBank/TopicManager/TopicManager";
 import QuestionManager from "../../../components/Admin/QuestionBank/QuestionManager/QuestionManager";
-// import QuestionManager from '../../components/Admin/QuestionBank/QuestionManager/QuestionManager';
 
 const QuestionBank = () => {
   const [filters, setFilters] = useState({
@@ -24,15 +22,26 @@ const QuestionBank = () => {
 
   return (
     <div className="qb-wrapper p-4">
+      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="fw-bold text-dark m-0">📚 Question Bank</h3>
+        <div>
+          {/* ✅ UPDATED TITLE STYLE */}
+          <h3 className="fw-bold text-main m-0 d-flex align-items-center gap-2">
+            📚 Question <span className="highlight-text">Bank</span>
+          </h3>
+          <p className="text-muted small m-0">
+            Manage topics and questions hierarchically.
+          </p>
+        </div>
       </div>
 
-      {/* Filter Bar chalega kyunke ye ban chuka hai */}
+      {/* Filter Bar */}
       <FilterBar onFilterChange={handleFilterChange} />
 
+      {/* Main Content Area */}
       {filters.chapterId ? (
         <div className="qb-content">
+          {/* Tabs */}
           <div className="qb-tabs">
             <button
               className={`qb-tab-btn ${activeTab === "topics" ? "active" : ""}`}
@@ -50,8 +59,8 @@ const QuestionBank = () => {
             </button>
           </div>
 
+          {/* Dynamic Components */}
           <div className="p-4">
-            {/* ⚠️ YAHAN BHI COMMENT KAR DO */}
             {activeTab === "topics" && (
               <TopicManager chapterId={filters.chapterId} />
             )}
@@ -66,8 +75,15 @@ const QuestionBank = () => {
           </div>
         </div>
       ) : (
+        /* Empty State */
         <div className="qb-empty-state">
+          <div className="empty-icon-box">
+            <FaLayerGroup />
+          </div>
           <h4>Select a Chapter to Begin</h4>
+          <p>
+            Please select a Class, Subject, and Chapter from the filters above.
+          </p>
         </div>
       )}
     </div>

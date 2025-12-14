@@ -1,194 +1,283 @@
-/* --- VARIABLES --- */
+/* --- VARIABLES (Used from App.css, defined locally for fallback) --- */
 :root {
-    --sidebar-bg: #111827;
-    /* Deep Navy/Black */
-    --header-bg: #1F2937;
-    /* Slightly lighter for Header */
-    --primary-color: #3B82F6;
-    /* Blue */
-    --text-color: #ffffff;
-    --text-muted: #9CA3AF;
-    --header-height: 60px;
-    --sidebar-width-open: 260px;
-    --sidebar-width-collapsed: 70px;
-    /* Only icons visible */
+  --header-height: 60px;
+  --sidebar-width-open: 260px;
+  --sidebar-width-collapsed: 80px;
 }
 
 /* ============================
    1. FIXED TOP BAR (HEADER)
    ============================ */
 .top-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: var(--header-height);
-    background-color: var(--header-bg);
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    z-index: 1100;
-    /* Highest Priority */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--header-height);
+  background-color: var(--nav-bg); /* Glassy Background from App.css */
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 1100;
+  transition: background-color 0.3s ease;
 }
 
-/* Hamburger Button in Header */
 .toggle-btn {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 5px;
-    transition: transform 0.2s;
+  background: none;
+  border: none;
+  color: var(--text-main);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.2s;
 }
 
 .toggle-btn:hover {
-    color: var(--primary-color);
+  color: var(--accent-1); /* Blue Accent */
 }
 
-/* Logo Text */
 .brand-logo {
-    font-size: 20px;
-    font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .brand-subtitle {
-    font-weight: 300;
-    font-size: 14px;
-    opacity: 0.7;
+  font-weight: 300;
+  font-size: 14px;
+  opacity: 0.8;
+  color: var(--text-muted);
+  -webkit-text-fill-color: var(--text-muted); /* Reset gradient for subtitle */
 }
 
 /* ============================
-   2. SIDEBAR (GENERAL)
+   2. SIDEBAR CONTAINER
    ============================ */
 .sidebar {
-    position: fixed;
-    top: var(--header-height);
-    /* Starts below Header */
-    left: 0;
-    height: calc(100vh - var(--header-height));
-    /* Full height minus header */
-    background-color: var(--sidebar-bg);
-    color: var(--text-color);
-    transition: width 0.3s ease, transform 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    padding-top: 20px;
-    z-index: 1000;
-    overflow-x: hidden;
-    /* Hide text when collapsed */
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  height: calc(100vh - var(--header-height));
+  background-color: var(--sidebar-bg); /* Theme Aware */
+  border-right: 1px solid var(--border-color);
+  color: var(--text-main);
+  transition: width 0.3s ease, background-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  z-index: 1000;
+  overflow-x: hidden;
 }
 
 .sidebar-menu {
-    list-style: none;
-    padding: 0 10px;
-    margin: 0;
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-/* Links */
-.menu-link {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-    /* Prevent text wrapping */
-    transition: background 0.2s;
-    height: 48px;
-    /* Fixed height for consistency */
-}
-
-.menu-icon {
-    font-size: 20px;
-    min-width: 24px;
-    /* Ensure icon stays fixed size */
-}
-
-.link-text {
-    margin-left: 12px;
-    transition: opacity 0.2s;
-}
-
-/* Hover & Active */
-.menu-link:hover {
-    background-color: #1F2937;
-    color: #F3F4F6;
-}
-
-.menu-link.active {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-/* Footer */
-.sidebar-footer {
-    padding: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  list-style: none;
+  padding: 0 15px;
+  margin: 0;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 /* ============================
-   3. DESKTOP BEHAVIOR
+   3. MENU LINKS (Home Page Style)
    ============================ */
-.sidebar.desktop.open {
-    width: var(--sidebar-width-open);
+.menu-link {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid transparent; /* Prepare for hover border */
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.sidebar.desktop.collapsed {
-    width: var(--sidebar-width-collapsed);
-    /* Shrink to Icons only */
-    padding: 20px 5px;
-    /* Less padding */
+/* Icon Box */
+.menu-link .icon-box {
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: var(--pill-bg); /* Subtle BG */
+  color: var(--text-main);
+  font-size: 18px;
+  margin-right: 12px;
+  transition: all 0.3s ease;
 }
 
-/* Center icons when collapsed */
-.sidebar.desktop.collapsed .menu-link {
-    justify-content: center;
-    padding: 12px 0;
+/* Hover Effect */
+.menu-link:hover {
+  background-color: var(--pill-bg);
+  color: var(--text-main);
+  transform: translateX(5px);
 }
 
-.sidebar.desktop.collapsed .menu-icon {
-    margin-right: 0;
+.menu-link:hover .icon-box {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: white;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+}
+
+/* Active State (Gradient Background like Home) */
+.menu-link.active {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.1),
+    rgba(45, 212, 191, 0.1)
+  );
+  border-color: var(--accent-1);
+  color: var(--accent-1);
+}
+
+.menu-link.active .icon-box {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: white;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
+}
+
+.disabled-link {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ============================
-   4. MOBILE BEHAVIOR
+   4. FOOTER BUTTONS (Toggle & Logout)
+   ============================ */
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-sidebar-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center text by default */
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth spring effect */
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- ICON HIDDEN BY DEFAULT (When Sidebar Open) --- */
+.sidebar.desktop.open .btn-sidebar-action .icon-box {
+  max-width: 0;
+  opacity: 0;
+  margin-right: 0;
+  transform: translateX(-20px); /* Move left */
+  transition: all 0.3s ease;
+  display: flex; /* Keep flex for alignment */
+  align-items: center;
+}
+
+/* --- REVEAL ICON ON HOVER --- */
+.sidebar.desktop.open .btn-sidebar-action:hover .icon-box {
+  max-width: 30px; /* Bring back width */
+  opacity: 1;
+  margin-right: 10px;
+  transform: translateX(0); /* Slide in */
+}
+
+/* Adjust alignment on hover */
+.sidebar.desktop.open .btn-sidebar-action:hover {
+  justify-content: flex-start; /* Align left to make room */
+  padding-left: 20px;
+  background-color: var(--pill-bg);
+}
+
+/* --- THEME TOGGLE SPECIFIC --- */
+.theme-toggle:hover .icon-box {
+  color: #eab308; /* Yellow Sun/Moon on hover */
+}
+
+/* --- LOGOUT BUTTON SPECIFIC --- */
+.logout-btn:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.logout-btn:hover .icon-box {
+  color: white;
+}
+
+/* ============================
+   5. COLLAPSED STATE
+   ============================ */
+.sidebar.desktop.collapsed {
+  width: var(--sidebar-width-collapsed);
+  padding: 20px 10px;
+}
+
+.sidebar.desktop.collapsed .menu-link,
+.sidebar.desktop.collapsed .btn-sidebar-action {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.sidebar.desktop.collapsed .menu-link:hover {
+  transform: none; /* No shift in collapsed mode */
+}
+
+/* Ensure Icons are ALWAYS visible in collapsed mode */
+.sidebar.desktop.collapsed .btn-sidebar-action .icon-box {
+  max-width: 30px;
+  opacity: 1;
+  margin-right: 0;
+  transform: none;
+  display: flex;
+}
+
+.sidebar.desktop.collapsed .icon-box {
+  margin-right: 0; /* Center icons */
+}
+
+/* ============================
+   6. MOBILE BEHAVIOR
    ============================ */
 .sidebar.mobile {
-    width: var(--sidebar-width-open);
-    /* Always full width on mobile */
-    transform: translateX(-100%);
-    /* Hidden by default */
-    box-shadow: none;
+  width: var(--sidebar-width-open);
+  transform: translateX(-100%);
+  box-shadow: none;
 }
 
 .sidebar.mobile.open {
-    transform: translateX(0);
-    /* Slide in */
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+  transform: translateX(0);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Overlay */
+/* Mobile Overlay */
 .sidebar-overlay {
-    position: fixed;
-    top: var(--header-height);
-    left: 0;
-    width: 100%;
-    height: calc(100vh - var(--header-height));
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 900;
-    backdrop-filter: blur(2px);
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  width: 100%;
+  height: calc(100vh - var(--header-height));
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 900;
+  backdrop-filter: blur(4px);
 }
 
 /* Utilities */
 .d-none {
-    display: none !important;
+  display: none !important;
 }

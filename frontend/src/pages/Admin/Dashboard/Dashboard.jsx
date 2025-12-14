@@ -8,6 +8,7 @@ import {
   FaUsers,
   FaSpinner,
 } from "react-icons/fa";
+import "./Dashboard.css";
 
 const Dashboard = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -26,9 +27,13 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
+
+        // Ensure you have an endpoint that returns exactly this structure
+        // Or you can map it manually if the API is different
         const { data } = await axios.get(`${BASE_URL}/api/admin/stats`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         setStats(data);
       } catch (error) {
         console.error("Error loading stats:", error);
@@ -42,21 +47,18 @@ const Dashboard = () => {
 
   if (loading)
     return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "60vh" }}
-      >
-        <FaSpinner className="icon-spin fs-1 text-primary" />
+      <div className="dashboard-loading">
+        <FaSpinner className="icon-spin" />
       </div>
     );
 
   return (
-    <div className="container-fluid p-4">
+    <div className="dashboard-wrapper p-4">
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h3 className="fw-bold text-dark m-0">Admin Dashboard</h3>
-          <p className="text-muted small m-0">Overview of your system</p>
+          <h2 className="fw-bold text-main m-0">Admin Dashboard</h2>
+          <p className="text-muted small m-0">System Overview & Statistics</p>
         </div>
       </div>
 
@@ -66,7 +68,7 @@ const Dashboard = () => {
         <div className="col-md-3">
           <StatCard
             title="Total Questions"
-            value={stats.totalQuestions.toLocaleString()}
+            value={stats.totalQuestions?.toLocaleString() || 0}
             icon={<FaQuestion />}
             colorType="blue"
           />
@@ -76,7 +78,7 @@ const Dashboard = () => {
         <div className="col-md-3">
           <StatCard
             title="Active Subjects"
-            value={stats.activeSubjects}
+            value={stats.activeSubjects || 0}
             icon={<FaBookOpen />}
             colorType="green"
           />
@@ -86,7 +88,7 @@ const Dashboard = () => {
         <div className="col-md-3">
           <StatCard
             title="Class Levels"
-            value={stats.classLevels}
+            value={stats.classLevels || 0}
             icon={<FaGraduationCap />}
             colorType="orange"
           />
@@ -96,17 +98,14 @@ const Dashboard = () => {
         <div className="col-md-3">
           <StatCard
             title="Total Users"
-            value={stats.totalUsers}
+            value={stats.totalUsers || 0}
             icon={<FaUsers />}
             colorType="cyan"
           />
         </div>
       </div>
 
-      {/* ✨ CLEAN LOOK: 
-         No graphs, no lists. Just the numbers that matter.
-      */}
-
+      {/* Footer / Empty State */}
       <div className="mt-5 text-center text-muted">
         <small>Select an option from the sidebar to manage content.</small>
       </div>

@@ -1,11 +1,41 @@
-/* src/pages/Admin/Dashboard/Dashboard.css */
+/* Dashboard Wrapper */
+.dashboard-wrapper {
+  /* ✅ FIX: Remove min-height: 100vh here because Layout already handles it */
+  width: 100%;
 
-/* Only needed if you want to force the specific font family */
-body {
-    font-family: 'Inter', sans-serif;
+  /* ✅ FIX: Use Theme Background to blend perfectly */
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  transition: background-color 0.3s ease;
+
+  /* Standard Padding */
+  padding: 2rem;
 }
 
-/* Optional: Smooth hover effect for the rows if needed */
-tbody tr:hover {
-    background-color: #f8f9fa;
+/* Loading Screen */
+.dashboard-loading {
+  height: 60vh; /* Reduced height for better centering */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dashboard-loading .icon-spin {
+  font-size: 3rem;
+  color: var(--accent-1);
+  animation: spin 1s linear infinite;
+}
+
+/* Colors */
+.text-main {
+  color: var(--text-main);
+}
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }

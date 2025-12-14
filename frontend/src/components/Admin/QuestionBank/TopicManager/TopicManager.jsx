@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast"; // ✅ Toaster included
+import toast, { Toaster } from "react-hot-toast";
 import Swal from "sweetalert2";
 import "./TopicManager.css";
 import {
@@ -11,7 +11,6 @@ import {
   FaLayerGroup,
   FaCode,
   FaSpinner,
-  FaSave,
   FaTimes,
 } from "react-icons/fa";
 
@@ -25,7 +24,6 @@ const TopicManager = ({ chapterId }) => {
   const [editingId, setEditingId] = useState(null);
   const [bulkJson, setBulkJson] = useState("");
 
-  // ✅ Form Data now has both English and Urdu
   const [formData, setFormData] = useState({
     topicNumber: "",
     name: { en: "", ur: "" },
@@ -36,7 +34,6 @@ const TopicManager = ({ chapterId }) => {
     if (chapterId) fetchTopics();
   }, [chapterId]);
 
-  // --- API: Fetch Topics ---
   const fetchTopics = async () => {
     try {
       const res = await axios.get(
@@ -44,12 +41,11 @@ const TopicManager = ({ chapterId }) => {
       );
       setTopics(res.data);
     } catch (err) {
-      console.error(err);
       toast.error("Failed to load topics");
     }
   };
 
-  // --- HANDLERS: Input Changes ---
+  // --- HANDLERS ---
   const handleSimpleInput = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -61,24 +57,15 @@ const TopicManager = ({ chapterId }) => {
     });
   };
 
-  // --- ACTION: Populate Edit Form ---
   const handleEditClick = (topic) => {
     setEditingId(topic._id);
     setMode("single");
-
-    // ✅ Logic to handle both Object {en, ur} and Old String format
     const enName = typeof topic.name === "object" ? topic.name.en : topic.name;
     const urName = typeof topic.name === "object" ? topic.name.ur : "";
-
     setFormData({
       topicNumber: topic.topicNumber,
       name: { en: enName, ur: urName },
     });
-
-    // Scroll to form
-    document
-      .querySelector(".add-topic-card")
-      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
@@ -86,120 +73,82 @@ const TopicManager = ({ chapterId }) => {
     setFormData({ topicNumber: "", name: { en: "", ur: "" } });
   };
 
-  // --- 1. ADD / UPDATE SINGLE TOPIC ---
   const handleSubmitSingle = async (e) => {
     e.preventDefault();
-
-    // Validation: Number and English Name are mandatory
-    if (!formData.topicNumber || !formData.name.en) {
-      return toast.error("Topic Number and English Name are required!");
-    }
-
-    if (!chapterId) return toast.error("System Error: Chapter not selected.");
+    if (!formData.topicNumber || !formData.name.en)
+      return toast.error("Required fields missing!");
 
     setLoading(true);
-    const toastId = toast.loading(
-      editingId ? "Updating Topic..." : "Saving Topic..."
-    );
+    const toastId = toast.loading(editingId ? "Updating..." : "Saving...");
 
     try {
       const payload = {
         chapterId,
         topicNumber: formData.topicNumber,
-        name: formData.name, // Sends { en: "...", ur: "..." }
+        name: formData.name,
       };
-
       if (editingId) {
         await axios.put(`${BASE_URL}/api/topics/${editingId}`, payload);
-        toast.success("Topic Updated Successfully!", { id: toastId });
+        toast.success("Updated!", { id: toastId });
         setEditingId(null);
       } else {
         await axios.post(`${BASE_URL}/api/topics/add`, payload);
-        toast.success("Topic Added Successfully!", { id: toastId });
+        toast.success("Added!", { id: toastId });
       }
-
-      // Reset & Refresh
       setFormData({ topicNumber: "", name: { en: "", ur: "" } });
       fetchTopics();
     } catch (err) {
-      toast.dismiss(toastId);
-      const msg = err.response?.data?.error || "Operation Failed";
-      toast.error(msg);
+      toast.error(err.response?.data?.error || "Failed", { id: toastId });
     } finally {
       setLoading(false);
     }
   };
 
-  // --- 2. BULK UPLOAD ---
   const handleBulkUpload = async () => {
-    if (!bulkJson) return toast.error("Please paste JSON data first.");
-
+    if (!bulkJson) return toast.error("Paste JSON first.");
     setLoading(true);
-    const toastId = toast.loading("Uploading Bulk Topics...");
-
+    const toastId = toast.loading("Uploading...");
     try {
       const parsedData = JSON.parse(bulkJson);
-
-      if (!Array.isArray(parsedData)) {
-        setLoading(false);
-        toast.dismiss(toastId);
-        return toast.error("Invalid Format! Must be an Array [ ... ]");
-      }
-
-      // ✅ Map JSON to Backend Schema
       const bulkPayload = parsedData.map((item) => ({
         chapter: chapterId,
         topicNumber: item.topicNumber,
-        name: {
-          en: item.nameEn || item.name,
-          ur: item.nameUr || "",
-        },
+        name: { en: item.nameEn || item.name, ur: item.nameUr || "" },
       }));
-
-      const res = await axios.post(`${BASE_URL}/api/topics/add-bulk`, {
+      await axios.post(`${BASE_URL}/api/topics/add-bulk`, {
         topics: bulkPayload,
       });
-
-      toast.success(res.data.message || "Bulk Upload Complete!", {
-        id: toastId,
-      });
+      toast.success("Bulk Upload Complete!", { id: toastId });
       setBulkJson("");
       setMode("single");
       fetchTopics();
     } catch (err) {
-      toast.dismiss(toastId);
-      if (err instanceof SyntaxError) {
-        toast.error("Invalid JSON Syntax!");
-      } else {
-        const msg = err.response?.data?.error || "Bulk Upload Failed";
-        toast.error(msg);
-      }
+      toast.error("Upload Failed", { id: toastId });
     } finally {
       setLoading(false);
     }
   };
 
-  // --- 3. DELETE TOPIC ---
   const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: "Delete Topic?",
-      text: "This will remove all related questions!",
+      text: "This removes all related questions!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#dc3545",
       confirmButtonText: "Yes, Delete!",
+      background: "var(--card-bg)", // Theme aware alert
+      color: "var(--text-main)",
     });
 
     if (result.isConfirmed) {
       setLoading(true);
-      const toastId = toast.loading("Deleting...");
       try {
         await axios.delete(`${BASE_URL}/api/topics/${id}`);
-        toast.success("Topic Deleted", { id: toastId });
+        toast.success("Deleted");
         fetchTopics();
       } catch (err) {
-        toast.dismiss(toastId);
-        toast.error("Failed to delete");
+        toast.error("Failed");
       } finally {
         setLoading(false);
       }
@@ -208,73 +157,55 @@ const TopicManager = ({ chapterId }) => {
 
   return (
     <div className="row g-4">
-      {/* ✅ Local Toaster ensures notifications appear */}
       <Toaster position="top-right" />
 
-      {/* LEFT: LIST DISPLAY */}
+      {/* LEFT: LIST */}
       <div className="col-md-7">
-        <div className="d-flex align-items-center mb-3 text-primary">
-          <FaListUl className="me-2 fs-5" />
+        <div className="d-flex align-items-center mb-3 text-main">
+          <FaListUl className="me-2 text-accent" />
           <h5 className="m-0 fw-bold">Existing Topics</h5>
         </div>
 
-        <div
-          className="list-group shadow-sm"
-          style={{ maxHeight: "600px", overflowY: "auto" }}
-        >
+        <div className="topic-list-container custom-scrollbar">
           {topics.length === 0 ? (
-            <div className="text-center p-5 bg-light rounded border border-dashed">
-              <FaLayerGroup className="text-muted fs-1 mb-2 opacity-50" />
-              <p className="text-muted m-0">No topics found.</p>
+            <div className="empty-topic-state">
+              <FaLayerGroup />
+              <p>No topics found.</p>
             </div>
           ) : (
             topics.map((topic) => (
               <div
                 key={topic._id}
-                className={`list-group-item d-flex justify-content-between align-items-center p-3 topic-list-item ${
-                  editingId === topic._id
-                    ? "bg-light border-start border-primary border-4"
-                    : ""
+                className={`topic-card ${
+                  editingId === topic._id ? "active-edit" : ""
                 }`}
               >
                 <div className="d-flex align-items-center">
-                  <span
-                    className="badge bg-primary rounded-pill me-3"
-                    style={{ minWidth: "50px" }}
-                  >
-                    {topic.topicNumber}
-                  </span>
+                  <span className="topic-badge">{topic.topicNumber}</span>
                   <div>
-                    {/* ENGLISH NAME */}
-                    <span className="fw-bold text-dark me-2">
+                    <span className="fw-bold text-main me-2">
                       {typeof topic.name === "object"
                         ? topic.name.en
                         : topic.name}
                     </span>
-
-                    {/* URDU NAME (Shown in brackets) */}
                     {topic.name?.ur && (
-                      <span className="urdu-font text-secondary">
+                      <span className="urdu-font text-muted">
                         ({topic.name.ur})
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="d-flex gap-2">
+                <div className="action-buttons">
                   <button
-                    className="btn btn-sm btn-outline-warning"
+                    className="btn-icon edit"
                     onClick={() => handleEditClick(topic)}
-                    disabled={loading}
-                    title="Edit"
                   >
                     <FaEdit />
                   </button>
                   <button
-                    className="btn btn-sm btn-outline-danger"
+                    className="btn-icon delete"
                     onClick={() => handleDelete(topic._id)}
-                    disabled={loading}
-                    title="Delete"
                   >
                     <FaTrashAlt />
                   </button>
@@ -285,48 +216,24 @@ const TopicManager = ({ chapterId }) => {
         </div>
       </div>
 
-      {/* RIGHT: ADD/EDIT FORM */}
+      {/* RIGHT: FORM */}
       <div className="col-md-5">
-        <div
-          className="card add-topic-card bg-white sticky-top shadow-sm border-0"
-          style={{ top: "20px" }}
-        >
-          {/* Form Header */}
-          <div className="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h6 className="m-0 fw-bold text-primary d-flex align-items-center">
-              {editingId ? (
-                <>
-                  <FaEdit className="me-2" /> Edit Topic
-                </>
-              ) : (
-                <>
-                  <FaPlus className="me-2" /> Add Topic
-                </>
-              )}
+        <div className="form-card sticky-top">
+          <div className="form-header">
+            <h6 className="m-0 fw-bold text-accent">
+              {editingId ? "Edit Topic" : "Add Topic"}
             </h6>
-
-            {/* Toggle Single/Bulk */}
             {!editingId && (
-              <div className="d-flex bg-light p-1 rounded">
+              <div className="mode-toggle">
                 <button
-                  className={`btn btn-xs px-2 ${
-                    mode === "single"
-                      ? "bg-white shadow-sm fw-bold"
-                      : "text-muted"
-                  }`}
+                  className={mode === "single" ? "active" : ""}
                   onClick={() => setMode("single")}
-                  disabled={loading}
                 >
                   Single
                 </button>
                 <button
-                  className={`btn btn-xs px-2 ${
-                    mode === "bulk"
-                      ? "bg-white shadow-sm fw-bold"
-                      : "text-muted"
-                  }`}
+                  className={mode === "bulk" ? "active" : ""}
                   onClick={() => setMode("bulk")}
-                  disabled={loading}
                 >
                   Bulk
                 </button>
@@ -334,120 +241,87 @@ const TopicManager = ({ chapterId }) => {
             )}
           </div>
 
-          <div className="card-body p-4">
+          <div className="p-4">
             {mode === "single" ? (
-              // --- SINGLE MODE FORM ---
               <form onSubmit={handleSubmitSingle}>
                 {editingId && (
-                  <div className="alert alert-warning py-1 d-flex justify-content-between align-items-center small mb-3">
-                    <span>Editing Mode Active</span>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-light py-0"
-                      onClick={handleCancelEdit}
-                    >
-                      <FaTimes /> Cancel
+                  <div className="edit-alert">
+                    <span>Editing Mode</span>
+                    <button type="button" onClick={handleCancelEdit}>
+                      <FaTimes />
                     </button>
                   </div>
                 )}
 
                 <div className="row mb-3">
                   <div className="col-4">
-                    <label className="form-label small fw-bold text-secondary">
-                      No.<span className="text-danger">*</span>
-                    </label>
+                    <label className="form-label">No.</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       name="topicNumber"
                       placeholder="1.1"
                       value={formData.topicNumber}
                       onChange={handleSimpleInput}
-                      disabled={loading}
                     />
                   </div>
                   <div className="col-8">
-                    <label className="form-label small fw-bold text-secondary">
-                      English Name <span className="text-danger">*</span>
-                    </label>
+                    <label className="form-label">English Name</label>
                     <input
                       type="text"
-                      className="form-control"
-                      placeholder="Introduction"
+                      className="form-control custom-input"
+                      placeholder="Intro"
                       value={formData.name.en}
                       onChange={(e) => handleLangInput("en", e.target.value)}
-                      disabled={loading}
                     />
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <label className="form-label small fw-bold text-secondary">
-                    Urdu Name (Optional)
-                  </label>
+                  <label className="form-label">Urdu Name</label>
                   <input
                     type="text"
-                    className="form-control urdu-font"
+                    className="form-control custom-input urdu-font"
                     placeholder="تعارف"
                     value={formData.name.ur}
                     onChange={(e) => handleLangInput("ur", e.target.value)}
                     dir="rtl"
-                    disabled={loading}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className={`btn w-100 fw-bold py-2 ${
-                    editingId ? "btn-warning text-white" : "btn-primary"
-                  }`}
+                  className="btn-primary-gradient w-100"
                   disabled={loading}
                 >
                   {loading ? (
-                    <>
-                      <FaSpinner className="icon-spin me-2" /> Processing...
-                    </>
+                    <FaSpinner className="icon-spin" />
+                  ) : editingId ? (
+                    "Update"
                   ) : (
-                    <>{editingId ? "Update Topic" : "Save Topic"}</>
+                    "Save"
                   )}
                 </button>
               </form>
             ) : (
-              // --- BULK MODE FORM ---
               <div>
-                <h6 className="small fw-bold text-muted">JSON Format:</h6>
-                <div
-                  className="bg-dark text-white p-2 rounded mb-2 small"
-                  style={{ fontFamily: "monospace", fontSize: "11px" }}
-                >
-                  [<br />
-                  &nbsp;&nbsp;{`{`}"topicNumber": "1.1", "nameEn": "Intro",
-                  "nameUr": "تعارف"{`}`},<br />
-                  &nbsp;&nbsp;...
-                  <br />]
-                </div>
                 <textarea
-                  className="form-control mb-3"
+                  className="form-control custom-input mb-3"
                   rows="6"
-                  style={{ fontFamily: "monospace", fontSize: "12px" }}
-                  placeholder="Paste JSON here..."
+                  placeholder='[{"topicNumber": "1.1", "nameEn": "Intro"}]'
                   value={bulkJson}
                   onChange={(e) => setBulkJson(e.target.value)}
-                  disabled={loading}
                 ></textarea>
-
                 <button
-                  className="btn btn-primary w-100 fw-bold d-flex justify-content-center align-items-center"
+                  className="btn-primary-gradient w-100"
                   onClick={handleBulkUpload}
-                  disabled={loading || !bulkJson}
+                  disabled={loading}
                 >
                   {loading ? (
-                    <>
-                      <FaSpinner className="icon-spin me-2" /> Uploading...
-                    </>
+                    <FaSpinner className="icon-spin" />
                   ) : (
                     <>
-                      <FaCode className="me-2" /> Upload Bulk
+                      <FaCode className="me-2" /> Upload
                     </>
                   )}
                 </button>

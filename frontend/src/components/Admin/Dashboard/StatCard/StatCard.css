@@ -1,61 +1,104 @@
-/* src/components/Admin/Dashboard/StatCard/StatCard.css */
-
-.custom-card {
-    height: 140px;
-    /* Keep fixed height as requested */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: none;
-    /* Ensure no border */
+/* --- MODERN STAT CARD --- */
+.stat-card-modern {
+  background-color: var(--card-bg); /* Theme Aware */
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Smooth Bounce */
+  box-shadow: 0 4px 6px var(--shadow-color);
+  position: relative;
+  overflow: hidden;
+  height: 140px; /* Fixed Height */
 }
 
-.custom-card:hover {
-    transform: translateY(-5px);
-    /* Slight lift effect */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+/* Lift Effect on Hover */
+.stat-card-modern:hover {
+  transform: translateY(-8px);
 }
 
-/* --- GRADIENTS --- */
-/* We mix the original color with a slightly lighter/different shade */
-
-.gradient-blue {
-    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+/* Typography */
+.stat-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
 }
 
-.gradient-green {
-    background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1;
 }
 
-.gradient-orange {
-    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+/* Icon Box */
+.stat-icon-box {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.4s ease;
 }
 
-.gradient-cyan {
-    background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+/* Rotate icon slightly on hover */
+.stat-card-modern:hover .stat-icon-box {
+  transform: scale(1.1) rotate(10deg);
 }
 
-/* --- TYPOGRAPHY --- */
-/* Font weights handles by Bootstrap, specific sizing here */
+/* =========================================
+   GLOWING HOVER EFFECTS
+   ========================================= */
 
-.card-title {
-    font-size: 17px;
-    /* Adjusted for better fit */
-    letter-spacing: 0.5px;
+/* --- BLUE CARD --- */
+.stat-card-modern.blue .stat-icon-box {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+.stat-card-modern.blue:hover {
+  border-color: #3b82f6;
+  /* ✨ The Glow Effect */
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
 }
 
-.card-value {
-    font-size: 32px;
-    line-height: 1.2;
+/* --- GREEN CARD --- */
+.stat-card-modern.green .stat-icon-box {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+.stat-card-modern.green:hover {
+  border-color: #10b981;
+  /* ✨ The Glow Effect */
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
 }
 
-/* --- ICON WRAPPER --- */
-.card-icon-wrapper {
-    width: 55px;
-    height: 55px;
-    background-color: rgba(255, 255, 255, 0.2);
-    /* White transparent looks cleaner on gradients */
-    backdrop-filter: blur(5px);
-    /* Optional: Adds a glassmorphism effect */
-    border-radius: 12px;
-    /* Soft square */
-    font-size: 26px;
+/* --- ORANGE CARD --- */
+.stat-card-modern.orange .stat-icon-box {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+.stat-card-modern.orange:hover {
+  border-color: #f59e0b;
+  /* ✨ The Glow Effect */
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+}
+
+/* --- CYAN CARD --- */
+.stat-card-modern.cyan .stat-icon-box {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+}
+.stat-card-modern.cyan:hover {
+  border-color: #06b6d4;
+  /* ✨ The Glow Effect */
+  box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
 }

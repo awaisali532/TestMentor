@@ -1,63 +1,104 @@
-/* QuestionBank Page Wrapper */
+/* --- QUESTION BANK WRAPPER --- */
 .qb-wrapper {
-    min-height: calc(100vh - 80px);
-    /* Navbar height minus */
-    background-color: #f4f6f8;
+  min-height: calc(100vh - 60px); /* Adjust based on navbar height */
+  background-color: var(--bg-body); /* Theme Aware */
+  transition: background-color 0.3s ease;
 }
 
-/* White Content Area */
+/* --- TITLE GRADIENT (For the word "Bank") --- */
+.highlight-text {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800; /* Extra bold for emphasis */
+}
+
+/* --- MAIN CONTENT CARD --- */
 .qb-content {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    /* Taaki corners round rahein */
-    border: 1px solid #e0e0e0;
+  background-color: var(--card-bg); /* Theme Aware */
+  border-radius: 16px;
+  box-shadow: 0 4px 20px var(--shadow-color);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  margin-top: 20px;
 }
 
 /* --- CUSTOM TABS STYLING --- */
 .qb-tabs {
-    display: flex;
-    border-bottom: 1px solid #dee2e6;
-    background-color: #f8f9fa;
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--pill-bg); /* Subtle background for tab area */
 }
 
 .qb-tab-btn {
-    flex: 1;
-    padding: 15px 20px;
-    border: none;
-    background: none;
-    font-weight: 600;
-    color: #6c757d;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-bottom: 3px solid transparent;
-    /* Hidden underline by default */
+  flex: 1;
+  padding: 18px 20px;
+  border: none;
+  background: none;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  font-size: 0.95rem;
 }
 
 .qb-tab-btn:hover {
-    background-color: #e9ecef;
-    color: #495057;
+  background-color: var(--border-color); /* Slight darken on hover */
+  color: var(--text-main);
 }
 
 /* Active Tab Style */
 .qb-tab-btn.active {
-    color: #0d6efd;
-    /* Bootstrap Primary Blue */
-    background-color: white;
-    border-bottom: 3px solid #0d6efd;
+  color: var(--accent-1); /* Blue Accent */
+  background-color: var(--card-bg); /* Merge with content below */
+  border-bottom: 3px solid var(--accent-1);
 }
 
-/* Empty State Area */
+/* --- EMPTY STATE AREA --- */
 .qb-empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #adb5bd;
+  text-align: center;
+  padding: 80px 20px;
+  margin-top: 30px;
+  background-color: var(--card-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: 16px;
+  color: var(--text-muted);
 }
 
-.qb-empty-icon {
-    font-size: 50px;
-    margin-bottom: 15px;
-    display: block;
-    opacity: 0.5;
+.empty-icon-box {
+  width: 80px;
+  height: 80px;
+  background-color: var(--pill-bg);
+  color: var(--accent-1);
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+.qb-empty-state h4 {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.qb-empty-state p {
+  font-size: 0.95rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* --- UTILITIES --- */
+.text-main {
+  color: var(--text-main) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
 }

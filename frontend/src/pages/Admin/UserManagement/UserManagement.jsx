@@ -41,7 +41,6 @@ const UserManagement = () => {
         },
       });
 
-      console.log("2. Data Received:", data);
       setUsers(data);
     } catch (error) {
       console.error("3. API Error:", error);

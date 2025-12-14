@@ -1,29 +1,177 @@
-/* Minimal Custom CSS */
-
-.topic-list-item {
-    transition: background-color 0.2s;
+/* --- TOPIC CARD --- */
+.topic-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
 }
 
-.topic-list-item:hover {
-    background-color: #f8f9fa;
+.topic-card:hover {
+  transform: translateX(5px);
+  border-color: var(--accent-1);
 }
 
+.topic-card.active-edit {
+  border-left: 4px solid var(--accent-1);
+  background-color: var(--pill-bg);
+}
+
+.topic-badge {
+  background-color: var(--pill-bg);
+  color: var(--text-main);
+  padding: 5px 10px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-right: 15px;
+  min-width: 45px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+/* --- ACTION BUTTONS (Icons Only) --- */
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+
+.btn-icon.edit:hover {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+.btn-icon.delete:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* --- FORM CARD --- */
+.form-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px var(--shadow-color);
+}
+
+.form-header {
+  background-color: var(--pill-bg);
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Mode Toggle (Single/Bulk) */
+.mode-toggle {
+  background-color: var(--card-bg);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  display: flex;
+}
+
+.mode-toggle button {
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.mode-toggle button.active {
+  background-color: var(--accent-1);
+  color: white;
+  font-weight: 600;
+}
+
+/* --- INPUTS --- */
+.custom-input {
+  background-color: var(--bg-body) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  font-size: 0.9rem;
+}
+
+.custom-input:focus {
+  border-color: var(--accent-1) !important;
+  box-shadow: none !important;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* --- BUTTONS --- */
+.btn-primary-gradient {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.btn-primary-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
+}
+
+/* --- UTILITIES --- */
+.text-main {
+  color: var(--text-main) !important;
+}
+.text-accent {
+  color: var(--accent-1) !important;
+}
+.text-muted {
+  color: var(--text-muted) !important;
+}
 .urdu-font {
-    font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif;
-    font-size: 1.1em;
+  font-family: "Jameel Noori Nastaleeq", serif;
 }
-
-/* Spinner Animation */
-.icon-spin {
-    animation: spin 1s linear infinite;
+.edit-alert {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+.edit-alert button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+.empty-topic-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+}
+.empty-topic-state svg {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  opacity: 0.5;
 }
