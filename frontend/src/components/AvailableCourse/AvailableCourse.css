@@ -1,78 +1,199 @@
-.course-card {
-  width: 200px;
-  /* Remove fixed height */
-  min-height: 280px; /* Optional: ensures decent minimum */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border: none;
-  margin: 15px auto;
-  border-radius: 8px;
+/* =========================================
+   AVAILABLE COURSES CSS
+   ========================================= */
+
+/* --- 1. THEME VARIABLES FOR CARDS --- */
+[data-theme="dark"] {
+  --card-bg: rgba(15, 23, 42, 0.6);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-hover-border: rgba(45, 212, 191, 0.5);
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] {
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.05);
+  --card-hover-border: rgba(14, 165, 233, 0.5);
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* --- 2. SECTION LAYOUT --- */
+.courses-section {
+  padding: 80px 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: #f8fafc;
+  /* Default Light */
+}
+
+/* Force Dark Background in Dark Mode */
+[data-theme="dark"] .courses-section {
+  background-color: #020617 !important;
+  color: #f8fafc !important;
+}
+
+.courses-section .container {
+  max-width: 1200px;
+  padding-left: 25px;
+  padding-right: 25px;
+}
+
+/* --- 3. HEADER STYLING (RENAMED) --- */
+.courses-header {
+  text-align: center;
+  margin-bottom: 50px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ✅ Renamed from .section-title */
+.courses-title-main {
+  font-weight: 800;
+  color: inherit;
+  margin-bottom: 15px;
+  font-size: 2.5rem;
+  line-height: 1.2;
+}
+
+/* ✅ Renamed from .section-subtitle */
+.courses-subtitle {
+  color: inherit;
+  opacity: 0.8;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+/* Highlight Gradient Text */
+.highlight-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- 4. CARD DESIGN --- */
+.courses-section .custom-course-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Let content flow top to bottom */
   align-items: center;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.courses-section .custom-course-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--card-hover-border);
+  box-shadow: var(--card-shadow);
+}
+
+/* --- IMAGE CIRCLE --- */
+.card-img-box {
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
   padding: 15px;
   transition: transform 0.3s ease;
-  background-color: var(--card-bg-color);
 }
 
-.course-card:hover {
-  transform: translateY(-5px);
-}
 
-.course-card img {
-  max-width: 100%;
-  height: 100px; /* Choti image height */
-  object-fit: contain;
-  margin-bottom: 10px;
-  border-radius: 8px;
-}
-
-.course-card .card-title {
-  font-size: 1rem; /* Thoda chota title */
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-.course-card .card-text {
-  font-size: 0.8rem;
-  color: #555;
-  text-align: center;
-}
-
-.course-card .btn {
-  margin-top: auto; /* Push to bottom inside card body */
-  width: 90%;
-  border-radius: 20px;
-  padding: 8px;
-  font-size: 0.9rem;
-  align-self: center;
-}
-
-.card-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Button stays at bottom */
-  flex-grow: 1;
+.course-logo {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .course-card {
-    width: 160px; /* slightly wider for better text wrap */
-    padding: 12px;
-  }
-
-  .course-card img {
-    height: 80px;
-  }
+.custom-course-card:hover .card-img-box {
+  transform: scale(1.1);
 }
 
-.course-card .card-title {
-  font-size: 0.9rem;
+/* --- CARD CONTENT --- */
+.course-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: inherit;
+  margin-bottom: 10px;
 }
 
-.course-card .card-text {
-  font-size: 0.75rem;
+[data-theme="dark"] .course-title {
+  color: #f8fafc;
+}
+
+[data-theme="light"] .course-title {
+  color: #1e293b;
+}
+
+.course-desc {
+  color: inherit;
+  opacity: 0.7;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+  flex-grow: 1;
+}
+
+/* --- BUTTONS --- */
+.course-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e293b;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 25px;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .course-btn {
+  background: #f8fafc;
+  color: #020617;
+}
+
+.course-btn:hover {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf) !important;
+  color: white !important;
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
+}
+
+/* --- DISABLED STATE --- */
+.custom-course-card.disabled {
+  opacity: 0.7;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+.custom-course-card.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--card-border);
+}
+
+.disabled-btn {
+  background: transparent !important;
+  border: 1px solid currentColor;
+  color: inherit;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.disabled-btn:hover {
+  background: transparent !important;
+  transform: none;
+  box-shadow: none;
 }

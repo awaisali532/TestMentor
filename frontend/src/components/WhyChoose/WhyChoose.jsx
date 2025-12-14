@@ -1,5 +1,4 @@
 import React from "react";
-import { Container, Row, Col } from "react-bootstrap";
 import { BsCpu, BsJournalText, BsGraphUp, BsPhone } from "react-icons/bs";
 import "./WhyChoose.css";
 
@@ -32,25 +31,33 @@ const features = [
 
 const WhyChoose = () => {
   return (
-    <section className="why-choose d-flex justify-content-center">
-      <Container>
-        <h2 className="section-title">Why Choose TestMentor?</h2>
-        <Row>
+    <section className="why-choose-section">
+      <div className="container">
+        {/* Header */}
+        <div className="wc-header text-center">
+          <h2 className="wc-title">
+            Why Choose <span className="highlight-text">TestMentor?</span>
+          </h2>
+          <p className="wc-subtitle">
+            Everything you need to ace your exams in one place.
+          </p>
+        </div>
+
+        {/* Features Grid */}
+        <div className="row g-4">
           {features.map((feature, index) => (
-            <Col
-              key={index}
-              md={6}
-              className="d-flex align-items-start feature-wrapper"
-            >
-              <div className="icon-container">{feature.icon}</div>
-              <div>
-                <h5 className="feature-title">{feature.title}</h5>
-                <p className="feature-description">{feature.description}</p>
+            <div key={index} className="col-md-6 col-12">
+              <div className="wc-card">
+                <div className="wc-icon-box">{feature.icon}</div>
+                <div className="wc-content">
+                  <h5 className="wc-feature-title">{feature.title}</h5>
+                  <p className="wc-feature-desc">{feature.description}</p>
+                </div>
               </div>
-            </Col>
+            </div>
           ))}
-        </Row>
-      </Container>
+        </div>
+      </div>
     </section>
   );
 };

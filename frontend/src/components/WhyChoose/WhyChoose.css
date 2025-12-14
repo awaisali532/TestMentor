@@ -1,60 +1,111 @@
-.why-choose {
-  padding: 60px 0;
-  background-color: #fff;
-  /* display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  text-align: center; */
+/* =========================================
+   WHY CHOOSE SECTION
+   ========================================= */
+
+/* --- 1. LAYOUT & THEME --- */
+.why-choose-section {
+  /* padding: 80px 0; */
+  background-color: var(--bg-body);
+  transition: background-color 0.3s ease;
 }
 
-.section-title {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 40px;
+/* ✅ Constraint Width to match Navbar */
+.why-choose-section .container {
+  max-width: 1200px;
+  padding-left: 25px;
+  padding-right: 25px;
 }
 
-.feature-wrapper {
-  margin-bottom: 30px;
-  gap: 15px;
+/* --- 2. HEADER --- */
+.wc-header {
+  margin-bottom: 50px;
 }
 
-.icon-container {
-  font-size: 2rem;
-  color: #0d6efd; /* Bootstrap primary color */
-  flex-shrink: 0;
-  margin-top: 3px;
+.wc-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
 }
 
-.feature-title {
+.wc-subtitle {
+  color: var(--text-muted);
   font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 6px;
 }
 
-.feature-description {
+/* Highlight Gradient Text (Reusing your global class logic) */
+.highlight-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- 3. FEATURE CARD --- */
+.wc-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+}
+
+/* Hover Effect: Slight lift */
+.wc-card:hover {
+  transform: translateY(-5px);
+}
+
+/* --- 4. ICON STYLING --- */
+.wc-icon-box {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* ✅ Gradient Icon Color */
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Fallback color */
+  color: #0ea5e9;
+
+  /* Add a subtle glow behind icon in Dark Mode */
+  filter: drop-shadow(0 4px 10px rgba(14, 165, 233, 0.2));
+}
+
+/* --- 5. TEXT CONTENT --- */
+.wc-feature-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.wc-feature-desc {
   font-size: 0.95rem;
-  color: #555;
-  width: 70%;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 90%;
 }
 
-/* Mobile adjustments */
-@media (max-width: 576px) {
-  .section-title {
-    font-size: 1.6rem;
+/* --- RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  .wc-title {
+    font-size: 2rem;
   }
 
-  .feature-title {
-    font-size: 1rem;
+  .wc-card {
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+    padding: 10px;
   }
 
-  .feature-description {
-    font-size: 0.85rem;
-    width: 90%;
-  }
-
-  .icon-container {
-    font-size: 1.8rem;
+  .wc-feature-desc {
+    max-width: 100%;
   }
 }

@@ -1,43 +1,129 @@
-.section-title {
-  font-weight: 500;
-  color: #5e5b5b;
-  /* font-size: 1.25rem; ≈ 20px on default base */
+/* =========================================
+   RECOMMENDED CLASSES SECTION
+   ========================================= */
+
+/* --- 1. LAYOUT & THEME --- */
+.recommended-section {
+  /* padding: 80px 0; */
+  padding-top: 30px;
+  background-color: var(--bg-body);
+  transition: background-color 0.3s ease;
 }
 
-.class-card-home {
-  width: 11.5rem;
-  height: 4.375rem; /* 70px */
-  background-color: white;
-  border-radius: 0.625rem; /* 10px */
-  box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.2); /* 2px 6px */
-  font-size: 1.3rem; /* ≈ 18px */
-  font-weight: 400;
-  transition: transform 0.2s ease;
+/* ✅ Constraint Width to match Navbar */
+.recommended-section .container {
+  max-width: 1200px;
+  padding-left: 25px;
+  padding-right: 25px;
+}
+
+/* --- 2. HEADER --- */
+.rc-header {
+  margin-bottom: 50px;
+}
+
+.rc-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.rc-subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+/* Highlight Gradient Text (Reusing global logic) */
+.highlight-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- 3. GLASS CARD DESIGN --- */
+.class-card-glass {
+  /* Dimensions */
+  min-width: 180px;
+  padding: 20px 30px;
+
+  /* Glassy Background based on theme */
+  background-color: var(--card-bg, rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  /* Borders & Shadows */
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+  /* Text Styling */
+  color: var(--text-main);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  /* Smooth Transitions */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Hover effect */
-.class-card-home:hover {
-  transform: scale(1.05);
+/* --- HOVER EFFECTS --- */
+.class-card-glass:hover {
+  transform: translateY(-5px);
+  background-color: var(--pill-bg);
+  /* Slightly lighter/darker on hover */
+  box-shadow: 0 10px 20px rgba(14, 165, 233, 0.15);
+  /* Blue glow */
+  border-color: #0ea5e9;
+  /* Brand Blue Border */
 }
 
-/* Responsive: Stack vertically on small screens */
+/* Gradient Text on Hover */
+.class-card-glass:hover .class-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- SPECIFIC DARK MODE ADJUSTMENTS --- */
+[data-theme="dark"] .class-card-glass {
+  background-color: rgba(15, 23, 42, 0.6);
+  /* Dark Glass */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .class-card-glass:hover {
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2);
+}
+
+/* --- RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  .rc-title {
+    font-size: 2rem;
+  }
+}
+
 @media (max-width: 576px) {
-  .class-card-home {
+  .class-card-glass {
     width: 100%;
-    max-width: 18.75rem; /* 300px */
+    /* Full width cards on mobile */
+    max-width: 300px;
     margin: 0 auto;
-    font-size: 1.62rem; /* Slightly smaller for small screens */
+    padding: 15px;
+    font-size: 1.1rem;
   }
 
-  .recommended-wrapper {
-    flex-direction: column !important;
+  .rc-wrapper {
+    flex-direction: column;
     align-items: center;
-  }
-
-  .section-title {
-    font-size: 1.125rem; /* Slightly smaller on mobile */
+    gap: 15px !important;
   }
 }

@@ -3,19 +3,31 @@ import "./Mediums.css";
 
 const mediums = ["English Medium", "Urdu Medium", "Both Medium"];
 
-const RecommendedClasses = () => {
+const Mediums = () => {
   return (
-    <div className="container text-center my-4">
-      <h1 className="section-title mb-4">Medium</h1>
-      <div className="d-flex flex-wrap justify-content-center gap-3 recommended-wrapper">
-        {mediums.map((className, index) => (
-          <div className="medium-card" key={index}>
-            <strong>{className}</strong>
-          </div>
-        ))}
+    <section className="mediums-section">
+      <div className="container">
+        {/* Header */}
+        <div className="mediums-header text-center">
+          <h2 className="mediums-title">
+            Select <span className="highlight-text">Medium</span>
+          </h2>
+          <p className="mediums-subtitle">
+            Choose your preferred language for study materials.
+          </p>
+        </div>
+
+        {/* Mediums Grid */}
+        <div className="d-flex flex-wrap justify-content-center gap-4 mediums-wrapper">
+          {mediums.map((medium, index) => (
+            <div className="medium-card-glass" key={index}>
+              <span className="medium-text">{medium}</span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 
-export default RecommendedClasses;
+export default Mediums;

@@ -1,0 +1,8 @@
+.home-wrapper {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #ffffff;
+    /* Or #f8f9fa for a light grey look */
+    overflow-x: hidden;
+    /* Prevents horizontal scrollbar */
+}

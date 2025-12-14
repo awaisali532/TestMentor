@@ -1,72 +1,231 @@
-.footer {
-  background-color: #343a40;
+/* =========================================
+   MODERN FOOTER STYLES
+   ========================================= */
+
+/* --- 1. LAYOUT & THEME --- */
+.footer-section {
+  background-color: var(--bg-body);
+  /* Adapts to Theme */
+  color: var(--text-main);
+  padding-top: 80px;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
 }
 
-.footer a {
-  color: #ccc;
-  text-decoration: none;
-  transition: color 0.3s ease, transform 0.3s ease;
+/* Force Dark Footer in Dark Mode for better contrast */
+[data-theme="dark"] .footer-section {
+  background-color: #0f172a;
+  /* Slightly lighter than body black */
 }
 
-.footer a:hover {
-  color: #fff;
-  text-decoration: underline;
-  transform: translateX(2px);
-}
-
-/* Footer Brand */
+/* --- 2. BRANDING --- */
 .footer-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: var(--text-main);
 }
 
-/* Social Icons - base style */
-.footer .social-icons a,
-.footer .d-flex a {
-  font-size: 1.25rem;
-  transition: color 0.3s ease, transform 0.3s ease;
+.footer-brand span {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Social Hover Colors */
-.footer a:hover:nth-child(1) {
-  color: #1877f2;
-} /* Facebook Blue */
-.footer a:hover:nth-child(2) {
-  color: #1da1f2;
-} /* Twitter Blue */
-.footer a:hover:nth-child(3) {
-  color: #e4405f;
-} /* Instagram Pink-Red */
-
-/* Optional: slight scale on hover */
-.footer .d-flex a:hover {
-  transform: scale(1.2);
+.footer-desc {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  max-width: 300px;
 }
 
-/* General text and list */
-.footer p,
-.footer ul {
+/* --- 3. LINKS --- */
+.footer-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text-main);
+  position: relative;
+  display: inline-block;
+}
+
+/* Small underline effect */
+.footer-heading::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 3px;
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  bottom: -8px;
+  left: 0;
+  border-radius: 2px;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
   margin: 0;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 576px) {
-  .footer-brand {
-    font-size: 1.25rem;
+.footer-links li {
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.footer-links a:hover {
+  color: #0ea5e9;
+  /* Brand Blue */
+  transform: translateX(5px);
+}
+
+/* --- 4. SOCIAL ICONS --- */
+.social-links {
+  display: flex;
+  gap: 15px;
+}
+
+.social-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--pill-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: translateY(-3px);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Brand Colors on Hover */
+.social-icon.fb:hover {
+  background-color: #1877f2;
+  box-shadow: 0 5px 15px rgba(24, 119, 242, 0.4);
+}
+
+.social-icon.tw:hover {
+  background-color: #1da1f2;
+  box-shadow: 0 5px 15px rgba(29, 161, 242, 0.4);
+}
+
+.social-icon.insta:hover {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4);
+}
+
+/* --- 5. NEWSLETTER --- */
+.newsletter-box {
+  position: relative;
+  margin-top: 10px;
+}
+
+.newsletter-box input {
+  width: 100%;
+  padding: 12px 15px;
+  padding-right: 50px;
+  border-radius: 50px;
+  background: var(--pill-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  color: var(--text-main);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.newsletter-box input:focus {
+  border-color: #0ea5e9;
+}
+
+.newsletter-box button {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.newsletter-box button:hover {
+  transform: scale(1.1);
+}
+
+/* --- 6. CONTACT INFO --- */
+.contact-info p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-info .icon {
+  color: #0ea5e9;
+}
+
+/* --- 7. FOOTER BOTTOM --- */
+.footer-bottom {
+  margin-top: 60px;
+  padding: 25px 0;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.text-highlight {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* --- RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  .footer-section {
+    padding-top: 50px;
+    text-align: center;
   }
 
-  .footer h6 {
-    font-size: 1rem;
+  .footer-heading::after {
+    left: 50%;
+    transform: translateX(-50%);
   }
 
-  .footer p,
-  .footer ul li,
-  .footer a {
-    font-size: 0.9rem;
+  .social-links {
+    justify-content: center;
   }
 
-  .footer .d-flex {
-    justify-content: center !important;
+  .contact-info p {
+    justify-content: center;
+  }
+
+  .footer-brand,
+  .footer-desc {
+    margin-left: auto;
+    margin-right: auto;
   }
 }

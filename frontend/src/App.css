@@ -1,29 +1,201 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #F3F4F6;
-  /* Exact light grey from image */
-}
+/* =========================================
+   1. CSS VARIABLES & THEMING
+   ========================================= */
 
-/* Global Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
-}
-
-/* Colors (Converted directly) */
+/* A. Global Constants (Colors that don't change based on theme) */
 :root {
+  --font-main: 'Inter', sans-serif;
+
+  /* Brand Static Colors */
   --primary-color: #3ca8a0;
   --primary-color-dark: #135f5a;
   --secondary-color: #0046b2;
   --icon-color: #3076ce;
   --card-bg-color: #f0f4fb;
+  --danger-color: #dc3545;
 }
 
-/* Buttons */
+/* B. Dark Mode (Default) */
+:root,
+[data-theme="dark"] {
+  --bg-body: #020617;
+  /* Very Dark Blue/Black */
+  --nav-bg: rgba(15, 23, 42, 0.9);
+  /* Glassy Dark */
+  --text-main: #f8fafc;
+  /* White Text */
+  --text-muted: #94a3b8;
+  /* Gray Text */
+
+  --pill-bg: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+
+  /* Theme Accents */
+  --accent-1: #0ea5e9;
+  --accent-2: #2dd4bf;
+}
+
+/* C. Light Mode Override */
+[data-theme="light"] {
+  --bg-body: #f8fafc;
+  /* Light Grey/White */
+  --nav-bg: rgba(255, 255, 255, 0.9);
+  /* Glassy White */
+  --text-main: #1e293b;
+  /* Dark Slate Text */
+  --text-muted: #64748b;
+  /* Muted Text */
+
+  --pill-bg: rgba(0, 0, 0, 0.05);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================
+   2. GLOBAL RESET & BASE STYLES
+   ========================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+}
+
+html {
+  font-size: 16px;
+  /* Base size: 1rem = 16px */
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-body) !important;
+  /* Overrides Bootstrap */
+  color: var(--text-main) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fix for React Router Links */
+a {
+  text-decoration: none;
+  color: inherit;
+  /* Inherit text color from theme */
+}
+
+/* =========================================
+   3. TYPOGRAPHY
+   ========================================= */
+
+h1 {
+  font-size: 3rem;
+}
+
+/* 48px */
+h2 {
+  font-size: 2.5rem;
+}
+
+/* 40px */
+h3 {
+  font-size: 2rem;
+}
+
+/* 32px */
+h4 {
+  font-size: 1.5rem;
+}
+
+/* 24px */
+h5 {
+  font-size: 1.25rem;
+}
+
+/* 20px */
+h6 {
+  font-size: 1rem;
+}
+
+/* 16px */
+p {
+  font-size: 1.125rem;
+}
+
+/* 18px */
+
+/* --- Responsive Typography --- */
+
+/* Tablet (< 768px) */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+  }
+
+  h5 {
+    font-size: 1rem;
+  }
+
+  h6 {
+    font-size: 0.875rem;
+  }
+
+  p {
+    font-size: 1rem;
+  }
+}
+
+/* Mobile (< 576px) */
+@media (max-width: 576px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+  }
+
+  h5 {
+    font-size: 1rem;
+  }
+
+  h6 {
+    font-size: 0.875rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+  }
+}
+
+/* =========================================
+   4. COMPONENTS & UTILITIES
+   ========================================= */
+
+/* Primary Button */
 .button-primary {
   background-color: var(--primary-color);
   color: white;
@@ -31,8 +203,9 @@ body {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
   text-decoration: none;
+  display: inline-block;
 }
 
 .button-primary:hover {
@@ -41,141 +214,14 @@ body {
   color: white;
 }
 
-Link {
-  text-decoration: none;
-}
-
-/* Base font size */
-html {
-  font-size: 16px;
-  /* 1rem = 16px */
-}
-
-h1 {
-  font-size: 3rem;
-  /* 48px */
-}
-
-h2 {
-  font-size: 2.5rem;
-  /* 40px */
-}
-
-h3 {
-  font-size: 2rem;
-  /* 32px */
-}
-
-h4 {
-  font-size: 1.5rem;
-  /* 24px */
-}
-
-h5 {
-  font-size: 1.25rem;
-  /* 20px */
-}
-
-h6 {
-  font-size: 1rem;
-  /* 16px */
-}
-
-p {
-  font-size: 1.125rem;
-  /* 18px */
-}
-
-/* Media Queries for Responsiveness */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2.5rem;
-    /* 40px */
-  }
-
-  h2 {
-    font-size: 2rem;
-    /* 32px */
-  }
-
-  h3 {
-    font-size: 1.75rem;
-    /* 28px */
-  }
-
-  h4 {
-    font-size: 1.25rem;
-    /* 20px */
-  }
-
-  h5 {
-    font-size: 1rem;
-    /* 16px */
-  }
-
-  h6 {
-    font-size: 0.875rem;
-    /* 14px */
-  }
-
-  p {
-    font-size: 1rem;
-    /* 16px */
-  }
-}
-
-@media (max-width: 576px) {
-  h1 {
-    font-size: 2rem;
-    /* 32px */
-  }
-
-  h2 {
-    font-size: 1.75rem;
-    /* 28px */
-  }
-
-  h3 {
-    font-size: 1.5rem;
-    /* 24px */
-  }
-
-  h4 {
-    font-size: 1.125rem;
-    /* 18px */
-  }
-
-  h5 {
-    font-size: 1rem;
-    /* 16px */
-  }
-
-  h6 {
-    font-size: 0.875rem;
-    /* 14px */
-  }
-
-  p {
-    font-size: 0.875rem;
-    /* 14px */
-  }
-}
-
-/* Starik ko bara aur align karne ke liye magic class */
+/* Required Field Asterisk (*) */
 .required-mark {
-  color: #dc3545;
-  /* Red Color */
+  color: var(--danger-color);
   font-size: 1.4rem;
-  /* Size bara (apni marzi se adjust karein) */
   font-weight: bold;
-  /* Thora mota */
   line-height: 0;
-  /* Sabse Important: Ye line ki height kharab nahi hone dega */
   vertical-align: middle;
-  /* Text ke sath center mein rahega */
   margin-left: 4px;
-  /* Text se thora fasla */
   position: relative;
   top: 3px;
-  /* Thora sa neeche lane ke liye (Fine tuning) */
 }

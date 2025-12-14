@@ -1,128 +1,307 @@
-:root {
-  --primary-color: #3ca8a0;
-  --primary-color-dark: #135f5a;
-  --secondary-color: #0046b2;
-}
+/* --- GLOBAL VARIABLES (Keep same) --- */
+/* (Assuming you have these in index.css as discussed before) */
 
-.custom-navbar {
-  height: 60px;
+/* --- FLOATING NAVBAR STRUCTURE --- */
+.navbar-floating {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  max-width: 1200px;
+  height: 70px;
+  background-color: var(--nav-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 50px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px var(--shadow-color);
+  z-index: 1000;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
+  padding: 0 10px;
 }
 
-.custom-navbar .container {
-  width: 100%;
+.navbar-floating.compact {
+  height: 60px;
+  top: 15px;
+  width: 98%;
+  max-width: 1250px;
+  box-shadow: 0 15px 35px var(--shadow-color);
+}
+
+.nav-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  padding: 0 20px;
 }
 
-.custom-navbar .logo {
-  font-size: 24px;
-  font-weight: bold;
-  background: linear-gradient(
-    to right,
-    var(--primary-color-dark),
-    var(--secondary-color)
-  );
-  color: transparent;
+/* --- LOGO --- */
+.nav-logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.nav-logo span {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- LINKS --- */
+.nav-center {
   display: flex;
-  align-items: center;
-  height: 60px;
+  gap: 5px;
 }
 
-.custom-navbar .hamburger-icon {
-  display: none;
-  font-size: 24px;
-  color: var(--primary-color-dark);
-}
-
-.custom-navbar .menu-items-container {
-  display: flex;
-  align-items: center;
-}
-
-.custom-navbar .menu-items-container .menu-items {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.custom-navbar .menu-items-container .menu-items li {
-  margin: 0 10px;
-}
-
-.custom-navbar .menu-items-container .menu-items li a {
+.nav-item {
   text-decoration: none;
-  color: var(--primary-color-dark);
-  font-size: 16px;
+  color: var(--text-muted);
   font-weight: 500;
-}
-
-.custom-navbar .menu-items-container .menu-items li a:hover {
-  color: var(--secondary-color);
-}
-
-.custom-navbar .menu-items-container .login-btn {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
+  font-size: 0.95rem;
   padding: 8px 20px;
+  border-radius: 50px;
+  transition: all 0.3s ease;
 }
 
-.custom-navbar .menu-items-container .login-btn:hover {
-  background-color: var(--primary-color-dark);
-  border-color: var(--primary-color-dark);
+.nav-item:hover {
+  color: var(--text-main);
+  background-color: var(--pill-bg);
 }
 
-/* Hamburger Menu for Mobile View */
+.nav-item.active {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+}
+
+/* --- BUTTONS --- */
+.theme-toggle-btn {
+  background: var(--pill-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--border-color);
+  transform: rotate(15deg);
+}
+
+.icon-sun {
+  color: #f59e0b;
+  font-size: 1.2rem;
+}
+
+.icon-moon {
+  color: #a78bfa;
+  font-size: 1.1rem;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+/* ✅ SMART LOGIN BUTTON (New) */
+.btn-smart-login {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 8px 20px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  /* No gap initially */
+  transition: all 0.3s ease;
+  overflow: hidden;
+  /* Hide icon initially */
+}
+
+.smart-icon {
+  max-width: 0;
+  /* Hidden */
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+}
+
+/* Hover Effect */
+.btn-smart-login:hover {
+  background: var(--text-main);
+  color: var(--bg-body);
+  gap: 8px;
+  /* Create space */
+  padding-right: 25px;
+  /* Expand right side */
+}
+
+.btn-smart-login:hover .smart-icon {
+  max-width: 20px;
+  /* Show icon */
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.user-profile-pill {
+  display: flex;
+  align-items: center;
+  background: var(--pill-bg);
+  padding: 5px 15px;
+  border-radius: 50px;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.icon-btn-logout {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+
+.icon-btn-logout:hover {
+  transform: scale(1.1);
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+.mobile-toggle,
+.mobile-drawer,
+.nav-overlay,
+.mobile-actions {
+  display: none !important;
+}
+
+.desktop-only {
+  display: flex !important;
+}
+
 @media (max-width: 992px) {
-  .custom-navbar .hamburger-icon {
-    display: block;
+  .desktop-only {
+    display: none !important;
   }
 
-  .custom-navbar .menu-items-container {
-    position: absolute;
-    top: 60px;
-    right: 0;
-    width: 100%;
-    display: none;
-    flex-direction: column;
-  }
-
-  .custom-navbar .menu-items-container.open {
-    display: flex;
-  }
-
-  .custom-navbar .menu-items-container .menu-items {
-    flex-direction: column;
-    width: 100%;
+  .mobile-actions {
+    display: flex !important;
     align-items: center;
+    gap: 15px;
   }
 
-  .custom-navbar .menu-items-container .menu-items li {
-    margin: 10px 0;
+  .mobile-toggle {
+    display: block !important;
+    font-size: 1.5rem;
+    color: var(--text-main);
+    cursor: pointer;
   }
 
-  .custom-navbar .menu-items-container .login-btn {
+  .mobile-drawer {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background-color: var(--bg-body);
+    z-index: 1100;
+    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    border-left: 1px solid var(--border-color);
+  }
+
+  .mobile-drawer.open {
+    right: 0;
+  }
+
+  .drawer-header {
     width: 100%;
-    text-align: center;
-    margin-top: 10px;
-  }
-}
-
-/* Desktop View */
-@media (min-width: 992px) {
-  .custom-navbar .menu-items-container {
+    padding: 20px;
     display: flex;
     justify-content: flex-end;
   }
 
-  .custom-navbar .menu-items-container .menu-items {
+  .close-icon {
+    font-size: 1.8rem;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+
+  .close-icon:hover {
+    color: #ef4444;
+  }
+
+  .drawer-content {
     display: flex;
-    list-style: none;
+    flex-direction: column;
+    gap: 25px;
+    width: 100%;
+    padding: 20px 30px;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .drawer-content .nav-item {
+    display: block;
+    width: 100%;
+    font-size: 1.2rem;
+    padding: 10px;
+    color: var(--text-main);
+  }
+
+  .mobile-auth {
+    margin-top: 20px;
+    width: 100%;
+  }
+
+  /* Mobile Button adjustment */
+  .mobile-auth .btn-smart-login {
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+    /* Always show gap on mobile */
+  }
+
+  .mobile-auth .smart-icon {
+    max-width: 20px;
+    /* Always show icon on mobile */
+    opacity: 1;
+    transform: none;
+  }
+
+  .nav-overlay {
+    display: block !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
   }
 }

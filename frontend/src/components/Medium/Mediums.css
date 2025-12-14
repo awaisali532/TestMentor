@@ -1,43 +1,127 @@
-.section-title {
-  font-weight: 500;
-  color: #5e5b5b;
-  /* font-size: 1.25rem; ≈ 20px on default base */
+/* =========================================
+   MEDIUMS SECTION
+   ========================================= */
+
+/* --- 1. LAYOUT & THEME --- */
+.mediums-section {
+  padding: 60px 0;
+  background-color: var(--bg-body);
+  transition: background-color 0.3s ease;
 }
 
-.medium-card {
-  width: 17.5rem;
-  height: 4.375rem; /* 70px */
-  background-color: white;
-  border-radius: 0.625rem; /* 10px */
-  box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.2); /* 2px 6px */
-  font-size: 1.3rem; /* ≈ 18px */
-  font-weight: 400;
-  transition: transform 0.2s ease;
+/* ✅ FORCE DARK BACKGROUND IN DARK MODE */
+[data-theme="dark"] .mediums-section {
+  background-color: #020617 !important;
+  color: #f8fafc !important;
+}
+
+/* Constraint Width to match Navbar */
+.mediums-section .container {
+  max-width: 1200px;
+  padding-left: 25px;
+  padding-right: 25px;
+}
+
+/* --- 2. HEADER --- */
+.mediums-header {
+  margin-bottom: 50px;
+}
+
+.mediums-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: inherit;
+  /* Adapts to theme */
+  margin-bottom: 10px;
+}
+
+.mediums-subtitle {
+  color: inherit;
+  opacity: 0.8;
+  font-size: 1.1rem;
+}
+
+/* Reusing Global Highlight Text */
+.highlight-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- 3. GLASS CARD DESIGN --- */
+.medium-card-glass {
+  /* Specific Dimensions for Medium Cards (Wider) */
+  width: 18rem;
+  height: 4.5rem;
+
+  /* Glassy Background */
+  background-color: var(--card-bg, rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  /* Borders */
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  /* Slightly sharper than main cards */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+  /* Typography */
+  color: inherit;
+  font-size: 1.3rem;
+  font-weight: 600;
+
+  /* Layout & Transitions */
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
 }
 
-/* Hover effect */
-.class-card:hover {
-  transform: scale(1.05);
+/* --- DARK MODE CARD OVERRIDES --- */
+[data-theme="dark"] .medium-card-glass {
+  background-color: rgba(15, 23, 42, 0.6);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Responsive: Stack vertically on small screens */
+/* --- HOVER EFFECTS --- */
+.medium-card-glass:hover {
+  transform: translateY(-5px) scale(1.02);
+  border-color: #0ea5e9;
+  /* Brand Blue Border */
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.2);
+}
+
+/* Text Gradient on Hover */
+.medium-card-glass:hover .medium-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  .mediums-title {
+    font-size: 2rem;
+  }
+}
+
 @media (max-width: 576px) {
-  .class-card {
+  .medium-card-glass {
     width: 100%;
-    max-width: 18.75rem; /* 300px */
-    margin: 0 auto;
-    font-size: 1.62rem; /* Slightly smaller for small screens */
+    /* Full width on mobile */
+    max-width: 350px;
+    height: 4rem;
+    /* Slightly smaller height */
+    font-size: 1.1rem;
   }
 
-  .recommended-wrapper {
-    flex-direction: column !important;
+  .mediums-wrapper {
+    flex-direction: column;
     align-items: center;
-  }
-
-  .section-title {
-    font-size: 1.125rem; /* Slightly smaller on mobile */
+    gap: 15px !important;
   }
 }

@@ -6,9 +6,11 @@ import RecommendedClasses from "../../components/RecommendedClasses/RecommendedC
 import Mediums from "../../components/Medium/Mediums";
 import QuestionTypes from "../../components/QuestionsType/QuestionsType";
 import Footer from "../../components/Footer/Footer";
+import "./Home.css"; // Ensure this is imported
+
 const Home = () => {
   return (
-    <div>
+    <main className="home-wrapper">
       <HeroSection />
       <AvailableCourses />
       <WhyChoose />
@@ -16,7 +18,7 @@ const Home = () => {
       <Mediums />
       <QuestionTypes />
       <Footer />
-    </div>
+    </main>
   );
 };
 
