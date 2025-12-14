@@ -15,14 +15,17 @@ const userSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     image: { type: String, default: "" },
 
-    // ✅ NEW: Permissions Logic
+    // ✅ NEW: Resume Field (Stores the URL/Path to the PDF)
+    resume: { type: String, default: "" },
+
+    // Permissions Logic
     permissions: {
       type: [String],
       default: [], // Stores ["manage_questions", "manage_subjects"] etc.
     },
     isSuperAdmin: {
       type: Boolean,
-      default: false, // Only YOU will have this true
+      default: false,
     },
   },
   { timestamps: true }

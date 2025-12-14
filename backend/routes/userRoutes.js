@@ -7,8 +7,10 @@ const {
   deleteUser,
   toggleUserStatus,
   updateProfile,
-  removeProfileImage, // ✅ Import this
+  removeProfileImage,
   changePassword,
+  uploadResume, //
+  deleteResume,
 } = require("../controllers/userController");
 
 const {
@@ -22,8 +24,13 @@ const upload = require("../middleware/upload");
 
 // 1. Profile Routes
 router.put("/profile", protect, upload.single("image"), updateProfile);
-router.put("/profile/remove-image", protect, removeProfileImage); // ✅ New Route
+router.put("/profile/remove-image", protect, removeProfileImage);
 router.put("/change-password", protect, changePassword);
+
+// ✅ NEW: Resume Upload Route (Only Super Admin should use this logically)
+// We use upload.single("resume") to expect a file field named 'resume'
+router.put("/profile/resume", protect, upload.single("resume"), uploadResume);
+router.put("/profile/resume/remove", protect, deleteResume); // 🗑️ Delete Route
 
 // 2. Admin Management Routes
 router.get("/all", protect, hasPermission("manage_users"), getAllUsers);

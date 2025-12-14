@@ -88,6 +88,7 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        resume: user.resume,
         image: user.image || "",
         isSuperAdmin: user.isSuperAdmin || false,
         permissions: user.permissions || [],

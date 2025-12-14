@@ -9,7 +9,10 @@ import {
   FaLock,
   FaUser,
   FaSpinner,
-  FaTrash, // ✅ Imported Trash Icon
+  FaTrash,
+  FaFilePdf,
+  FaCloudUploadAlt,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 import "./ProfileSettings.css";
 
@@ -17,15 +20,16 @@ const ProfileSettings = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // --- STATES ---
-  // Initialized isSuperAdmin to false safely
   const [user, setUser] = useState({
     name: "",
     email: "",
     image: "",
+    resume: "",
     isSuperAdmin: false,
   });
   const [loading, setLoading] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
+  const [resumeLoading, setResumeLoading] = useState(false);
 
   // Modals & Inputs
   const [showNameModal, setShowNameModal] = useState(false);
@@ -36,26 +40,45 @@ const ProfileSettings = () => {
 
   // --- 1. INITIAL LOAD ---
   useEffect(() => {
+    // 1. LocalStorage se data uthao
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
       setUser(storedUser);
       setNewName(storedUser.name);
     }
+
+    // 2. (Optional but Recommended) Server se latest data fetch kro
+    // Taake agar LocalStorage purana ho to update ho jaye
+    const fetchLatestProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        // Hum "updateProfile" wale route ko "GET" ki tarah use nahi kr skte,
+        // lekin agar aapke pas "GET /me" ya "GET /profile" route ho to yahan call krein.
+        // Filhal hum LocalStorage par hi rely kr rhe hain.
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchLatestProfile();
   }, []);
+
+  // Simplified Helper
+  const getViewableResumeLink = (url) => {
+    return url || "#";
+  };
 
   // --- 2. IMAGE UPLOAD ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      return toast.error("Please upload a valid image file (JPG, PNG)");
-    }
+    if (!file || !file.type.startsWith("image/"))
+      return toast.error("Invalid Image");
 
     const formData = new FormData();
     formData.append("image", file);
-
     setImgLoading(true);
-    const toastId = toast.loading("Uploading Profile Photo...");
+    const toastId = toast.loading("Uploading...");
 
     try {
       const token = localStorage.getItem("token");
@@ -67,33 +90,32 @@ const ProfileSettings = () => {
       });
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
-      toast.success("Profile photo updated!", { id: toastId });
-      // Reload logic not needed if res.data contains isSuperAdmin
+      toast.success("Photo updated!", { id: toastId });
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to upload image", { id: toastId });
+      toast.error("Failed to upload", { id: toastId });
     } finally {
       setImgLoading(false);
     }
   };
 
-  // ✅ 3. REMOVE IMAGE
+  // --- 3. REMOVE IMAGE ---
   const handleRemoveImage = async () => {
-    if (!window.confirm("Are you sure you want to remove your photo?")) return;
-
+    if (!window.confirm("Remove photo?")) return;
     setImgLoading(true);
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
         `${BASE_URL}/api/users/profile/remove-image`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
-      toast.success("Photo removed successfully");
+      toast.success("Photo removed");
     } catch (err) {
-      toast.error("Failed to remove photo");
+      toast.error("Failed");
     } finally {
       setImgLoading(false);
     }
@@ -101,21 +123,23 @@ const ProfileSettings = () => {
 
   // --- 4. UPDATE NAME ---
   const handleUpdateName = async () => {
-    if (!newName.trim()) return toast.error("Name cannot be empty");
+    if (!newName.trim()) return toast.error("Name empty");
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
         `${BASE_URL}/api/users/profile`,
         { name: newName },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
-      toast.success("Name updated successfully!");
+      toast.success("Name updated!");
       setShowNameModal(false);
     } catch (err) {
-      toast.error("Failed to update name");
+      toast.error("Failed");
     } finally {
       setLoading(false);
     }
@@ -125,10 +149,7 @@ const ProfileSettings = () => {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwords.new !== passwords.confirm)
-      return toast.error("New passwords do not match!");
-    if (passwords.new.length < 6)
-      return toast.error("Password must be at least 6 characters");
-
+      return toast.error("Passwords don't match");
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -137,13 +158,73 @@ const ProfileSettings = () => {
         { oldPassword: passwords.old, newPassword: passwords.new },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Password changed successfully!");
+      toast.success("Password changed!");
       setShowPassModal(false);
       setPasswords({ old: "", new: "", confirm: "" });
     } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to change password");
+      toast.error(err.response?.data?.error || "Failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ 6. UPLOAD RESUME
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || file.type !== "application/pdf")
+      return toast.error("Upload valid PDF");
+
+    const formData = new FormData();
+    formData.append("resume", file);
+    setResumeLoading(true);
+    const toastId = toast.loading("Uploading Resume...");
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${BASE_URL}/api/users/profile/resume`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const updatedUser = { ...user, resume: res.data.resume };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast.success("Uploaded successfully!", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Upload failed", { id: toastId });
+    } finally {
+      setResumeLoading(false);
+    }
+  };
+
+  // ✅ 7. DELETE RESUME
+  const handleDeleteResume = async () => {
+    if (!window.confirm("Delete resume?")) return;
+    setResumeLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${BASE_URL}/api/users/profile/resume/remove`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const updatedUser = { ...user, resume: "" };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast.success("Resume removed");
+    } catch (err) {
+      toast.error("Failed");
+    } finally {
+      setResumeLoading(false);
     }
   };
 
@@ -159,7 +240,7 @@ const ProfileSettings = () => {
         <div className="card-body text-center p-4 p-md-5">
           <h4 className="fw-bold mb-4 text-dark">Profile & Settings</h4>
 
-          {/* --- 1. AVATAR SECTION --- */}
+          {/* AVATAR SECTION */}
           <div className="position-relative d-inline-block mb-4">
             <div className="avatar-container">
               {imgLoading ? (
@@ -173,21 +254,17 @@ const ProfileSettings = () => {
                   className="avatar-image"
                   onError={(e) => {
                     e.target.onerror = null;
-                    setUser((prev) => ({ ...prev, image: "" }));
+                    setUser((p) => ({ ...p, image: "" }));
                   }}
                 />
               ) : (
                 <FaUser className="default-avatar-icon" />
               )}
             </div>
-
-            {/* Buttons Wrapper */}
             <div className="d-flex gap-2 justify-content-center mt-3">
-              {/* Upload Button */}
               <label
                 className="btn btn-primary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                 style={{ width: "36px", height: "36px", cursor: "pointer" }}
-                title="Change Photo"
               >
                 <FaCamera size={14} />
                 <input
@@ -198,13 +275,10 @@ const ProfileSettings = () => {
                   disabled={imgLoading}
                 />
               </label>
-
-              {/* ✅ Delete Button (Only shows if image exists) */}
               {user.image && (
                 <button
                   className="btn btn-danger btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                   style={{ width: "36px", height: "36px" }}
-                  title="Remove Photo"
                   onClick={handleRemoveImage}
                   disabled={imgLoading}
                 >
@@ -214,19 +288,16 @@ const ProfileSettings = () => {
             </div>
           </div>
 
-          {/* --- 2. NAME SECTION --- */}
+          {/* NAME */}
           <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
             <h3 className="fw-bold m-0 text-dark">{user.name}</h3>
             <button
               className="edit-name-btn shadow-sm"
               onClick={() => setShowNameModal(true)}
-              title="Edit Name"
             >
               <FaPen size={13} />
             </button>
           </div>
-
-          {/* ✅ Correct Badge: Super Admin vs Sub-Admin */}
           <span
             className={`badge px-3 py-2 rounded-pill fw-medium ls-1 mb-4 ${
               user.isSuperAdmin
@@ -237,7 +308,7 @@ const ProfileSettings = () => {
             {user.isSuperAdmin ? "Super Admin" : "Sub-Admin"}
           </span>
 
-          {/* --- 3. EMAIL SECTION --- */}
+          {/* EMAIL */}
           <div className="bg-light p-3 rounded-3 mb-3 text-start border">
             <label className="fw-bold text-muted mb-1 text-uppercase fs-7 ls-1">
               Email Address
@@ -248,8 +319,8 @@ const ProfileSettings = () => {
             </div>
           </div>
 
-          {/* --- 4. PASSWORD SECTION --- */}
-          <div className="bg-light p-3 rounded-3 text-start border">
+          {/* PASSWORD */}
+          <div className="bg-light p-3 rounded-3 mb-3 text-start border">
             <label className="fw-bold text-muted mb-1 text-uppercase fs-7 ls-1">
               Security
             </label>
@@ -271,11 +342,72 @@ const ProfileSettings = () => {
               </button>
             </div>
           </div>
+
+          {/* ✅ RESUME SECTION */}
+          {user.isSuperAdmin && (
+            <div className="bg-light p-3 rounded-3 text-start border">
+              <label className="fw-bold text-muted mb-1 text-uppercase fs-7 ls-1 d-flex align-items-center gap-2">
+                <FaFilePdf className="text-danger" /> Admin Resume
+              </label>
+              <div className="d-flex justify-content-between align-items-center mt-2">
+                {user.resume ? (
+                  <div className="d-flex align-items-center gap-2 overflow-hidden">
+                    <a
+                      href={getViewableResumeLink(user.resume)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary text-decoration-none fw-bold small text-truncate"
+                      style={{ maxWidth: "150px" }}
+                    >
+                      View Current Resume
+                    </a>
+                    <FaExternalLinkAlt size={12} className="text-primary" />
+                  </div>
+                ) : (
+                  <small className="text-muted fst-italic">
+                    No resume uploaded
+                  </small>
+                )}
+
+                <div className="d-flex gap-2">
+                  <label
+                    className="btn btn-outline-primary btn-sm fw-bold px-3 rounded-pill d-flex align-items-center gap-2 cursor-pointer"
+                    style={{ minWidth: "100px" }}
+                  >
+                    {resumeLoading ? (
+                      <FaSpinner className="icon-spin" />
+                    ) : (
+                      <>
+                        <FaCloudUploadAlt />{" "}
+                        {user.resume ? "Replace" : "Upload"}
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      hidden
+                      accept="application/pdf"
+                      onChange={handleResumeUpload}
+                      disabled={resumeLoading}
+                    />
+                  </label>
+                  {user.resume && (
+                    <button
+                      className="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center"
+                      style={{ width: "32px", height: "32px" }}
+                      onClick={handleDeleteResume}
+                      disabled={resumeLoading}
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* --- MODALS --- */}
-      {/* Edit Name Modal */}
+      {/* Modals (Name & Password) */}
       {showNameModal && (
         <div className="modal-overlay-custom">
           <div className="modal-box-custom p-4 bg-white rounded-4 shadow">
@@ -306,14 +438,12 @@ const ProfileSettings = () => {
         </div>
       )}
 
-      {/* Change Password Modal */}
       {showPassModal && (
         <div className="modal-overlay-custom">
           <div className="modal-box-custom p-4 bg-white rounded-4 shadow">
             <div className="d-flex justify-content-between mb-4 align-items-center">
               <h5 className="fw-bold m-0 d-flex align-items-center">
-                <FaLock className="me-2 text-warning" />
-                Change Password
+                <FaLock className="me-2 text-warning" /> Change Password
               </h5>
               <button
                 className="btn-close"
@@ -351,7 +481,7 @@ const ProfileSettings = () => {
                 <span
                   className="position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer text-muted"
                   style={{ marginTop: "12px" }}
-                  onClick={() => setShowPass((prev) => !prev)}
+                  onClick={() => setShowPass((p) => !p)}
                 >
                   {showPass ? <FaEyeSlash /> : <FaEye />}
                 </span>
@@ -377,8 +507,7 @@ const ProfileSettings = () => {
               >
                 {loading ? (
                   <>
-                    <FaSpinner className="icon-spin me-2" />
-                    Updating...
+                    <FaSpinner className="icon-spin me-2" /> Updating...
                   </>
                 ) : (
                   "Update Password"
