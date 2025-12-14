@@ -31,7 +31,14 @@ const questionSchema = new mongoose.Schema(
     },
     questionCategory: {
       type: String,
-      enum: ["TEXT", "EXERCISE", "EXAMPLE", "NUMERICAL", "REVIEW"],
+      enum: [
+        "TEXT",
+        "EXERCISE",
+        "EXAMPLE",
+        "NUMERICAL",
+        "REVIEW",
+        "CONCEPTUAL",
+      ],
       default: "TEXT",
     },
     difficulty: {
