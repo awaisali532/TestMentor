@@ -16,8 +16,8 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { MdEmail } from "react-icons/md";
 import { useUser } from "../../context/UserContext";
-import toast, { Toaster } from "react-hot-toast";
-import { validatePassword } from "../../utils/validators"; // 👈 IMPORT VALIDATOR
+import toast from "react-hot-toast";
+import { validatePassword } from "../../utils/validators";
 
 const RegisterPage = () => {
   const { register } = useUser();
@@ -27,18 +27,13 @@ const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
-
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    // 🔒 PASSWORD VALIDATION CHECK
     const passwordError = validatePassword(password, email);
-    if (passwordError) {
-      return toast.error(passwordError);
-    }
+    if (passwordError) return toast.error(passwordError);
 
     setLoading(true);
     const toastId = toast.loading("Creating your account...");
@@ -55,33 +50,29 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="container-wrapper d-flex justify-content-center align-items-center">
-      {/* <Toaster position="top-center" /> */}
-
-      <div className="login-register-card d-flex flex-column flex-md-row">
-        {/* Left Panel (Same as before) */}
+    <div className="container-wrapper">
+      <div className="login-register-card">
+        {/* Left Panel */}
         <div className="left-panel">
-          <div className="overlay">
-            <img
-              src={registerimg}
-              alt="Illustration"
-              className="illustration"
-            />
-            <h2 className="mt-4">Join TestMentor</h2>
-            <p>Start your journey to success today!</p>
-            <Link className="button-primary" to={"/login"}>
-              Login Here
-            </Link>
-          </div>
+          <img
+            src={registerimg}
+            alt="Register Illustration"
+            className="illustration"
+          />
+          <h2>Join Us!</h2>
+          <p>Already have an account? Login to continue.</p>
+          <Link to="/login" className="btn-outline-white">
+            Login Here
+          </Link>
         </div>
 
         {/* Right Panel */}
         <div className="right-panel">
-          <h2 className="mb-4">Register</h2>
+          <h2>Create Account</h2>
 
           <form onSubmit={handleRegister}>
-            {/* Name Input */}
-            <div className="form-group mb-3">
+            {/* Name */}
+            <div className="form-group">
               <div className="input-group">
                 <span className="input-group-text">
                   <FaUser />
@@ -97,8 +88,8 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Email Input */}
-            <div className="form-group mb-3">
+            {/* Email */}
+            <div className="form-group">
               <div className="input-group">
                 <span className="input-group-text">
                   <MdEmail />
@@ -114,10 +105,8 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Password Input with Validation Text */}
-            <div className="form-group mb-2">
-              {" "}
-              {/* mb-3 se mb-2 kia taaki text qareeb aye */}
+            {/* Password */}
+            <div className="form-group">
               <div className="input-group">
                 <span className="input-group-text">
                   <FaLock />
@@ -138,23 +127,34 @@ const RegisterPage = () => {
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
               </div>
-            </div>
-
-            {/* 👇 HELPER TEXT FOR PASSWORD */}
-            <div
-              className="mb-3 text-muted"
-              style={{ fontSize: "0.75rem", lineHeight: "1.2" }}
-            >
-              * Must be 8+ chars with Uppercase, Lowercase, Number & Symbol.
-              <br />* Cannot be same as email.
+              <small
+                className="text-muted"
+                style={{
+                  fontSize: "0.75rem",
+                  marginTop: "5px",
+                  display: "block",
+                }}
+              >
+                * 8+ chars, Uppercase, Lowercase, Number & Symbol.
+              </small>
             </div>
 
             {/* Role Selection */}
-            <div className="form-group mb-4 d-flex align-items-center p-2 border rounded bg-light">
-              <FaUserTag className="me-2 text-secondary" />
-              <label className="me-3 mb-0 fw-bold small text-secondary">
+            <div
+              className="form-group d-flex align-items-center p-2 border rounded"
+              style={{ background: "var(--pill-bg)" }}
+            >
+              <FaUserTag
+                className="me-2"
+                style={{ color: "var(--text-muted)" }}
+              />
+              <span
+                className="me-3 fw-bold small"
+                style={{ color: "var(--text-main)" }}
+              >
                 I am a:
-              </label>
+              </span>
+
               <div className="form-check form-check-inline">
                 <input
                   className="form-check-input"
@@ -164,12 +164,11 @@ const RegisterPage = () => {
                   value="student"
                   checked={role === "student"}
                   onChange={(e) => setRole(e.target.value)}
-                  style={{ cursor: "pointer" }}
                 />
                 <label
                   className="form-check-label"
                   htmlFor="student"
-                  style={{ cursor: "pointer" }}
+                  style={{ color: "var(--text-main)" }}
                 >
                   Student
                 </label>
@@ -183,26 +182,21 @@ const RegisterPage = () => {
                   value="teacher"
                   checked={role === "teacher"}
                   onChange={(e) => setRole(e.target.value)}
-                  style={{ cursor: "pointer" }}
                 />
                 <label
                   className="form-check-label"
                   htmlFor="teacher"
-                  style={{ cursor: "pointer" }}
+                  style={{ color: "var(--text-main)" }}
                 >
                   Teacher
                 </label>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="button-primary w-100 mb-3 d-flex justify-content-center align-items-center gap-2"
-              disabled={loading}
-            >
+            <button type="submit" className="btn-auth" disabled={loading}>
               {loading ? (
                 <>
-                  <FaSpinner className="icon-spin" /> Creating Account...
+                  <FaSpinner className="icon-spin" /> Creating...
                 </>
               ) : (
                 "Register"
@@ -210,15 +204,17 @@ const RegisterPage = () => {
             </button>
           </form>
 
-          {/* Social Icons (Same as before) */}
-          <p className="text-center mb-2 small text-muted">
-            or register with social platforms
-          </p>
-          <div className="social-icons d-flex justify-content-center gap-3">
-            <FcGoogle className="icon" />
-            <FaFacebookF className="icon fb" />
-            <FaGithub className="icon gh" />
-            <FaLinkedinIn className="icon li" />
+          <p className="social-text">Or register with</p>
+          <div className="social-icons">
+            <div className="social-icon-btn">
+              <FcGoogle />
+            </div>
+            <div className="social-icon-btn">
+              <FaFacebookF style={{ color: "#1877f2" }} />
+            </div>
+            <div className="social-icon-btn">
+              <FaGithub />
+            </div>
           </div>
         </div>
       </div>

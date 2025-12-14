@@ -1,97 +1,150 @@
-/* --- PAGE LAYOUT --- */
+/* =========================================
+   SUBJECTS PAGE STYLING
+   ========================================= */
+
+/* --- 1. PAGE LAYOUT & THEME --- */
 .subjects-page-wrapper {
   min-height: 100vh;
-  background-color: #f8f9fa;
+  /* Use global theme variable */
+  background-color: var(--bg-body);
+  padding-top: 120px;
+  /* Space for floating navbar */
   padding-bottom: 50px;
+  transition: background-color 0.3s ease;
 }
 
-/* --- HERO HEADER --- */
+/* Force Dark Background in Dark Mode */
+[data-theme="dark"] .subjects-page-wrapper {
+  background-color: #020617;
+}
+
+/* Constraint Width to match Navbar */
+.subjects-page-wrapper .container {
+  max-width: 1200px;
+  padding-left: 25px;
+  padding-right: 25px;
+}
+
+/* --- 2. HEADER --- */
 .subjects-header {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: white;
-  padding: 60px 0 40px;
   text-align: center;
+  margin-bottom: 30px;
 }
 
-/* --- TABS Styling --- */
+.subjects-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.subjects-subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+/* Highlight Text (Gradient) */
+.highlight-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- 3. TABS Styling --- */
 .tabs-container {
   display: flex;
   justify-content: center;
   gap: 15px;
-  padding: 20px 0;
-  margin-bottom: 20px;
+  padding: 10px 0;
+  margin-bottom: 30px;
   flex-wrap: wrap;
-  background-color: #f8f9fa;
   z-index: 100;
 }
 
 .tab-btn {
-  border: none;
-  background: white;
-  color: #64748b;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+  background: var(--pill-bg, #fff);
+  color: var(--text-muted);
   padding: 10px 25px;
   border-radius: 50px;
   font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  border: 1px solid transparent;
 }
 
 .tab-btn:hover {
-  background-color: #e2e8f0;
-  transform: translateY(-2px);
+  border-color: #0ea5e9;
+  color: var(--text-main);
 }
 
 .tab-btn.active {
-  background-color: #3b82f6;
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
   color: white;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
 }
 
-/* --- CARD STYLING --- */
+/* --- 4. CARD STYLING --- */
 .subject-card {
-  background: white;
+  /* Theme Variables */
+  background-color: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #f1f5f9);
+  color: var(--text-main);
+
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
-  border: 1px solid #f1f5f9;
   cursor: pointer;
-  height: 100%; /* ✅ Ensures card takes full height in grid */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dark Mode Card Overrides */
+[data-theme="dark"] .subject-card {
+  background-color: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .subject-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: #0ea5e9;
+  box-shadow: 0 12px 24px rgba(14, 165, 233, 0.15);
 }
 
-/* --- IMAGE HANDLING UPDATES --- */
+.subject-card .card-title {
+  color: var(--text-main);
+}
+
+/* --- IMAGE HANDLING --- */
 .card-img-wrapper {
-  height: 220px; /* ✅ INCREASED HEIGHT (was 160px) */
+  height: 220px;
   width: 100%;
-  background-color: #fff; /* White background looks better with contain */
+  /* Keep image background white/light even in dark mode for clarity */
+  background-color: #fff;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 15px; /* ✅ Added padding so image doesn't touch edges */
-  border-bottom: 1px solid #f0f0f0;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .subject-img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* ✅ SHOWS FULL IMAGE (No cropping) */
-  transition: transform 0.3s ease;
+  object-fit: contain;
+  transition: transform 0.4s ease;
 }
 
 .subject-card:hover .subject-img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
-/* Placeholder */
+/* Placeholder Icon */
 .placeholder-img {
   color: #cbd5e1;
   display: flex;
@@ -101,14 +154,16 @@
   height: 100%;
 }
 
-/* Overlay */
+/* --- 5. OVERLAY & SMART BUTTON --- */
 .overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  /* Darker Overlay */
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,6 +175,67 @@
   opacity: 1;
 }
 
+/* ✅ SMART ACTION BUTTON */
+.btn-card-action {
+  background: white;
+  color: #0f172a;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-card-action:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+/* Text Switching Logic */
+.text-idle,
+.text-hover {
+  position: absolute;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+}
+
+/* Initial State */
+.text-idle {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.text-hover {
+  transform: translateY(20px);
+  /* Hidden below */
+  opacity: 0;
+  color: #0ea5e9;
+  /* Brand color on hover text */
+}
+
+/* Hover State (Overlay is active parent) */
+.overlay:hover .text-idle {
+  transform: translateY(-20px);
+  /* Move Up */
+  opacity: 0;
+}
+
+.overlay:hover .text-hover {
+  transform: translateY(0);
+  /* Move into center */
+  opacity: 1;
+}
+
 /* --- LOADING --- */
 .loading-screen {
   height: 50vh;
@@ -127,6 +243,6 @@
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 600;
 }

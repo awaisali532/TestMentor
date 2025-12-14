@@ -1,39 +1,31 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaBookOpen } from "react-icons/fa";
-import { useNavigate, useSearchParams } from "react-router-dom"; // ✅ Added useSearchParams
+import { FaBookOpen, FaArrowRight } from "react-icons/fa"; // ✅ Added Arrow Icon
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "./Subjects.css";
 
 const Subjects = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const navigate = useNavigate();
-
-  // ✅ URL Params Hook
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // --- STATES ---
   const [allSubjects, setAllSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // We derive activeClass directly from URL or default to empty string initially
   const activeClass = searchParams.get("class") || "";
 
-  // --- INITIAL FETCH ---
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/subjects`);
         const data = res.data;
-
         setAllSubjects(data);
 
-        // Extract unique classes
         const uniqueClasses = [...new Set(data.map((item) => item.className))];
-        uniqueClasses.sort(); // Sort naturally (9th, 10th...)
+        uniqueClasses.sort(); // Natural sort
         setClasses(uniqueClasses);
 
-        // ✅ LOGIC: If URL has no class, set the first one automatically
         if (!searchParams.get("class") && uniqueClasses.length > 0) {
           setSearchParams({ class: uniqueClasses[0] });
         }
@@ -43,16 +35,13 @@ const Subjects = () => {
         setLoading(false);
       }
     };
-
     fetchSubjects();
-  }, []); // Run once on mount
+  }, []);
 
-  // --- HANDLER: Change Tab ---
   const handleTabChange = (cls) => {
-    setSearchParams({ class: cls }); // ✅ Update URL instead of just state
+    setSearchParams({ class: cls });
   };
 
-  // --- FILTER LOGIC ---
   const displayedSubjects = allSubjects.filter(
     (sub) => sub.className === activeClass
   );
@@ -61,25 +50,28 @@ const Subjects = () => {
 
   return (
     <div className="subjects-page-wrapper">
+      {/* Header */}
       <div className="subjects-header">
         <div className="container">
-          <h1 className="fw-bold">Explore Subjects</h1>
-          <p className="opacity-75">
+          <h1 className="subjects-title">
+            Explore <span className="highlight-text">Subjects</span>
+          </h1>
+          <p className="subjects-subtitle">
             Select your class level to view available courses.
           </p>
         </div>
       </div>
 
-      <div className="container mt-4">
+      <div className="container content-container mt-4">
         {/* DYNAMIC TABS */}
         {classes.length > 0 ? (
           <>
-            <div className="tabs-container sticky-top-tabs">
+            <div className="tabs-container">
               {classes.map((cls) => (
                 <button
                   key={cls}
                   className={`tab-btn ${activeClass === cls ? "active" : ""}`}
-                  onClick={() => handleTabChange(cls)} // ✅ Use Handler
+                  onClick={() => handleTabChange(cls)}
                 >
                   {cls}
                 </button>
@@ -110,15 +102,20 @@ const Subjects = () => {
                             <FaBookOpen size={40} />
                           </div>
                         )}
+
+                        {/* ✅ Smart Overlay Button */}
                         <div className="overlay">
-                          <button className="btn btn-light btn-sm fw-bold">
-                            View Syllabus
+                          <button className="btn-card-action">
+                            <span className="text-idle">View Syllabus</span>
+                            <span className="text-hover">
+                              Start Now <FaArrowRight className="ms-2" />
+                            </span>
                           </button>
                         </div>
                       </div>
 
                       <div className="card-body p-3 text-center">
-                        <h5 className="card-title fw-bold text-dark m-0">
+                        <h5 className="card-title fw-bold m-0">
                           {subject.subjectName}
                         </h5>
                         <p className="small text-muted m-0 mt-1">

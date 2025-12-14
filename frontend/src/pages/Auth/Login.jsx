@@ -10,11 +10,11 @@ import {
   FaSpinner,
   FaEye,
   FaEyeSlash,
-} from "react-icons/fa"; // ✅ Imported Eye Icons
+} from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { useUser } from "../../context/UserContext";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const { login } = useUser();
@@ -22,8 +22,6 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // ✅ NEW STATE: Controls password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -37,10 +35,8 @@ const LoginPage = () => {
       toast.success("Welcome back!", { id: toastId });
 
       if (response.user.role === "admin") {
-        // ✅ REPLACE: TRUE (This prevents Back button from going to Login page)
         navigate("/admin/dashboard", { replace: true });
       } else {
-        // ✅ REPLACE: TRUE
         navigate("/", { replace: true });
       }
     } catch (err) {
@@ -49,27 +45,31 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
   return (
-    <div className="container-wrapper d-flex justify-content-center align-items-center">
-      {/* <Toaster position="top-center" /> */}
-      <div className="login-register-card d-flex flex-column flex-md-row">
+    <div className="container-wrapper">
+      <div className="login-register-card">
         {/* Left Panel */}
         <div className="left-panel">
-          <div className="overlay">
-            <img src={loginimg} alt="Student" className="illustration" />
-            <h2 className="mt-4">Welcome Back!</h2>
-            <p>Don't have an account?</p>
-            <Link className="button-primary" to="/register">
-              Register Here
-            </Link>
-          </div>
+          <img
+            src={loginimg}
+            alt="Login Illustration"
+            className="illustration"
+          />
+          <h2>Welcome Back!</h2>
+          <p>Don't have an account yet? Join us today!</p>
+          <Link to="/register" className="btn-outline-white">
+            Register Here
+          </Link>
         </div>
 
         {/* Right Panel */}
         <div className="right-panel">
-          <h2 className="mb-4">Login</h2>
+          <h2>Login to Account</h2>
+
           <form onSubmit={handleLogin}>
-            <div className="form-group mb-3">
+            {/* Email */}
+            <div className="form-group">
               <div className="input-group">
                 <span className="input-group-text">
                   <MdEmail />
@@ -77,7 +77,7 @@ const LoginPage = () => {
                 <input
                   type="email"
                   className="form-control"
-                  placeholder="Email"
+                  placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -85,16 +85,13 @@ const LoginPage = () => {
               </div>
             </div>
 
-            {/* ✅ PASSWORD INPUT WITH EYE ICON */}
-            <div className="form-group mb-3">
+            {/* Password */}
+            <div className="form-group">
               <div className="input-group">
-                {/* Lock Icon (Left) */}
                 <span className="input-group-text">
                   <FaLock />
                 </span>
-
                 <input
-                  // Logic: If showPassword is true -> text, else -> password
                   type={showPassword ? "text" : "password"}
                   className="form-control"
                   placeholder="Password"
@@ -102,8 +99,6 @@ const LoginPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-
-                {/* Eye Icon (Right) - Clickable */}
                 <span
                   className="input-group-text"
                   style={{ cursor: "pointer" }}
@@ -114,16 +109,12 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <p className="text-end mb-3 forgot">Forgot password?</p>
+            <p className="forgot">Forgot Password?</p>
 
-            <button
-              type="submit"
-              className="button-primary w-100 mb-3 d-flex justify-content-center align-items-center gap-2"
-              disabled={loading}
-            >
+            <button type="submit" className="btn-auth" disabled={loading}>
               {loading ? (
                 <>
-                  <FaSpinner className="icon-spin" /> Logging in...
+                  <FaSpinner className="icon-spin" /> Logging In...
                 </>
               ) : (
                 "Login"
@@ -131,11 +122,17 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <div className="social-icons d-flex justify-content-center gap-3 mt-4">
-            <FcGoogle className="icon" />
-            <FaFacebookF className="icon fb" />
-            <FaGithub className="icon gh" />
-            <FaLinkedinIn className="icon li" />
+          <p className="social-text">Or login with</p>
+          <div className="social-icons">
+            <div className="social-icon-btn">
+              <FcGoogle />
+            </div>
+            <div className="social-icon-btn">
+              <FaFacebookF style={{ color: "#1877f2" }} />
+            </div>
+            <div className="social-icon-btn">
+              <FaGithub />
+            </div>
           </div>
         </div>
       </div>
