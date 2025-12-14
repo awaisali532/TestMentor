@@ -164,25 +164,29 @@ const About = () => {
                   {/* Actions Row */}
                   <div className="actions-row">
                     <div className="social-links">
-                      {/* Social links can also be dynamic if added to backend */}
+                      {/* GitHub Link */}
                       <a
-                        href="https://github.com"
+                        href="https://github.com/awaisali532"
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="social-btn github"
                       >
                         <FaGithub />
                       </a>
+
+                      {/* LinkedIn Link */}
                       <a
-                        href="https://linkedin.com"
+                        href="https://www.linkedin.com/in/awais-ali-080a61332/"
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="social-btn linkedin"
                       >
                         <FaLinkedin />
                       </a>
+
+                      {/* Email Link */}
                       <a
-                        href={`mailto:${developer.email}`}
+                        href="mailto:awaisali532193@gmail.com"
                         className="social-btn email"
                       >
                         <FaEnvelope />

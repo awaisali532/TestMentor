@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useUser } from "../../../../context/UserContext";
+import { useUser } from "../../../../context/UserContext"; // Ensure path is correct
 import { MdSpaceDashboard } from "react-icons/md";
 import {
   FaFolder,
@@ -10,7 +10,8 @@ import {
   FaSignOutAlt,
   FaHistory,
   FaLock,
-  FaBars, // Hamburger
+  FaBars,
+  FaCogs, // ✅ Used for Site Settings
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -157,6 +158,15 @@ const Sidebar = () => {
             label="User Management"
             permission="manage_users"
           />
+
+          {/* ✅ NEW: Site Settings (Super Admin Only) */}
+          {user && user.isSuperAdmin && (
+            <SidebarItem
+              to="/admin/site-settings"
+              icon={FaCogs}
+              label="Site Settings"
+            />
+          )}
 
           <SidebarItem
             to="/admin/recent-activity"

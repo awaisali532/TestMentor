@@ -1,0 +1,40 @@
+.site-settings-wrapper {
+  background-color: var(--bg-body, #f8f9fa);
+  min-height: 100vh;
+}
+
+.icon-box-header {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);
+}
+
+.custom-admin-input {
+  border: 2px solid #e2e8f0;
+  padding: 12px 15px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  font-size: 0.95rem;
+}
+
+.custom-admin-input:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+}
+
+[data-theme="dark"] .custom-admin-input {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: white;
+}
+
+[data-theme="dark"] .custom-admin-input:focus {
+  border-color: #0ea5e9;
+}

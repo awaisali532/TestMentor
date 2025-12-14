@@ -31,6 +31,7 @@ const getPublicIdFromUrl = (url) => {
     return null;
   }
 };
+
 // 1. Get All Users
 exports.getAllUsers = async (req, res) => {
   try {
@@ -196,6 +197,7 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ error: "Password update failed." });
   }
 };
+
 // ✅ 9. UPLOAD RESUME (Using RAW Stream - Avoids 401 & Corruption)
 exports.uploadResume = async (req, res) => {
   try {
@@ -212,7 +214,6 @@ exports.uploadResume = async (req, res) => {
       const oldPublicId = getPublicIdFromUrl(user.resume);
       if (oldPublicId) {
         try {
-          // Delete both types to clean up any mess from previous attempts
           await cloudinary.uploader.destroy(oldPublicId, {
             resource_type: "raw",
           });
@@ -231,12 +232,11 @@ exports.uploadResume = async (req, res) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: "resumes",
-            // ✅ RAW: This avoids the 401 Unauthorized error for PDFs
-            resource_type: "raw",
+            resource_type: "raw", // ✅ RAW: Avoids 401 Unauthorized
             public_id: `resume_${req.user._id}.pdf`, // Force extension in ID
             format: "pdf",
-            type: "upload", // Explicitly Public
-            access_mode: "public", // Explicitly Public
+            type: "upload",
+            access_mode: "public",
             overwrite: true,
           },
           (error, result) => {
@@ -283,7 +283,6 @@ exports.deleteResume = async (req, res) => {
       const publicId = getPublicIdFromUrl(user.resume);
       if (publicId) {
         try {
-          // Delete 'raw' mainly, but try 'image' too just in case
           await cloudinary.uploader.destroy(publicId, { resource_type: "raw" });
           await cloudinary.uploader.destroy(publicId, {
             resource_type: "image",
@@ -306,13 +305,12 @@ exports.deleteResume = async (req, res) => {
     res.status(500).json({ error: "Failed to remove resume." });
   }
 };
-// ✅ GET ADMIN PROFILE (Public for About Page)
+
+// ✅ 11. GET ADMIN PROFILE (Public for About & Contact Page)
 exports.getAdminProfile = async (req, res) => {
   try {
-    // Find the user who isSuperAdmin: true
-    // We select only necessary fields for security
     const admin = await User.findOne({ isSuperAdmin: true }).select(
-      "name email image resume bio role socialLinks"
+      "name email image resume bio role socialLinks businessInfo" // ✅ Added businessInfo
     );
 
     if (!admin) {
@@ -322,5 +320,37 @@ exports.getAdminProfile = async (req, res) => {
     res.json(admin);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch admin profile" });
+  }
+};
+
+// ✅ 12. UPDATE BUSINESS INFO (Super Admin Only)
+exports.updateBusinessInfo = async (req, res) => {
+  try {
+    // Security Check: Only Super Admin can do this
+    if (!req.user.isSuperAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update settings" });
+    }
+
+    const { phone, officeAddress, supportEmail } = req.body;
+    const user = await User.findById(req.user._id);
+
+    // Update fields inside the businessInfo object
+    user.businessInfo = {
+      phone: phone || user.businessInfo.phone,
+      officeAddress: officeAddress || user.businessInfo.officeAddress,
+      supportEmail: supportEmail || user.businessInfo.supportEmail,
+    };
+
+    await user.save();
+
+    res.json({
+      message: "Business details updated successfully",
+      businessInfo: user.businessInfo,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update business info" });
   }
 };

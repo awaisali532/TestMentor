@@ -14,8 +14,6 @@ const userSchema = new mongoose.Schema(
     },
     isActive: { type: Boolean, default: true },
     image: { type: String, default: "" },
-
-    // ✅ NEW: Resume Field (Stores the URL/Path to the PDF)
     resume: { type: String, default: "" },
 
     // Permissions Logic
@@ -26,6 +24,11 @@ const userSchema = new mongoose.Schema(
     isSuperAdmin: {
       type: Boolean,
       default: false,
+    },
+    businessInfo: {
+      phone: { type: String, default: "+92 300 1234567" },
+      officeAddress: { type: String, default: "Lahore, Pakistan" },
+      supportEmail: { type: String, default: "support@testmentor.com" }, // Different from login email
     },
   },
   { timestamps: true }

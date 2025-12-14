@@ -1,0 +1,200 @@
+/* =========================================
+   CONTACT PAGE STYLING
+   ========================================= */
+
+/* --- 1. PAGE LAYOUT --- */
+.contact-wrapper {
+  min-height: 100vh;
+  background-color: var(--bg-body); /* Theme Aware */
+  padding-top: 140px; /* Navbar Space */
+  /* padding-bottom: 80px; */
+  transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .contact-wrapper {
+  background-color: #020617;
+}
+
+/* --- 2. HERO SECTION --- */
+.contact-hero {
+  margin-bottom: 60px;
+  padding: 0 20px;
+}
+
+.contact-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 15px;
+}
+
+.contact-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Gradient Text Highlight */
+.highlight-text {
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- 3. INFO CARDS (LEFT SIDE) --- */
+.info-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  padding: 25px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .info-card {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  border-color: #0ea5e9;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.info-card .icon-box {
+  min-width: 50px;
+  height: 50px;
+  background: var(--pill-bg, #f1f5f9);
+  color: #0ea5e9;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.info-card h5 {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 5px;
+}
+
+.info-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.info-link {
+  font-weight: 600;
+  color: #0ea5e9;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.info-link:hover {
+  color: #2dd4bf;
+  text-decoration: underline;
+}
+
+.info-text {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* --- 4. FORM CARD (RIGHT SIDE) --- */
+.contact-form-card {
+  background: var(--card-bg, #fff);
+  padding: 40px;
+  border-radius: 24px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .contact-form-card {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.form-title {
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 30px;
+  font-size: 1.8rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+/* Custom Inputs */
+.custom-input {
+  background-color: var(--bg-body);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.custom-input:focus {
+  background-color: var(--bg-body);
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+  color: var(--text-main);
+}
+
+/* Placeholder Color Fix for Dark Mode */
+.custom-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Send Button */
+.btn-send-message {
+  width: 100%;
+  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  border: none;
+  color: white;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+}
+
+.btn-send-message:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-send-message:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Responsive --- */
+@media (max-width: 991px) {
+  .contact-form-card {
+    padding: 30px 20px;
+  }
+  .contact-title {
+    font-size: 2.5rem;
+  }
+}

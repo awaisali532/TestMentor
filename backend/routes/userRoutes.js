@@ -12,6 +12,7 @@ const {
   uploadResume, //
   deleteResume,
   getAdminProfile,
+  updateBusinessInfo,
 } = require("../controllers/userController");
 
 const {
@@ -28,7 +29,7 @@ router.get("/admin-profile", getAdminProfile);
 router.put("/profile", protect, upload.single("image"), updateProfile);
 router.put("/profile/remove-image", protect, removeProfileImage);
 router.put("/change-password", protect, changePassword);
-
+router.put("/business-info", protect, updateBusinessInfo);
 // ✅ NEW: Resume Upload Route (Only Super Admin should use this logically)
 // We use upload.single("resume") to expect a file field named 'resume'
 router.put("/profile/resume", protect, upload.single("resume"), uploadResume);
