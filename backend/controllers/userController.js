@@ -306,3 +306,21 @@ exports.deleteResume = async (req, res) => {
     res.status(500).json({ error: "Failed to remove resume." });
   }
 };
+// ✅ GET ADMIN PROFILE (Public for About Page)
+exports.getAdminProfile = async (req, res) => {
+  try {
+    // Find the user who isSuperAdmin: true
+    // We select only necessary fields for security
+    const admin = await User.findOne({ isSuperAdmin: true }).select(
+      "name email image resume bio role socialLinks"
+    );
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin profile not found" });
+    }
+
+    res.json(admin);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch admin profile" });
+  }
+};

@@ -7,9 +7,11 @@ import {
   FaPlay,
   FaLock,
   FaSignInAlt,
-} from "react-icons/fa"; // Added FaSignInAlt
+  FaBookOpen,
+  FaTimes, // ✅ Close Icon
+} from "react-icons/fa";
 import { useUser } from "../../../context/UserContext";
-import toast from "react-hot-toast"; // ✅ Using react-hot-toast
+import toast from "react-hot-toast";
 import "./SubjectDetails.css";
 
 const SubjectDetails = () => {
@@ -21,6 +23,9 @@ const SubjectDetails = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openChapters, setOpenChapters] = useState({});
+
+  // ✅ New State for Custom Login Popup
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +40,7 @@ const SubjectDetails = () => {
         }
       } catch (err) {
         console.error(err);
+        toast.error("Failed to load subject details.");
       } finally {
         setLoading(false);
       }
@@ -49,85 +55,97 @@ const SubjectDetails = () => {
     }));
   };
 
-  // ✅ UPDATED: Custom Toast for Login
+  // ✅ Updated Logic: Show Popup instead of Toast
   const handleStartTest = (topicId) => {
     if (!user) {
-      // Create a custom toast with a button
-      toast(
-        (t) => (
-          <div className="d-flex flex-column gap-2 align-items-center">
-            <span className="fw-bold text-dark">🔒 Login Required</span>
-            <span className="small text-muted text-center">
-              You must be logged in to attempt this test.
-            </span>
-            <button
-              className="btn btn-sm btn-primary w-100 mt-1 d-flex align-items-center justify-content-center gap-2"
-              onClick={() => {
-                toast.dismiss(t.id); // Close toast
-                navigate("/login"); // Go to Login
-              }}
-            >
-              <FaSignInAlt /> Login Now
-            </button>
-          </div>
-        ),
-        {
-          duration: 4000, // Stay for 4 seconds
-          position: "top-center",
-          style: {
-            border: "1px solid #e2e8f0",
-            padding: "16px",
-            color: "#713200",
-          },
-        }
-      );
+      setShowLoginPopup(true); // Open Custom Popup
     } else {
       navigate(`/test/topic/${topicId}`);
     }
   };
 
+  // ✅ Handle Click Outside (Overlay Click)
+  const handleOverlayClick = (e) => {
+    if (e.target.className.includes("popup-overlay")) {
+      setShowLoginPopup(false);
+    }
+  };
+
   if (loading) return <div className="loading-screen">Loading Syllabus...</div>;
-  if (!data) return <div className="text-center py-5">Subject not found.</div>;
+  if (!data)
+    return <div className="text-center py-5 mt-5">Subject not found.</div>;
 
   const { subject, hierarchy } = data;
 
   return (
     <div className="details-wrapper">
-      {/* 1. HERO HEADER */}
-      <div className="details-header">
+      {/* ✅ CUSTOM LOGIN POPUP */}
+      {showLoginPopup && (
+        <div className="popup-overlay" onClick={handleOverlayClick}>
+          <div className="login-popup-card">
+            <button
+              className="close-btn"
+              onClick={() => setShowLoginPopup(false)}
+            >
+              <FaTimes />
+            </button>
+            <div className="icon-circle">
+              <FaLock />
+            </div>
+            <h4>Login Required</h4>
+            <p>
+              You need to login to attempt this test and save your progress.
+            </p>
+            <button
+              className="btn-login-popup"
+              onClick={() => navigate("/login")}
+            >
+              <FaSignInAlt /> Login Now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER SECTION */}
+      <div className="details-header text-center">
         <div className="container">
-          <h1 className="fw-bold">{subject.subjectName}</h1>
-          <span className="badge bg-light text-dark fs-6 px-3 py-2 rounded-pill">
-            {subject.className}
-          </span>
+          <span className="badge-class">{subject.className}</span>
+          <h1 className="subject-title">
+            <span className="highlight-text">{subject.subjectName}</span>
+          </h1>
+          <p className="subject-subtitle">
+            Master this subject with chapter-wise tests and instant results.
+          </p>
         </div>
       </div>
 
-      {/* 2. SYLLABUS CONTENT */}
-      <div className="container mt-5" style={{ maxWidth: "900px" }}>
-        <h4 className="fw-bold text-dark mb-4">Course Syllabus</h4>
+      {/* SYLLABUS CONTENT */}
+      <div className="container mt-4" style={{ maxWidth: "800px" }}>
+        <div className="d-flex align-items-center gap-2 mb-4">
+          <FaBookOpen className="text-primary" />
+          <h4 className="fw-bold m-0 text-main">Course Syllabus</h4>
+        </div>
 
         {hierarchy.length === 0 ? (
-          <div className="text-center text-muted">No chapters added yet.</div>
+          <div className="empty-state">
+            <p>No chapters added yet.</p>
+          </div>
         ) : (
           <div className="accordion-list">
             {hierarchy.map((chapter) => (
-              <div key={chapter._id} className="chapter-item mb-3 shadow-sm">
+              <div key={chapter._id} className="chapter-item mb-3">
                 {/* Chapter Header */}
                 <div
-                  className={`chapter-header p-3 d-flex justify-content-between align-items-center cursor-pointer ${
+                  className={`chapter-header p-3 d-flex justify-content-between align-items-center ${
                     openChapters[chapter._id] ? "active" : ""
                   }`}
                   onClick={() => toggleChapter(chapter._id)}
                 >
-                  <div>
-                    <small
-                      className="text-uppercase text-muted fw-bold"
-                      style={{ fontSize: "0.75rem" }}
-                    >
-                      Chapter {chapter.chapterNumber}
-                    </small>
-                    <h5 className="m-0 fw-bold text-dark">
+                  <div className="d-flex flex-column">
+                    <span className="chapter-label">
+                      CHAPTER {chapter.chapterNumber}
+                    </span>
+                    <h5 className="chapter-name">
                       {typeof chapter.name === "object"
                         ? chapter.name.en
                         : chapter.name}
@@ -144,18 +162,18 @@ const SubjectDetails = () => {
 
                 {/* Topics List */}
                 {openChapters[chapter._id] && (
-                  <div className="chapter-body bg-white border-top">
+                  <div className="chapter-body">
                     {chapter.topics.length > 0 ? (
                       chapter.topics.map((topic) => (
                         <div
                           key={topic._id}
-                          className="topic-row p-3 d-flex justify-content-between align-items-center border-bottom"
+                          className="topic-row p-3 d-flex justify-content-between align-items-center"
                         >
                           <div className="d-flex align-items-center gap-3">
-                            <span className="badge bg-light text-secondary border">
+                            <span className="topic-number">
                               {topic.topicNumber}
                             </span>
-                            <span className="fw-medium text-dark">
+                            <span className="topic-name">
                               {typeof topic.name === "object"
                                 ? topic.name.en
                                 : topic.name}
@@ -163,26 +181,26 @@ const SubjectDetails = () => {
                           </div>
 
                           <button
-                            className={`btn btn-sm ${
-                              user ? "btn-primary" : "btn-outline-primary"
-                            } px-3 rounded-pill fw-bold`}
+                            className={`btn-start ${
+                              user ? "unlocked" : "locked"
+                            }`}
                             onClick={() => handleStartTest(topic._id)}
                           >
                             {user ? (
                               <>
-                                <FaPlay className="me-2" size={10} /> Start
+                                Start <FaPlay size={10} />
                               </>
                             ) : (
                               <>
-                                <FaLock className="me-2" size={10} /> Start
+                                <FaLock size={12} />
                               </>
                             )}
                           </button>
                         </div>
                       ))
                     ) : (
-                      <div className="p-3 text-muted small fst-italic">
-                        No topics available.
+                      <div className="p-3 text-muted small fst-italic text-center">
+                        No topics available in this chapter.
                       </div>
                     )}
                   </div>

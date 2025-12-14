@@ -18,6 +18,7 @@ import UserManagement from "./pages/Admin/UserManagement/UserManagement";
 import ProfileSettings from "./pages/Admin/ProfileSettings/ProfileSettings";
 import Subjects from "./pages/Subjects/Subjects";
 import SubjectDetails from "./pages/Subjects/SubjectDetails/SubjectDetails";
+import About from "./pages/About/About";
 // Security Guards
 import AdminRoute from "./components/AdminRoute/AdminRoute";
 import PublicRoute from "./components/PublicRoute/PublicRoute";
@@ -39,6 +40,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/subjects" element={<Subjects />} />{" "}
             <Route path="/subjects/:id" element={<SubjectDetails />} />
+            <Route path="/about" element={<About />} />
             {/* 👈 Yahan shift kar dain */}
             {/* 🛡️ PUBLIC ROUTES (Only for Non-Logged In Users like Login/Register) */}
             <Route element={<PublicRoute />}>

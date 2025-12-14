@@ -11,6 +11,7 @@ const {
   changePassword,
   uploadResume, //
   deleteResume,
+  getAdminProfile,
 } = require("../controllers/userController");
 
 const {
@@ -21,6 +22,7 @@ const {
 const upload = require("../middleware/upload");
 
 // --- ROUTES ---
+router.get("/admin-profile", getAdminProfile);
 
 // 1. Profile Routes
 router.put("/profile", protect, upload.single("image"), updateProfile);
@@ -31,7 +33,6 @@ router.put("/change-password", protect, changePassword);
 // We use upload.single("resume") to expect a file field named 'resume'
 router.put("/profile/resume", protect, upload.single("resume"), uploadResume);
 router.put("/profile/resume/remove", protect, deleteResume); // 🗑️ Delete Route
-
 // 2. Admin Management Routes
 router.get("/all", protect, hasPermission("manage_users"), getAllUsers);
 router.post("/add", protect, hasPermission("manage_users"), addUser);
