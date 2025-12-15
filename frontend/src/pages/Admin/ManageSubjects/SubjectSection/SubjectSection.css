@@ -1,0 +1,222 @@
+/* =========================================
+   SUBJECT SECTION STYLING
+   ========================================= */
+
+/* --- SUBJECT CARD (Theme Consistent) --- */
+.subject-card {
+    background-color: var(--card-bg);
+    /* Theme Aware */
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    min-height: 240px;
+    /* Taller for image */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.subject-card:hover {
+    border-color: var(--accent-1);
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* --- SUBJECT IMAGE AREA --- */
+.subject-img-container {
+    width: 100%;
+    height: 140px;
+    background-color: var(--bg-body);
+    /* Darker placeholder in dark mode */
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.subject-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Fill the box nicely */
+    transition: transform 0.5s ease;
+}
+
+.subject-card:hover .subject-img {
+    transform: scale(1.1);
+    /* Zoom effect on hover */
+}
+
+/* Fallback Icon when no image */
+.subject-icon-placeholder {
+    font-size: 3rem;
+    color: var(--text-muted);
+    opacity: 0.3;
+}
+
+/* --- TEXT CONTENT --- */
+.subject-info h5 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0;
+    text-transform: capitalize;
+}
+
+.subject-info small {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: block;
+}
+
+/* --- ACTION BUTTONS (Overlay) --- */
+.subject-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.subject-card:hover .subject-actions {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.action-btn-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    /* Always light for contrast */
+}
+
+.action-btn-circle.edit {
+    color: #f59e0b;
+}
+
+.action-btn-circle.delete {
+    color: #ef4444;
+}
+
+.action-btn-circle:hover {
+    transform: scale(1.15);
+}
+
+/* --- FORM CONTAINER (Inside the Card) --- */
+.subject-form-container {
+    background-color: var(--bg-body);
+    /* Slightly distinct form background */
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+/* Image Upload Box */
+.upload-box {
+    width: 100%;
+    height: 200px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--card-bg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.upload-box:hover {
+    border-color: var(--accent-1);
+    background-color: var(--pill-bg);
+}
+
+.upload-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.upload-placeholder {
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.upload-placeholder svg {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: var(--accent-1);
+}
+
+/* --- ADD NEW BUTTON --- */
+.add-subject-btn {
+    border: 2px dashed var(--border-color);
+    background-color: var(--bg-body);
+    border-radius: 16px;
+    cursor: pointer;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.add-subject-btn:hover {
+    border-color: var(--accent-1);
+    background-color: var(--pill-bg);
+    transform: translateY(-5px);
+}
+
+.add-icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--pill-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--accent-1);
+    margin-bottom: 15px;
+    transition: 0.3s;
+}
+
+.add-subject-btn:hover .add-icon-circle {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: white;
+    box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
+}
+
+.add-text {
+    font-weight: 700;
+    color: var(--accent-1);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}

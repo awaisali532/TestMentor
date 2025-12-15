@@ -1,22 +1,18 @@
 import React, { useState } from "react";
 import "./ManageSubjects.css";
-import ClassSection from "./ClassSection";
-import SubjectSection from "./SubjectSection";
-import ChapterSection from "./ChapterSection";
+import ClassSection from "./ClassSection/ClassSection";
+import SubjectSection from "./SubjectSection/SubjectSection";
+import ChapterSection from "./ChapterSection/ChapterSection";
 import Swal from "sweetalert2";
 
 const ManageSubjects = () => {
   // --- MASTER STATE ---
-  const [activeStep, setActiveStep] = useState(1); // 1 = Class, 2 = Subject, 3 = Chapter
+  const [activeStep, setActiveStep] = useState(1);
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
-
-  // "Dirty" state: If true, user is typing/editing, so warn before leaving
   const [isEditing, setIsEditing] = useState(false);
 
   // --- NAVIGATION CONTROLLER ---
-
-  // Helper: Checks for unsaved changes before moving
   const safeNavigation = async (actionCallback) => {
     if (isEditing) {
       const result = await Swal.fire({
@@ -27,14 +23,15 @@ const ManageSubjects = () => {
         confirmButtonColor: "#d33",
         confirmButtonText: "Yes, Leave",
         cancelButtonText: "No, Stay",
+        background: "var(--card-bg)",
+        color: "var(--text-main)",
       });
-      if (!result.isConfirmed) return; // Stop navigation
-      setIsEditing(false); // Reset dirty state
+      if (!result.isConfirmed) return;
+      setIsEditing(false);
     }
-    actionCallback(); // Proceed with navigation
+    actionCallback();
   };
 
-  // 1. Move Forward to Subjects
   const handleClassSelect = (cls) => {
     safeNavigation(() => {
       setSelectedClass(cls);
@@ -42,7 +39,6 @@ const ManageSubjects = () => {
     });
   };
 
-  // 2. Move Forward to Chapters
   const handleSubjectSelect = (sub) => {
     safeNavigation(() => {
       setSelectedSubject(sub);
@@ -50,9 +46,7 @@ const ManageSubjects = () => {
     });
   };
 
-  // 3. Move Backward (Clicking Headers)
   const handleHeaderClick = (targetStep) => {
-    // Only allow going back (e.g., clicking Step 1 when on Step 3)
     if (targetStep < activeStep) {
       safeNavigation(() => {
         setActiveStep(targetStep);
@@ -67,11 +61,10 @@ const ManageSubjects = () => {
   };
 
   return (
-    <div className="admin-wrapper">
-      <div className="accordion-container">
-        {/* HEADER */}
-        <h3 className="fw-bold text-dark mb-4">Subject Management</h3>
+    <div className="admin-wrapper p-4">
+      <h3 className="fw-bold text-main mb-4">Subject Management</h3>
 
+      <div className="accordion-container">
         {/* --- STEP 1: CLASSES --- */}
         <ClassSection
           isExpanded={activeStep === 1}

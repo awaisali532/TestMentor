@@ -55,7 +55,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard-wrapper p-4">
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-5">
+      <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h2 className="fw-bold text-main m-0">Admin Dashboard</h2>
           <p className="text-muted small m-0">System Overview & Statistics</p>
@@ -106,7 +106,7 @@ const Dashboard = () => {
       </div>
 
       {/* Footer / Empty State */}
-      <div className="mt-5 text-center text-muted">
+      <div className="mt-3 text-center text-muted">
         <small>Select an option from the sidebar to manage content.</small>
       </div>
     </div>

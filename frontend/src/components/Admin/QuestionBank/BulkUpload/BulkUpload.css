@@ -1,0 +1,60 @@
+/* Container styling */
+.bulk-upload-container {
+    background-color: var(--bg-body);
+    /* Theme Background */
+    border: 2px dashed var(--border-color);
+    /* Dashed Border */
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Example Box styling */
+.json-example-box {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    overflow-x: auto;
+}
+
+.json-example-box pre {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+/* Button to toggle example */
+.btn-icon-text {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-icon-text:hover {
+    color: var(--accent-1);
+}
+
+/* Ensure Textarea matches theme */
+.custom-input {
+    background-color: var(--card-bg) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.custom-input:focus {
+    border-color: var(--accent-1) !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+}
+
+.text-accent {
+    color: var(--accent-1) !important;
+}

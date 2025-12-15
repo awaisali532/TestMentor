@@ -1,0 +1,221 @@
+/* =========================================
+   CHAPTER SECTION STYLING
+   ========================================= */
+
+/* --- LAYOUT & SCROLL --- */
+.chapter-list-container {
+    max-height: 550px;
+    overflow-y: auto;
+    padding-right: 5px;
+    /* Space for scrollbar */
+}
+
+/* Custom Scrollbar for Webkit */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 10px;
+}
+
+/* --- LIST ITEMS --- */
+.chapter-item {
+    background-color: var(--bg-body);
+    /* Slightly distinct from Card BG */
+    border: 1px solid var(--border-color);
+    margin-bottom: 10px;
+    border-radius: 12px;
+    padding: 15px;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chapter-item:hover {
+    transform: translateX(5px);
+    border-color: var(--accent-1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.chapter-item.active-edit {
+    border-left: 4px solid var(--accent-1);
+    background-color: var(--pill-bg);
+}
+
+/* Chapter Badge (Ch 1) */
+.chapter-badge {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: white;
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-right: 15px;
+    box-shadow: 0 2px 5px rgba(14, 165, 233, 0.3);
+}
+
+/* Text Styles */
+.chapter-name-en {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.chapter-name-ur {
+    font-family: 'Jameel Noori Nastaleeq', serif;
+    color: var(--text-muted);
+    margin-left: 10px;
+    font-size: 1.1rem;
+}
+
+/* --- FORM CONTAINER (Right Side) --- */
+.chapter-form-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    position: sticky;
+    top: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Form Header */
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-title {
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0;
+}
+
+/* --- MODE TOGGLE (Single/Bulk) --- */
+.mode-toggle {
+    background-color: var(--bg-body);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    display: flex;
+}
+
+.mode-btn {
+    border: none;
+    background: none;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.mode-btn.active {
+    background-color: var(--card-bg);
+    color: var(--accent-1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* --- INPUTS --- */
+.custom-input {
+    background-color: var(--bg-body) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    border-radius: 10px !important;
+    padding: 10px 15px;
+}
+
+.custom-input:focus {
+    border-color: var(--accent-1) !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+}
+
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+/* --- ACTION BUTTONS --- */
+.action-icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.action-icon-btn:hover {
+    background-color: var(--pill-bg);
+    transform: scale(1.1);
+}
+
+.action-icon-btn.edit:hover {
+    color: #f59e0b;
+}
+
+.action-icon-btn.delete:hover {
+    color: #ef4444;
+}
+
+/* Cancel Button */
+.btn-cancel {
+    background-color: var(--pill-bg);
+    color: var(--text-muted);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: var(--border-color);
+    color: var(--text-main);
+}
+
+/* --- JSON CODE BLOCK --- */
+.json-preview {
+    background-color: var(--bg-body);
+    color: var(--text-muted);
+    padding: 15px;
+    border-radius: 10px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+/* --- EMPTY STATE --- */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    border: 2px dashed var(--border-color);
+    border-radius: 16px;
+}

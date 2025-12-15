@@ -1,19 +1,25 @@
 import React, { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { FaCloudUploadAlt, FaSpinner, FaFileCode } from "react-icons/fa";
+import Swal from "sweetalert2";
+import {
+  FaCloudUploadAlt,
+  FaSpinner,
+  FaFileCode,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
+import "./BulkUpload.css";
 
-// ✅ Props main se 'topics' hata dia, ab wo zaroori nahi
 const BulkUpload = ({ chapterId, subjectId, classLevel, onSuccess }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   const [jsonInput, setJsonInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showExample, setShowExample] = useState(false);
 
   const handleUpload = async () => {
-    if (!jsonInput.trim()) {
-      return toast.error("Please paste JSON data!");
-    }
+    if (!jsonInput.trim()) return toast.error("Please paste JSON data!");
 
     setLoading(true);
     try {
@@ -24,11 +30,9 @@ const BulkUpload = ({ chapterId, subjectId, classLevel, onSuccess }) => {
         return toast.error("Invalid JSON Format!");
       }
 
-      if (!Array.isArray(parsedQuestions)) {
-        return toast.error("JSON must be an Array [ ... ].");
-      }
+      if (!Array.isArray(parsedQuestions))
+        return toast.error("JSON must be an Array [ ... ]");
 
-      // 🔄 Change: topics array UI se nahi bhej rahay, backend khud JSON se nikalega
       const res = await axios.post(`${BASE_URL}/api/questions/bulk-add`, {
         questions: parsedQuestions,
         chapterId,
@@ -36,78 +40,113 @@ const BulkUpload = ({ chapterId, subjectId, classLevel, onSuccess }) => {
         classLevel,
       });
 
-      toast.success(res.data.message);
+      toast.success(res.data.message || "Upload Successful");
 
-      // Agar kuch warnings aayi hain (kuch topics nahi milay)
       if (res.data.warnings && res.data.warnings.length > 0) {
-        toast.error(
-          `Warning: ${res.data.warnings.length} questions skipped due to invalid Topic Numbers.`
+        toast(
+          (t) => (
+            <span>
+              <b>Warning:</b> {res.data.warnings.length} questions skipped.
+            </span>
+          ),
+          { icon: "⚠️" }
         );
-        console.warn(res.data.warnings);
       }
 
       setJsonInput("");
       onSuccess();
     } catch (err) {
-      console.error(err);
-      // Agar backend se specific error message aaye
       const errorMsg = err.response?.data?.error || "Upload Failed";
-      const details = err.response?.data?.details; // List of failed questions
+      const details = err.response?.data?.details;
 
-      toast.error(errorMsg);
       if (details) {
-        alert("Errors:\n" + details.join("\n")); // Show detailed alert
+        Swal.fire({
+          title: "Detailed Errors",
+          html: details.join("<br>"),
+          icon: "error",
+          background: "var(--card-bg)",
+          color: "var(--text-main)",
+        });
+      } else {
+        toast.error(errorMsg);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="text-center p-4 border border-dashed rounded bg-light">
-      <FaFileCode className="text-secondary mb-3" size={40} />
-      <h6 className="fw-bold text-dark">Smart Bulk Upload (JSON)</h6>
+  // ✅ VALIDATION: Disable button if empty
+  const isBulkValid = jsonInput.trim().length > 0;
 
-      <div className="alert alert-info py-2 small text-start">
-        <strong>Instructions:</strong>
-        <ul className="mb-0 ps-3">
-          <li>
-            Define topics inside the JSON using{" "}
-            <code>"topics": ["1.1", "1.3"]</code>
-          </li>
-          <li>
-            Make sure the <b>Topic Numbers</b> exist in the database.
-          </li>
-        </ul>
+  return (
+    <div className="bulk-upload-container p-3">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex align-items-center gap-2 text-accent">
+          <FaFileCode size={20} />
+          <h6 className="m-0 fw-bold">Smart Bulk Upload</h6>
+        </div>
+        <button
+          className="btn-icon-text"
+          onClick={() => setShowExample(!showExample)}
+        >
+          {showExample ? <FaEyeSlash /> : <FaEye />} Example
+        </button>
       </div>
 
-      <textarea
-        className="form-control mb-3 small font-monospace"
-        rows="10"
-        placeholder='[
+      {showExample && (
+        <div className="json-example-box mb-3">
+          <p className="mb-1 text-accent fw-bold small">
+            Required Format (Array):
+          </p>
+          <pre>
+            {`[
   {
-    "topics": ["1.1", "1.2"], 
-    "statement": { "en": "Define Physics?" },
-    "type": "SHORT",
-    "difficulty": "Easy"
+    "topics": ["1.1"], 
+    "type": "MCQ", 
+    "difficulty": "Easy",
+    "statement": { "en": "What is Force?", "ur": "فورس..." },
+    "options": [
+      { "en": "Opt A", "isCorrect": true },
+      { "en": "Opt B", "isCorrect": false },
+      { "en": "Opt C", "isCorrect": false },
+      { "en": "Opt D", "isCorrect": false }
+    ]
   }
-]'
+]`}
+          </pre>
+        </div>
+      )}
+
+      <textarea
+        className="form-control custom-input mb-3 font-monospace small"
+        rows="10"
+        placeholder="Paste your JSON array here..."
         value={jsonInput}
         onChange={(e) => setJsonInput(e.target.value)}
       ></textarea>
 
+      {/* ✅ DISABLED LOGIC APPLIED */}
       <button
-        className="btn btn-dark w-100 fw-bold"
+        className="btn-primary-gradient w-100"
         onClick={handleUpload}
-        disabled={loading}
+        disabled={loading || !isBulkValid}
       >
         {loading ? (
-          <FaSpinner className="icon-spin me-2" />
+          <>
+            <FaSpinner className="icon-spin me-2" /> Uploading...
+          </>
         ) : (
-          <FaCloudUploadAlt className="me-2" />
+          <>
+            <FaCloudUploadAlt className="me-2" /> Upload JSON
+          </>
         )}
-        {loading ? "Mapping & Uploading..." : "Upload JSON"}
       </button>
+
+      {!isBulkValid && (
+        <div className="text-danger small mt-2">
+          * Code block cannot be empty.
+        </div>
+      )}
     </div>
   );
 };

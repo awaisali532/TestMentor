@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast"; // ✅ Ensure Toaster is imported
+import toast, { Toaster } from "react-hot-toast";
 import Swal from "sweetalert2";
 import "./QuestionManager.css";
 import {
@@ -11,8 +11,8 @@ import {
   FaFilter,
   FaSave,
   FaTimes,
-  FaCheckSquare,
-  FaSquare,
+  FaCloudUploadAlt,
+  FaSpinner,
 } from "react-icons/fa";
 
 // Imports
@@ -27,12 +27,10 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const [questions, setQuestions] = useState([]);
   const [filterTopicId, setFilterTopicId] = useState("");
 
-  const [loading, setLoading] = useState(false); // For fetching data
-  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ For Save/Update buttons
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mode, setMode] = useState("single");
   const [editingId, setEditingId] = useState(null);
-
-  // ✅ New State for Bulk Selection
   const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
 
   // Form Data
@@ -64,7 +62,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   useEffect(() => {
     if (filterTopicId) {
       fetchQuestions();
-      setSelectedQuestionIds([]); // Reset selection on topic change
+      setSelectedQuestionIds([]);
     } else {
       setQuestions([]);
     }
@@ -78,7 +76,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       );
       setTopics(res.data);
     } catch (err) {
-      console.error(err);
       toast.error("Failed to load topics");
     }
   };
@@ -89,17 +86,13 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       const res = await axios.get(
         `${BASE_URL}/api/questions/topic/${filterTopicId}`
       );
-
-      // ✅ SORTING LOGIC HERE
       const typePriority = { MCQ: 1, SHORT: 2, LONG: 3 };
-
       const sortedQuestions = res.data.sort((a, b) => {
-        const priorityA = typePriority[a.type] || 4; // Default to 4 if type is unknown
+        const priorityA = typePriority[a.type] || 4;
         const priorityB = typePriority[b.type] || 4;
         return priorityA - priorityB;
       });
-
-      setQuestions(sortedQuestions); // Set the sorted data
+      setQuestions(sortedQuestions);
     } catch (err) {
       toast.error("Failed to load questions");
     } finally {
@@ -171,7 +164,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     setImageFile(null);
   };
 
-  // ✅ HANDLER: Checkbox Logic
   const toggleQuestionSelection = (qId) => {
     setSelectedQuestionIds((prev) =>
       prev.includes(qId) ? prev.filter((id) => id !== qId) : [...prev, qId]
@@ -180,23 +172,22 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
   const selectAllQuestions = () => {
     if (selectedQuestionIds.length === questions.length) {
-      setSelectedQuestionIds([]); // Deselect All
+      setSelectedQuestionIds([]);
     } else {
-      setSelectedQuestionIds(questions.map((q) => q._id)); // Select All
+      setSelectedQuestionIds(questions.map((q) => q._id));
     }
   };
 
-  // ✅ HANDLER: Bulk Delete Selected
+  // --- DELETE HANDLERS ---
   const handleDeleteSelected = async () => {
     if (selectedQuestionIds.length === 0) return;
-
     const res = await Swal.fire({
       title: `Delete ${selectedQuestionIds.length} Questions?`,
-      text: "This action cannot be undone!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Yes, delete them!",
+      confirmButtonColor: "#dc3545",
+      background: "var(--card-bg)",
+      color: "var(--text-main)",
     });
 
     if (res.isConfirmed) {
@@ -207,26 +198,26 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           { ids: selectedQuestionIds },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("Selected questions deleted!");
+        toast.success("Deleted!");
         fetchQuestions();
         setSelectedQuestionIds([]);
       } catch (err) {
-        toast.error("Failed to delete selected questions.");
+        toast.error("Failed to delete.");
       }
     }
   };
 
-  // ✅ HANDLER: Delete All in Topic
   const handleDeleteAllInTopic = async () => {
     if (!filterTopicId) return;
-
     const res = await Swal.fire({
       title: "Delete ALL Questions?",
-      text: "This will remove EVERY question in this topic. Are you sure?",
+      text: "This removes EVERYTHING in this topic!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Yes, Delete Everything!",
+      confirmButtonColor: "#dc3545",
+      confirmButtonText: "Yes, Delete All!",
+      background: "var(--card-bg)",
+      color: "var(--text-main)",
     });
 
     if (res.isConfirmed) {
@@ -236,24 +227,42 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           `${BASE_URL}/api/questions/topic/${filterTopicId}/delete-all`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("All questions deleted successfully!");
+        toast.success("All Deleted!");
         fetchQuestions();
         setSelectedQuestionIds([]);
       } catch (err) {
-        toast.error("Failed to delete all questions.");
+        toast.error("Failed.");
       }
     }
   };
 
-  // SINGLE SUBMIT (Updated Loading Logic)
+  const handleDelete = async (id) => {
+    const res = await Swal.fire({
+      title: "Delete?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      background: "var(--card-bg)",
+      color: "var(--text-main)",
+    });
+    if (res.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(`${BASE_URL}/api/questions/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("Deleted");
+        fetchQuestions();
+      } catch (err) {
+        toast.error("Failed");
+      }
+    }
+  };
+
+  // --- SUBMIT HANDLER ---
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.selectedTopicIds.length === 0)
-      return toast.error("Please select at least one Topic!");
-    if (!formData.statement.en && !formData.statement.ur)
-      return toast.error("Statement is empty!");
-
-    setIsSubmitting(true); // ✅ Start Loading
+    setIsSubmitting(true);
 
     const data = new FormData();
     data.append("topics", JSON.stringify(formData.selectedTopicIds));
@@ -288,14 +297,12 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         await axios.put(`${BASE_URL}/api/questions/${editingId}`, data, {
           headers,
         });
-        toast.success("Question Updated!");
+        toast.success("Updated!");
         setEditingId(null);
         setFormData(initialFormState);
       } else {
         await axios.post(`${BASE_URL}/api/questions/add`, data, { headers });
-        toast.success("Question Saved!");
-
-        // Reset form but keep topics selected
+        toast.success("Saved!");
         setFormData((prev) => ({
           ...prev,
           statement: { en: "", ur: "" },
@@ -306,51 +313,42 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       if (filterTopicId) fetchQuestions();
       setImageFile(null);
     } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.error || "Operation Failed");
+      toast.error(err.response?.data?.error || "Failed");
     } finally {
-      setIsSubmitting(false); // ✅ Stop Loading
+      setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    const res = await Swal.fire({
-      title: "Delete?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-    });
-    if (res.isConfirmed) {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(`${BASE_URL}/api/questions/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast.success("Deleted");
-        fetchQuestions();
-      } catch (err) {
-        toast.error("Failed");
-      }
-    }
-  };
+  // ✅ VALIDATION LOGIC
+  const hasTopic = formData.selectedTopicIds.length > 0;
+  const hasStatement =
+    formData.statement.en.trim() !== "" || formData.statement.ur.trim() !== "";
+  const isMcqComplete =
+    formData.type === "MCQ"
+      ? formData.options.every(
+          (opt) => opt.en.trim() !== "" || opt.ur.trim() !== ""
+        )
+      : true; // If not MCQ, ignore options
+
+  const isFormValid = hasTopic && hasStatement && isMcqComplete;
 
   return (
     <div className="row g-4">
-      <Toaster position="top-right" /> {/* ✅ Ensuring Toaster is here */}
-      {/* LEFT: LIST (Filter by Topic) */}
+      <Toaster position="top-right" />
+
+      {/* LEFT: LIST */}
       <div className="col-md-7">
-        {/* Filter Box */}
-        <div className="filter-box-q bg-white p-3 rounded shadow-sm border mb-3">
-          <label className="fw-bold small text-secondary mb-1">
-            <FaFilter className="me-1" /> Filter Questions by Topic
+        <div className="filter-box-q sticky-top">
+          <label className="fw-bold small text-muted mb-2 d-flex align-items-center">
+            <FaFilter className="me-2 text-accent" /> Filter Questions
           </label>
           <div className="d-flex gap-2">
             <select
-              className="form-select border-primary"
+              className="form-select custom-select"
               value={filterTopicId}
               onChange={(e) => setFilterTopicId(e.target.value)}
             >
-              <option value="">-- Select Topic to View Questions --</option>
+              <option value="">-- Select Topic --</option>
               {topics.map((t) => (
                 <option key={t._id} value={t._id}>
                   {t.topicNumber} -{" "}
@@ -358,13 +356,11 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 </option>
               ))}
             </select>
-
-            {/* 🔴 Delete All Button (Only if topic selected) */}
             {filterTopicId && questions.length > 0 && (
               <button
-                className="btn btn-danger text-nowrap"
-                title="Delete All in Topic"
+                className="btn-danger-soft"
                 onClick={handleDeleteAllInTopic}
+                title="Delete All"
               >
                 <FaTrashAlt /> All
               </button>
@@ -372,22 +368,20 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           </div>
         </div>
 
-        {/* ✅ Bulk Actions Bar */}
         {selectedQuestionIds.length > 0 && (
-          <div className="bg-danger bg-opacity-10 text-danger p-2 mb-3 rounded d-flex justify-content-between align-items-center border border-danger">
-            <span className="fw-bold ms-2">
-              {selectedQuestionIds.length} Questions Selected
+          <div className="bulk-action-bar">
+            <span className="fw-bold">
+              {selectedQuestionIds.length} Selected
             </span>
             <button
-              className="btn btn-sm btn-danger fw-bold"
+              className="btn-danger-soft btn-sm"
               onClick={handleDeleteSelected}
             >
-              <FaTrashAlt className="me-1" /> Delete Selected
+              <FaTrashAlt className="me-1" /> Delete
             </button>
           </div>
         )}
 
-        {/* List Header (Select All) */}
         {questions.length > 0 && (
           <div className="d-flex align-items-center mb-2 px-2">
             <div className="form-check">
@@ -399,7 +393,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 onChange={selectAllQuestions}
               />
               <label
-                className="form-check-label small fw-bold text-secondary cursor-pointer"
+                className="form-check-label small fw-bold text-muted cursor-pointer"
                 htmlFor="selectAll"
               >
                 Select All
@@ -408,56 +402,47 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           </div>
         )}
 
-        <div className="q-list-container">
+        <div className="q-list-container custom-scrollbar">
           {loading ? (
-            <div className="text-center py-5">Loading...</div>
+            <div className="text-center py-5 text-muted">Loading...</div>
           ) : questions.length === 0 ? (
-            <div className="text-center text-muted py-5 border rounded bg-light border-dashed">
+            <div className="empty-state-box">
               {filterTopicId
-                ? "No questions found in this topic."
-                : "Select a topic above to view questions."}
+                ? "No questions found."
+                : "Select a topic to view questions."}
             </div>
           ) : (
             questions.map((q, index) => (
               <div
                 key={q._id}
                 className={`question-card type-${q.type} ${
-                  editingId === q._id ? "border-primary bg-light" : ""
-                } ${
-                  selectedQuestionIds.includes(q._id)
-                    ? "border-danger bg-danger bg-opacity-10"
-                    : ""
-                }`}
+                  editingId === q._id ? "active-edit" : ""
+                } ${selectedQuestionIds.includes(q._id) ? "selected" : ""}`}
               >
                 <div className="d-flex justify-content-between mb-2">
-                  <div className="d-flex align-items-center">
-                    {/* ✅ Individual Checkbox */}
+                  <div className="d-flex align-items-center flex-wrap gap-2">
                     <input
                       type="checkbox"
-                      className="form-check-input me-2"
-                      style={{ width: "1.2em", height: "1.2em" }}
+                      className="form-check-input"
                       checked={selectedQuestionIds.includes(q._id)}
                       onChange={() => toggleQuestionSelection(q._id)}
                     />
-
-                    <span className="fw-bold fs-5 me-2 text-secondary">
+                    <span className="fw-bold fs-6 text-accent">
                       #{index + 1}
                     </span>
-                    <span className="badge bg-dark me-1">{q.type}</span>
-                    <span className="badge bg-info text-dark me-1">
-                      {q.questionCategory}
-                    </span>
-                    <span className="badge bg-secondary">{q.marks} Marks</span>
+                    <span className="badge-type">{q.type}</span>
+                    <span className="badge-cat">{q.questionCategory}</span>
+                    <span className="badge-marks">{q.marks} Marks</span>
                   </div>
                   <div className="d-flex gap-2">
                     <button
-                      className="btn btn-sm btn-outline-warning"
+                      className="btn-icon edit"
                       onClick={() => handleEdit(q)}
                     >
                       <FaPen />
                     </button>
                     <button
-                      className="btn btn-sm btn-outline-danger"
+                      className="btn-icon delete"
                       onClick={() => handleDelete(q._id)}
                     >
                       <FaTrashAlt />
@@ -466,34 +451,36 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 </div>
 
                 {q.statement.en && (
-                  <p className="q-statement-en">
+                  <p className="q-text en">
                     <RenderText text={q.statement.en} />
                   </p>
                 )}
                 {q.statement.ur && (
-                  <p className="q-statement-ur">
+                  <p className="q-text ur">
                     <RenderText text={q.statement.ur} />
                   </p>
                 )}
 
                 {q.type === "MCQ" && (
-                  <div className="mcq-options-grid">
+                  <div className="mcq-grid">
                     {q.options.map((opt, i) => (
                       <div
                         key={i}
-                        className={`mcq-option ${
-                          opt.isCorrect ? "correct" : ""
-                        }`}
+                        className={`mcq-opt ${opt.isCorrect ? "correct" : ""}`}
                       >
-                        <span className="fw-bold me-2">
-                          {String.fromCharCode(65 + i)}.
+                        <span className="opt-label">
+                          {String.fromCharCode(65 + i)}
                         </span>
-                        <RenderText text={opt.en} />
-                        {opt.ur && (
-                          <span className="opt-ur">
-                            (<RenderText text={opt.ur} />)
+                        <div className="opt-content">
+                          <span className="en">
+                            <RenderText text={opt.en} />
                           </span>
-                        )}
+                          {opt.ur && (
+                            <span className="ur">
+                              <RenderText text={opt.ur} />
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -503,273 +490,270 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           )}
         </div>
       </div>
-      {/* RIGHT: FORM (Add/Edit) */}
+
+      {/* RIGHT: FORM */}
       <div className="col-md-5">
-        <div className="q-form-sticky bg-white p-3 rounded shadow-sm border">
-          <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-            <h5 className={`m-0 fw-bold ${editingId ? "text-primary" : ""}`}>
-              {editingId ? "Edit Question" : "Add New Question"}
-            </h5>
+        <div className="form-card sticky-top">
+          <div className="form-header">
+            <h6 className="m-0 fw-bold text-accent">
+              {editingId ? "Edit Question" : "Add Question"}
+            </h6>
             {editingId && (
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={handleCancelEdit}
-              >
-                <FaTimes /> Cancel
+              <button className="btn-icon close" onClick={handleCancelEdit}>
+                <FaTimes />
               </button>
             )}
           </div>
 
           {!editingId && (
-            <div className="d-flex justify-content-center mb-3 bg-light p-1 rounded">
+            <div className="mode-switch">
               <button
-                className={`btn btn-sm flex-fill ${
-                  mode === "single" ? "btn-white shadow fw-bold" : ""
-                }`}
+                className={mode === "single" ? "active" : ""}
                 onClick={() => setMode("single")}
               >
-                <FaPen /> Single
+                <FaPen className="me-1" /> Single
               </button>
               <button
-                className={`btn btn-sm flex-fill ${
-                  mode === "bulk" ? "btn-white shadow fw-bold" : ""
-                }`}
+                className={mode === "bulk" ? "active" : ""}
                 onClick={() => setMode("bulk")}
               >
-                <FaCode /> Bulk JSON
+                <FaCode className="me-1" /> Bulk
               </button>
             </div>
           )}
 
-          {mode === "single" ? (
-            <form onSubmit={handleSingleSubmit}>
-              {/* ✅ MULTI-SELECT TOPICS */}
-              <div className="mb-3">
-                <label className="form-label small fw-bold d-block">
-                  Select Topics (Multiple)
-                </label>
-                <div
-                  className="topic-multiselect-box border rounded p-2"
-                  style={{ maxHeight: "150px", overflowY: "auto" }}
-                >
-                  {topics.map((t) => (
-                    <div key={t._id} className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id={`topic-${t._id}`}
-                        checked={formData.selectedTopicIds.includes(t._id)}
-                        onChange={() => toggleTopicSelection(t._id)}
-                      />
-                      <label
-                        className="form-check-label small"
-                        htmlFor={`topic-${t._id}`}
-                      >
-                        {t.topicNumber} -{" "}
-                        {typeof t.name === "object" ? t.name.en : t.name}
-                      </label>
+          <div className="p-3">
+            {mode === "single" ? (
+              <form onSubmit={handleSingleSubmit}>
+                {/* 1. Topics */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Topics <span className="text-danger">*</span>
+                  </label>
+                  <div
+                    className={`multi-select-box custom-scrollbar ${
+                      !hasTopic && "border-danger"
+                    }`}
+                  >
+                    {topics.map((t) => (
+                      <div key={t._id} className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`t-${t._id}`}
+                          checked={formData.selectedTopicIds.includes(t._id)}
+                          onChange={() => toggleTopicSelection(t._id)}
+                        />
+                        <label
+                          className="form-check-label small"
+                          htmlFor={`t-${t._id}`}
+                        >
+                          {t.topicNumber} -{" "}
+                          {typeof t.name === "object" ? t.name.en : t.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  {!hasTopic && (
+                    <div className="text-danger small mt-1">
+                      Select at least one topic
                     </div>
-                  ))}
+                  )}
                 </div>
-                {formData.selectedTopicIds.length === 0 && (
-                  <div className="text-danger small mt-1">* Required</div>
-                )}
-              </div>
 
-              {/* Type & Category */}
-              <div className="row g-2 mb-2">
-                <div className="col-6">
-                  <label className="form-label small fw-bold">Type</label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={formData.type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, type: e.target.value })
-                    }
-                  >
-                    <option value="MCQ">MCQ</option>
-                    <option value="SHORT">Short</option>
-                    <option value="LONG">Long</option>
-                  </select>
+                {/* 2. Type & Category */}
+                <div className="row g-2 mb-2">
+                  <div className="col-6">
+                    <label className="form-label">Type</label>
+                    <select
+                      className="form-select custom-select"
+                      value={formData.type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, type: e.target.value })
+                      }
+                    >
+                      <option value="MCQ">MCQ</option>
+                      <option value="SHORT">Short</option>
+                      <option value="LONG">Long</option>
+                    </select>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label">Category</label>
+                    <select
+                      className="form-select custom-select"
+                      value={formData.questionCategory}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          questionCategory: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="TEXT">Text</option>
+                      <option value="EXERCISE">Exercise</option>
+                      <option value="CONCEPTUAL">Conceptual</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="col-6">
-                  <label className="form-label small fw-bold">Category</label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={formData.questionCategory}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        questionCategory: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="TEXT">Text / Theory</option>
-                    <option value="EXERCISE">Exercise</option>
-                    <option value="EXAMPLE">Example</option>
-                    <option value="NUMERICAL">Numerical</option>
-                    <option value="REVIEW">Review Ex</option>
-                    <option value="CONCEPTUAL">Conceptual</option>
-                  </select>
-                </div>
-              </div>
 
-              {/* Difficulty */}
-              <div className="mb-2">
-                <label className="form-label small fw-bold d-block">
-                  Difficulty
-                </label>
-                <div className="btn-group w-100 btn-group-sm">
-                  {["Easy", "Medium", "Hard"].map((d) => (
-                    <React.Fragment key={d}>
-                      <input
-                        type="radio"
-                        className="btn-check"
-                        name="diff"
-                        id={d}
-                        checked={formData.difficulty === d}
-                        onChange={() =>
+                <div className="mb-2">
+                  <label className="form-label">Difficulty</label>
+                  <div className="btn-group w-100" role="group">
+                    {["Easy", "Medium", "Hard"].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        className={`btn btn-sm ${
+                          formData.difficulty === d
+                            ? "btn-primary-gradient"
+                            : "btn-outline-secondary text-main"
+                        }`}
+                        onClick={() =>
                           setFormData({ ...formData, difficulty: d })
                         }
-                      />
-                      <label
-                        className={`btn btn-outline-${
-                          d === "Easy"
-                            ? "success"
-                            : d === "Medium"
-                            ? "secondary"
-                            : "danger"
-                        }`}
-                        htmlFor={d}
                       >
                         {d}
-                      </label>
-                    </React.Fragment>
-                  ))}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Statement */}
-              <div className="mb-2">
-                <label className="form-label small fw-bold">Statement</label>
-                <textarea
-                  className="form-control form-control-sm mb-1"
-                  rows="2"
-                  placeholder="English..."
-                  value={formData.statement.en}
-                  onChange={(e) => handleStatementChange("en", e.target.value)}
-                ></textarea>
-                <textarea
-                  className="form-control form-control-sm urdu-font"
-                  rows="2"
-                  placeholder="اردو..."
-                  value={formData.statement.ur}
-                  onChange={(e) => handleStatementChange("ur", e.target.value)}
-                ></textarea>
-              </div>
-
-              {/* MCQ Options */}
-              {formData.type === "MCQ" && (
-                <div className="mb-2 bg-light p-2 rounded border">
-                  <label className="small fw-bold text-muted">
-                    Options (Select Correct)
+                {/* 3. Statement */}
+                <div className="mb-3">
+                  <label className="form-label">
+                    Statement <span className="text-danger">*</span>
                   </label>
-                  {formData.options.map((opt, i) => (
-                    <div
-                      key={i}
-                      className={`option-box d-flex align-items-center gap-2 ${
-                        opt.isCorrect ? "correct" : ""
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="opt"
-                        checked={opt.isCorrect}
-                        onChange={() => setCorrectOption(i)}
-                        style={{ cursor: "pointer" }}
-                      />
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder="Eng"
-                        value={opt.en}
-                        onChange={(e) =>
-                          handleOptionChange(i, "en", e.target.value)
-                        }
-                      />
-                      <input
-                        type="text"
-                        className="form-control form-control-sm urdu-font m-0"
-                        placeholder="اردو"
-                        value={opt.ur}
-                        onChange={(e) =>
-                          handleOptionChange(i, "ur", e.target.value)
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Image & Tags */}
-              <div className="row g-2 mb-3">
-                <div className="col-6">
-                  <label className="small fw-bold">Image</label>
-                  <input
-                    type="file"
-                    className="form-control form-control-sm"
-                    onChange={(e) => setImageFile(e.target.files[0])}
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="small fw-bold">Tags</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    placeholder="LHR-22"
-                    value={formData.boardTags}
+                  <textarea
+                    className={`form-control custom-input mb-2 ${
+                      !hasStatement && "is-invalid"
+                    }`}
+                    rows="2"
+                    placeholder="English..."
+                    value={formData.statement.en}
                     onChange={(e) =>
-                      setFormData({ ...formData, boardTags: e.target.value })
+                      handleStatementChange("en", e.target.value)
                     }
-                  />
+                  ></textarea>
+                  <textarea
+                    className="form-control custom-input urdu-font"
+                    rows="2"
+                    placeholder="اردو..."
+                    value={formData.statement.ur}
+                    onChange={(e) =>
+                      handleStatementChange("ur", e.target.value)
+                    }
+                    dir="rtl"
+                  ></textarea>
                 </div>
-              </div>
 
-              {/* Submit Button (Updated Logic) */}
-              <button
-                type="submit"
-                className={`btn w-100 fw-bold ${
-                  editingId ? "btn-warning text-white" : "btn-primary"
-                }`}
-                disabled={
-                  isSubmitting || formData.selectedTopicIds.length === 0
-                }
-              >
-                {isSubmitting ? (
-                  <span>Loading...</span> // You can add a Spinner Icon here
-                ) : editingId ? (
-                  <>
-                    <FaSave className="me-2" /> Update Question
-                  </>
-                ) : (
-                  <>
-                    <FaPlus className="me-2" /> Save Question
-                  </>
+                {/* 4. MCQ Options (Only if MCQ) */}
+                {formData.type === "MCQ" && (
+                  <div
+                    className={`mb-3 p-2 border rounded bg-light-theme ${
+                      !isMcqComplete && "border-danger"
+                    }`}
+                  >
+                    <label className="small fw-bold text-muted mb-2 d-block">
+                      Options (All 4 Required)
+                    </label>
+                    {formData.options.map((opt, i) => (
+                      <div
+                        key={i}
+                        className={`d-flex align-items-center gap-2 mb-2 ${
+                          opt.isCorrect ? "border-success" : ""
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="correctOpt"
+                          checked={opt.isCorrect}
+                          onChange={() => setCorrectOption(i)}
+                        />
+                        <input
+                          type="text"
+                          className="form-control custom-input form-control-sm"
+                          placeholder="Eng"
+                          value={opt.en}
+                          onChange={(e) =>
+                            handleOptionChange(i, "en", e.target.value)
+                          }
+                        />
+                        <input
+                          type="text"
+                          className="form-control custom-input form-control-sm urdu-font"
+                          placeholder="اردو"
+                          value={opt.ur}
+                          onChange={(e) =>
+                            handleOptionChange(i, "ur", e.target.value)
+                          }
+                          dir="rtl"
+                        />
+                      </div>
+                    ))}
+                    {!isMcqComplete && (
+                      <div className="text-danger small">
+                        Fill all 4 options (English or Urdu)
+                      </div>
+                    )}
+                  </div>
                 )}
-              </button>
-            </form>
-          ) : (
-            <BulkUpload
-              topicId={formData.selectedTopicIds[0]}
-              chapterId={chapterId}
-              subjectId={subjectId}
-              classLevel={classLevel}
-              onSuccess={() => {
-                fetchQuestions();
-                setMode("single");
-              }}
-            />
-          )}
+
+                <div className="row g-2 mb-3">
+                  <div className="col-6">
+                    <label className="form-label">Image</label>
+                    <input
+                      type="file"
+                      className="form-control custom-input form-control-sm"
+                      onChange={(e) => setImageFile(e.target.files[0])}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label">Tags</label>
+                    <input
+                      type="text"
+                      className="form-control custom-input form-control-sm"
+                      placeholder="LHR-22"
+                      value={formData.boardTags}
+                      onChange={(e) =>
+                        setFormData({ ...formData, boardTags: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* ✅ DISABLED STATE APPLIED HERE */}
+                <button
+                  type="submit"
+                  className="btn-primary-gradient w-100"
+                  disabled={isSubmitting || !isFormValid}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <FaSpinner className="icon-spin me-2" /> Saving...
+                    </>
+                  ) : editingId ? (
+                    <>
+                      <FaSave className="me-2" /> Update
+                    </>
+                  ) : (
+                    <>
+                      <FaPlus className="me-2" /> Save Question
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <BulkUpload
+                chapterId={chapterId}
+                subjectId={subjectId}
+                classLevel={classLevel}
+                onSuccess={() => {
+                  fetchQuestions();
+                  setMode("single");
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

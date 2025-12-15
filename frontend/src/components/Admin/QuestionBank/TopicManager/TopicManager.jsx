@@ -12,6 +12,8 @@ import {
   FaCode,
   FaSpinner,
   FaTimes,
+  FaSave,
+  FaCloudUploadAlt,
 } from "react-icons/fa";
 
 const TopicManager = ({ chapterId }) => {
@@ -137,7 +139,7 @@ const TopicManager = ({ chapterId }) => {
       showCancelButton: true,
       confirmButtonColor: "#dc3545",
       confirmButtonText: "Yes, Delete!",
-      background: "var(--card-bg)", // Theme aware alert
+      background: "var(--card-bg)",
       color: "var(--text-main)",
     });
 
@@ -220,8 +222,17 @@ const TopicManager = ({ chapterId }) => {
       <div className="col-md-5">
         <div className="form-card sticky-top">
           <div className="form-header">
-            <h6 className="m-0 fw-bold text-accent">
-              {editingId ? "Edit Topic" : "Add Topic"}
+            <h6 className="m-0 fw-bold text-accent d-flex align-items-center gap-2">
+              {/* Dynamic Icon & Text based on Mode */}
+              {mode === "single" ? (
+                <>
+                  <FaPlus /> {editingId ? "Edit Topic" : "Add Topic"}
+                </>
+              ) : (
+                <>
+                  <FaCode /> Bulk Upload
+                </>
+              )}
             </h6>
             {!editingId && (
               <div className="mode-toggle">
@@ -295,33 +306,75 @@ const TopicManager = ({ chapterId }) => {
                   disabled={loading}
                 >
                   {loading ? (
-                    <FaSpinner className="icon-spin" />
+                    <>
+                      <FaSpinner className="icon-spin me-2" /> Processing...
+                    </>
                   ) : editingId ? (
-                    "Update"
+                    <>
+                      <FaEdit className="me-2" /> Update Topic
+                    </>
                   ) : (
-                    "Save"
+                    <>
+                      <FaSave className="me-2" /> Save Topic
+                    </>
                   )}
                 </button>
               </form>
             ) : (
               <div>
+                {/* Updated JSON Example */}
+                <div
+                  className="json-example p-3 rounded mb-3"
+                  style={{
+                    backgroundColor: "var(--bg-body)",
+                    border: "1px solid var(--border-color)",
+                    fontFamily: "monospace",
+                    fontSize: "0.8rem",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  <p className="mb-2 fw-bold text-accent">Example Format:</p>
+                  [<br />
+                  &nbsp;&nbsp;{`{`}
+                  <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;"topicNumber": "1.1",
+                  <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;"nameEn": "Introduction to Physics",
+                  <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;"nameUr": "طبیعیات کا تعارف"
+                  <br />
+                  &nbsp;&nbsp;{`}`},<br />
+                  &nbsp;&nbsp;{`{`}
+                  <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;"topicNumber": "1.2",
+                  <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;"nameEn": "Physical Quantities",
+                  <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;"nameUr": "طبیعی مقداریں"
+                  <br />
+                  &nbsp;&nbsp;{`}`}
+                  <br />]
+                </div>
+
                 <textarea
                   className="form-control custom-input mb-3"
                   rows="6"
-                  placeholder='[{"topicNumber": "1.1", "nameEn": "Intro"}]'
+                  placeholder="Paste your JSON array here..."
                   value={bulkJson}
                   onChange={(e) => setBulkJson(e.target.value)}
                 ></textarea>
                 <button
                   className="btn-primary-gradient w-100"
                   onClick={handleBulkUpload}
-                  disabled={loading}
+                  disabled={loading || !bulkJson}
                 >
                   {loading ? (
-                    <FaSpinner className="icon-spin" />
+                    <>
+                      <FaSpinner className="icon-spin me-2" /> Uploading...
+                    </>
                   ) : (
                     <>
-                      <FaCode className="me-2" /> Upload
+                      <FaCloudUploadAlt className="me-2" /> Upload Bulk
                     </>
                   )}
                 </button>

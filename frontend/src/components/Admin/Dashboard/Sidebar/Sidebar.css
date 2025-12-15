@@ -1,4 +1,4 @@
-/* --- VARIABLES (Used from App.css, defined locally for fallback) --- */
+/* --- VARIABLES --- */
 :root {
   --header-height: 60px;
   --sidebar-width-open: 260px;
@@ -14,7 +14,7 @@
   left: 0;
   width: 100%;
   height: var(--header-height);
-  background-color: var(--nav-bg); /* Glassy Background from App.css */
+  background-color: var(--nav-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-color);
   color: var(--text-main);
@@ -36,7 +36,7 @@
 }
 
 .toggle-btn:hover {
-  color: var(--accent-1); /* Blue Accent */
+  color: var(--accent-1);
 }
 
 .brand-logo {
@@ -53,7 +53,7 @@
   font-size: 14px;
   opacity: 0.8;
   color: var(--text-muted);
-  -webkit-text-fill-color: var(--text-muted); /* Reset gradient for subtitle */
+  -webkit-text-fill-color: var(--text-muted);
 }
 
 /* ============================
@@ -64,7 +64,7 @@
   top: var(--header-height);
   left: 0;
   height: calc(100vh - var(--header-height));
-  background-color: var(--sidebar-bg); /* Theme Aware */
+  background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   color: var(--text-main);
   transition: width 0.3s ease, background-color 0.3s ease;
@@ -81,10 +81,11 @@
   margin: 0;
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ============================
-   3. MENU LINKS (Home Page Style)
+   3. MENU LINKS (NORMAL / OPEN STATE)
    ============================ */
 .menu-link {
   display: flex;
@@ -97,7 +98,7 @@
   font-size: 15px;
   font-weight: 500;
   transition: all 0.3s ease;
-  border: 1px solid transparent; /* Prepare for hover border */
+  border: 1px solid transparent;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -110,11 +111,12 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background-color: var(--pill-bg); /* Subtle BG */
+  background-color: var(--pill-bg);
   color: var(--text-main);
   font-size: 18px;
   margin-right: 12px;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 /* Hover Effect */
@@ -130,14 +132,12 @@
   box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
 }
 
-/* Active State (Gradient Background like Home) */
+/* Active State (Open) */
 .menu-link.active {
-  background: linear-gradient(
-    135deg,
-    rgba(14, 165, 233, 0.1),
-    rgba(45, 212, 191, 0.1)
-  );
-  border-color: var(--accent-1);
+  background: linear-gradient(135deg,
+      rgba(14, 165, 233, 0.1),
+      rgba(45, 212, 191, 0.1));
+  border: 1px solid var(--accent-1);
   color: var(--accent-1);
 }
 
@@ -164,51 +164,38 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center; /* Center text by default */
-  padding: 5px;
+  padding: 12px;
   border: 1px solid var(--border-color);
   background-color: var(--card-bg);
   color: var(--text-main);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth spring effect */
+  transition: all 0.3s ease;
   font-weight: 600;
   position: relative;
   overflow: hidden;
 }
 
-/* --- ICON HIDDEN BY DEFAULT (When Sidebar Open) --- */
-.sidebar.desktop.open .btn-sidebar-action .icon-box {
-  max-width: 0;
-  opacity: 0;
-  margin-right: 0;
-  transform: translateX(-20px); /* Move left */
-  transition: all 0.3s ease;
-  display: flex; /* Keep flex for alignment */
+/* Icon Box Style */
+.btn-sidebar-action .icon-box {
+  width: 30px;
+  display: flex;
+  justify-content: center;
   align-items: center;
-}
-
-/* --- REVEAL ICON ON HOVER --- */
-.sidebar.desktop.open .btn-sidebar-action:hover .icon-box {
-  max-width: 30px; /* Bring back width */
-  opacity: 1;
   margin-right: 10px;
-  transform: translateX(0); /* Slide in */
+  /* Always visible in Open Mode */
 }
 
-/* Adjust alignment on hover */
-.sidebar.desktop.open .btn-sidebar-action:hover {
-  justify-content: flex-start; /* Align left to make room */
-  padding-left: 20px;
+.btn-sidebar-action:hover {
   background-color: var(--pill-bg);
 }
 
-/* --- THEME TOGGLE SPECIFIC --- */
+/* Theme Toggle Hover */
 .theme-toggle:hover .icon-box {
-  color: #eab308; /* Yellow Sun/Moon on hover */
+  color: #eab308;
 }
 
-/* --- LOGOUT BUTTON SPECIFIC --- */
+/* Logout Hover */
 .logout-btn:hover {
   background: linear-gradient(135deg, #ef4444, #dc2626) !important;
   color: white !important;
@@ -221,34 +208,54 @@
 }
 
 /* ============================
-   5. COLLAPSED STATE
+   5. COLLAPSED STATE (THE FIX)
    ============================ */
 .sidebar.desktop.collapsed {
   width: var(--sidebar-width-collapsed);
   padding: 20px 10px;
+  align-items: center;
+  /* Center everything */
 }
 
+/* Make Buttons & Links Square in Collapsed Mode */
 .sidebar.desktop.collapsed .menu-link,
 .sidebar.desktop.collapsed .btn-sidebar-action {
+  width: 45px;
+  /* Small Fixed Width */
+  height: 45px;
+  /* Small Fixed Height */
+  padding: 0;
+  /* Remove padding */
   justify-content: center;
-  padding: 10px 0;
+  /* Center Icon */
+  margin: 0 auto 10px auto;
+  /* Center in sidebar */
+  border-radius: 12px;
+}
+
+/* Fix Icon Margins in Collapsed */
+.sidebar.desktop.collapsed .menu-link .icon-box,
+.sidebar.desktop.collapsed .btn-sidebar-action .icon-box {
+  margin-right: 0;
+  /* No margin needed */
+}
+
+/* Fix Active Border Size in Collapsed */
+.sidebar.desktop.collapsed .menu-link.active {
+  width: 45px;
+  /* Ensure border wraps tightly */
+  border: 2px solid var(--accent-1);
+  background: transparent;
+  /* Clean look */
 }
 
 .sidebar.desktop.collapsed .menu-link:hover {
-  transform: none; /* No shift in collapsed mode */
-}
-
-/* Ensure Icons are ALWAYS visible in collapsed mode */
-.sidebar.desktop.collapsed .btn-sidebar-action .icon-box {
-  max-width: 30px;
-  opacity: 1;
-  margin-right: 0;
   transform: none;
-  display: flex;
 }
 
-.sidebar.desktop.collapsed .icon-box {
-  margin-right: 0; /* Center icons */
+/* Hide Text */
+.sidebar.desktop.collapsed .link-text {
+  display: none !important;
 }
 
 /* ============================
@@ -265,7 +272,6 @@
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Mobile Overlay */
 .sidebar-overlay {
   position: fixed;
   top: var(--header-height);
@@ -277,7 +283,6 @@
   backdrop-filter: blur(4px);
 }
 
-/* Utilities */
 .d-none {
   display: none !important;
 }

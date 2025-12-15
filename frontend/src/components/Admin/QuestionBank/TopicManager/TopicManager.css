@@ -9,11 +9,13 @@
   justify-content: space-between;
   align-items: center;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .topic-card:hover {
   transform: translateX(5px);
   border-color: var(--accent-1);
+  background-color: var(--pill-bg);
 }
 
 .topic-card.active-edit {
@@ -24,14 +26,23 @@
 .topic-badge {
   background-color: var(--pill-bg);
   color: var(--text-main);
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 50px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   margin-right: 15px;
-  min-width: 45px;
+  min-width: 50px;
   text-align: center;
   border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.topic-card:hover .topic-badge {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
+  /* Glow Effect */
 }
 
 /* --- ACTION BUTTONS (Icons Only) --- */
@@ -50,6 +61,7 @@
   background-color: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
 }
+
 .btn-icon.delete:hover {
   background-color: rgba(239, 68, 68, 0.1);
   color: #ef4444;
@@ -119,33 +131,70 @@
 
 /* --- BUTTONS --- */
 .btn-primary-gradient {
+  /* Default State: Blue to Teal Gradient */
   background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
   border: none;
   color: white;
-  padding: 10px;
-  border-radius: 10px;
-  font-weight: 600;
-  transition: transform 0.2s;
+  padding: 12px;
+  border-radius: 12px;
+  /* Softer Corners */
+  font-weight: 700;
+  /* Bolder Text */
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+  /* Subtle Shadow */
+  position: relative;
+  overflow: hidden;
 }
 
+/* --- HOVER EFFECT --- */
 .btn-primary-gradient:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4);
+  transform: translateY(-3px);
+  /* Lift Up */
+
+  /* Reverse Gradient Effect / Brighter */
+  background: linear-gradient(135deg, var(--accent-2), var(--accent-1));
+
+  /* Glowing Shadow matching the brand color */
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.5);
+}
+
+/* Active / Click Effect */
+.btn-primary-gradient:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+}
+
+/* Disabled State */
+.btn-primary-gradient:disabled {
+  background: var(--pill-bg);
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* --- UTILITIES --- */
 .text-main {
   color: var(--text-main) !important;
 }
+
 .text-accent {
   color: var(--accent-1) !important;
 }
+
 .text-muted {
   color: var(--text-muted) !important;
 }
+
 .urdu-font {
   font-family: "Jameel Noori Nastaleeq", serif;
 }
+
 .edit-alert {
   background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
@@ -157,12 +206,14 @@
   font-size: 0.85rem;
   font-weight: 600;
 }
+
 .edit-alert button {
   background: none;
   border: none;
   color: inherit;
   cursor: pointer;
 }
+
 .empty-topic-state {
   text-align: center;
   padding: 40px;
@@ -170,6 +221,7 @@
   border: 1px dashed var(--border-color);
   border-radius: 12px;
 }
+
 .empty-topic-state svg {
   font-size: 2rem;
   margin-bottom: 10px;

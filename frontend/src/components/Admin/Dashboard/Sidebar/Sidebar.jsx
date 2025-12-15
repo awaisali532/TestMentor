@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useUser } from "../../../../context/UserContext";
-import { useTheme } from "../../../../context/ThemeContext"; // ✅ Theme Hook
+import { useTheme } from "../../../../context/ThemeContext";
 import { MdSpaceDashboard } from "react-icons/md";
 import {
   FaFolder,
@@ -21,9 +21,9 @@ import "./Sidebar.css";
 const Sidebar = () => {
   const location = useLocation();
   const { user, logout } = useUser();
-  const { theme, toggleTheme } = useTheme(); // ✅ Get Theme
+  const { theme, toggleTheme } = useTheme();
 
-  // ✅ State: Desktop (Open by default), Mobile (Closed by default)
+  // State: Desktop (Open by default), Mobile (Closed by default)
   const [isOpen, setIsOpen] = useState(window.innerWidth > 992);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
 
@@ -171,6 +171,9 @@ const Sidebar = () => {
           <button
             onClick={toggleTheme}
             className="btn-sidebar-action theme-toggle mb-2"
+            title={
+              !isOpen ? (theme === "light" ? "Dark Mode" : "Light Mode") : ""
+            }
           >
             <div className="icon-box">
               {theme === "light" ? <FaMoon /> : <FaSun />}
@@ -183,7 +186,11 @@ const Sidebar = () => {
           </button>
 
           {/* Logout Button */}
-          <button onClick={logout} className="btn-sidebar-action logout-btn">
+          <button
+            onClick={logout}
+            className="btn-sidebar-action logout-btn"
+            title={!isOpen ? "Logout" : ""}
+          >
             <div className="icon-box">
               <FaSignOutAlt />
             </div>
