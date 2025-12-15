@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaBookOpen, FaArrowRight } from "react-icons/fa"; // ✅ Added Arrow Icon
+import { FaBookOpen, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./Subjects.css";
 
@@ -23,7 +23,7 @@ const Subjects = () => {
         setAllSubjects(data);
 
         const uniqueClasses = [...new Set(data.map((item) => item.className))];
-        uniqueClasses.sort(); // Natural sort
+        uniqueClasses.sort();
         setClasses(uniqueClasses);
 
         if (!searchParams.get("class") && uniqueClasses.length > 0) {
@@ -50,7 +50,6 @@ const Subjects = () => {
 
   return (
     <div className="subjects-page-wrapper">
-      {/* Header */}
       <div className="subjects-header">
         <div className="container">
           <h1 className="subjects-title">
@@ -63,7 +62,6 @@ const Subjects = () => {
       </div>
 
       <div className="container content-container mt-4">
-        {/* DYNAMIC TABS */}
         {classes.length > 0 ? (
           <>
             <div className="tabs-container">
@@ -78,7 +76,6 @@ const Subjects = () => {
               ))}
             </div>
 
-            {/* SUBJECTS GRID */}
             <div className="row g-4 mt-2">
               {displayedSubjects.length > 0 ? (
                 displayedSubjects.map((subject) => (
@@ -86,8 +83,9 @@ const Subjects = () => {
                     key={subject._id}
                     className="col-12 col-sm-6 col-md-4 col-lg-3"
                   >
+                    {/* ✅ RENAMED CLASS: public-subject-card */}
                     <div
-                      className="subject-card h-100"
+                      className="public-subject-card h-100"
                       onClick={() => navigate(`/subjects/${subject._id}`)}
                     >
                       <div className="card-img-wrapper">
@@ -95,7 +93,7 @@ const Subjects = () => {
                           <img
                             src={subject.image.url}
                             alt={subject.subjectName}
-                            className="subject-img"
+                            className="pub-subject-img"
                           />
                         ) : (
                           <div className="placeholder-img">
@@ -103,7 +101,6 @@ const Subjects = () => {
                           </div>
                         )}
 
-                        {/* ✅ Smart Overlay Button */}
                         <div className="overlay">
                           <button className="btn-card-action">
                             <span className="text-idle">View Syllabus</span>

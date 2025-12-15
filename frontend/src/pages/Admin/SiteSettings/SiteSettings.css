@@ -1,40 +1,148 @@
+/* --- THEME VARIABLES --- */
+:root {
+  /* Light Mode */
+  --bg-body: #f3f4f6;
+  --bg-card: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+
+  /* Input Colors */
+  --input-bg: #f9fafb;
+  --input-border: #e5e7eb;
+  --input-text: #1f2937;
+  --input-focus-border: #3b82f6;
+  --input-focus-shadow: rgba(59, 130, 246, 0.25);
+
+  /* Accents */
+  --accent-gradient: linear-gradient(
+    135deg,
+    #2563eb,
+    #06b6d4
+  ); /* Blue to Cyan */
+  --glow-card-light: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --glow-card-hover: 0 20px 25px -5px rgba(37, 99, 235, 0.15),
+    0 10px 10px -5px rgba(37, 99, 235, 0.1);
+}
+
+[data-theme="dark"] {
+  /* Dark Mode */
+  --bg-body: #0f172a; /* Deep Blue */
+  --bg-card: #1e293b; /* Slate */
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+
+  /* Input Colors (Dark) */
+  --input-bg: #334155;
+  --input-border: #475569;
+  --input-text: #f3f4f6;
+  --input-focus-border: #38bdf8;
+  --input-focus-shadow: rgba(56, 189, 248, 0.3);
+
+  /* Stronger Glow for Dark Mode */
+  --glow-card-light: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --glow-card-hover: 0 0 20px rgba(56, 189, 248, 0.2),
+    0 0 40px rgba(56, 189, 248, 0.1);
+}
+
+/* --- WRAPPER --- */
 .site-settings-wrapper {
-  background-color: var(--bg-body, #f8f9fa);
+  background-color: var(--bg-body);
   min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+/* --- HEADER ANIMATION & GRADIENT TITLE --- */
+.gradient-title {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.8rem;
+  letter-spacing: 0.5px;
 }
 
 .icon-box-header {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
+  width: 55px;
+  height: 55px;
+  background: var(--accent-gradient);
   color: white;
-  border-radius: 12px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
-.custom-admin-input {
-  border: 2px solid #e2e8f0;
-  padding: 12px 15px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  background-color: #fff;
+.settings-subtitle {
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
-.custom-admin-input:focus {
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+/* --- GLOWING CARD --- */
+.settings-card {
+  background-color: var(--bg-card);
+  box-shadow: var(--glow-card-light);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid transparent;
 }
 
-[data-theme="dark"] .custom-admin-input {
-  background-color: #1e293b;
-  border-color: #334155;
+/* Card Hover Effect */
+.settings-card:hover {
+  transform: translateY(-5px); /* Moves up slightly */
+  box-shadow: var(--glow-card-hover); /* Adds the glow */
+}
+
+/* --- INPUT FIELDS --- */
+.input-label {
+  color: var(--text-main);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.icon-accent {
+  color: #3b82f6; /* Default Blue */
+}
+[data-theme="dark"] .icon-accent {
+  color: #38bdf8; /* Cyan in Dark Mode */
+}
+
+.custom-admin-input {
+  background-color: var(--input-bg) !important;
+  border: 2px solid var(--input-border);
+  color: var(--input-text) !important;
+  padding: 14px 16px; /* Taller input */
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Input Focus Glow */
+.custom-admin-input:focus {
+  border-color: var(--input-focus-border);
+  background-color: var(--input-bg);
+  box-shadow: 0 0 0 4px var(--input-focus-shadow);
+  outline: none;
+}
+
+/* --- BUTTON GLOW --- */
+.btn-glow {
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5); /* Stronger glow on hover */
   color: white;
 }
 
-[data-theme="dark"] .custom-admin-input:focus {
-  border-color: #0ea5e9;
+.btn-glow:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }

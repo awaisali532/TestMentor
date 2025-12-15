@@ -1,0 +1,64 @@
+.stat-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 10px var(--shadow-color);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-title {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  color: var(--text-main);
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.stat-icon-box {
+  width: 55px;
+  height: 55px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Gradient Variants */
+.stat-card.blue .stat-icon-box {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+.stat-card.blue:hover {
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+}
+
+.stat-card.green .stat-icon-box {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+.stat-card.green:hover {
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+}
+
+.stat-card.orange .stat-icon-box {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+.stat-card.orange:hover {
+  box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2);
+}

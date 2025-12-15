@@ -156,6 +156,11 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
     }
   };
 
+  // ✅ VALIDATION LOGIC
+  const isSingleValid =
+    newChapter.number.trim() !== "" && newChapter.name.en.trim() !== "";
+  const isBulkValid = bulkJson.trim() !== "";
+
   if (!isExpanded) return null;
 
   return (
@@ -221,7 +226,15 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
             {/* Header */}
             <div className="form-header">
               <h6 className="form-title">
-                {editingId ? "Edit Chapter" : "Add New Chapter"}
+                {editingId ? (
+                  <>
+                    Edit <span className="highlight-text">Chapter</span>
+                  </>
+                ) : (
+                  <>
+                    Add <span className="highlight-text">New Chapter</span>
+                  </>
+                )}
               </h6>
 
               {!editingId && (
@@ -258,7 +271,9 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                 )}
 
                 <div className="mb-3">
-                  <label className="form-label">Chapter No.</label>
+                  <label className="form-label">
+                    Chapter No. <span className="text-danger">*</span>
+                  </label>
                   <input
                     className="form-control custom-input"
                     name="number"
@@ -269,7 +284,9 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="form-label">Chapter Name</label>
+                  <label className="form-label">
+                    Chapter Name <span className="text-danger">*</span>
+                  </label>
                   <input
                     className="form-control custom-input mb-2"
                     placeholder="English Name"
@@ -291,7 +308,7 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
 
                 <button
                   className="btn-primary-gradient w-100 d-flex justify-content-center align-items-center"
-                  disabled={loading}
+                  disabled={loading || !isSingleValid}
                 >
                   {loading ? (
                     <>
@@ -332,7 +349,7 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                 <button
                   className="btn-primary-gradient w-100 d-flex justify-content-center align-items-center"
                   onClick={handleBulkUpload}
-                  disabled={loading}
+                  disabled={loading || !isBulkValid}
                 >
                   {loading ? (
                     <>
@@ -344,6 +361,12 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                     </>
                   )}
                 </button>
+
+                {!isBulkValid && bulkJson.trim() === "" && (
+                  <div className="text-danger small mt-2">
+                    * Code block cannot be empty.
+                  </div>
+                )}
               </div>
             )}
           </div>

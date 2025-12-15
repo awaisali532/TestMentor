@@ -1,240 +1,98 @@
-/* =========================================
-   1. MAIN LAYOUT WRAPPER
-   ========================================= */
+/* ... (Previous CSS remains same) ... */
+
+/* Main Page Layout */
 .user-wrapper {
-    max-width: 1200px;
-    margin: 40px auto;
-    /* Centered on page with top margin */
-    padding: 0 20px;
+  width: 100%;
+  margin: 0;
+  min-height: 100vh;
+  padding: 15px 25px;
+  background-color: var(--bg-body);
+  transition: background-color 0.3s ease;
+  box-sizing: border-box;
+  position: relative; /* Needed for loader context if absolute, but we use fixed */
 }
 
-/* Page Title Styling */
-.user-wrapper h3 {
-    font-size: 1.75rem;
-    color: #212529;
-    letter-spacing: -0.5px;
+/* Heading Style */
+.section-heading {
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 15px;
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* =========================================
-   2. STATS CARDS
-   ========================================= */
-.stat-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Highlight Gradient Text */
+.highlight-text {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
 }
 
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
-}
-
-.stat-icon-box {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-}
-
-/* =========================================
-   3. FILTERS & SEARCH BAR (Responsive)
-   ========================================= */
-/* Container Card */
-.filter-card {
-    background: #fff;
-}
-
-/* Search Box Input Group */
-.search-box {
-    width: 100%;
-    /* Default Mobile Width */
-}
-
-.search-box .input-group-text {
-    background-color: #fff;
-    border-right: none;
-}
-
-.search-box .form-control {
-    border-left: none;
-}
-
-.search-box .form-control:focus {
-    box-shadow: none;
-    /* Remove blue glow for cleaner look */
-    border-color: #dee2e6;
-}
-
-/* Filter Box (Dropdown) */
-.filter-box {
-    width: 100%;
-}
-
-/* --- Desktop Styles (min-width: 768px) --- */
-@media (min-width: 768px) {
-
-    /* Fixed widths for desktop so they don't stretch */
-    .search-box {
-        width: 320px !important;
-        flex-grow: 0;
-    }
-
-    .filter-box {
-        width: 200px !important;
-        flex-grow: 0;
-    }
-
-    .btn-add-user {
-        width: auto !important;
-        /* Button size fits content */
-    }
-}
-
-/* --- Mobile Styles (max-width: 767px) --- */
-@media (max-width: 767px) {
-    .d-flex.gap-3 {
-        gap: 1rem !important;
-    }
-
-    /* Full width buttons on mobile for easier tapping */
-    .btn {
-        width: 100%;
-    }
+/* Loading Screen (Initial Load) */
+.loading-screen {
+  height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  background-color: var(--bg-body);
 }
 
 /* =========================================
-   4. USER TABLE STYLING
+   ✅ FULL SCREEN DELETING OVERLAY
    ========================================= */
-.table-responsive {
-    border-radius: 12px;
-    /* Rounded corners for table container */
+.full-screen-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent Dark */
+  backdrop-filter: blur(8px); /* The Blur Effect */
+  z-index: 9999; /* Highest priority */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
 }
 
-.table thead th {
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #edf2f7;
+.loader-content {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Avatar Circle */
-.user-avatar-circle {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 18px;
-    background-color: #e9ecef;
-    color: #495057;
-    text-transform: uppercase;
-}
-
-/* Hover Effect on Rows */
-.table-hover tbody tr {
-    transition: background-color 0.2s ease;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-/* Action Buttons */
-.btn-action {
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-
-.btn-action:hover {
-    transform: scale(1.1);
-}
-
-/* =========================================
-   5. MODAL STYLING (Add/Edit User)
-   ========================================= */
-.modal-overlay-custom {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    /* Semi-transparent backdrop */
-    z-index: 1060;
-    /* Higher than sidebar */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-    padding: 20px;
-    /* Prevent touching edges on mobile */
-}
-
-.modal-box {
-    background: white;
-    width: 100%;
-    max-width: 500px;
-    /* Fixed width for desktop */
-    border-radius: 16px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    animation: modalSlideUp 0.3s ease-out;
-}
-
-/* Modal Animation */
-@keyframes modalSlideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Modal Form Elements */
-.modal-box label {
-    color: #6c757d;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-}
-
-.modal-box .form-control:focus,
-.modal-box .form-select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-/* Permissions Section */
-.form-check-input:checked {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-}
-
-/* Utilities */
-.cursor-pointer {
-    cursor: pointer;
+.loader-content p {
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  margin: 0;
+  color: white;
 }
 
 .icon-spin {
-    animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    100% {
-        transform: rotate(360deg);
-    }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

@@ -1,172 +1,391 @@
-/* --- MAIN CARD --- */
+/* --- THEME VARIABLES --- */
+:root {
+  /* Light Mode */
+  --bg-body: #f3f4f6;
+  --bg-card: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --info-box-bg: #f9fafb;
+  --info-box-border: #e5e7eb;
+
+  /* Colors */
+  --primary-grad: linear-gradient(135deg, #3b82f6, #06b6d4);
+  --primary-shadow: rgba(59, 130, 246, 0.4);
+  --danger-color: #ef4444;
+
+  /* Glows */
+  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --card-glow-hover: 0 20px 25px -5px rgba(59, 130, 246, 0.25),
+    0 0 10px rgba(59, 130, 246, 0.1);
+
+  --input-bg: #fff;
+  --input-border: #d1d5db;
+  --input-text: #1f2937;
+}
+
+[data-theme="dark"] {
+  /* Dark Mode */
+  --bg-body: #0f172a;
+  --bg-card: #1e293b;
+  --text-main: #f3f4f6;
+  --text-muted: #94a3b8;
+  --info-box-bg: #334155;
+  --info-box-border: #475569;
+
+  --card-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+  --card-glow-hover: 0 0 30px rgba(56, 189, 248, 0.4),
+    0 0 60px rgba(56, 189, 248, 0.2);
+
+  --input-bg: #0f172a;
+  --input-border: #475569;
+  --input-text: #f3f4f6;
+}
+
+/* --- LAYOUT & CARD --- */
+.profile-wrapper {
+  min-height: 85vh;
+  background-color: var(--bg-body);
+  transition: background-color 0.3s ease;
+  padding: 20px;
+}
+
 .profile-card {
-    transition: all 0.3s ease-in-out;
+  background-color: var(--bg-card);
+  width: 100%;
+  max-width: 550px;
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  color: var(--text-main);
+}
+.profile-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--card-glow-hover);
 }
 
-/* --- CIRCULAR AVATAR CONTAINER --- */
+.gradient-text {
+  background: var(--primary-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-main {
+  color: var(--text-main);
+}
+.text-xs {
+  font-size: 0.75rem;
+}
+
+/* --- AVATAR STYLES --- */
 .avatar-container {
-    width: 140px;
-    /* Fixed width */
-    height: 140px;
-    /* Fixed height */
-    margin: 0 auto;
-    /* Horizontally Center */
-    position: relative;
-    border-radius: 50%;
-    /* Make circle */
-    border: 5px solid #fff;
-    /* White border nice look */
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    /* Bootstrap shadow-sm equivalent */
-    background-color: #f8f9fa;
-    /* Light gray background */
-    overflow: hidden;
-    /* Ensures image doesn't bleed out */
-    /* ✅ CRITICAL FIX: Force perfect circle aspect ratio */
-    aspect-ratio: 1 / 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+  position: relative;
+  border-radius: 50%;
+  border: 4px solid var(--bg-card);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Stronger shadow */
+  background-color: #e2e8f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
-
-/* Image fits perfectly */
 .avatar-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* Ensures image covers area without stretching */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-
-/* Default Avatar Icon Styling */
 .default-avatar-icon {
-    width: 65%;
-    /* Icon size relative to circle */
-    height: 65%;
-    color: #adb5bd;
-    /* Bootstrap gray-500 */
-    /* Ensure SVG centers itself */
-    display: block;
-    margin: auto;
+  width: 60%;
+  height: 60%;
+  color: #94a3b8;
 }
 
-/* --- LOADING SPINNER --- */
-.spinner-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f8f9fa;
-    color: #0d6efd;
-    /* Primary color */
+.avatar-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  z-index: 10;
 }
 
-.icon-spin {
-    animation: spin 1s linear infinite;
-    font-size: 2rem;
+/* --- NEW AVATAR BUTTONS (Floating Bubbles) --- */
+.avatar-actions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  transform: translateY(20px); /* Push them down slightly */
 }
 
-@keyframes spin {
-    100% {
-        transform: rotate(360deg);
-    }
+.avatar-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 3px solid var(--bg-card); /* Creates "cutout" effect */
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bouncy */
 }
 
-/* --- UPLOAD CAMERA BUTTON --- */
-.upload-btn-wrapper {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    z-index: 10;
+.btn-camera {
+  background: var(--primary-grad);
+  color: white;
+}
+.btn-camera:hover {
+  transform: scale(1.15) rotate(10deg);
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.5);
 }
 
-.upload-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background-color: #0d6efd !important;
-    /* Primary color force */
-    color: white;
-    border: 3px solid white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    transition: all 0.2s ease;
+.btn-trash {
+  background: #ef4444;
+  color: white;
+}
+.btn-trash:hover {
+  transform: scale(1.15) rotate(-10deg);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.5);
 }
 
-.upload-btn:hover {
-    transform: scale(1.1);
-    background-color: #0b5ed7 !important;
-    /* Darker primary on hover */
-}
-
-/* --- EDIT NAME PEN BUTTON --- */
+/* --- NEW EDIT NAME BUTTON (Spaced & Styled) --- */
 .edit-name-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: #f8f9fa;
-    /* Light bg */
-    color: #0d6efd;
-    /* Primary color text */
-    border: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    transition: all 0.2s ease;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: var(--info-box-bg);
+  border: 1px solid var(--info-box-border);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .edit-name-btn:hover {
-    background-color: #e9ecef;
-    transform: scale(1.05);
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
 }
 
+/* --- MODERN RESUME BUTTONS --- */
+.btn-modern-upload {
+  background: var(--primary-grad);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+  border: none;
+}
+.btn-modern-upload:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
+  opacity: 0.95;
+}
 
-/* --- MODALS --- */
+.btn-modern-delete {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-modern-delete:hover {
+  background-color: #ef4444;
+  color: white;
+  transform: rotate(90deg); /* Playful rotation */
+}
+
+/* --- REST OF CSS (Badges, Info Boxes, Modals) --- */
+.badge-custom {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+}
+.badge-admin {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+.badge-sub {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.info-box {
+  background-color: var(--info-box-bg);
+  border: 1px solid var(--info-box-border);
+  padding: 15px;
+  border-radius: 12px;
+  text-align: left;
+}
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  display: block;
+}
+.info-value {
+  font-weight: 600;
+  color: var(--text-main);
+}
+.badge-locked {
+  background: #64748b;
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+.btn-outline-custom {
+  background: transparent;
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-outline-custom:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.resume-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.resume-link:hover {
+  text-decoration: underline;
+}
+
+/* Modal Styles */
 .modal-overlay-custom {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1050;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
 }
-
 .modal-box-custom {
-    width: 90%;
-    max-width: 420px;
-    animation: slideUp 0.3s ease-out;
+  background: var(--bg-card);
+  width: 90%;
+  max-width: 400px;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-main);
+}
+.modal-input {
+  width: 100%;
+  padding: 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+  border-radius: 8px;
+  outline: none;
+}
+.modal-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+.btn-modal-save {
+  background: var(--primary-grad);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+.btn-modal-cancel {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  padding: 10px 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-close-custom {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-weight: bold;
+  cursor: pointer;
 }
 
+/* Utilities & Animations */
+.password-eye {
+  position: absolute;
+  right: 10px;
+  top: 38px;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.icon-spin {
+  animation: spin 1s linear infinite;
+}
+.icon-spin-lg {
+  animation: spin 1s linear infinite;
+  font-size: 2rem;
+}
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
 @keyframes slideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* Utilities */
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.fs-7 {
-    font-size: 0.85rem;
-}
-
-.fs-8 {
-    font-size: 0.75rem;
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,0 +1,149 @@
+.user-table-card {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px var(--shadow-color);
+  overflow: hidden;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.custom-table th {
+  background-color: var(--bg-body);
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  padding: 15px 20px;
+  text-align: left;
+}
+
+.custom-table td {
+  padding: 15px 20px;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.custom-table tr:hover {
+  background-color: var(--pill-bg);
+}
+
+/* User Info */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.user-name {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+.user-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Role Badges */
+.badge-role {
+  padding: 5px 12px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge-role.admin,
+.badge-role.superadmin {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.badge-role.teacher {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+.badge-role.student {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+/* Status Button */
+.status-btn {
+  border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.status-btn.active {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+.status-btn.inactive {
+  background-color: rgba(107, 114, 128, 0.2);
+  color: var(--text-muted);
+}
+
+/* ✅ DISABLED STATUS BUTTON */
+.status-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--bg-body) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Action Buttons */
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+  background: transparent;
+  margin-left: 5px;
+  color: var(--text-muted);
+}
+.action-btn:hover {
+  background-color: var(--pill-bg);
+  transform: scale(1.1);
+}
+.action-btn.edit {
+  color: #f59e0b;
+}
+.action-btn.delete {
+  color: #ef4444;
+}
+
+/* ✅ DISABLED ACTION BUTTONS (Crucial Fix) */
+.action-btn:disabled {
+  opacity: 0.2; /* Make it very faint */
+  cursor: not-allowed;
+  pointer-events: none; /* Disables clicking entirely */
+  filter: grayscale(100%);
+  transform: none !important;
+}
+
+/* Visual cue for row */
+.row-disabled {
+  background-color: rgba(0, 0, 0, 0.02);
+}

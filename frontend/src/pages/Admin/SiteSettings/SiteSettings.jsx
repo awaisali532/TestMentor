@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast"; // ✅ Imported Toaster
 import {
   FaSave,
   FaPhone,
@@ -25,13 +25,16 @@ const SiteSettings = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        // We reuse getAdminProfile because it contains the businessInfo object
-        const res = await axios.get(`${BASE_URL}/api/users/admin-profile`);
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${BASE_URL}/api/users/admin-profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (res.data.businessInfo) {
           setFormData({
-            phone: res.data.businessInfo.phone,
-            officeAddress: res.data.businessInfo.officeAddress,
-            supportEmail: res.data.businessInfo.supportEmail,
+            phone: res.data.businessInfo.phone || "",
+            officeAddress: res.data.businessInfo.officeAddress || "",
+            supportEmail: res.data.businessInfo.supportEmail || "",
           });
         }
       } catch (error) {
@@ -54,6 +57,8 @@ const SiteSettings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+
+    // ✅ Start Loading Toast
     const toastId = toast.loading("Updating settings...");
 
     try {
@@ -61,44 +66,50 @@ const SiteSettings = () => {
       await axios.put(`${BASE_URL}/api/users/business-info`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Site settings updated!", { id: toastId });
+
+      // ✅ Success Toast (Updates the loading one)
+      toast.success("Settings saved successfully!", { id: toastId });
     } catch (error) {
       console.error(error);
-      toast.error("Update failed. Ensure you are Super Admin.", {
-        id: toastId,
-      });
+      // ✅ Error Toast
+      toast.error("Update failed. Please try again.", { id: toastId });
     } finally {
       setSaving(false);
     }
   };
 
   if (loading)
-    return <div className="p-5 text-center">Loading Settings...</div>;
+    return (
+      <div className="p-5 text-center loading-text">Loading Settings...</div>
+    );
 
   return (
     <div className="site-settings-wrapper p-4">
+      {/* ✅ ADDED TOASTER HERE TO ENSURE IT SHOWS */}
+      <Toaster position="top-center" reverseOrder={false} />
+
       <div className="container" style={{ maxWidth: "800px" }}>
-        {/* Header */}
-        <div className="d-flex align-items-center gap-3 mb-4">
+        {/* Header Section */}
+        <div className="d-flex align-items-center gap-3 mb-4 header-anim">
           <div className="icon-box-header">
             <FaGlobe size={24} />
           </div>
           <div>
-            <h2 className="fw-bold m-0 text-dark">Site Configuration</h2>
-            <p className="text-muted m-0">
-              Update contact details visible on the Contact Us page.
+            <h2 className="fw-bold m-0 gradient-title">Site Configuration</h2>
+            <p className="m-0 settings-subtitle">
+              Manage your contact details and business info.
             </p>
           </div>
         </div>
 
-        {/* Form Card */}
-        <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
+        {/* GLOWING CARD */}
+        <div className="card settings-card border-0 rounded-4 overflow-hidden">
           <div className="card-body p-4 p-md-5">
             <form onSubmit={handleSubmit}>
               {/* Phone Number */}
               <div className="mb-4">
-                <label className="form-label fw-bold text-secondary">
-                  <FaPhone className="me-2" /> Phone Number
+                <label className="form-label fw-bold input-label">
+                  <FaPhone className="me-2 icon-accent" /> Phone Number
                 </label>
                 <input
                   type="text"
@@ -108,15 +119,12 @@ const SiteSettings = () => {
                   value={formData.phone}
                   onChange={handleChange}
                 />
-                <small className="text-muted">
-                  Display format (e.g. +1 (555) 000-0000)
-                </small>
               </div>
 
               {/* Support Email */}
               <div className="mb-4">
-                <label className="form-label fw-bold text-secondary">
-                  <FaEnvelope className="me-2" /> Support Email
+                <label className="form-label fw-bold input-label">
+                  <FaEnvelope className="me-2 icon-accent" /> Support Email
                 </label>
                 <input
                   type="email"
@@ -126,15 +134,12 @@ const SiteSettings = () => {
                   value={formData.supportEmail}
                   onChange={handleChange}
                 />
-                <small className="text-muted">
-                  Where users should send email inquiries.
-                </small>
               </div>
 
               {/* Office Address */}
               <div className="mb-4">
-                <label className="form-label fw-bold text-secondary">
-                  <FaMapMarkerAlt className="me-2" /> Office Address
+                <label className="form-label fw-bold input-label">
+                  <FaMapMarkerAlt className="me-2 icon-accent" /> Office Address
                 </label>
                 <textarea
                   name="officeAddress"
@@ -146,11 +151,11 @@ const SiteSettings = () => {
                 ></textarea>
               </div>
 
-              {/* Action Button */}
+              {/* Save Button */}
               <div className="d-flex justify-content-end mt-5">
                 <button
                   type="submit"
-                  className="btn btn-primary px-4 py-2 rounded-pill fw-bold d-flex align-items-center gap-2"
+                  className="btn btn-glow px-5 py-3 rounded-pill fw-bold d-flex align-items-center gap-2"
                   disabled={saving}
                 >
                   <FaSave /> {saving ? "Saving..." : "Save Changes"}

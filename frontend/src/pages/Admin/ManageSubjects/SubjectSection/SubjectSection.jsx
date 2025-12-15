@@ -275,7 +275,7 @@ const SubjectSection = ({
           {/* Existing Subjects */}
           {subjects.map((sub) => (
             <div key={sub._id} className="col-md-3">
-              <div className="subject-card" onClick={() => onSelect(sub)}>
+              <div className="subject-sec-card" onClick={() => onSelect(sub)}>
                 {/* Actions */}
                 <div className="subject-actions">
                   <button

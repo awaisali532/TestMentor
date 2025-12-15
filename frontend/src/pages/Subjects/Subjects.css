@@ -1,24 +1,20 @@
 /* =========================================
-   SUBJECTS PAGE STYLING
+   PUBLIC SUBJECTS PAGE STYLING
    ========================================= */
 
 /* --- 1. PAGE LAYOUT & THEME --- */
 .subjects-page-wrapper {
   min-height: 100vh;
-  /* Use global theme variable */
   background-color: var(--bg-body);
   padding-top: 120px;
-  /* Space for floating navbar */
   padding-bottom: 50px;
   transition: background-color 0.3s ease;
 }
 
-/* Force Dark Background in Dark Mode */
 [data-theme="dark"] .subjects-page-wrapper {
   background-color: #020617;
 }
 
-/* Constraint Width to match Navbar */
 .subjects-page-wrapper .container {
   max-width: 1200px;
   padding-left: 25px;
@@ -43,7 +39,6 @@
   font-size: 1.1rem;
 }
 
-/* Highlight Text (Gradient) */
 .highlight-text {
   background: linear-gradient(135deg, #0ea5e9, #2dd4bf);
   -webkit-background-clip: text;
@@ -59,12 +54,11 @@
   padding: 10px 0;
   margin-bottom: 30px;
   flex-wrap: wrap;
-  z-index: 100;
 }
 
 .tab-btn {
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
-  background: var(--pill-bg, #fff);
+  border: 1px solid var(--border-color);
+  background: var(--pill-bg);
   color: var(--text-muted);
   padding: 10px 25px;
   border-radius: 50px;
@@ -85,13 +79,11 @@
   box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
 }
 
-/* --- 4. CARD STYLING --- */
-.subject-card {
-  /* Theme Variables */
-  background-color: var(--card-bg, #fff);
-  border: 1px solid var(--border-color, #f1f5f9);
+/* --- 4. PUBLIC CARD STYLING --- */
+.public-subject-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
   color: var(--text-main);
-
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
@@ -102,49 +94,44 @@
   flex-direction: column;
 }
 
-/* Dark Mode Card Overrides */
-[data-theme="dark"] .subject-card {
+[data-theme="dark"] .public-subject-card {
   background-color: rgba(15, 23, 42, 0.6);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-.subject-card:hover {
+.public-subject-card:hover {
   transform: translateY(-5px);
   border-color: #0ea5e9;
   box-shadow: 0 12px 24px rgba(14, 165, 233, 0.15);
 }
 
-.subject-card .card-title {
-  color: var(--text-main);
-}
-
-/* --- IMAGE HANDLING --- */
+/* --- 5. IMAGE HANDLING (FIXED) --- */
 .card-img-wrapper {
-  height: 220px;
+  /* ✅ Increased Height for better visibility */
+  height: 190px;
   width: 100%;
-  /* Keep image background white/light even in dark mode for clarity */
-  background-color: #fff;
+  background-color: #ffffff; /* Keep white background for clean look */
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px; /* Reduced padding to maximize image size */
   border-bottom: 1px solid var(--border-color);
 }
 
-.subject-img {
+.pub-subject-img {
   width: 100%;
   height: 100%;
+  /* ✅ CONTAIN ensures the full image is visible without cropping */
   object-fit: contain;
   transition: transform 0.4s ease;
 }
 
-.subject-card:hover .subject-img {
-  transform: scale(1.08);
+.public-subject-card:hover .subject-img {
+  transform: scale(1.05); /* Slight zoom on hover */
 }
 
-/* Placeholder Icon */
 .placeholder-img {
   color: #cbd5e1;
   display: flex;
@@ -154,14 +141,13 @@
   height: 100%;
 }
 
-/* --- 5. OVERLAY & SMART BUTTON --- */
+/* --- 6. OVERLAY & SMART BUTTON --- */
 .overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* Darker Overlay */
   background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(3px);
   display: flex;
@@ -171,11 +157,10 @@
   transition: opacity 0.3s ease;
 }
 
-.subject-card:hover .overlay {
+.public-subject-card:hover .overlay {
   opacity: 1;
 }
 
-/* ✅ SMART ACTION BUTTON */
 .btn-card-action {
   background: white;
   color: #0f172a;
@@ -192,48 +177,52 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .btn-card-action:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
-/* Text Switching Logic */
 .text-idle,
 .text-hover {
   position: absolute;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  display: flex;
-  align-items: center;
+  transition: all 0.4s ease;
 }
-
-/* Initial State */
 .text-idle {
   transform: translateY(0);
   opacity: 1;
 }
-
 .text-hover {
   transform: translateY(20px);
-  /* Hidden below */
   opacity: 0;
   color: #0ea5e9;
-  /* Brand color on hover text */
 }
 
-/* Hover State (Overlay is active parent) */
 .overlay:hover .text-idle {
   transform: translateY(-20px);
-  /* Move Up */
   opacity: 0;
 }
-
 .overlay:hover .text-hover {
   transform: translateY(0);
-  /* Move into center */
   opacity: 1;
+}
+
+/* --- TEXT CONTENT --- */
+.public-subject-card .card-body {
+  padding: 15px;
+  text-align: center;
+  background-color: var(--card-bg);
+}
+
+.public-subject-card h5 {
+  color: var(--text-main);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.public-subject-card p {
+  color: var(--text-muted);
 }
 
 /* --- LOADING --- */
