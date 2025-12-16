@@ -1,0 +1,102 @@
+/* --- USER SPECIFIC THEME VARIABLES (Scoped) --- */
+/* Hum '--u-' prefix use karenge taake Admin variables se mix na ho */
+
+/* LIGHT MODE */
+.u-light {
+    --u-bg-body: #f3f4f6;
+    --u-bg-card: #ffffff;
+    --u-text-main: #1f2937;
+    --u-text-muted: #6b7280;
+    --u-border: #e5e7eb;
+    --u-hover-bg: #f9fafb;
+    --u-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --u-accent: #2563eb;
+    /* Blue */
+}
+
+/* DARK MODE */
+.u-dark {
+    --u-bg-body: #0f172a;
+    /* Deep Navy */
+    --u-bg-card: #1e293b;
+    /* Slate */
+    --u-text-main: #f1f5f9;
+    --u-text-muted: #94a3b8;
+    --u-border: rgba(255, 255, 255, 0.1);
+    --u-hover-bg: rgba(255, 255, 255, 0.05);
+    --u-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --u-accent: #3b82f6;
+    /* Lighter Blue */
+}
+
+/* --- GRID LAYOUT --- */
+.usr-layout-wrapper {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    /* Sidebar | Content | Notifs */
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--u-bg-body);
+    color: var(--u-text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow: hidden;
+}
+
+.usr-layout-sidebar {
+    background-color: var(--u-bg-card);
+    border-right: 1px solid var(--u-border);
+    height: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.usr-layout-main {
+    padding: 30px;
+    overflow-y: auto;
+    /* Scroll only center */
+    position: relative;
+}
+
+.usr-layout-right {
+    background-color: var(--u-bg-card);
+    border-left: 1px solid var(--u-border);
+    height: 100%;
+    transition: background-color 0.3s ease;
+}
+
+/* --- SCROLLBAR CUSTOMIZATION (User Side Only) --- */
+.usr-layout-main::-webkit-scrollbar {
+    width: 8px;
+}
+
+.usr-layout-main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.usr-layout-main::-webkit-scrollbar-thumb {
+    background: var(--u-border);
+    border-radius: 4px;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+    .usr-layout-wrapper {
+        grid-template-columns: 80px 1fr 0px;
+        /* Collapse Right Panel */
+    }
+
+    .usr-layout-right {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .usr-layout-wrapper {
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px 1fr;
+        /* Add Mobile Header later */
+    }
+
+    .usr-layout-sidebar {
+        display: none;
+    }
+}

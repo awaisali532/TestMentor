@@ -9,6 +9,7 @@ const questionRoutes = require("./routes/questionRoutes");
 const userRoutes = require("./routes/userRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 dotenv.config();
 connectDB();
 
@@ -24,6 +25,7 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", dashboardRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.get("/", (req, res) => {
   res.send("🚀 TestMentor Backend is running...");
 });

@@ -11,7 +11,7 @@
 
 /* ✅ FORCE DARK BACKGROUND IN DARK MODE */
 [data-theme="dark"] .mediums-section {
-  background-color: #020617 !important;
+  background-color: rgb(14 23 41) !important;
   color: #f8fafc !important;
 }
 

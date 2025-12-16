@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./Auth.css";
-import loginimg from "../../assets/imeages/login/login.png";
+import loginimg from "../../assets/imeages/login/login.png"; // Ensure path is correct
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaLock,
@@ -28,19 +28,22 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const toastId = toast.loading("Verifying credentials...");
+    // const toastId = toast.loading("Verifying credentials...");
 
     try {
       const response = await login(email, password);
-      toast.success("Welcome back!", { id: toastId });
+      toast.success("Welcome back!");
 
-      if (response.user.role === "admin") {
+      // --- ✅ REDIRECTION LOGIC UPDATED ---
+      if (response.user.isSuperAdmin) {
+        // If Super Admin -> Admin Dashboard
         navigate("/admin/dashboard", { replace: true });
       } else {
-        navigate("/", { replace: true });
+        // Everyone else (Free/Paid Users) -> User Dashboard
+        navigate("/user/dashboard", { replace: true });
       }
     } catch (err) {
-      toast.error(err.message || "Login failed.", { id: toastId });
+      toast.error(err.message || "Login failed.");
     } finally {
       setLoading(false);
     }

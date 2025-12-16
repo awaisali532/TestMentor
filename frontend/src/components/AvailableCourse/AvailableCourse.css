@@ -27,7 +27,7 @@
 
 /* Force Dark Background in Dark Mode */
 [data-theme="dark"] .courses-section {
-  background-color: #020617 !important;
+  background-color: rgb(14 23 41) !important;
   color: #f8fafc !important;
 }
 

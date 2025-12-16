@@ -1,0 +1,263 @@
+.ud-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* --- HERO SECTION --- */
+.ud-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 10px;
+}
+
+.ud-welcome {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+    color: var(--u-text-main);
+}
+
+.ud-subtitle {
+    color: var(--u-text-muted);
+    font-size: 0.95rem;
+}
+
+/* Badges */
+.badge-pill {
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-pill.free {
+    background: rgba(107, 114, 128, 0.2);
+    color: var(--u-text-muted);
+    border: 1px solid var(--u-border);
+}
+
+.badge-pill.premium {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+}
+
+/* --- GRID CARDS --- */
+.ud-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.ud-card {
+    background-color: var(--u-bg-card);
+    border: 1px solid var(--u-border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 200px;
+}
+
+.ud-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--u-shadow);
+}
+
+/* Action Card Styles */
+.card-icon-bg {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.card-icon-bg.blue {
+    background: rgba(37, 99, 235, 0.1);
+    color: #3b82f6;
+}
+
+.card-icon-bg.purple {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.card-info h5 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--u-text-main);
+}
+
+.card-info p {
+    color: var(--u-text-muted);
+    font-size: 0.9rem;
+    margin: 0 0 20px 0;
+}
+
+/* Buttons */
+.ud-btn {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: auto;
+    transition: 0.2s;
+}
+
+.btn-blue {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-blue:hover {
+    background: #2563eb;
+}
+
+.btn-purple {
+    background: #8b5cf6;
+    color: white;
+}
+
+.btn-purple:hover {
+    background: #7c3aed;
+}
+
+/* Locked State */
+.ud-card.locked {
+    opacity: 0.8;
+    border: 1px dashed var(--u-border);
+}
+
+.btn-locked {
+    background: var(--u-bg-body);
+    color: var(--u-text-muted);
+    border: 1px solid var(--u-border);
+    cursor: not-allowed;
+}
+
+/* Stats Card Specifics */
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    color: var(--u-text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--u-text-main);
+}
+
+.stats-number .total {
+    font-size: 1.2rem;
+    color: var(--u-text-muted);
+    font-weight: 500;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--u-bg-body);
+    border-radius: 4px;
+    margin: 15px 0 10px 0;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.stats-sub {
+    font-size: 0.8rem;
+    color: var(--u-text-muted);
+}
+
+
+/* --- ACTIVITY TABLE --- */
+.ud-section {
+    margin-top: 10px;
+}
+
+.section-title {
+    margin-bottom: 15px;
+    color: var(--u-text-main);
+    font-weight: 700;
+}
+
+.activity-table-wrapper {
+    background: var(--u-bg-card);
+    border: 1px solid var(--u-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ud-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ud-table th {
+    text-align: left;
+    padding: 15px;
+    background: var(--u-hover-bg);
+    color: var(--u-text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.ud-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--u-border);
+    color: var(--u-text-main);
+    font-size: 0.9rem;
+}
+
+.ud-table tr:last-child td {
+    border-bottom: none;
+}
+
+.text-sm {
+    font-size: 0.8rem;
+}
+
+.status-dot {
+    height: 8px;
+    width: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ud-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .activity-table-wrapper {
+        overflow-x: auto;
+    }
+}

@@ -1,0 +1,138 @@
+.usr-sidebar-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.usr-brand {
+    margin-bottom: 30px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--u-text-main);
+}
+
+/* --- PROFILE CARD --- */
+.usr-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background-color: var(--u-bg-body);
+    /* Darker than card */
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 1px solid var(--u-border);
+}
+
+.usr-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--u-accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.usr-name {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--u-text-main);
+}
+
+.usr-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.usr-badge-free {
+    background: #64748b;
+    color: white;
+}
+
+.usr-badge-paid {
+    background: #eab308;
+    color: black;
+    font-weight: bold;
+}
+
+/* --- NAVIGATION --- */
+.usr-nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.usr-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: var(--u-text-muted);
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.usr-nav-link:hover,
+.usr-nav-link.usr-active {
+    background-color: var(--u-hover-bg);
+    color: var(--u-accent);
+}
+
+/* --- FOOTER --- */
+.usr-sidebar-footer {
+    margin-top: auto;
+}
+
+.usr-btn-upgrade {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+}
+
+.usr-footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.usr-icon-btn {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--u-border);
+    color: var(--u-text-muted);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.usr-icon-btn:hover {
+    background: var(--u-hover-bg);
+    color: var(--u-text-main);
+}
+
+.usr-icon-btn.usr-danger:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
