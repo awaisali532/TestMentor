@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import UserSidebar from "../../components/User/UserSidebar/UserSidebar";
-import NotificationPanel from "../../components/user/NotificationPanel/NotificationPanel";
+import NotificationPanel from "../../components/User/NotificationPanel/NotificationPanel";
 import { FaBars } from "react-icons/fa"; // Hamburger Icon
 import "./UserLayout.css";
 
