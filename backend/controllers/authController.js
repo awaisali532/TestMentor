@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/User"); // Ensure filename matches your project
+const User = require("../models/user"); // Ensure filename matches your project
 
 // --- REGISTER (Public Signups) ---
 exports.register = async (req, res) => {
