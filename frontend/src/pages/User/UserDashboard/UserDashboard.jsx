@@ -8,7 +8,7 @@ import {
   FaLock,
   FaClock,
 } from "react-icons/fa";
-import "./UserDashboard.css"; // CSS file next step mein banayenge
+import "./UserDashboard.css";
 
 const UserDashboard = () => {
   // 1. Get User Data
@@ -19,11 +19,10 @@ const UserDashboard = () => {
   };
 
   // 2. Logic to Check Limits
-  // Agar user FREE hai AUR usne 1 paper bana liya hai => BLOCKED
   const isFree = user.planType === "free";
   const limitReached = isFree && user.usage.papersGenerated >= 1;
 
-  // 3. Mock Activity Data (Baad mein API se ayega)
+  // 3. Mock Activity Data
   const [activities, setActivities] = useState([
     {
       id: 1,
@@ -45,7 +44,9 @@ const UserDashboard = () => {
       {/* --- HERO SECTION --- */}
       <div className="ud-hero">
         <div>
-          <h2 className="ud-welcome">Welcome back, {user.name}! 👋</h2>
+          <h2 className="ud-welcome">
+            Welcome back, <span className="text-gradient">{user.name}!</span> 👋
+          </h2>
           <p className="ud-subtitle">
             Here is what's happening with your account today.
           </p>
@@ -63,14 +64,17 @@ const UserDashboard = () => {
 
       {/* --- STATS & ACTIONS GRID --- */}
       <div className="ud-grid">
-        {/* CARD 1: GENERATE PAPER (The Main Feature) */}
+        {/* CARD 1: GENERATE PAPER */}
         <div className={`ud-card action-card ${limitReached ? "locked" : ""}`}>
-          <div className="card-icon-bg blue">
-            {limitReached ? <FaLock /> : <FaPlus />}
+          <div className="card-top">
+            <div className="card-icon-bg blue-glow">
+              {limitReached ? <FaLock /> : <FaPlus />}
+            </div>
+            <span className="card-tag">Core Feature</span>
           </div>
           <div className="card-info">
             <h5>Generate Paper</h5>
-            <p>Create custom papers PDF.</p>
+            <p>Create professional PDF papers.</p>
           </div>
 
           {limitReached ? (
@@ -86,12 +90,15 @@ const UserDashboard = () => {
 
         {/* CARD 2: ONLINE TEST */}
         <div className="ud-card action-card">
-          <div className="card-icon-bg purple">
-            <FaLaptopCode />
+          <div className="card-top">
+            <div className="card-icon-bg purple-glow">
+              <FaLaptopCode />
+            </div>
+            <span className="card-tag">Practice</span>
           </div>
           <div className="card-info">
             <h5>Online Test</h5>
-            <p>Practice MCQs instantly.</p>
+            <p>Attempt MCQs and check result.</p>
           </div>
           <Link to="/user/online-test" className="ud-btn btn-purple">
             Start Quiz
@@ -104,24 +111,29 @@ const UserDashboard = () => {
             <span>Paper Usage</span>
             <FaHistory className="text-muted" />
           </div>
-          <h3 className="stats-number">
-            {user.usage.papersGenerated}{" "}
-            <span className="total">/ {isFree ? "1" : "∞"}</span>
-          </h3>
-          <div className="progress-bar-bg">
-            <div
-              className="progress-bar-fill"
-              style={{
-                width: isFree
-                  ? `${(user.usage.papersGenerated / 1) * 100}%`
-                  : "100%",
-                background: limitReached ? "#ef4444" : "#10b981",
-              }}
-            ></div>
+          <div className="stats-body">
+            <h3 className="stats-number">
+              {user.usage.papersGenerated}{" "}
+              <span className="total">/ {isFree ? "1" : "∞"}</span>
+            </h3>
+            <div className="progress-bar-bg">
+              <div
+                className="progress-bar-fill"
+                style={{
+                  width: isFree
+                    ? `${(user.usage.papersGenerated / 1) * 100}%`
+                    : "100%",
+                  background: limitReached ? "#ef4444" : "#10b981",
+                  boxShadow: limitReached
+                    ? "0 0 10px #ef4444"
+                    : "0 0 10px #10b981",
+                }}
+              ></div>
+            </div>
+            <small className="stats-sub">
+              {limitReached ? "Limit Reached" : "You can generate more."}
+            </small>
           </div>
-          <small className="stats-sub">
-            {limitReached ? "Limit Reached" : "You can generate more."}
-          </small>
         </div>
       </div>
 
@@ -147,7 +159,7 @@ const UserDashboard = () => {
                     <FaClock className="me-1" /> {act.date}
                   </td>
                   <td>
-                    <span className="status-dot"></span> Completed
+                    <span className="status-badge success">Completed</span>
                   </td>
                 </tr>
               ))}

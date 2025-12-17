@@ -32,7 +32,8 @@
   width: 100vw;
   background-color: var(--u-bg-body);
   color: var(--u-text-main);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth Transition */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Smooth Transition */
   overflow: hidden;
 }
 
@@ -61,7 +62,7 @@
 
 /* --- RIGHT PANEL --- */
 .usr-layout-right {
-  background-color: var(--u-bg-card);
+  /* background-color: var(--u-bg-card); */
   border-left: 1px solid var(--u-border);
   height: 100%;
   transition: background-color 0.3s ease;
@@ -69,7 +70,8 @@
 
 /* --- MOBILE HEADER (Hidden on Desktop) --- */
 .usr-mobile-header {
-  display: none; /* Default hidden */
+  display: none;
+  /* Default hidden */
   align-items: center;
   gap: 15px;
   margin-bottom: 20px;
@@ -92,9 +94,11 @@
 .usr-layout-main::-webkit-scrollbar {
   width: 8px;
 }
+
 .usr-layout-main::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .usr-layout-main::-webkit-scrollbar-thumb {
   background: var(--u-border);
   border-radius: 4px;
@@ -105,17 +109,21 @@
    ========================================= */
 
 @media (max-width: 1024px) {
+
   /* Tablet: Hide Right Panel */
   .usr-layout-wrapper,
   .usr-layout-wrapper.usr-collapsed {
-    grid-template-columns: 80px 1fr; /* Sidebar collapsed style usually */
+    grid-template-columns: 80px 1fr;
+    /* Sidebar collapsed style usually */
   }
+
   .usr-layout-right {
     display: none;
   }
 }
 
 @media (max-width: 768px) {
+
   /* Mobile: Single Column */
   .usr-layout-wrapper,
   .usr-layout-wrapper.usr-collapsed {
@@ -132,16 +140,19 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 280px; /* Fixed width for drawer */
+    width: 280px;
+    /* Fixed width for drawer */
     height: 100%;
-    transform: translateX(-100%); /* Hidden by default */
+    transform: translateX(-100%);
+    /* Hidden by default */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
     border-right: none;
   }
 
   .usr-layout-sidebar.mobile-open {
-    transform: translateX(0); /* Slide In */
+    transform: translateX(0);
+    /* Slide In */
   }
 
   /* --- BLUR BACKDROP (Overlay) --- */
@@ -152,7 +163,8 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(5px); /* BLUR EFFECT */
+    backdrop-filter: blur(5px);
+    /* BLUR EFFECT */
     z-index: 40;
     animation: fadeIn 0.3s ease;
   }
@@ -162,6 +174,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

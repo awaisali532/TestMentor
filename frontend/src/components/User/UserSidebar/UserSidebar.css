@@ -29,6 +29,7 @@
   z-index: 100;
   transition: all 0.2s;
 }
+
 .usr-collapse-btn:hover {
   color: var(--u-accent);
   border-color: var(--u-accent);
@@ -48,7 +49,8 @@
 
 .brand-accent {
   color: var(--u-accent);
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.6); /* Neon Text Glow */
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  /* Neon Text Glow */
 }
 
 .brand-short {
@@ -58,8 +60,10 @@
 /* --- PROFILE CARD (Redesigned) --- */
 .usr-profile-card {
   display: flex;
-  flex-direction: column; /* Stack vertical */
-  align-items: center; /* Center content */
+  flex-direction: column;
+  /* Stack vertical */
+  align-items: center;
+  /* Center content */
   padding: 20px;
   background: linear-gradient(145deg, var(--u-bg-body), var(--u-hover-bg));
   border-radius: 16px;
@@ -71,7 +75,8 @@
 
 .usr-profile-card:hover {
   border-color: var(--u-accent);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15); /* Hover Glow */
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+  /* Hover Glow */
 }
 
 .usr-avatar-container {
@@ -80,8 +85,9 @@
 }
 
 .usr-avatar {
-  width: 70px; /* Bigger Avatar */
-  height: 70px;
+  width: 100px;
+  /* Big Avatar as requested */
+  height: 100px;
   background: linear-gradient(135deg, #3b82f6, #06b6d4);
   color: white;
   border-radius: 50%;
@@ -89,21 +95,24 @@
   justify-content: center;
   align-items: center;
   font-weight: 800;
-  font-size: 1.8rem;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); /* Neon Avatar Glow */
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  font-size: 2.5rem;
+  /* Text size increased for bigger avatar */
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  /* Neon Avatar Glow */
+  border: 3px solid rgba(255, 255, 255, 0.2);
   transition: width 0.3s, height 0.3s;
 }
 
 .online-dot {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  width: 14px;
-  height: 14px;
+  bottom: 8px;
+  /* Adjusted for 100px size */
+  right: 8px;
+  width: 18px;
+  height: 18px;
   background-color: #10b981;
   border-radius: 50%;
-  border: 2px solid var(--u-bg-card);
+  border: 3px solid var(--u-bg-card);
   box-shadow: 0 0 8px #10b981;
 }
 
@@ -112,14 +121,20 @@
   width: 100%;
 }
 
+/* ✅ NAME WRAPPING LOGIC HERE */
 .usr-name {
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--u-text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Wrapping Styles: */
+  white-space: normal;
+  /* Allows wrapping */
+  word-wrap: break-word;
+  /* Breaks long words */
+  line-height: 1.3;
+  /* Spacing for multi-line */
+  text-align: center;
 }
 
 .usr-badge {
@@ -142,7 +157,8 @@
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); /* Gold Glow */
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+  /* Gold Glow */
   border: none;
 }
 
@@ -187,7 +203,8 @@
   background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent);
   color: var(--u-accent);
   border-left: 3px solid var(--u-accent);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); /* Subtle Link Glow */
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  /* Subtle Link Glow */
 }
 
 /* --- FOOTER & BUTTONS --- */
@@ -221,7 +238,8 @@
 
 .usr-btn-upgrade:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); /* Intensify Glow */
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+  /* Intensify Glow */
 }
 
 .usr-footer-actions {
@@ -249,7 +267,8 @@
   background: var(--u-hover-bg);
   color: var(--u-accent);
   border-color: var(--u-accent);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); /* Blue Neon Hover */
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  /* Blue Neon Hover */
 }
 
 /* Logout Specific */
@@ -257,12 +276,14 @@
   color: #ef4444;
   border-color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); /* Red Neon Hover */
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  /* Red Neon Hover */
 }
 
 /* --- COLLAPSED MODE STYLES --- */
 .collapsed-mode {
-  padding: 25px 10px; /* Slimmer padding */
+  padding: 25px 10px;
+  /* Slimmer padding */
   align-items: center;
 }
 
@@ -284,6 +305,7 @@
   height: 40px;
   font-size: 1.2rem;
   margin-bottom: 0;
+  border-width: 2px;
 }
 
 /* Footer in collapsed mode */
@@ -296,11 +318,105 @@
 .fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
+
+/* --- 🔥 LOGOUT MODAL STYLES --- */
+.logout-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  /* Dark Dim Background */
+  backdrop-filter: blur(8px);
+  /* Blur Effect */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  /* Top most */
+  animation: fadeIn 0.2s ease-out;
+}
+
+.logout-box {
+  background: var(--u-bg-card);
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+  border: 1px solid var(--u-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  /* Deep Shadow */
+  transform: scale(1);
+  animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.logout-title {
+  margin: 0 0 10px 0;
+  color: var(--u-text-main);
+  font-weight: 800;
+  font-size: 1.5rem;
+}
+
+.logout-msg {
+  color: var(--u-text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+}
+
+.logout-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.l-btn {
+  padding: 10px 25px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 0.9rem;
+  transition: transform 0.2s;
+}
+
+.l-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Cancel Button */
+.l-cancel {
+  background: var(--u-hover-bg);
+  color: var(--u-text-main);
+  border: 1px solid var(--u-border);
+}
+
+/* Confirm Button (Red Neon) */
+.l-confirm {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes popUp {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

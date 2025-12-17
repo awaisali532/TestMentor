@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUser } from "../../../../context/UserContext";
 import { useTheme } from "../../../../context/ThemeContext";
 import { MdSpaceDashboard } from "react-icons/md";
@@ -20,12 +20,16 @@ import "./Sidebar.css";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useUser();
   const { theme, toggleTheme } = useTheme();
 
   // State: Desktop (Open by default), Mobile (Closed by default)
   const [isOpen, setIsOpen] = useState(window.innerWidth > 992);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
+
+  // ✅ LOGOUT MODAL STATE
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Screen Resize Listener
   useEffect(() => {
@@ -44,6 +48,13 @@ const Sidebar = () => {
     if (isMobile) setIsOpen(false);
   };
   const isActive = (path) => (location.pathname === path ? "active" : "");
+
+  // ✅ LOGOUT HANDLER
+  const handleLogoutConfirm = () => {
+    logout(); // Context logout
+    navigate("/login", { replace: true });
+    window.location.reload(); // Ensure clean state
+  };
 
   const canAccess = (perm) => {
     if (!user) return false;
@@ -185,9 +196,9 @@ const Sidebar = () => {
             </span>
           </button>
 
-          {/* Logout Button */}
+          {/* Logout Button (Triggers Modal) */}
           <button
-            onClick={logout}
+            onClick={() => setShowLogoutModal(true)} // ✅ Trigger Modal
             className="btn-sidebar-action logout-btn"
             title={!isOpen ? "Logout" : ""}
           >
@@ -202,6 +213,29 @@ const Sidebar = () => {
           </button>
         </div>
       </div>
+
+      {/* --- 🔥 3. ADMIN LOGOUT MODAL --- */}
+      {showLogoutModal && (
+        <div className="admin-logout-overlay">
+          <div className="admin-logout-box">
+            <h4 className="logout-title">Sign Out?</h4>
+            <p className="logout-msg">
+              Are you sure you want to exit the admin panel?
+            </p>
+            <div className="logout-actions">
+              <button
+                className="a-btn a-cancel"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+              <button className="a-btn a-confirm" onClick={handleLogoutConfirm}>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -1,70 +1,101 @@
 import React, { useState } from "react";
-import {
-  FaBell,
-  FaExclamationCircle,
-  FaCheckCircle,
-  FaInfoCircle,
-} from "react-icons/fa";
+import { FaBell, FaCheck, FaInfoCircle } from "react-icons/fa";
 import "./NotificationPanel.css";
 
 const NotificationPanel = () => {
-  // Mock Data (Backend se replace hoga baad mein)
+  const [lang, setLang] = useState("ur"); // Default Urdu as per screenshot
+
+  // Mock Data with Dual Language Support
   const [notifications] = useState([
     {
       id: 1,
-      title: "Exam Schedule",
-      msg: "Physics test tomorrow at 10 AM.",
-      type: "urgent",
-      date: "10 mins ago",
+      type: "success",
+      en: "Click here to download Urdu Font.",
+      ur: "اُردو فونٹ ڈاؤن لوڈ کرنے کے لیے کلک کریں۔",
+      date: "New",
     },
     {
       id: 2,
-      title: "New Feature",
-      msg: "You can now view past results.",
       type: "success",
-      date: "2 hours ago",
+      en: "New 1st Year data has been uploaded.",
+      ur: "نیو فرسٹ ایئر کا ڈیٹا اپلوڈ ہو چکا ہے۔",
+      date: "Today",
     },
     {
       id: 3,
-      title: "Maintenance",
-      msg: "System update at midnight.",
-      type: "info",
+      type: "success",
+      en: "New 9th Class data has been uploaded.",
+      ur: "نیو نہم کا ڈیٹا اپلوڈ ہو چکا ہے۔",
       date: "Yesterday",
+    },
+    {
+      id: 4,
+      type: "info",
+      en: "Added font size option for Equations in Math papers.",
+      ur: "ریاضی کے پیپر میں موجود مساوات (Equations) کا فونٹ سائز بڑھانے کی آپشن شامل کر دی گئی ہے۔",
+      date: "2 days ago",
+    },
+    {
+      id: 5,
+      type: "success",
+      en: "As per new board policy, 9th & 10th Islamiyat is now combined.",
+      ur: "بورڈ کی نئی پالیسی کے مطابق نہم اور دہم اسلامیات لازمی کو کمبائن کر دیا گیا ہے۔",
+      date: "3 days ago",
+    },
+    {
+      id: 6,
+      type: "success",
+      en: "Pak Studies for 9th class removed as per new policy.",
+      ur: "بورڈ کی نئی پالیسی کے مطابق مطالعہ پاکستان کو نہم کلاس میں سے ختم کر دیا گیا ہے۔",
+      date: "Last Week",
     },
   ]);
 
-  const getIcon = (type) => {
-    if (type === "urgent")
-      return <FaExclamationCircle className="usr-n-icon text-red" />;
-    if (type === "success")
-      return <FaCheckCircle className="usr-n-icon text-green" />;
-    return <FaInfoCircle className="usr-n-icon text-blue" />;
-  };
-
   return (
-    <div className="usr-notif-container">
-      <div className="usr-notif-header">
-        <h4>Notifications</h4>
-        <div className="usr-bell-wrap">
-          <FaBell />
-          <span className="usr-dot"></span>
+    <div className="usr-notif-wrapper">
+      {/* HEADER */}
+      <div className="usr-notif-header-solid">
+        <div className="d-flex align-items-center gap-2">
+          <FaBell className="bell-shake" />
+          <h5 className="m-0 fw-bold">New Alerts</h5>
+        </div>
+
+        {/* Language Toggle */}
+        <div className="lang-toggle">
+          <button
+            className={lang === "en" ? "active" : ""}
+            onClick={() => setLang("en")}
+          >
+            ENG
+          </button>
+          <button
+            className={lang === "ur" ? "active" : ""}
+            onClick={() => setLang("ur")}
+          >
+            اردو
+          </button>
         </div>
       </div>
 
-      <div className="usr-notif-list">
-        {notifications.length > 0 ? (
-          notifications.map((notif) => (
-            <div key={notif.id} className={`usr-notif-card ${notif.type}`}>
-              {getIcon(notif.type)}
-              <div className="usr-notif-content">
-                <h6>{notif.title}</h6>
-                <p>{notif.msg}</p>
-                <span className="usr-n-date">{notif.date}</span>
-              </div>
+      {/* LIST */}
+      <div className="usr-notif-body custom-scrollbar">
+        {notifications.map((item) => (
+          <div key={item.id} className="alert-item">
+            {/* Icon */}
+            <div className="alert-icon">
+              {item.type === "success" ? <FaCheck /> : <FaInfoCircle />}
             </div>
-          ))
-        ) : (
-          <p className="usr-no-data">No new notifications.</p>
+
+            {/* Content */}
+            <div className={`alert-content ${lang === "ur" ? "rtl-text" : ""}`}>
+              <p>{lang === "ur" ? item.ur : item.en}</p>
+              <span className="alert-date">{item.date}</span>
+            </div>
+          </div>
+        ))}
+
+        {notifications.length === 0 && (
+          <p className="text-center text-muted mt-4">No new alerts.</p>
         )}
       </div>
     </div>

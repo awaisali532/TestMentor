@@ -286,3 +286,112 @@
 .d-none {
   display: none !important;
 }
+
+
+/* ============================
+   7. ADMIN LOGOUT MODAL (New)
+   ============================ */
+.admin-logout-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  /* Dim background */
+  backdrop-filter: blur(6px);
+  /* Modern blur */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  /* Above everything */
+  animation: fadeIn 0.2s ease-out;
+}
+
+.admin-logout-box {
+  background: var(--card-bg);
+  /* Use Admin Card Background */
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 380px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: var(--text-main);
+  transform: scale(1);
+  animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.logout-title {
+  margin: 0 0 10px 0;
+  font-weight: 800;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logout-msg {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+}
+
+.logout-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.a-btn {
+  padding: 10px 25px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 0.9rem;
+  transition: transform 0.2s;
+}
+
+.a-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Cancel Button */
+.a-cancel {
+  background: var(--pill-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+/* Confirm Button (Red Gradient) */
+.a-confirm {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes popUp {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
