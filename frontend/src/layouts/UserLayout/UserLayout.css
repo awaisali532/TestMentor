@@ -1,102 +1,168 @@
 /* --- USER SPECIFIC THEME VARIABLES (Scoped) --- */
-/* Hum '--u-' prefix use karenge taake Admin variables se mix na ho */
-
 /* LIGHT MODE */
 .u-light {
-    --u-bg-body: #f3f4f6;
-    --u-bg-card: #ffffff;
-    --u-text-main: #1f2937;
-    --u-text-muted: #6b7280;
-    --u-border: #e5e7eb;
-    --u-hover-bg: #f9fafb;
-    --u-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --u-accent: #2563eb;
-    /* Blue */
+  --u-bg-body: #f3f4f6;
+  --u-bg-card: #ffffff;
+  --u-text-main: #1f2937;
+  --u-text-muted: #6b7280;
+  --u-border: #e5e7eb;
+  --u-hover-bg: #f9fafb;
+  --u-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --u-accent: #2563eb;
 }
 
 /* DARK MODE */
 .u-dark {
-    --u-bg-body: #0f172a;
-    /* Deep Navy */
-    --u-bg-card: #1e293b;
-    /* Slate */
-    --u-text-main: #f1f5f9;
-    --u-text-muted: #94a3b8;
-    --u-border: rgba(255, 255, 255, 0.1);
-    --u-hover-bg: rgba(255, 255, 255, 0.05);
-    --u-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    --u-accent: #3b82f6;
-    /* Lighter Blue */
+  --u-bg-body: #0f172a;
+  --u-bg-card: #1e293b;
+  --u-text-main: #f1f5f9;
+  --u-text-muted: #94a3b8;
+  --u-border: rgba(255, 255, 255, 0.1);
+  --u-hover-bg: rgba(255, 255, 255, 0.05);
+  --u-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --u-accent: #3b82f6;
 }
 
 /* --- GRID LAYOUT --- */
 .usr-layout-wrapper {
-    display: grid;
-    grid-template-columns: 260px 1fr 300px;
-    /* Sidebar | Content | Notifs */
-    height: 100vh;
-    width: 100vw;
-    background-color: var(--u-bg-body);
-    color: var(--u-text-main);
-    transition: background-color 0.3s ease, color 0.3s ease;
-    overflow: hidden;
+  display: grid;
+  /* Default: Sidebar(260px) | Content | Right(300px) */
+  grid-template-columns: 260px 1fr 300px;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--u-bg-body);
+  color: var(--u-text-main);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth Transition */
+  overflow: hidden;
 }
 
+/* --- COLLAPSED STATE (Desktop) --- */
+.usr-layout-wrapper.usr-collapsed {
+  /* Sidebar shrinks to 80px */
+  grid-template-columns: 80px 1fr 300px;
+}
+
+/* --- SIDEBAR CONTAINER --- */
 .usr-layout-sidebar {
-    background-color: var(--u-bg-card);
-    border-right: 1px solid var(--u-border);
-    height: 100%;
-    transition: background-color 0.3s ease;
+  background-color: var(--u-bg-card);
+  border-right: 1px solid var(--u-border);
+  height: 100%;
+  position: relative;
+  z-index: 50;
+  transition: width 0.3s ease;
 }
 
+/* --- MAIN CONTENT --- */
 .usr-layout-main {
-    padding: 30px;
-    overflow-y: auto;
-    /* Scroll only center */
-    position: relative;
+  padding: 30px;
+  overflow-y: auto;
+  position: relative;
 }
 
+/* --- RIGHT PANEL --- */
 .usr-layout-right {
-    background-color: var(--u-bg-card);
-    border-left: 1px solid var(--u-border);
-    height: 100%;
-    transition: background-color 0.3s ease;
+  background-color: var(--u-bg-card);
+  border-left: 1px solid var(--u-border);
+  height: 100%;
+  transition: background-color 0.3s ease;
 }
 
-/* --- SCROLLBAR CUSTOMIZATION (User Side Only) --- */
+/* --- MOBILE HEADER (Hidden on Desktop) --- */
+.usr-mobile-header {
+  display: none; /* Default hidden */
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--u-border);
+}
+
+.usr-hamburger-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--u-text-main);
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+}
+
+/* --- SCROLLBAR CUSTOMIZATION --- */
 .usr-layout-main::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
-
 .usr-layout-main::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
-
 .usr-layout-main::-webkit-scrollbar-thumb {
-    background: var(--u-border);
-    border-radius: 4px;
+  background: var(--u-border);
+  border-radius: 4px;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 1024px) {
-    .usr-layout-wrapper {
-        grid-template-columns: 80px 1fr 0px;
-        /* Collapse Right Panel */
-    }
+/* =========================================
+   📱 RESPONSIVE & MOBILE STYLES
+   ========================================= */
 
-    .usr-layout-right {
-        display: none;
-    }
+@media (max-width: 1024px) {
+  /* Tablet: Hide Right Panel */
+  .usr-layout-wrapper,
+  .usr-layout-wrapper.usr-collapsed {
+    grid-template-columns: 80px 1fr; /* Sidebar collapsed style usually */
+  }
+  .usr-layout-right {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
-    .usr-layout-wrapper {
-        grid-template-columns: 1fr;
-        grid-template-rows: 60px 1fr;
-        /* Add Mobile Header later */
-    }
+  /* Mobile: Single Column */
+  .usr-layout-wrapper,
+  .usr-layout-wrapper.usr-collapsed {
+    grid-template-columns: 1fr;
+  }
 
-    .usr-layout-sidebar {
-        display: none;
-    }
+  /* Show Mobile Header */
+  .usr-mobile-header {
+    display: flex;
+  }
+
+  /* --- MOBILE SIDEBAR (Drawer Mode) --- */
+  .usr-layout-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px; /* Fixed width for drawer */
+    height: 100%;
+    transform: translateX(-100%); /* Hidden by default */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+    border-right: none;
+  }
+
+  .usr-layout-sidebar.mobile-open {
+    transform: translateX(0); /* Slide In */
+  }
+
+  /* --- BLUR BACKDROP (Overlay) --- */
+  .usr-mobile-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px); /* BLUR EFFECT */
+    z-index: 40;
+    animation: fadeIn 0.3s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

@@ -1,29 +1,65 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import UserSidebar from "../../components/User/UserSidebar/UserSidebar";
-import NotificationPanel from "../../components/User/NotificationPanel/NotificationPanel";
+import NotificationPanel from "../../components/user/NotificationPanel/NotificationPanel";
+import { FaBars } from "react-icons/fa"; // Hamburger Icon
 import "./UserLayout.css";
 
 const UserLayout = ({ children }) => {
-  // --- THEME STATE ---
-  // Default Dark Mode rakha hai, chahein to localStorage se persistence add kar skte hain
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
+  // 1. Sidebar Collapse State (Desktop)
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // 2. Mobile Sidebar State
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+  const toggleMobileMenu = () => setIsMobileOpen(!isMobileOpen);
 
   return (
-    // "u-dark" ya "u-light" class add hogi based on state
-    <div className={`usr-layout-wrapper ${isDarkMode ? "u-dark" : "u-light"}`}>
-      {/* Left Sidebar (Pass theme props) */}
-      <aside className="usr-layout-sidebar">
-        <UserSidebar isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+    <div
+      className={`usr-layout-wrapper ${isDarkMode ? "u-dark" : "u-light"} ${
+        isCollapsed ? "usr-collapsed" : ""
+      }`}
+    >
+      {/* --- MOBILE OVERLAY (Backdrop) --- */}
+      {isMobileOpen && (
+        <div
+          className="usr-mobile-backdrop"
+          onClick={() => setIsMobileOpen(false)}
+        ></div>
+      )}
+
+      {/* --- LEFT SIDEBAR --- */}
+      <aside
+        className={`usr-layout-sidebar ${isMobileOpen ? "mobile-open" : ""}`}
+      >
+        <UserSidebar
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
+          isCollapsed={isCollapsed}
+          toggleCollapse={toggleCollapse}
+          closeMobileMenu={() => setIsMobileOpen(false)} // Close on link click (Mobile)
+        />
       </aside>
 
-      {/* Main Content (Center) */}
-      <main className="usr-layout-main">{children}</main>
+      {/* --- MAIN CONTENT --- */}
+      <main className="usr-layout-main">
+        {/* Mobile Header (Visible only on small screens) */}
+        <div className="usr-mobile-header">
+          <button className="usr-hamburger-btn" onClick={toggleMobileMenu}>
+            <FaBars />
+          </button>
+          <h4 className="m-0">
+            Test<span style={{ color: "var(--u-accent)" }}>Mentor</span>
+          </h4>
+        </div>
 
-      {/* Right Notification Panel */}
+        {children}
+      </main>
+
+      {/* --- RIGHT PANEL --- */}
       <aside className="usr-layout-right">
         <NotificationPanel />
       </aside>

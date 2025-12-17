@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import "./Auth.css";
 import { Link, useNavigate } from "react-router-dom";
-import registerimg from "../../assets/imeages/registerimg/registerimg.png";
+import registerimg from "../../assets/imeages/registerimg/registerimg.png"; // Ensure path is correct
 import {
   FaUser,
   FaLock,
-  FaUserTag,
   FaFacebookF,
   FaGithub,
-  FaLinkedinIn,
   FaSpinner,
   FaEye,
   FaEyeSlash,
@@ -26,12 +24,14 @@ const RegisterPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
+  // ❌ Role state removed (Backend defaults to 'user' & 'free')
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    // Validate Password
     const passwordError = validatePassword(password, email);
     if (passwordError) return toast.error(passwordError);
 
@@ -39,11 +39,17 @@ const RegisterPage = () => {
     const toastId = toast.loading("Creating your account...");
 
     try {
-      const response = await register(name, email, password, role);
-      toast.success(response.message, { id: toastId });
+      // ✅ We only send name, email, password
+      const response = await register(name, email, password);
+
+      toast.success(response.message || "Registration Successful!", {
+        id: toastId,
+      });
+
+      // Redirect to Login
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      toast.error(err || "Registration Failed", { id: toastId });
+      toast.error(err.message || "Registration Failed", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -139,59 +145,7 @@ const RegisterPage = () => {
               </small>
             </div>
 
-            {/* Role Selection */}
-            <div
-              className="form-group d-flex align-items-center p-2 border rounded"
-              style={{ background: "var(--pill-bg)" }}
-            >
-              <FaUserTag
-                className="me-2"
-                style={{ color: "var(--text-muted)" }}
-              />
-              <span
-                className="me-3 fw-bold small"
-                style={{ color: "var(--text-main)" }}
-              >
-                I am a:
-              </span>
-
-              <div className="form-check form-check-inline">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="role"
-                  id="student"
-                  value="student"
-                  checked={role === "student"}
-                  onChange={(e) => setRole(e.target.value)}
-                />
-                <label
-                  className="form-check-label"
-                  htmlFor="student"
-                  style={{ color: "var(--text-main)" }}
-                >
-                  Student
-                </label>
-              </div>
-              <div className="form-check form-check-inline">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="role"
-                  id="teacher"
-                  value="teacher"
-                  checked={role === "teacher"}
-                  onChange={(e) => setRole(e.target.value)}
-                />
-                <label
-                  className="form-check-label"
-                  htmlFor="teacher"
-                  style={{ color: "var(--text-main)" }}
-                >
-                  Teacher
-                </label>
-              </div>
-            </div>
+            {/* ❌ Role Selection Dropdown Removed Here ❌ */}
 
             <button type="submit" className="btn-auth" disabled={loading}>
               {loading ? (

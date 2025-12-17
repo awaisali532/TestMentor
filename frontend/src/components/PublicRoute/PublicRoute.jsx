@@ -16,10 +16,12 @@ const PublicRoute = () => {
 
   // 2. REDIRECT: If user is already logged in
   if (user) {
-    if (user.role === "admin") {
+    // ✅ Check for Super Admin OR Admin Role
+    if (user.isSuperAdmin || user.role === "admin") {
       return <Navigate to="/admin/dashboard" replace />;
     } else {
-      return <Navigate to="/" replace />;
+      // ✅ FIX: Redirect standard users to User Dashboard, NOT Home
+      return <Navigate to="/user/dashboard" replace />;
     }
   }
 

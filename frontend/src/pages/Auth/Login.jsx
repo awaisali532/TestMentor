@@ -6,7 +6,6 @@ import {
   FaLock,
   FaFacebookF,
   FaGithub,
-  FaLinkedinIn,
   FaSpinner,
   FaEye,
   FaEyeSlash,
@@ -24,22 +23,21 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  // const toastId = toast.loading("Logging in...");
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // const toastId = toast.loading("Verifying credentials...");
 
     try {
       const response = await login(email, password);
       toast.success("Welcome back!");
 
-      // --- ✅ REDIRECTION LOGIC UPDATED ---
-      if (response.user.isSuperAdmin) {
-        // If Super Admin -> Admin Dashboard
+      // --- ✅ FINAL REDIRECTION LOGIC ---
+      // Check if user is Super Admin OR has the 'admin' role (Staff)
+      if (response.user.isSuperAdmin || response.user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
       } else {
-        // Everyone else (Free/Paid Users) -> User Dashboard
+        // Standard Users (Free/Paid) go to User Dashboard
         navigate("/user/dashboard", { replace: true });
       }
     } catch (err) {

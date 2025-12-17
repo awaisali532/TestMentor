@@ -1,10 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user"); // Ensure filename matches your project
+const User = require("../models/User"); // Ensure filename matches your project
 
-// --- REGISTER ---
+// --- REGISTER (Public Signups) ---
 exports.register = async (req, res) => {
-  // ✅ Removed 'role' from input. Everyone registers as a standard User on Free Plan.
+  // We only accept name, email, password. Role is forced to 'user'.
   const { name, email, password } = req.body;
 
   try {
@@ -24,12 +24,14 @@ exports.register = async (req, res) => {
     }
 
     // 3. Create User
-    // We do NOT need to pass role or planType.
-    // The Model defaults them to role: "user" and planType: "free".
+    // ✅ FORCE ROLE to "user" for public registrations.
+    // ✅ FORCE PLAN to "free".
     const user = await User.create({
       name,
       email,
       password, // Model middleware will hash this automatically
+      role: "user", // Security: Public users cannot be admins
+      planType: "free",
       image: "",
     });
 
@@ -40,6 +42,7 @@ exports.register = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role, // Will be "user"
         planType: user.planType,
       },
     });
@@ -51,7 +54,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// --- LOGIN ---
+// --- LOGIN (Admin & User) ---
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -69,7 +72,6 @@ exports.login = async (req, res) => {
     }
 
     // 🔒 2. COMPARE PASSWORD
-    // We use the method defined in your User Model
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -79,7 +81,6 @@ exports.login = async (req, res) => {
     }
 
     // ✅ 3. JWT Token Generation
-    // We include planType in token so we can check limits in middleware easily
     const token = jwt.sign(
       {
         userId: user._id,
@@ -91,7 +92,7 @@ exports.login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // ✅ 4. Response with New Data Structure
+    // ✅ 4. Response with Full Profile
     res.json({
       success: true,
       message: "Login successful",
@@ -102,15 +103,15 @@ exports.login = async (req, res) => {
         email: user.email,
         image: user.image || "",
 
-        // Roles
-        role: user.role,
-        isSuperAdmin: user.isSuperAdmin,
+        // ✅ Roles (Critical for Frontend Redirection)
+        role: user.role, // 'user' or 'admin'
+        isSuperAdmin: user.isSuperAdmin, // true/false
 
         // Permissions & Resume (For Admins)
         permissions: user.permissions || [],
         resume: user.resume || "",
 
-        // 🔥 NEW: Freemium Data (Vital for Dashboard)
+        // 🔥 Freemium Data (For User Dashboard)
         planType: user.planType, // 'free' or 'paid'
         usage: user.usage, // { papersGenerated: 0, onlineTestsTaken: 0 }
         subscription: user.subscription, // { status: false, validUntil: null }

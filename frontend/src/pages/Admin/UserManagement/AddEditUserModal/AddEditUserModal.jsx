@@ -6,11 +6,11 @@ import {
   FaShieldAlt,
   FaEye,
   FaEyeSlash,
-} from "react-icons/fa"; // ✅ Added Eye Icons
+} from "react-icons/fa";
 import toast from "react-hot-toast";
 import "./AddEditUserModal.css";
 
-// Permission List
+// Permission List (Only relevant for Admins)
 const PERMISSION_LIST = [
   { id: "manage_questions", label: "Question Manager" },
   { id: "manage_subjects", label: "Manage Subjects" },
@@ -22,22 +22,20 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
     name: "",
     email: "",
     password: "",
-    role: "student",
+    role: "admin", // Default to Admin since we only create admins here
     permissions: [],
   });
 
-  // ✅ State for Password Visibility
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    // Reset password visibility when modal opens/changes
     setShowPassword(false);
 
     if (editingUser) {
       setFormData({
         name: editingUser.name,
         email: editingUser.email,
-        role: editingUser.role,
+        role: editingUser.role, // Could be 'user' if editing a normal user
         permissions: editingUser.permissions || [],
         password: "",
       });
@@ -46,7 +44,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         name: "",
         email: "",
         password: "",
-        role: "student",
+        role: "admin", // Force new creations to be Admin
         permissions: [],
       });
     }
@@ -66,19 +64,13 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
     });
   };
 
-  // ✅ VALIDATION FUNCTION
   const validateForm = () => {
     const { name, email, password } = formData;
-
-    // 1. Basic Checks
     if (!name.trim()) return "Full Name is required.";
     if (!email.trim()) return "Email Address is required.";
-
-    // 2. Email Format Check (Regex)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return "Invalid Email Address format.";
 
-    // 3. Password Validation
     if (!editingUser || password.trim() !== "") {
       if (password.length < 8) return "Password must be at least 8 characters.";
       if (!/[A-Z]/.test(password))
@@ -88,8 +80,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
       if (!/[!@#$%^&*(),.?":{}|<>]/.test(password))
         return "Password must contain at least 1 Special Character (!@#$).";
     }
-
-    return null; // No Error
+    return null;
   };
 
   const handleSaveClick = () => {
@@ -108,7 +99,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
       <div className="modal-container">
         <div className="modal-header">
           <h5 className="m-0 fw-bold text-main">
-            {editingUser ? "Edit User" : "Add New User"}
+            {editingUser ? "Edit User / Admin" : "Create New Admin"}
           </h5>
           <button className="btn-close-modal" onClick={onClose}>
             <FaTimes />
@@ -122,7 +113,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
             <input
               type="text"
               className="modal-input"
-              placeholder="e.g. Ali Khan"
+              placeholder="Full Name"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -136,7 +127,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
             <input
               type="email"
               className="modal-input"
-              placeholder="e.g. ali@example.com"
+              placeholder="Email"
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
@@ -144,7 +135,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
             />
           </div>
 
-          {/* Role */}
+          {/* Role Selection */}
           <div className="mb-3">
             <label>Role</label>
             <select
@@ -153,14 +144,26 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               onChange={(e) =>
                 setFormData({ ...formData, role: e.target.value })
               }
+              disabled={!editingUser} // Lock to Admin when creating new
             >
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
-              <option value="admin">Admin</option>
+              {/* If editing, allow changing role. If creating, force Admin. */}
+              {!editingUser ? (
+                <option value="admin">Admin (Staff)</option>
+              ) : (
+                <>
+                  <option value="user">User (Standard)</option>
+                  <option value="admin">Admin (Staff)</option>
+                </>
+              )}
             </select>
+            {!editingUser && (
+              <small className="text-muted d-block mt-1">
+                * Only Admins can be created here. Regular users must sign up.
+              </small>
+            )}
           </div>
 
-          {/* Permissions (Admin Only) */}
+          {/* Permissions (Only for Admin Role) */}
           {formData.role === "admin" && (
             <div className="mb-4">
               <label className="d-flex align-items-center gap-2 mb-2 text-accent">
@@ -185,13 +188,11 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
             </div>
           )}
 
-          {/* Password Field with Eye Icon */}
+          {/* Password */}
           <div className="mb-4">
             <label>
               {editingUser ? "New Password (Optional)" : "Password"}
             </label>
-
-            {/* Wrapper for Input + Icon */}
             <div
               style={{
                 position: "relative",
@@ -200,7 +201,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               }}
             >
               <input
-                // Toggle type between text and password
                 type={showPassword ? "text" : "password"}
                 className="modal-input"
                 value={formData.password}
@@ -210,12 +210,10 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                 placeholder={
                   editingUser
                     ? "Leave empty to keep current"
-                    : "Enter a strong password"
+                    : "Enter strong password"
                 }
-                style={{ paddingRight: "40px" }} // Make room for the icon
+                style={{ paddingRight: "40px" }}
               />
-
-              {/* Eye Icon Clickable */}
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
@@ -229,19 +227,8 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
             </div>
-
-            {/* Password Hint */}
-            {!editingUser && (
-              <small
-                className="text-muted d-block mt-1"
-                style={{ fontSize: "0.75rem" }}
-              >
-                * Min 8 chars, 1 Uppercase, 1 Number, 1 Special Char.
-              </small>
-            )}
           </div>
 
-          {/* Save Button */}
           <button
             className="btn-save w-100"
             onClick={handleSaveClick}
@@ -251,7 +238,8 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               <FaSpinner className="icon-spin" />
             ) : (
               <>
-                <FaSave className="me-2" /> Save User
+                <FaSave className="me-2" />{" "}
+                {editingUser ? "Update User" : "Create Admin"}
               </>
             )}
           </button>
