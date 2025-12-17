@@ -1,5 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const { storage } = require("../config/cloudinary"); // ✅ Import Cloudinary Storage
+const upload = multer({ storage }); // ✅ Configure Upload Middleware
+
+// Import Controller Functions
 const {
   getAllUsers,
   addUser,
@@ -7,34 +12,50 @@ const {
   deleteUser,
   toggleUserStatus,
   updateProfile,
-  removeProfileImage,
+  updateProfileImage, // ✅ New Dedicated Route
+  deleteProfileImage, // ✅ New Dedicated Route
   changePassword,
-  uploadResume, //
+  uploadResume,
   deleteResume,
   getAdminProfile,
   updateBusinessInfo,
 } = require("../controllers/userController");
 
-const {
-  protect,
-  admin,
-  hasPermission,
-} = require("../middleware/authMiddleware");
-const upload = require("../middleware/upload");
+// Import Auth Middleware
+const { protect, hasPermission } = require("../middleware/authMiddleware");
 
-// --- ROUTES ---
+// ==========================================
+// PUBLIC ROUTES
+// ==========================================
 router.get("/admin-profile", getAdminProfile);
 
-// 1. Profile Routes
+// ==========================================
+// PROTECTED USER ROUTES (Profile & Settings)
+// ==========================================
+
+// 1. General Profile Update (Name + Optional Image)
 router.put("/profile", protect, upload.single("image"), updateProfile);
-router.put("/profile/remove-image", protect, removeProfileImage);
+
+// 2. Dedicated Profile Image Handling (Better for UI)
+router.put(
+  "/profile/image",
+  protect,
+  upload.single("image"),
+  updateProfileImage
+);
+router.delete("/profile/image", protect, deleteProfileImage);
+
+// 3. Security & Settings
 router.put("/change-password", protect, changePassword);
 router.put("/business-info", protect, updateBusinessInfo);
-// ✅ NEW: Resume Upload Route (Only Super Admin should use this logically)
-// We use upload.single("resume") to expect a file field named 'resume'
+
+// 4. Resume Management (PDF)
 router.put("/profile/resume", protect, upload.single("resume"), uploadResume);
-router.put("/profile/resume/remove", protect, deleteResume); // 🗑️ Delete Route
-// 2. Admin Management Routes
+router.put("/profile/resume/remove", protect, deleteResume);
+
+// ==========================================
+// ADMIN MANAGEMENT ROUTES (Requires Permission)
+// ==========================================
 router.get("/all", protect, hasPermission("manage_users"), getAllUsers);
 router.post("/add", protect, hasPermission("manage_users"), addUser);
 router.put("/:id", protect, hasPermission("manage_users"), updateUser);

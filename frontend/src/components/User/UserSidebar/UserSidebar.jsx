@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useUser } from "../../../context/UserContext";
+import { useUser } from "../../../context/UserContext"; // ✅ Context Import
 import {
   FaHome,
   FaFileAlt,
@@ -23,20 +23,18 @@ const UserSidebar = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useUser();
+
+  // ✅ FIX: Get 'user' directly from Context (Not LocalStorage)
+  // Is se real-time update hoga bina refresh kiye.
+  const { user, logout } = useUser();
 
   // Modal State
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Safe Retrieve User
-  const user = JSON.parse(localStorage.getItem("user")) || {
-    name: "Guest",
-    planType: "free",
-    subscription: { validUntil: null },
-  };
-
+  // Helper for active class
   const isActive = (path) => (location.pathname === path ? "usr-active" : "");
 
+  // Helper for date format
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-GB", {
@@ -46,12 +44,12 @@ const UserSidebar = ({
     });
   };
 
-  // ✅ 1. Trigger Modal Logic
+  // 1. Trigger Modal Logic
   const handleLogoutClick = () => {
-    setShowLogoutModal(true); // Show custom modal
+    setShowLogoutModal(true);
   };
 
-  // ✅ 2. Actual Logout Perform
+  // 2. Actual Logout Perform
   const confirmLogout = () => {
     if (logout) logout();
     localStorage.removeItem("token");
@@ -61,6 +59,10 @@ const UserSidebar = ({
     navigate("/login", { replace: true });
     window.location.reload();
   };
+
+  // Fallback for user name to prevent crash if user is null briefly
+  const userName = user?.name || "Guest";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <>
@@ -83,24 +85,34 @@ const UserSidebar = ({
           )}
         </div>
 
+        {/* --- PROFILE SECTION --- */}
         <div className="usr-profile-card">
           <div className="usr-avatar-container">
-            <div className="usr-avatar">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
+            {/* ✅ FIX: Check if image exists, show IMG tag, else show Initial */}
+            {user?.image ? (
+              <img
+                src={user.image}
+                alt="Profile"
+                className="usr-avatar"
+                style={{ objectFit: "cover" }} // Ensures image fits circle perfectly
+              />
+            ) : (
+              <div className="usr-avatar">{userInitial}</div>
+            )}
+
             {!isCollapsed && <div className="online-dot"></div>}
           </div>
 
           {!isCollapsed && (
             <div className="usr-info fade-in">
-              <h5 className="usr-name">{user.name}</h5>
-              {user.planType === "paid" ? (
+              <h5 className="usr-name">{userName}</h5>
+              {user?.planType === "paid" ? (
                 <>
                   <span className="usr-badge usr-badge-paid">
                     <FaCrown size={10} /> Premium
                   </span>
                   <span className="usr-validity">
-                    Exp: {formatDate(user.subscription?.validUntil)}
+                    Exp: {formatDate(user?.subscription?.validUntil)}
                   </span>
                 </>
               ) : (
@@ -135,7 +147,7 @@ const UserSidebar = ({
         </nav>
 
         <div className="usr-sidebar-footer">
-          {user.planType === "free" && !isCollapsed && (
+          {user?.planType === "free" && !isCollapsed && (
             <button className="usr-btn-upgrade fade-in">
               <FaCrown /> Upgrade
             </button>
@@ -153,7 +165,7 @@ const UserSidebar = ({
             </button>
             <button
               className="usr-icon-btn usr-danger"
-              onClick={handleLogoutClick} // Click triggers Custom Modal
+              onClick={handleLogoutClick}
               title="Logout"
             >
               <FaSignOutAlt />
@@ -162,7 +174,7 @@ const UserSidebar = ({
         </div>
       </div>
 
-      {/* --- 🔥 NEW CUSTOM LOGOUT MODAL --- */}
+      {/* --- LOGOUT MODAL --- */}
       {showLogoutModal && (
         <div className="logout-overlay">
           <div className="logout-box">

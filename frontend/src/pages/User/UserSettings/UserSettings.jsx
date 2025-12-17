@@ -1,0 +1,430 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  FaCamera,
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaCrown,
+  FaHistory,
+  FaSave,
+  FaSpinner,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
+import toast from "react-hot-toast";
+import { useUser } from "../../../context/UserContext"; // Import User Context
+import "./UserSettings.css";
+
+const UserSettings = () => {
+  // Use Context for User Data
+  const { user, setUser } = useUser();
+  const [loading, setLoading] = useState(false);
+  const [imgLoading, setImgLoading] = useState(false);
+
+  // ✅ Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Local States for Editing
+  const [name, setName] = useState("");
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: "",
+  });
+
+  // Initialize Name from User Context
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+    }
+  }, [user]);
+
+  // Helper: Format Date
+  const formatDate = (date) =>
+    date ? new Date(date).toLocaleDateString() : "Lifetime";
+
+  // 1. Handle Image Upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    setImgLoading(true);
+    const toastId = toast.loading("Uploading photo...");
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const updatedUser = { ...user, image: res.data.image };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success("Photo updated!", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Upload failed", {
+        id: toastId,
+      });
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
+  // ✅ 2. Trigger Delete Modal
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  // ✅ 3. Confirm Delete (API Call)
+  const confirmRemoveImage = async () => {
+    setShowDeleteModal(false); // Close Modal
+    setImgLoading(true);
+    const toastId = toast.loading("Removing photo...");
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const updatedUser = { ...user, image: "" };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success("Photo removed!", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to remove", { id: toastId });
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
+  // 4. Handle Profile Update
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return toast.error("Name cannot be empty");
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile`,
+        { name },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const updatedUser = { ...user, name: res.data.name || name };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success("Profile details updated!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 5. Handle Password Change
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwords.new !== passwords.confirm) {
+      return toast.error("New passwords do not match!");
+    }
+    if (passwords.new.length < 6) {
+      return toast.error("Password must be at least 6 characters");
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/change-password`,
+        { oldPassword: passwords.current, newPassword: passwords.new },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Password changed successfully!");
+      setPasswords({ current: "", new: "", confirm: "" });
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to change password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) return <div className="text-center p-5">Loading...</div>;
+
+  return (
+    <>
+      <div className="us-container">
+        <h2 className="us-page-title">Account Settings</h2>
+
+        <div className="us-grid-layout">
+          {/* --- LEFT COLUMN --- */}
+          <div className="us-left-col">
+            <div className="us-card profile-card">
+              <div className="us-avatar-wrapper">
+                {imgLoading ? (
+                  <div className="us-avatar-placeholder">
+                    <FaSpinner className="icon-spin" />
+                  </div>
+                ) : user.image ? (
+                  <img
+                    src={user.image}
+                    alt="Profile"
+                    className="us-avatar-img"
+                  />
+                ) : (
+                  <div className="us-avatar-placeholder">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+
+                <label className="us-camera-btn" title="Upload Photo">
+                  <FaCamera />
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+
+                {user.image && (
+                  <button
+                    className="us-delete-btn"
+                    onClick={handleDeleteClick} // ✅ Triggers Modal
+                    title="Remove Photo"
+                  >
+                    <FaTrash size={12} />
+                  </button>
+                )}
+              </div>
+
+              <h3 className="us-profile-name">{user.name}</h3>
+              <p className="us-profile-email">{user.email}</p>
+
+              <div className={`us-plan-badge ${user.planType}`}>
+                {user.planType === "paid" ? <FaCrown /> : <FaUser />}
+                {user.planType === "paid" ? "Premium Member" : "Free Plan"}
+              </div>
+            </div>
+
+            <div className="us-card sub-card">
+              <div className="us-card-header">
+                <FaHistory className="text-accent" />
+                <h5>Subscription Details</h5>
+              </div>
+              <div className="us-sub-details">
+                <div className="detail-row">
+                  <span>Current Plan:</span>
+                  <span
+                    className={
+                      user.planType === "paid" ? "text-gold" : "text-muted"
+                    }
+                  >
+                    {user.planType ? user.planType.toUpperCase() : "FREE"}
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span>Valid Until:</span>
+                  <span>
+                    {user.planType === "paid"
+                      ? formatDate(user.subscription?.validUntil)
+                      : "Forever"}
+                  </span>
+                </div>
+
+                <div className="usage-bar-wrap">
+                  <div className="d-flex justify-content-between text-xs mb-1">
+                    <span>Paper Limit</span>
+                    <span>
+                      {user.usage?.papersGenerated || 0} /{" "}
+                      {user.planType === "free" ? "1" : "∞"}
+                    </span>
+                  </div>
+                  <div className="progress-bg">
+                    <div
+                      className="progress-fill"
+                      style={{
+                        width:
+                          user.planType === "free"
+                            ? `${
+                                ((user.usage?.papersGenerated || 0) / 1) * 100
+                              }%`
+                            : "100%",
+                        background:
+                          (user.usage?.papersGenerated || 0) >= 1 &&
+                          user.planType === "free"
+                            ? "#ef4444"
+                            : "#10b981",
+                      }}
+                    ></div>
+                  </div>
+                </div>
+
+                {user.planType === "free" && (
+                  <button className="btn-us-upgrade">Upgrade to Premium</button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* --- RIGHT COLUMN --- */}
+          <div className="us-right-col">
+            <div className="us-card form-card">
+              <div className="us-card-header">
+                <FaEdit className="text-accent" />
+                <h5>Personal Information</h5>
+              </div>
+              <form onSubmit={handleUpdateProfile}>
+                <div className="form-group mb-3">
+                  <label>Full Name</label>
+                  <div className="input-with-icon">
+                    <FaUser className="input-icon" />
+                    <input
+                      type="text"
+                      className="us-input"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="form-group mb-4">
+                  <label>
+                    Email Address <span className="badge-locked">Locked</span>
+                  </label>
+                  <div className="input-with-icon locked">
+                    <FaEnvelope className="input-icon" />
+                    <input
+                      type="email"
+                      className="us-input"
+                      value={user.email}
+                      disabled
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="btn-us-save"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <FaSpinner className="icon-spin" />
+                  ) : (
+                    <>
+                      <FaSave /> Save Changes
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            <div className="us-card form-card">
+              <div className="us-card-header">
+                <FaLock className="text-accent" />
+                <h5>Change Password</h5>
+              </div>
+              <form onSubmit={handlePasswordChange}>
+                <div className="form-group mb-3">
+                  <label>Current Password</label>
+                  <input
+                    type="password"
+                    className="us-input"
+                    placeholder="••••••••"
+                    value={passwords.current}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, current: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label>New Password</label>
+                    <input
+                      type="password"
+                      className="us-input"
+                      placeholder="New Password"
+                      value={passwords.new}
+                      onChange={(e) =>
+                        setPasswords({ ...passwords, new: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label>Confirm Password</label>
+                    <input
+                      type="password"
+                      className="us-input"
+                      placeholder="Confirm New"
+                      value={passwords.confirm}
+                      onChange={(e) =>
+                        setPasswords({ ...passwords, confirm: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="btn-us-outline"
+                  disabled={loading}
+                >
+                  {loading ? "Updating..." : "Update Password"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- ✅ CUSTOM DELETE MODAL --- */}
+      {showDeleteModal && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal-box">
+            <h3 className="dm-title">Delete Photo?</h3>
+            <p className="dm-msg">
+              Are you sure you want to delete your profile photo? This action
+              cannot be undone.
+            </p>
+            <div className="dm-actions">
+              <button
+                className="dm-btn dm-cancel"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="dm-btn dm-confirm"
+                onClick={confirmRemoveImage}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default UserSettings;

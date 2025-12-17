@@ -1,38 +1,37 @@
-const User = require("../models/user"); // Ensure filename matches (User.js)
+const User = require("../models/user"); // Ensure filename matches your User model file
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
-const streamifier = require("streamifier"); // ✅ MUST BE INSTALLED
+const streamifier = require("streamifier");
 
-// --- HELPER: Convert Buffer to Data URI (ONLY FOR IMAGES) ---
+// --- HELPER: Convert Buffer to Data URI (For Images) ---
 const bufferToDataURI = (buffer, mimetype) => {
   const b64 = Buffer.from(buffer).toString("base64");
   return "data:" + mimetype + ";base64," + b64;
 };
 
-// ✅ HELPER: Extract Public ID (Robust for Raw/Image)
+// --- HELPER: Extract Public ID from Cloudinary URL ---
 const getPublicIdFromUrl = (url) => {
   try {
-    // Splits at '/upload/'
     const parts = url.split("/upload/");
     if (parts.length < 2) return null;
+    let path = parts[1]; // e.g. "v1234/folder/file.ext"
 
-    let path = parts[1]; // e.g., "v12345/resumes/resume_123.pdf" or "resumes/resume_123.pdf"
-
-    // Remove version "v1234/" if it exists
+    // Remove version prefix if exists
     if (path.startsWith("v")) {
       const slashIndex = path.indexOf("/");
-      if (slashIndex !== -1) {
-        path = path.substring(slashIndex + 1);
-      }
+      if (slashIndex !== -1) path = path.substring(slashIndex + 1);
     }
-
+    // Remove extension ONLY for images (Cloudinary raw files keep extension in ID usually)
+    // But for safety in this controller, we handle extension removal logic based on resource_type later.
     return path;
   } catch (error) {
     return null;
   }
 };
 
-// 1. Get All Users
+// ==========================================
+// 1. GET ALL USERS (Admin)
+// ==========================================
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
@@ -42,7 +41,9 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// 2. Add New User
+// ==========================================
+// 2. ADD NEW USER (Admin)
+// ==========================================
 exports.addUser = async (req, res) => {
   const { name, email, password, role, permissions } = req.body;
   try {
@@ -53,10 +54,11 @@ exports.addUser = async (req, res) => {
     const user = await User.create({
       name,
       email,
-      password,
-      role,
+      password, // Model middleware will hash this
+      role, // 'admin' or 'user' (from modal)
       isActive: true,
       permissions: role === "admin" ? permissions : [],
+      // Defaults from schema will handle planType='free', etc.
     });
 
     const userResponse = await User.findById(user._id).select("-password");
@@ -68,7 +70,9 @@ exports.addUser = async (req, res) => {
   }
 };
 
-// 3. Update User Info
+// ==========================================
+// 3. UPDATE USER INFO (Admin)
+// ==========================================
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, role, permissions } = req.body;
@@ -85,11 +89,17 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// 4. DELETE USER
+// ==========================================
+// 4. DELETE USER (Admin)
+// ==========================================
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found." });
+
+    // Optional: Delete user's image/resume from Cloudinary before deleting user
+    // ... logic here if needed ...
+
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "User deleted successfully." });
   } catch (error) {
@@ -97,20 +107,26 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// 5. Toggle Status
+// ==========================================
+// 5. TOGGLE USER STATUS (Block/Unblock)
+// ==========================================
 exports.toggleUserStatus = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found." });
+
     user.isActive = !user.isActive;
     await user.save();
+
     res.json({ message: `User status updated.` });
   } catch (error) {
     res.status(500).json({ error: "Status update failed." });
   }
 };
 
-// 6. UPDATE PROFILE (Images use Data URI)
+// ==========================================
+// 6. UPDATE PROFILE (Self)
+// ==========================================
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -118,24 +134,32 @@ exports.updateProfile = async (req, res) => {
 
     if (req.body.name) user.name = req.body.name;
 
+    // Image Upload Logic (Standard Image)
     if (req.file) {
       try {
         if (user.image && user.image.includes("cloudinary")) {
-          const oldId = getPublicIdFromUrl(user.image);
+          // Remove extension for image deletion usually
+          const oldIdWithExt = getPublicIdFromUrl(user.image);
+          const oldId = oldIdWithExt ? oldIdWithExt.split(".")[0] : null;
           if (oldId) await cloudinary.uploader.destroy(oldId);
         }
+
         const dataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
         const result = await cloudinary.uploader.upload(dataURI, {
-          folder: "avatars",
+          folder: "questbank/avatars",
           width: 300,
           crop: "scale",
         });
         user.image = result.secure_url;
       } catch (uploadError) {
+        console.error(uploadError);
         return res.status(500).json({ error: "Image upload failed." });
       }
     }
+
     const updatedUser = await user.save();
+
+    // Return full profile including token to update frontend context
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
@@ -145,6 +169,9 @@ exports.updateProfile = async (req, res) => {
       resume: updatedUser.resume,
       isSuperAdmin: updatedUser.isSuperAdmin,
       permissions: updatedUser.permissions,
+      planType: updatedUser.planType,
+      usage: updatedUser.usage,
+      subscription: updatedUser.subscription,
       token: req.headers.authorization.split(" ")[1],
     });
   } catch (error) {
@@ -152,53 +179,113 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// 7. REMOVE PROFILE IMAGE
-exports.removeProfileImage = async (req, res) => {
+// ==========================================
+// 7. UPDATE PROFILE IMAGE (Dedicated Route)
+// ==========================================
+exports.updateProfileImage = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ error: "User not found." });
-    if (user.image) {
-      const publicId = getPublicIdFromUrl(user.image);
-      if (publicId) await cloudinary.uploader.destroy(publicId);
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
     }
-    user.image = "";
-    const updatedUser = await user.save();
+
+    const user = await User.findById(req.user._id);
+
+    // Delete Old Image
+    if (user.image && user.image.includes("cloudinary")) {
+      const fullId = getPublicIdFromUrl(user.image);
+      const publicId = fullId ? fullId.split(".")[0] : null; // Remove extension for images
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+    }
+
+    // Multer Cloudinary Storage automatically uploads, so req.file.path is the URL
+    // IF you are using 'multer-storage-cloudinary'.
+    // IF you are using memory storage (buffer), use streamifier like below:
+
+    // Assuming Memory Storage for consistency with Resume logic:
+    const dataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: "questbank/avatars",
+      width: 300,
+      crop: "scale",
+    });
+
+    user.image = result.secure_url;
+    await user.save();
+
     res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      image: "",
-      resume: updatedUser.resume,
-      isSuperAdmin: updatedUser.isSuperAdmin,
-      permissions: updatedUser.permissions,
-      token: req.headers.authorization.split(" ")[1],
+      success: true,
+      message: "Profile image updated successfully!",
+      image: user.image,
     });
   } catch (error) {
-    res.status(500).json({ error: "Failed to remove image." });
+    console.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// 8. CHANGE PASSWORD
+// ==========================================
+// 8. DELETE PROFILE IMAGE (Remove)
+// ==========================================
+exports.deleteProfileImage = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user.image && user.image.includes("cloudinary")) {
+      const fullId = getPublicIdFromUrl(user.image);
+      const publicId = fullId ? fullId.split(".")[0] : null;
+
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      user.image = "";
+      await user.save();
+
+      res.json({
+        success: true,
+        message: "Profile image removed!",
+        image: "",
+      });
+    } else {
+      res.status(400).json({ message: "No profile image to delete." });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// ==========================================
+// 9. CHANGE PASSWORD
+// ==========================================
 exports.changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
     const user = await User.findById(req.user.id);
+
     if (!user) return res.status(404).json({ error: "User not found." });
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+    const isMatch = await user.matchPassword(oldPassword); // Use model method
     if (!isMatch)
       return res.status(400).json({ error: "Incorrect current password." });
+
     if (newPassword.length < 6)
       return res.status(400).json({ error: "New password too short." });
-    user.password = newPassword;
+
+    user.password = newPassword; // Pre-save hook handles hashing
     await user.save();
+
     res.json({ message: "Password updated successfully." });
   } catch (error) {
     res.status(500).json({ error: "Password update failed." });
   }
 };
 
-// ✅ 9. UPLOAD RESUME (Using RAW Stream - Avoids 401 & Corruption)
+// ==========================================
+// 10. UPLOAD RESUME (Admin Only - RAW Mode)
+// ==========================================
 exports.uploadResume = async (req, res) => {
   try {
     // 1. Validation
@@ -214,6 +301,7 @@ exports.uploadResume = async (req, res) => {
       const oldPublicId = getPublicIdFromUrl(user.resume);
       if (oldPublicId) {
         try {
+          // Try both types to ensure deletion
           await cloudinary.uploader.destroy(oldPublicId, {
             resource_type: "raw",
           });
@@ -257,15 +345,6 @@ exports.uploadResume = async (req, res) => {
     res.status(200).json({
       message: "Resume updated successfully",
       resume: user.resume,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        image: user.image,
-        resume: user.resume,
-        isSuperAdmin: user.isSuperAdmin,
-      },
     });
   } catch (error) {
     console.error("Resume Upload Error:", error);
@@ -273,7 +352,9 @@ exports.uploadResume = async (req, res) => {
   }
 };
 
-// ✅ 10. DELETE RESUME (Updated for RAW)
+// ==========================================
+// 11. DELETE RESUME (Admin Only)
+// ==========================================
 exports.deleteResume = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -294,23 +375,25 @@ exports.deleteResume = async (req, res) => {
     }
 
     user.resume = "";
-    const updatedUser = await user.save();
+    await user.save();
 
     res.json({
       message: "Resume removed successfully",
       resume: "",
-      user: { ...updatedUser._doc },
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to remove resume." });
   }
 };
 
-// ✅ 11. GET ADMIN PROFILE (Public for About & Contact Page)
+// ==========================================
+// 12. GET ADMIN PROFILE (Public Access)
+// ==========================================
 exports.getAdminProfile = async (req, res) => {
   try {
+    // Finds the first Super Admin
     const admin = await User.findOne({ isSuperAdmin: true }).select(
-      "name email image resume bio role socialLinks businessInfo" // ✅ Added businessInfo
+      "name email image resume role businessInfo"
     );
 
     if (!admin) {
@@ -323,10 +406,11 @@ exports.getAdminProfile = async (req, res) => {
   }
 };
 
-// ✅ 12. UPDATE BUSINESS INFO (Super Admin Only)
+// ==========================================
+// 13. UPDATE BUSINESS INFO (Super Admin)
+// ==========================================
 exports.updateBusinessInfo = async (req, res) => {
   try {
-    // Security Check: Only Super Admin can do this
     if (!req.user.isSuperAdmin) {
       return res
         .status(403)
@@ -336,7 +420,6 @@ exports.updateBusinessInfo = async (req, res) => {
     const { phone, officeAddress, supportEmail } = req.body;
     const user = await User.findById(req.user._id);
 
-    // Update fields inside the businessInfo object
     user.businessInfo = {
       phone: phone || user.businessInfo.phone,
       officeAddress: officeAddress || user.businessInfo.officeAddress,

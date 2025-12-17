@@ -20,7 +20,7 @@ import About from "./pages/About/About";
 import Contact from "./pages/Contact/Contact";
 import Subjects from "./pages/Subjects/Subjects";
 import SubjectDetails from "./pages/Subjects/SubjectDetails/SubjectDetails";
-
+import UserSettings from "./pages/User/UserSettings/UserSettings";
 // Pages - Auth
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
@@ -94,7 +94,14 @@ const App = () => {
                 </UserLayout>
               }
             />
-
+            <Route
+              path="/user/settings"
+              element={
+                <UserLayout>
+                  <UserSettings />
+                </UserLayout>
+              }
+            />
             <Route
               path="/user/past-papers"
               element={

@@ -1,5 +1,5 @@
-/* --- GLOBAL VARIABLES (Keep same) --- */
-/* (Assuming you have these in index.css as discussed before) */
+/* --- GLOBAL VARIABLES (Assumed) --- */
+/* Ensure these exist in your global CSS or context */
 
 /* --- FLOATING NAVBAR STRUCTURE --- */
 .navbar-floating {
@@ -10,12 +10,12 @@
   width: 95%;
   max-width: 1200px;
   height: 70px;
-  background-color: var(--nav-bg);
+  background-color: var(--nav-bg, #ffffff);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 50px;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 10px 30px var(--shadow-color);
+  border: 1px solid var(--border-color, #e5e7eb);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
@@ -28,7 +28,7 @@
   top: 15px;
   width: 98%;
   max-width: 1250px;
-  box-shadow: 0 15px 35px var(--shadow-color);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
 }
 
 .nav-container {
@@ -43,7 +43,7 @@
 .nav-logo {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--text-main, #333);
   text-decoration: none;
   letter-spacing: -0.5px;
 }
@@ -63,7 +63,7 @@
 
 .nav-item {
   text-decoration: none;
-  color: var(--text-muted);
+  color: var(--text-muted, #666);
   font-weight: 500;
   font-size: 0.95rem;
   padding: 8px 20px;
@@ -72,8 +72,8 @@
 }
 
 .nav-item:hover {
-  color: var(--text-main);
-  background-color: var(--pill-bg);
+  color: var(--text-main, #333);
+  background-color: var(--pill-bg, #f3f4f6);
 }
 
 .nav-item.active {
@@ -85,9 +85,9 @@
 
 /* --- BUTTONS --- */
 .theme-toggle-btn {
-  background: var(--pill-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
+  background: var(--pill-bg, #f3f4f6);
+  border: 1px solid var(--border-color, #e5e7eb);
+  color: var(--text-main, #333);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -95,7 +95,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  margin-right: 10px;
+  margin-right: 15px;
   transition: all 0.3s ease;
 }
 
@@ -108,7 +108,6 @@
   color: #f59e0b;
   font-size: 1.2rem;
 }
-
 .icon-moon {
   color: #a78bfa;
   font-size: 1.1rem;
@@ -119,49 +118,64 @@
   align-items: center;
 }
 
-/* ✅ SMART LOGIN BUTTON (New) */
-.btn-smart-login {
-  background: transparent;
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
+/* ✅ NEW: DASHBOARD BUTTON (Neon) */
+.btn-smart-dashboard {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  color: white;
   padding: 8px 20px;
   border-radius: 50px;
   text-decoration: none;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0;
-  /* No gap initially */
+  gap: 8px;
   transition: all 0.3s ease;
-  overflow: hidden;
-  /* Hide icon initially */
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  border: 1px solid transparent;
 }
 
-.smart-icon {
-  max-width: 0;
-  /* Hidden */
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease;
+.btn-smart-dashboard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  color: white;
 }
 
-/* Hover Effect */
-.btn-smart-login:hover {
+/* SMART LOGIN BUTTONS */
+.btn-smart-login {
+  padding: 8px 20px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+/* Outline Style */
+.btn-smart-login.outline {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+.btn-smart-login.outline:hover {
+  background: var(--pill-bg);
+  border-color: var(--text-main);
+}
+
+/* Primary Style */
+.btn-smart-login.primary {
   background: var(--text-main);
   color: var(--bg-body);
-  gap: 8px;
-  /* Create space */
-  padding-right: 25px;
-  /* Expand right side */
+  border: 1px solid var(--text-main);
+}
+.btn-smart-login.primary:hover {
+  opacity: 0.9;
+  gap: 12px; /* Expanding animation */
 }
 
-.btn-smart-login:hover .smart-icon {
-  max-width: 20px;
-  /* Show icon */
-  opacity: 1;
-  transform: translateX(0);
-}
-
+/* USER PROFILE PILL */
 .user-profile-pill {
   display: flex;
   align-items: center;
@@ -170,6 +184,14 @@
   border-radius: 50px;
   color: var(--text-main);
   border: 1px solid var(--border-color);
+  font-weight: 500;
+}
+
+.user-name-trunc {
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .icon-btn-logout {
@@ -177,15 +199,16 @@
   border: none;
   color: #ef4444;
   cursor: pointer;
-  margin-left: 10px;
+  margin-left: 8px;
   display: flex;
   align-items: center;
   font-size: 1rem;
   transition: transform 0.2s;
+  padding: 0;
 }
 
 .icon-btn-logout:hover {
-  transform: scale(1.1);
+  transform: scale(1.2);
 }
 
 /* --- MOBILE RESPONSIVENESS --- */
@@ -226,7 +249,7 @@
     right: -100%;
     width: 280px;
     height: 100vh;
-    background-color: var(--bg-body);
+    background-color: var(--bg-body, #fff);
     z-index: 1100;
     transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
@@ -248,49 +271,36 @@
     font-size: 1.8rem;
     color: var(--text-main);
     cursor: pointer;
-    transition: color 0.3s;
-  }
-
-  .close-icon:hover {
-    color: #ef4444;
   }
 
   .drawer-content {
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 20px;
     width: 100%;
     padding: 20px 30px;
     text-align: center;
-    margin-top: 20px;
   }
 
   .drawer-content .nav-item {
     display: block;
     width: 100%;
-    font-size: 1.2rem;
-    padding: 10px;
+    font-size: 1.1rem;
+    padding: 12px;
     color: var(--text-main);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .drawer-content .nav-item.active {
+    color: #0ea5e9 !important;
+    font-weight: 800;
+    background: transparent; /* Remove background for mobile links */
   }
 
   .mobile-auth {
     margin-top: 20px;
     width: 100%;
-  }
-
-  /* Mobile Button adjustment */
-  .mobile-auth .btn-smart-login {
-    width: 100%;
-    justify-content: center;
-    gap: 10px;
-    /* Always show gap on mobile */
-  }
-
-  .mobile-auth .smart-icon {
-    max-width: 20px;
-    /* Always show icon on mobile */
-    opacity: 1;
-    transform: none;
   }
 
   .nav-overlay {
