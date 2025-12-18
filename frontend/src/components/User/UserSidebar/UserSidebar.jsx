@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useUser } from "../../../context/UserContext"; // ✅ Context Import
+import { useUser } from "../../../context/UserContext";
 import {
   FaHome,
   FaFileAlt,
@@ -23,18 +23,11 @@ const UserSidebar = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // ✅ FIX: Get 'user' directly from Context (Not LocalStorage)
-  // Is se real-time update hoga bina refresh kiye.
   const { user, logout } = useUser();
-
-  // Modal State
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Helper for active class
   const isActive = (path) => (location.pathname === path ? "usr-active" : "");
 
-  // Helper for date format
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-GB", {
@@ -44,23 +37,14 @@ const UserSidebar = ({
     });
   };
 
-  // 1. Trigger Modal Logic
-  const handleLogoutClick = () => {
-    setShowLogoutModal(true);
-  };
+  const handleLogoutClick = () => setShowLogoutModal(true);
 
-  // 2. Actual Logout Perform
   const confirmLogout = () => {
     if (logout) logout();
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.clear();
-
     navigate("/login", { replace: true });
     window.location.reload();
   };
 
-  // Fallback for user name to prevent crash if user is null briefly
   const userName = user?.name || "Guest";
   const userInitial = userName.charAt(0).toUpperCase();
 
@@ -71,10 +55,12 @@ const UserSidebar = ({
           isCollapsed ? "collapsed-mode" : ""
         }`}
       >
+        {/* Toggle Button */}
         <button className="usr-collapse-btn" onClick={toggleCollapse}>
           {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
         </button>
 
+        {/* Brand */}
         <div className="usr-brand">
           {isCollapsed ? (
             <h3 className="brand-short">TM</h3>
@@ -85,21 +71,19 @@ const UserSidebar = ({
           )}
         </div>
 
-        {/* --- PROFILE SECTION --- */}
+        {/* Profile Section */}
         <div className="usr-profile-card">
           <div className="usr-avatar-container">
-            {/* ✅ FIX: Check if image exists, show IMG tag, else show Initial */}
             {user?.image ? (
               <img
                 src={user.image}
                 alt="Profile"
                 className="usr-avatar"
-                style={{ objectFit: "cover" }} // Ensures image fits circle perfectly
+                style={{ objectFit: "cover" }}
               />
             ) : (
               <div className="usr-avatar">{userInitial}</div>
             )}
-
             {!isCollapsed && <div className="online-dot"></div>}
           </div>
 
@@ -122,6 +106,7 @@ const UserSidebar = ({
           )}
         </div>
 
+        {/* Navigation */}
         <nav className="usr-nav-menu">
           <Link
             to="/user/dashboard"
@@ -146,6 +131,7 @@ const UserSidebar = ({
           </Link>
         </nav>
 
+        {/* Footer */}
         <div className="usr-sidebar-footer">
           {user?.planType === "free" && !isCollapsed && (
             <button className="usr-btn-upgrade fade-in">
@@ -174,7 +160,7 @@ const UserSidebar = ({
         </div>
       </div>
 
-      {/* --- LOGOUT MODAL --- */}
+      {/* Logout Modal */}
       {showLogoutModal && (
         <div className="logout-overlay">
           <div className="logout-box">

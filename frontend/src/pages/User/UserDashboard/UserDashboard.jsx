@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaPlus,
@@ -8,21 +8,22 @@ import {
   FaLock,
   FaClock,
 } from "react-icons/fa";
+import { useUser } from "../../../context/UserContext"; // ✅ Context Import karein
 import "./UserDashboard.css";
 
 const UserDashboard = () => {
-  // 1. Get User Data
-  const user = JSON.parse(localStorage.getItem("user")) || {
-    name: "Guest",
-    planType: "free",
-    usage: { papersGenerated: 0 },
-  };
+  // ✅ 1. Get User Data from Context (NOT LocalStorage directly)
+  const { user } = useUser();
+
+  // Agar ghalti se user null hua (jo PrivateRoute hone nahi dega), to safe side empty object
+  const currentUser = user || { name: "User", usage: { papersGenerated: 0 } };
 
   // 2. Logic to Check Limits
-  const isFree = user.planType === "free";
-  const limitReached = isFree && user.usage.papersGenerated >= 1;
+  // (Assuming backend sends planType, otherwise default to free)
+  const isFree = currentUser.planType !== "premium";
+  const limitReached = isFree && (currentUser.usage?.papersGenerated || 0) >= 1;
 
-  // 3. Mock Activity Data
+  // 3. Mock Activity Data (Isay baad main Backend se fetch karein)
   const [activities, setActivities] = useState([
     {
       id: 1,
@@ -45,7 +46,8 @@ const UserDashboard = () => {
       <div className="ud-hero">
         <div>
           <h2 className="ud-welcome">
-            Welcome back, <span className="text-gradient">{user.name}!</span> 👋
+            Welcome back,{" "}
+            <span className="text-gradient">{currentUser.name}!</span> 👋
           </h2>
           <p className="ud-subtitle">
             Here is what's happening with your account today.
@@ -113,7 +115,7 @@ const UserDashboard = () => {
           </div>
           <div className="stats-body">
             <h3 className="stats-number">
-              {user.usage.papersGenerated}{" "}
+              {currentUser.usage?.papersGenerated || 0}{" "}
               <span className="total">/ {isFree ? "1" : "∞"}</span>
             </h3>
             <div className="progress-bar-bg">
@@ -121,7 +123,9 @@ const UserDashboard = () => {
                 className="progress-bar-fill"
                 style={{
                   width: isFree
-                    ? `${(user.usage.papersGenerated / 1) * 100}%`
+                    ? `${
+                        ((currentUser.usage?.papersGenerated || 0) / 1) * 100
+                      }%`
                     : "100%",
                   background: limitReached ? "#ef4444" : "#10b981",
                   boxShadow: limitReached

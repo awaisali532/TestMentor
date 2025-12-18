@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import UserSidebar from "../../components/User/UserSidebar/UserSidebar";
 import NotificationPanel from "../../components/User/NotificationPanel/NotificationPanel";
-import { FaBars } from "react-icons/fa"; // Hamburger Icon
+import { FaBars } from "react-icons/fa";
 import "./UserLayout.css";
 
 const UserLayout = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // 1. Sidebar Collapse State (Desktop)
+  // Desktop Collapse State
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // 2. Mobile Sidebar State
+  // Mobile/Tablet Drawer State
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
@@ -23,7 +23,7 @@ const UserLayout = ({ children }) => {
         isCollapsed ? "usr-collapsed" : ""
       }`}
     >
-      {/* --- MOBILE OVERLAY (Backdrop) --- */}
+      {/* --- OVERLAY BACKDROP (Click to close menu) --- */}
       {isMobileOpen && (
         <div
           className="usr-mobile-backdrop"
@@ -31,7 +31,7 @@ const UserLayout = ({ children }) => {
         ></div>
       )}
 
-      {/* --- LEFT SIDEBAR --- */}
+      {/* --- SIDEBAR (Becomes Drawer on <=1024px) --- */}
       <aside
         className={`usr-layout-sidebar ${isMobileOpen ? "mobile-open" : ""}`}
       >
@@ -40,18 +40,19 @@ const UserLayout = ({ children }) => {
           toggleTheme={toggleTheme}
           isCollapsed={isCollapsed}
           toggleCollapse={toggleCollapse}
-          closeMobileMenu={() => setIsMobileOpen(false)} // Close on link click (Mobile)
+          // Jab link par click ho, to drawer band ho jaye
+          closeMobileMenu={() => setIsMobileOpen(false)}
         />
       </aside>
 
       {/* --- MAIN CONTENT --- */}
       <main className="usr-layout-main">
-        {/* Mobile Header (Visible only on small screens) */}
+        {/* HAMBURGER HEADER (Visible on <=1024px) */}
         <div className="usr-mobile-header">
           <button className="usr-hamburger-btn" onClick={toggleMobileMenu}>
             <FaBars />
           </button>
-          <h4 className="m-0">
+          <h4 className="m-0" style={{ fontWeight: "700" }}>
             Test<span style={{ color: "var(--u-accent)" }}>Mentor</span>
           </h4>
         </div>
@@ -59,7 +60,7 @@ const UserLayout = ({ children }) => {
         {children}
       </main>
 
-      {/* --- RIGHT PANEL --- */}
+      {/* --- RIGHT PANEL (Hidden on <=1024px via CSS) --- */}
       <aside className="usr-layout-right">
         <NotificationPanel />
       </aside>

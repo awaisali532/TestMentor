@@ -23,7 +23,7 @@
   --u-accent: #3b82f6;
 }
 
-/* --- GRID LAYOUT --- */
+/* --- GRID LAYOUT (Desktop > 1024px) --- */
 .usr-layout-wrapper {
   display: grid;
   /* Default: Sidebar(260px) | Content | Right(300px) */
@@ -32,25 +32,23 @@
   width: 100vw;
   background-color: var(--u-bg-body);
   color: var(--u-text-main);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Smooth Transition */
+  transition: all 0.3s ease;
   overflow: hidden;
 }
 
-/* --- COLLAPSED STATE (Desktop) --- */
+/* Collapsed State (Only affects Desktop) */
 .usr-layout-wrapper.usr-collapsed {
-  /* Sidebar shrinks to 80px */
   grid-template-columns: 80px 1fr 300px;
 }
 
-/* --- SIDEBAR CONTAINER --- */
+/* --- SIDEBAR CONTAINER (Desktop) --- */
 .usr-layout-sidebar {
   background-color: var(--u-bg-card);
   border-right: 1px solid var(--u-border);
   height: 100%;
   position: relative;
   z-index: 50;
-  transition: width 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 /* --- MAIN CONTENT --- */
@@ -62,16 +60,15 @@
 
 /* --- RIGHT PANEL --- */
 .usr-layout-right {
-  /* background-color: var(--u-bg-card); */
   border-left: 1px solid var(--u-border);
   height: 100%;
   transition: background-color 0.3s ease;
+  overflow-y: auto;
 }
 
-/* --- MOBILE HEADER (Hidden on Desktop) --- */
+/* --- MOBILE HEADER (Visible on Tablet/Mobile) --- */
 .usr-mobile-header {
-  display: none;
-  /* Default hidden */
+  display: none; /* Default hidden */
   align-items: center;
   gap: 15px;
   margin-bottom: 20px;
@@ -94,11 +91,9 @@
 .usr-layout-main::-webkit-scrollbar {
   width: 8px;
 }
-
 .usr-layout-main::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .usr-layout-main::-webkit-scrollbar-thumb {
   background: var(--u-border);
   border-radius: 4px;
@@ -108,64 +103,51 @@
    📱 RESPONSIVE & MOBILE STYLES
    ========================================= */
 
+/* ✅ FIX: Change breakpoint to 1024px (Tablets & Small Laptops) */
 @media (max-width: 1024px) {
-
-  /* Tablet: Hide Right Panel */
-  .usr-layout-wrapper,
-  .usr-layout-wrapper.usr-collapsed {
-    grid-template-columns: 80px 1fr;
-    /* Sidebar collapsed style usually */
-  }
-
-  .usr-layout-right {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-
-  /* Mobile: Single Column */
+  /* 1. Grid becomes Single Column (Sidebar Gayab) */
   .usr-layout-wrapper,
   .usr-layout-wrapper.usr-collapsed {
     grid-template-columns: 1fr;
   }
 
-  /* Show Mobile Header */
+  /* 2. Hide Right Panel (Optional, space bachane ke liye) */
+  .usr-layout-right {
+    display: none;
+  }
+
+  /* 3. Show Hamburger Header */
   .usr-mobile-header {
     display: flex;
   }
 
-  /* --- MOBILE SIDEBAR (Drawer Mode) --- */
+  /* --- DRAWER SIDEBAR LOGIC --- */
   .usr-layout-sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 280px;
-    /* Fixed width for drawer */
+    width: 280px; /* Fixed width drawer */
     height: 100%;
-    transform: translateX(-100%);
-    /* Hidden by default */
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-100%); /* Screen se bahir */
     box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
     border-right: none;
+    z-index: 1000; /* Top layer */
   }
 
   .usr-layout-sidebar.mobile-open {
-    transform: translateX(0);
-    /* Slide In */
+    transform: translateX(0); /* Slide In */
   }
 
-  /* --- BLUR BACKDROP (Overlay) --- */
+  /* --- BACKDROP --- */
   .usr-mobile-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(5px);
-    /* BLUR EFFECT */
-    z-index: 40;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 900;
     animation: fadeIn 0.3s ease;
   }
 }
@@ -174,7 +156,6 @@
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }

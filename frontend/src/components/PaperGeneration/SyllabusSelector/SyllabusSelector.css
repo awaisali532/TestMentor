@@ -1,0 +1,245 @@
+/* --- WRAPPER & LAYOUT --- */
+.syl-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Extra padding top to prevent hiding behind fixed headers */
+  padding-top: 20px;
+  padding-bottom: 80px; /* Space for FAB button */
+  animation: fadeIn 0.4s ease-out;
+}
+
+.syl-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--pw-text);
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.syl-loading,
+.syl-error,
+.syl-empty {
+  text-align: center;
+  padding: 50px;
+  color: var(--pw-text);
+  font-size: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* --- GRID SYSTEM (2 Columns) --- */
+.syl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 Columns fix */
+  gap: 20px;
+  align-items: start; /* Ensures height doesn't stretch unnecessarily */
+}
+
+/* --- CHAPTER CARD --- */
+.syl-card {
+  background: var(--pw-card-bg);
+  border: 1px solid var(--pw-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.syl-card:hover {
+  border-color: var(--pw-accent);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+.syl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: var(--pw-card-bg);
+  cursor: pointer;
+  user-select: none;
+}
+
+.syl-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.syl-icon {
+  color: var(--pw-text);
+  opacity: 0.5;
+  transition: transform 0.2s;
+}
+
+.syl-card.expanded .syl-icon {
+  transform: rotate(180deg);
+  opacity: 1;
+  color: var(--pw-accent);
+}
+
+/* Checkbox Style */
+.syl-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--pw-accent);
+  cursor: pointer;
+}
+
+/* Chapter Badge */
+.syl-chap-badge {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--pw-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.pw-dark .syl-chap-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.syl-chap-name {
+  font-weight: 600;
+  color: var(--pw-text);
+  font-size: 1rem;
+}
+
+/* --- ACCORDION BODY (Topics) --- */
+.syl-body {
+  background: var(--pw-hover); /* Slightly darker inner bg */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top: 1px solid transparent;
+}
+
+.syl-body.open {
+  max-height: 500px; /* Allow expansion */
+  border-top-color: var(--pw-border);
+  overflow-y: auto;
+}
+
+.syl-topic-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px 10px 45px; /* Indented */
+  border-bottom: 1px solid var(--pw-border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.syl-topic-row:last-child {
+  border-bottom: none;
+}
+
+.syl-topic-row:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.syl-topic-cb {
+  width: 16px;
+  height: 16px;
+  margin-right: 12px;
+  accent-color: var(--pw-accent);
+}
+
+.syl-topic-num {
+  font-family: monospace;
+  color: var(--pw-text);
+  opacity: 0.7;
+  margin-right: 10px;
+  font-weight: 600;
+}
+
+.syl-topic-text {
+  color: var(--pw-text);
+  font-size: 0.95rem;
+}
+
+.syl-no-data {
+  padding: 15px;
+  text-align: center;
+  color: var(--pw-text);
+  opacity: 0.6;
+  font-style: italic;
+}
+
+/* --- FLOATING ACTION BUTTON (FAB) --- */
+.syl-fab-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--pw-accent);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 100;
+}
+
+.syl-fab-btn:hover {
+  transform: scale(1.1) rotate(-10deg);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+}
+
+.syl-fab-btn.disabled {
+  background: gray;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.5;
+  transform: scale(0.9);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .syl-grid {
+    grid-template-columns: 1fr; /* Mobile par 1 column */
+  }
+
+  .syl-fab-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

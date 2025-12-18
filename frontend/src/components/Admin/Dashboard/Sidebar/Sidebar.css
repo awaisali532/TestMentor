@@ -57,22 +57,29 @@
 }
 
 /* ============================
-   2. SIDEBAR CONTAINER
+   2. SIDEBAR CONTAINER (UPDATED FOR MOBILE FIX)
    ============================ */
 .sidebar {
   position: fixed;
   top: var(--header-height);
   left: 0;
+  /* ✅ FIX: Use dynamic viewport height if supported, fallback to 100vh */
   height: calc(100vh - var(--header-height));
+  height: calc(
+    100dvh - var(--header-height)
+  ); /* Modern browsers (dynamic viewport) */
+
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   color: var(--text-main);
-  transition: width 0.3s ease, background-color 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease; /* Added transform for mobile slide */
   display: flex;
   flex-direction: column;
   padding-top: 20px;
   z-index: 1000;
   overflow-x: hidden;
+  /* ✅ FIX: Ensure bottom padding for safety */
+  padding-bottom: 20px;
 }
 
 .sidebar-menu {
@@ -82,10 +89,12 @@
   flex-grow: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  /* ✅ FIX: Add padding bottom inside the scrollable area too */
+  padding-bottom: 20px;
 }
 
 /* ============================
-   3. MENU LINKS (NORMAL / OPEN STATE)
+   3. MENU LINKS
    ============================ */
 .menu-link {
   display: flex;
@@ -103,7 +112,6 @@
   overflow: hidden;
 }
 
-/* Icon Box */
 .menu-link .icon-box {
   width: 35px;
   height: 35px;
@@ -119,7 +127,6 @@
   flex-shrink: 0;
 }
 
-/* Hover Effect */
 .menu-link:hover {
   background-color: var(--pill-bg);
   color: var(--text-main);
@@ -132,11 +139,12 @@
   box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
 }
 
-/* Active State (Open) */
 .menu-link.active {
-  background: linear-gradient(135deg,
-      rgba(14, 165, 233, 0.1),
-      rgba(45, 212, 191, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.1),
+    rgba(45, 212, 191, 0.1)
+  );
   border: 1px solid var(--accent-1);
   color: var(--accent-1);
 }
@@ -153,11 +161,15 @@
 }
 
 /* ============================
-   4. FOOTER BUTTONS (Toggle & Logout)
+   4. FOOTER BUTTONS
    ============================ */
 .sidebar-footer {
   padding: 20px;
   border-top: 1px solid var(--border-color);
+  /* ✅ FIX: Ensure footer background is solid so content doesn't bleed */
+  background-color: var(--sidebar-bg);
+  /* ✅ FIX: Extra margin bottom for mobile browsers */
+  margin-bottom: env(safe-area-inset-bottom);
 }
 
 .btn-sidebar-action {
@@ -176,26 +188,22 @@
   overflow: hidden;
 }
 
-/* Icon Box Style */
 .btn-sidebar-action .icon-box {
   width: 30px;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-right: 10px;
-  /* Always visible in Open Mode */
 }
 
 .btn-sidebar-action:hover {
   background-color: var(--pill-bg);
 }
 
-/* Theme Toggle Hover */
 .theme-toggle:hover .icon-box {
   color: #eab308;
 }
 
-/* Logout Hover */
 .logout-btn:hover {
   background: linear-gradient(135deg, #ef4444, #dc2626) !important;
   color: white !important;
@@ -208,58 +216,44 @@
 }
 
 /* ============================
-   5. COLLAPSED STATE (THE FIX)
+   5. COLLAPSED STATE (DESKTOP)
    ============================ */
 .sidebar.desktop.collapsed {
   width: var(--sidebar-width-collapsed);
   padding: 20px 10px;
   align-items: center;
-  /* Center everything */
 }
 
-/* Make Buttons & Links Square in Collapsed Mode */
 .sidebar.desktop.collapsed .menu-link,
 .sidebar.desktop.collapsed .btn-sidebar-action {
   width: 45px;
-  /* Small Fixed Width */
   height: 45px;
-  /* Small Fixed Height */
   padding: 0;
-  /* Remove padding */
   justify-content: center;
-  /* Center Icon */
   margin: 0 auto 10px auto;
-  /* Center in sidebar */
   border-radius: 12px;
 }
 
-/* Fix Icon Margins in Collapsed */
 .sidebar.desktop.collapsed .menu-link .icon-box,
 .sidebar.desktop.collapsed .btn-sidebar-action .icon-box {
   margin-right: 0;
-  /* No margin needed */
 }
 
-/* Fix Active Border Size in Collapsed */
 .sidebar.desktop.collapsed .menu-link.active {
   width: 45px;
-  /* Ensure border wraps tightly */
   border: 2px solid var(--accent-1);
   background: transparent;
-  /* Clean look */
 }
 
 .sidebar.desktop.collapsed .menu-link:hover {
   transform: none;
 }
-
-/* Hide Text */
 .sidebar.desktop.collapsed .link-text {
   display: none !important;
 }
 
 /* ============================
-   6. MOBILE BEHAVIOR
+   6. MOBILE BEHAVIOR (FIXED)
    ============================ */
 .sidebar.mobile {
   width: var(--sidebar-width-open);
@@ -270,6 +264,14 @@
 .sidebar.mobile.open {
   transform: translateX(0);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ✅ MOBILE SPECIFIC PADDING FIX */
+@media (max-width: 992px) {
+  .sidebar {
+    /* Increase padding bottom on mobile to account for browser UI */
+    padding-bottom: 80px;
+  }
 }
 
 .sidebar-overlay {
@@ -287,9 +289,8 @@
   display: none !important;
 }
 
-
 /* ============================
-   7. ADMIN LOGOUT MODAL (New)
+   7. ADMIN LOGOUT MODAL
    ============================ */
 .admin-logout-overlay {
   position: fixed;
@@ -298,20 +299,16 @@
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.6);
-  /* Dim background */
   backdrop-filter: blur(6px);
-  /* Modern blur */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
-  /* Above everything */
   animation: fadeIn 0.2s ease-out;
 }
 
 .admin-logout-box {
   background: var(--card-bg);
-  /* Use Admin Card Background */
   padding: 30px;
   border-radius: 16px;
   width: 90%;
@@ -339,13 +336,11 @@
   font-size: 0.95rem;
   margin-bottom: 25px;
 }
-
 .logout-actions {
   display: flex;
   justify-content: center;
   gap: 15px;
 }
-
 .a-btn {
   padding: 10px 25px;
   border-radius: 12px;
@@ -355,19 +350,14 @@
   font-size: 0.9rem;
   transition: transform 0.2s;
 }
-
 .a-btn:hover {
   transform: translateY(-2px);
 }
-
-/* Cancel Button */
 .a-cancel {
   background: var(--pill-bg);
   color: var(--text-main);
   border: 1px solid var(--border-color);
 }
-
-/* Confirm Button (Red Gradient) */
 .a-confirm {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
@@ -379,18 +369,15 @@
     transform: scale(0.8);
     opacity: 0;
   }
-
   to {
     transform: scale(1);
     opacity: 1;
   }
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }

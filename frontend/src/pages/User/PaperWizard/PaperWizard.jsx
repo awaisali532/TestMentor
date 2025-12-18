@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaHome,
@@ -13,22 +13,64 @@ import { useTheme } from "../../../context/ThemeContext";
 // Child Components
 import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector";
 import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector";
+import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector";
 import "./PaperWizard.css";
 
 const PaperWizard = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
-  // --- STATE ---
-  const [step, setStep] = useState(1);
+  // --- 1. INITIALIZE STATE FROM LOCAL STORAGE ---
+
+  // Step State Load Logic
+  const [step, setStep] = useState(() => {
+    const savedStep = localStorage.getItem("pw_step");
+    return savedStep ? parseInt(savedStep) : 1;
+  });
+
+  // Data State Load Logic (With Reset Condition)
+  const [paperData, setPaperData] = useState(() => {
+    const savedData = localStorage.getItem("pw_data");
+    const savedStep = localStorage.getItem("pw_step");
+
+    if (savedData && savedStep) {
+      const parsedData = JSON.parse(savedData);
+      const currentStep = parseInt(savedStep);
+
+      // --- RESET LOGIC ON REFRESH ---
+
+      // Agar Step 3 (Syllabus) par refresh kia:
+      // Grade aur Subject rakho, Topics khali kar do
+      if (currentStep === 3) {
+        return { ...parsedData, topics: [] };
+      }
+
+      // Agar Step 2 (Subject) par refresh kia:
+      // Grade rakho, Subject khali kar do
+      if (currentStep === 2) {
+        return { ...parsedData, subject: "", topics: [] };
+      }
+
+      // Agar Step 4 par hain to sab kuch rakho (Pattern reset krna ho to wo bhi kr skte hain)
+      return parsedData;
+    }
+
+    // Default Empty State
+    return {
+      grade: "",
+      subject: "",
+      topics: [],
+      chapters: [],
+    };
+  });
+
   const [showExitModal, setShowExitModal] = useState(false);
 
-  const [paperData, setPaperData] = useState({
-    grade: "",
-    subject: "",
-    topics: [],
-    chapters: [],
-  });
+  // --- 2. SAVE TO LOCAL STORAGE ON CHANGE ---
+  useEffect(() => {
+    localStorage.setItem("pw_step", step);
+    localStorage.setItem("pw_data", JSON.stringify(paperData));
+  }, [step, paperData]);
 
   // --- HANDLERS ---
 
@@ -36,12 +78,19 @@ const PaperWizard = () => {
     setShowExitModal(true);
   };
 
+  // Clear Storage on Exit
   const confirmExit = () => {
+    localStorage.removeItem("pw_step");
+    localStorage.removeItem("pw_data");
     navigate("/user/dashboard");
   };
 
   const goToStep = (targetStep) => {
-    if (targetStep < step) setStep(targetStep);
+    if (targetStep < step) {
+      // Jab user piche jaye, to agla data clear krna acha UX hai,
+      // lekin aapki requirement ke mutabiq hum sirf step change kr rahe hain.
+      setStep(targetStep);
+    }
   };
 
   const handleClassSelect = (selectedGrade) => {
@@ -49,11 +98,25 @@ const PaperWizard = () => {
     setStep(2);
   };
 
-  // ✅ ERROR FIX 1: Ye function missing tha, ab add kar diya hai
   const handleSubjectSelect = (selectedSubject) => {
     setPaperData({ ...paperData, subject: selectedSubject });
-    setStep(3); // Go to next step
+    setStep(3);
   };
+
+  const handleSyllabusSelect = (selectedIds) => {
+    setPaperData({ ...paperData, topics: selectedIds });
+  };
+
+  // --- SAFETY CHECK ---
+  // Agar user direct Step 3 par aa jaye bina Grade select kiye (storage delete hone par), to wapis bhejo
+  useEffect(() => {
+    if (step > 1 && !paperData.grade) {
+      setStep(1);
+    }
+    if (step > 2 && !paperData.subject) {
+      setStep(2);
+    }
+  }, [step, paperData]);
 
   return (
     <div
@@ -79,7 +142,6 @@ const PaperWizard = () => {
             {paperData.grade || "Select Class"}
           </div>
 
-          {/* ✅ ERROR FIX 2: Yahan se SubjectSelector hata diya (Header me nahi ana chahiye) */}
           {step >= 2 && (
             <>
               <FaChevronRight className="crumb-separator" />
@@ -97,6 +159,15 @@ const PaperWizard = () => {
               <FaChevronRight className="crumb-separator" />
               <div className={`crumb-item ${step === 3 ? "active" : ""}`}>
                 Select Syllabus
+              </div>
+            </>
+          )}
+
+          {step >= 4 && (
+            <>
+              <FaChevronRight className="crumb-separator" />
+              <div className={`crumb-item ${step === 4 ? "active" : ""}`}>
+                Paper Pattern
               </div>
             </>
           )}
@@ -120,7 +191,7 @@ const PaperWizard = () => {
         </div>
       </header>
 
-      {/* --- CONTENT --- */}
+      {/* --- CONTENT AREA --- */}
       <div className="pw-content">
         {/* Step 1: Class Selection */}
         {step === 1 && (
@@ -132,7 +203,7 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* Step 2: Subject Selection (✅ Correct Placement) */}
+        {/* Step 2: Subject Selection */}
         {step === 2 && (
           <div className="fade-in">
             <SubjectSelector
@@ -142,10 +213,23 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* Step 3: Syllabus (Coming Soon) */}
+        {/* Step 3: Syllabus Selection */}
         {step === 3 && (
+          <div className="fade-in">
+            <SyllabusSelector
+              selectedClass={paperData.grade}
+              selectedSubject={paperData.subject}
+              onSelectionChange={handleSyllabusSelect}
+              onNext={() => setStep(4)}
+            />
+          </div>
+        )}
+
+        {/* Step 4: Paper Pattern */}
+        {step === 4 && (
           <div className="fade-in p-5 text-center">
-            Syllabus Selector Coming Soon...
+            <h2>Paper Pattern Settings</h2>
+            <p>Coming Soon...</p>
           </div>
         )}
       </div>

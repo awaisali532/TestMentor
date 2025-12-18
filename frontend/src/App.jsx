@@ -11,6 +11,9 @@ import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar/Navbar";
 import AdminRoute from "./components/AdminRoute/AdminRoute";
 import PublicRoute from "./components/PublicRoute/PublicRoute";
+// ✅ IMPORT THIS
+import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
+
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
 import UserLayout from "./layouts/UserLayout/UserLayout";
 
@@ -54,13 +57,13 @@ const App = () => {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
 
-            {/* Auth Routes */}
+            {/* Auth Routes (Login/Register) - Only for Guests */}
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Route>
 
-            {/* Admin Routes */}
+            {/* ADMIN ROUTES (Protected by AdminRoute) */}
             <Route element={<AdminRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<Dashboard />} />
@@ -79,33 +82,37 @@ const App = () => {
               </Route>
             </Route>
 
-            {/* User Routes (Standard) */}
-            <Route
-              path="/user/dashboard"
-              element={
-                <UserLayout>
-                  <UserDashboard />
-                </UserLayout>
-              }
-            />
-            <Route
-              path="/user/settings"
-              element={
-                <UserLayout>
-                  <UserSettings />
-                </UserLayout>
-              }
-            />
-            <Route
-              path="/user/past-papers"
-              element={
-                <UserLayout>
-                  <div className="p-4">Past Papers Coming Soon...</div>
-                </UserLayout>
-              }
-            />
+            {/* USER ROUTES (Protected by PrivateRoute) */}
+            {/* ✅ Yahan humne PrivateRoute lagaya hai (AdminRoute jaisa hi hai) */}
+            <Route element={<PrivateRoute />}>
+              <Route
+                path="/user/dashboard"
+                element={
+                  <UserLayout>
+                    <UserDashboard />
+                  </UserLayout>
+                }
+              />
+              <Route
+                path="/user/settings"
+                element={
+                  <UserLayout>
+                    <UserSettings />
+                  </UserLayout>
+                }
+              />
+              <Route
+                path="/user/past-papers"
+                element={
+                  <UserLayout>
+                    <div className="p-4">Past Papers Coming Soon...</div>
+                  </UserLayout>
+                }
+              />
 
-            <Route path="/user/generate-paper" element={<PaperWizard />} />
+              {/* Paper Wizard */}
+              <Route path="/user/generate-paper" element={<PaperWizard />} />
+            </Route>
           </Routes>
         </UserProvider>
       </ThemeProvider>
