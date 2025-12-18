@@ -14,18 +14,14 @@ import PublicRoute from "./components/PublicRoute/PublicRoute";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
 import UserLayout from "./layouts/UserLayout/UserLayout";
 
-// Pages - Public
+// Pages
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Contact from "./pages/Contact/Contact";
 import Subjects from "./pages/Subjects/Subjects";
 import SubjectDetails from "./pages/Subjects/SubjectDetails/SubjectDetails";
-
-// Pages - Auth
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
-
-// Pages - Admin
 import Dashboard from "./pages/Admin/Dashboard/Dashboard";
 import ManageSubjects from "./pages/Admin/ManageSubjects/ManageSubjects";
 import QuestionBank from "./pages/Admin/QuestionBank/QuestionBank";
@@ -33,15 +29,12 @@ import RecentActivity from "./pages/Admin/RecentActivity/RecentActivity";
 import UserManagement from "./pages/Admin/UserManagement/UserManagement";
 import ProfileSettings from "./pages/Admin/ProfileSettings/ProfileSettings";
 import SiteSettings from "./pages/Admin/SiteSettings/SiteSettings";
-
-// Pages - User
+import PaperWizard from "./pages/User/PaperWizard/PaperWizard";
 import UserDashboard from "./pages/User/UserDashboard/UserDashboard";
 import UserSettings from "./pages/User/UserSettings/UserSettings";
 
 const App = () => {
   const location = useLocation();
-
-  // Hide Public Navbar on Admin AND User Dashboard routes
   const isDashboardRoute =
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/user");
@@ -54,26 +47,20 @@ const App = () => {
           <Toaster position="top-center" reverseOrder={false} />
 
           <Routes>
-            {/* =========================================
-                🌍 OPEN ROUTES (Accessible to Everyone)
-               ========================================= */}
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/subjects" element={<Subjects />} />
             <Route path="/subjects/:id" element={<SubjectDetails />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
 
-            {/* =========================================
-                🛡️ AUTH ROUTES (Public Only)
-               ========================================= */}
+            {/* Auth Routes */}
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Route>
 
-            {/* =========================================
-                🔐 ADMIN ROUTES (Protected)
-               ========================================= */}
+            {/* Admin Routes */}
             <Route element={<AdminRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<Dashboard />} />
@@ -92,9 +79,7 @@ const App = () => {
               </Route>
             </Route>
 
-            {/* =========================================
-                👤 USER ROUTES (With Sidebar Layout)
-               ========================================= */}
+            {/* User Routes (Standard) */}
             <Route
               path="/user/dashboard"
               element={
@@ -103,7 +88,6 @@ const App = () => {
                 </UserLayout>
               }
             />
-
             <Route
               path="/user/settings"
               element={
@@ -112,7 +96,6 @@ const App = () => {
                 </UserLayout>
               }
             />
-
             <Route
               path="/user/past-papers"
               element={
@@ -121,6 +104,8 @@ const App = () => {
                 </UserLayout>
               }
             />
+
+            <Route path="/user/generate-paper" element={<PaperWizard />} />
           </Routes>
         </UserProvider>
       </ThemeProvider>

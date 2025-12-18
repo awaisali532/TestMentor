@@ -1,0 +1,193 @@
+/* --- CONTAINER (UPDATED) --- */
+.sub-container {
+    width: 100%;
+    max-width: 1200px;
+    /* ✅ Width ko limit kiya taake screen par na phaile */
+    margin: 0 auto;
+    /* ✅ Screen ke beech (mid) mein laane ke liye */
+    animation: fadeIn 0.4s ease-out;
+}
+
+.sub-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--pw-text);
+}
+
+.sub-loading,
+.sub-error {
+    text-align: center;
+    padding: 40px;
+    color: var(--pw-text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+    font-size: 2rem;
+    color: var(--pw-accent);
+}
+
+/* --- GRID LAYOUT (UPDATED) --- */
+.sub-grid {
+    display: grid;
+    /* 4 cards in a row inside the centered container */
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+    padding-bottom: 40px;
+}
+
+/* --- CARD DESIGN --- */
+.sub-card {
+    background-color: var(--pw-card-bg);
+    border: 1px solid var(--pw-border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    /* Thora sa height kam kiya taake compact lage */
+}
+
+.sub-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--pw-accent);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* --- IMAGE SECTION --- */
+.sub-img-box {
+    width: 100%;
+    height: 200px;
+    /* Image section thora adjust kiya */
+    background-color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--pw-border);
+}
+
+/* Dark mode fix */
+.pw-dark .sub-img-box {
+    background-color: #334155;
+}
+
+.sub-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.1));
+    transition: transform 0.4s ease;
+}
+
+.sub-card:hover .sub-img {
+    transform: scale(1.05);
+}
+
+.no-img-placeholder {
+    color: var(--pw-text);
+    opacity: 0.5;
+    font-size: 0.9rem;
+}
+
+/* --- TEXT SECTION --- */
+.sub-info {
+    flex: 1;
+    padding: 10px;
+    /* Padding thori kam ki */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.sub-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--pw-text);
+    line-height: 1.2;
+}
+
+/* Year Badge */
+.sub-year {
+    font-size: 0.85rem;
+    color: var(--pw-accent);
+    font-weight: 600;
+    background: rgba(37, 99, 235, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-top: 5px;
+}
+
+.pw-dark .sub-year {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+/* No Data */
+.no-data {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--pw-text);
+    opacity: 0.7;
+    margin-top: 20px;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- RESPONSIVENESS --- */
+@media (max-width: 1100px) {
+    .sub-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 850px) {
+    .sub-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 550px) {
+    .sub-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sub-card {
+        height: auto;
+    }
+}
