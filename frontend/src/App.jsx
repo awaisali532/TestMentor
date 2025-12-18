@@ -37,7 +37,6 @@ import SiteSettings from "./pages/Admin/SiteSettings/SiteSettings";
 // Pages - User
 import UserDashboard from "./pages/User/UserDashboard/UserDashboard";
 import UserSettings from "./pages/User/UserSettings/UserSettings";
-import PaperWizard from "./pages/User/PaperWizard/PaperWizard"; // ✅ Imported
 
 const App = () => {
   const location = useLocation();
@@ -122,12 +121,6 @@ const App = () => {
                 </UserLayout>
               }
             />
-
-            {/* =========================================
-                🚀 PAPER GENERATION (Focus Mode - No Sidebar)
-               ========================================= */}
-            {/* This is kept outside UserLayout for full screen experience */}
-            <Route path="/user/generate-paper" element={<PaperWizard />} />
           </Routes>
         </UserProvider>
       </ThemeProvider>

@@ -3,6 +3,7 @@ const router = express.Router();
 const upload = require("../middleware/upload");
 const {
   addQuestion,
+  getQuestionsByFilter,
   getQuestionsByTopic,
   deleteQuestion,
   updateQuestion,
@@ -16,7 +17,7 @@ const { protect, hasPermission } = require("../middleware/authMiddleware");
 
 // ✅ 1. Apply Protection (User must be logged in)
 router.use(protect);
-
+router.get("/filter", protect, getQuestionsByFilter);
 // --- ROUTES ---
 
 // READ (Allowed for all logged in users, e.g. Teachers generating papers)

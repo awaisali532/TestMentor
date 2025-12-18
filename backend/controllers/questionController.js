@@ -1,13 +1,49 @@
-const Question = require("../models/question"); // Ensure casing matches file
+const Question = require("../models/question");
 const Topic = require("../models/topic");
+// ✅ NEW IMPORT (Zaroori hai filter ke liye)
+const Subject = require("../models/subjectModel");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 
-// 1. ADD QUESTION (Supports Multiple Topics)
+// ==========================================
+// ✅ 1. NEW FUNCTION: FILTER FOR WIZARD
+// ==========================================
+const getQuestionsByFilter = async (req, res) => {
+  try {
+    // Frontend sends: ?grade=9th Class&subject=Physics
+    const { grade, subject } = req.query;
+
+    // 1. Find Subject ID
+    const subjectDoc = await Subject.findOne({
+      className: grade,
+      subjectName: subject,
+    });
+
+    if (!subjectDoc) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+
+    // 2. Find Questions directly by Subject ID
+    // Hum "topics" aur "chapter" ko populate kar rahe hain taake frontend par groupings ban sakein
+    const questions = await Question.find({ subject: subjectDoc._id })
+      .populate("topics", "name topicNumber") // Populate Topics
+      .populate("chapter", "name chapterNumber") // Populate Chapter
+      .sort({ createdAt: -1 });
+
+    res.json(questions);
+  } catch (err) {
+    console.error("Filter Error:", err);
+    res.status(500).json({ error: "Failed to fetch questions" });
+  }
+};
+
+// ==========================================
+// 2. ADD QUESTION (Existing Logic)
+// ==========================================
 const addQuestion = async (req, res) => {
   try {
     const {
-      topics, // 🔄 Expecting Array of IDs (or single ID string)
+      topics,
       chapterId,
       subjectId,
       classLevel,
@@ -21,11 +57,11 @@ const addQuestion = async (req, res) => {
       questionCategory,
     } = req.body;
 
-    // 🚨 SAFETY CHECKS
+    // Safety Checks
     if (!subjectId || subjectId === "undefined") {
-      return res.status(400).json({
-        error: "System Error: Subject ID is missing. Please refresh.",
-      });
+      return res
+        .status(400)
+        .json({ error: "System Error: Subject ID is missing." });
     }
     if (!classLevel || classLevel === "undefined") {
       return res
@@ -33,14 +69,12 @@ const addQuestion = async (req, res) => {
         .json({ error: "System Error: Class Level is missing." });
     }
 
-    // 🔄 Handle Topics Input (Can be JSON string array or single ID)
+    // Handle Topics Input
     let parsedTopics = [];
     if (topics) {
       try {
-        // If sent as JSON string ["ID1", "ID2"]
         parsedTopics = JSON.parse(topics);
       } catch (e) {
-        // If sent as simple string "ID1" or already array
         parsedTopics = Array.isArray(topics) ? topics : [topics];
       }
     }
@@ -69,7 +103,7 @@ const addQuestion = async (req, res) => {
     }
 
     const newQuestion = new Question({
-      topics: parsedTopics, // 🔄 Save as Array
+      topics: parsedTopics,
       chapter: chapterId,
       subject: subjectId,
       classLevel,
@@ -93,23 +127,24 @@ const addQuestion = async (req, res) => {
   }
 };
 
-// 2. GET QUESTIONS (Smart Filter)
+// ==========================================
+// 3. GET QUESTIONS BY TOPIC (Existing)
+// ==========================================
 const getQuestionsByTopic = async (req, res) => {
   try {
     const { topicId } = req.params;
-
-    // 🔄 MAGIC QUERY: Finds questions where 'topics' array contains 'topicId'
     const questions = await Question.find({ topics: topicId }).sort({
       createdAt: -1,
     });
-
     res.json(questions);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// 3. DELETE QUESTION
+// ==========================================
+// 4. DELETE QUESTION (Existing)
+// ==========================================
 const deleteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,12 +162,14 @@ const deleteQuestion = async (req, res) => {
   }
 };
 
-// 4. UPDATE QUESTION
+// ==========================================
+// 5. UPDATE QUESTION (Existing)
+// ==========================================
 const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      topics, // 🔄 New Input
+      topics,
       type,
       difficulty,
       marks,
@@ -146,7 +183,6 @@ const updateQuestion = async (req, res) => {
     const question = await Question.findById(id);
     if (!question) return res.status(404).json({ error: "Not found" });
 
-    // 🔄 Handle Topics Update
     let updatedTopics = question.topics;
     if (topics) {
       try {
@@ -157,7 +193,7 @@ const updateQuestion = async (req, res) => {
     }
 
     let updateData = {
-      topics: updatedTopics, // 🔄 Update Array
+      topics: updatedTopics,
       type,
       difficulty,
       marks,
@@ -193,7 +229,9 @@ const updateQuestion = async (req, res) => {
   }
 };
 
-// 5. BULK ADD (Smart Topic Mapping)
+// ==========================================
+// 6. BULK ADD (Existing)
+// ==========================================
 const addBulkQuestions = async (req, res) => {
   try {
     const { questions, chapterId, subjectId, classLevel } = req.body;
@@ -202,12 +240,7 @@ const addBulkQuestions = async (req, res) => {
       return res.status(400).json({ error: "Invalid data format." });
     }
 
-    // 1️⃣ Fetch ALL Topics of this Chapter (For ID Lookup)
-    // Hum database se check krenge k "1.1" ki ID kya hai
     const chapterTopics = await Topic.find({ chapter: chapterId });
-
-    // Performance Hack: Create a Map for fast lookup
-    // Example: { "1.1": "ObjectId(...)", "1.2": "ObjectId(...)" }
     const topicMap = {};
     chapterTopics.forEach((t) => {
       topicMap[t.topicNumber] = t._id;
@@ -216,37 +249,25 @@ const addBulkQuestions = async (req, res) => {
     const formattedQuestions = [];
     const errors = [];
 
-    // 2️⃣ Loop through each question in JSON
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       let assignedTopicIds = [];
 
-      // Agar JSON main "topics" ["1.1", "1.2"] majood hain
       if (q.topics && Array.isArray(q.topics)) {
         q.topics.forEach((num) => {
-          if (topicMap[num]) {
-            assignedTopicIds.push(topicMap[num]);
-          } else {
-            // Agar Topic Number database main nahi mila
-            console.warn(`Topic Number ${num} not found in DB`);
-          }
+          if (topicMap[num]) assignedTopicIds.push(topicMap[num]);
+          else console.warn(`Topic Number ${num} not found`);
         });
       }
 
-      // Fallback: Agar JSON main topic nahi, to kya karein?
-      // Filhal hum skip krdenge ya error denge.
       if (assignedTopicIds.length === 0) {
-        errors.push(
-          `Question #${
-            i + 1
-          }: No valid topics found (Check Topic Numbers like 1.1, 1.2)`
-        );
-        continue; // Is question ko skip kro
+        errors.push(`Question #${i + 1}: No valid topics found`);
+        continue;
       }
 
       formattedQuestions.push({
         ...q,
-        topics: assignedTopicIds, // ✅ Asli IDs assign ho gayin
+        topics: assignedTopicIds,
         chapter: chapterId,
         subject: subjectId,
         classLevel: classLevel,
@@ -257,17 +278,14 @@ const addBulkQuestions = async (req, res) => {
     }
 
     if (formattedQuestions.length === 0) {
-      return res.status(400).json({
-        error: "No questions could be mapped. Check your Topic Numbers!",
-        details: errors,
-      });
+      return res
+        .status(400)
+        .json({ error: "No questions mapped", details: errors });
     }
 
-    // 3️⃣ Insert into DB
     await Question.insertMany(formattedQuestions);
-
     res.status(201).json({
-      message: `${formattedQuestions.length} Questions added successfully!`,
+      message: `${formattedQuestions.length} Questions added!`,
       warnings: errors.length > 0 ? errors : null,
     });
   } catch (err) {
@@ -275,67 +293,60 @@ const addBulkQuestions = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-// 6. DELETE SELECTED QUESTIONS (Bulk Delete)
+
+// ==========================================
+// 7. DELETE BULK (Existing)
+// ==========================================
 const deleteQuestionsBulk = async (req, res) => {
   try {
-    const { ids } = req.body; // Array of IDs
-
-    if (!ids || ids.length === 0) {
+    const { ids } = req.body;
+    if (!ids || ids.length === 0)
       return res.status(400).json({ error: "No questions selected" });
-    }
 
-    // Optional: Delete images from Cloudinary first
     const questions = await Question.find({ _id: { $in: ids } });
     for (const q of questions) {
-      if (q.image && q.image.public_id) {
+      if (q.image && q.image.public_id)
         await cloudinary.uploader.destroy(q.image.public_id);
-      }
     }
 
     await Question.deleteMany({ _id: { $in: ids } });
-
     res.json({ message: "Selected questions deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// 7. DELETE ALL QUESTIONS IN A TOPIC
+// ==========================================
+// 8. DELETE ALL IN TOPIC (Existing)
+// ==========================================
 const deleteAllQuestionsInTopic = async (req, res) => {
   try {
     const { topicId } = req.params;
-
-    // Find questions that belong ONLY to this topic (optional logic)
-    // OR simply delete all questions linked to this topic
     const questions = await Question.find({ topics: topicId });
 
-    if (questions.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "No questions found in this topic" });
-    }
+    if (questions.length === 0)
+      return res.status(404).json({ error: "No questions found" });
 
-    // Cloudinary Cleanup
     for (const q of questions) {
-      if (q.image && q.image.public_id) {
+      if (q.image && q.image.public_id)
         await cloudinary.uploader.destroy(q.image.public_id);
-      }
     }
 
-    // Delete them
     await Question.deleteMany({ topics: topicId });
-
-    res.json({ message: "All questions in this topic deleted successfully" });
+    res.json({ message: "All questions in topic deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+// ✅ EXPORT ALL
 module.exports = {
   addQuestion,
+  getQuestionsByFilter, // ✅ New Export
   getQuestionsByTopic,
   deleteQuestion,
   updateQuestion,
   addBulkQuestions,
-  deleteQuestionsBulk, // ✅ Export this
-  deleteAllQuestionsInTopic, // ✅ Export this
+  deleteQuestionsBulk,
+  deleteAllQuestionsInTopic,
 };
