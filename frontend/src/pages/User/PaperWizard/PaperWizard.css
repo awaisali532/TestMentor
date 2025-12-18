@@ -1,0 +1,263 @@
+/* Full Screen Container */
+.wizard-container {
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--u-bg-body); /* Global Theme Variable */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--u-text-main);
+  transition: background-color 0.3s ease;
+}
+
+/* Header */
+.wizard-header {
+  height: 65px;
+  background-color: var(--u-bg-card);
+  border-bottom: 1px solid var(--u-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.wizard-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--u-text-main);
+}
+
+/* Exit Button */
+.btn-exit {
+  background: transparent;
+  border: 1px solid var(--u-border);
+  color: var(--u-text-muted);
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.btn-exit:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Theme Toggle Button */
+.wizard-theme-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--u-border);
+  background: var(--u-bg-body);
+  color: var(--u-text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+}
+.wizard-theme-btn:hover {
+  border-color: var(--u-accent);
+  color: var(--u-accent);
+  transform: rotate(15deg);
+}
+
+/* Stepper */
+.wizard-stepper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px 0;
+  background-color: var(--u-bg-body);
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.step-circle {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background-color: var(--u-bg-card);
+  border: 2px solid var(--u-text-muted);
+  color: var(--u-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  z-index: 2;
+  transition: all 0.3s;
+}
+
+.step-label {
+  margin-left: 10px;
+  font-weight: 600;
+  color: var(--u-text-muted);
+  font-size: 0.9rem;
+  margin-right: 20px;
+}
+
+.step-line {
+  width: 60px;
+  height: 2px;
+  background-color: var(--u-border);
+  margin-right: 20px;
+}
+
+/* Active State */
+.step-item.active .step-circle {
+  background-color: #10b981;
+  border-color: #10b981;
+  color: white;
+}
+.step-item.active .step-label {
+  color: var(--u-text-main);
+}
+.step-item.active .step-line {
+  background-color: #10b981;
+}
+
+/* Current Step */
+.step-item.current .step-circle {
+  background-color: var(--u-accent);
+  border-color: var(--u-accent);
+  color: white;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+.step-item.current .step-label {
+  color: var(--u-accent);
+}
+
+/* Content Area */
+.wizard-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* --- 🔥 MODAL STYLES --- */
+.wizard-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s;
+}
+
+.wizard-modal-box {
+  background: var(--u-bg-card);
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+  border: 1px solid var(--u-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.wm-title {
+  margin: 0 0 10px 0;
+  color: var(--u-text-main);
+  font-weight: 800;
+}
+.wm-msg {
+  color: var(--u-text-muted);
+  margin-bottom: 25px;
+  font-size: 0.95rem;
+}
+
+.wm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.wm-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+.wm-cancel {
+  background: var(--u-hover-bg);
+  color: var(--u-text-main);
+  border: 1px solid var(--u-border);
+}
+.wm-confirm {
+  background: #ef4444;
+  color: white;
+}
+.wm-confirm:hover {
+  background: #dc2626;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* ... (Purana code same rahega) ... */
+
+/* STEPPER CLICKABLE LOGIC */
+.step-item.clickable {
+  cursor: pointer;
+}
+
+.step-item.clickable:hover .step-circle {
+  background-color: var(--u-hover-bg);
+  border-color: var(--u-accent);
+}
+
+.step-item.clickable:hover .step-label {
+  color: var(--u-accent);
+}
+
+/* ... (Baki code same) ... */
+
+/* ✅ NEW BACK BUTTON STYLE */
+.btn-back-step {
+  background: transparent;
+  border: 1px solid var(--u-border);
+  color: var(--u-text-muted);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.btn-back-step:hover {
+  background: var(--u-hover-bg);
+  color: var(--u-text-main);
+  border-color: var(--u-text-main);
+  transform: translateX(-3px); /* Thora piche move karega hover pr */
+}

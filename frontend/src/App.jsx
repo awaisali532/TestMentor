@@ -20,7 +20,7 @@ import About from "./pages/About/About";
 import Contact from "./pages/Contact/Contact";
 import Subjects from "./pages/Subjects/Subjects";
 import SubjectDetails from "./pages/Subjects/SubjectDetails/SubjectDetails";
-import UserSettings from "./pages/User/UserSettings/UserSettings";
+
 // Pages - Auth
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
@@ -36,6 +36,8 @@ import SiteSettings from "./pages/Admin/SiteSettings/SiteSettings";
 
 // Pages - User
 import UserDashboard from "./pages/User/UserDashboard/UserDashboard";
+import UserSettings from "./pages/User/UserSettings/UserSettings";
+import PaperWizard from "./pages/User/PaperWizard/PaperWizard"; // ✅ Imported
 
 const App = () => {
   const location = useLocation();
@@ -53,20 +55,26 @@ const App = () => {
           <Toaster position="top-center" reverseOrder={false} />
 
           <Routes>
-            {/* 🌍 OPEN ROUTES */}
+            {/* =========================================
+                🌍 OPEN ROUTES (Accessible to Everyone)
+               ========================================= */}
             <Route path="/" element={<Home />} />
             <Route path="/subjects" element={<Subjects />} />
             <Route path="/subjects/:id" element={<SubjectDetails />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
 
-            {/* 🛡️ AUTH ROUTES */}
+            {/* =========================================
+                🛡️ AUTH ROUTES (Public Only)
+               ========================================= */}
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Route>
 
-            {/* 🔐 ADMIN ROUTES */}
+            {/* =========================================
+                🔐 ADMIN ROUTES (Protected)
+               ========================================= */}
             <Route element={<AdminRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<Dashboard />} />
@@ -85,7 +93,9 @@ const App = () => {
               </Route>
             </Route>
 
-            {/* 👤 USER ROUTES */}
+            {/* =========================================
+                👤 USER ROUTES (With Sidebar Layout)
+               ========================================= */}
             <Route
               path="/user/dashboard"
               element={
@@ -94,6 +104,7 @@ const App = () => {
                 </UserLayout>
               }
             />
+
             <Route
               path="/user/settings"
               element={
@@ -102,6 +113,7 @@ const App = () => {
                 </UserLayout>
               }
             />
+
             <Route
               path="/user/past-papers"
               element={
@@ -111,23 +123,11 @@ const App = () => {
               }
             />
 
-            <Route
-              path="/user/settings"
-              element={
-                <UserLayout>
-                  <div className="p-4">User Settings Coming Soon...</div>
-                </UserLayout>
-              }
-            />
-
-            <Route
-              path="/user/generate-paper"
-              element={
-                <UserLayout>
-                  <div className="p-4">Paper Generation Form Here...</div>
-                </UserLayout>
-              }
-            />
+            {/* =========================================
+                🚀 PAPER GENERATION (Focus Mode - No Sidebar)
+               ========================================= */}
+            {/* This is kept outside UserLayout for full screen experience */}
+            <Route path="/user/generate-paper" element={<PaperWizard />} />
           </Routes>
         </UserProvider>
       </ThemeProvider>

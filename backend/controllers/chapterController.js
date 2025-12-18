@@ -3,12 +3,61 @@ const Subject = require("../models/subjectModel");
 const Topic = require("../models/topic");
 const Question = require("../models/question");
 
-// 1. ADD SINGLE CHAPTER (Fixed Topic Creation)
+// ✅ NEW FUNCTION: Get Chapters WITH Topics (For Paper Wizard)
+const getChaptersByFilter = async (req, res) => {
+  try {
+    const { className, subjectName } = req.query;
+
+    // 1. Find Subject ID first (Kyunke frontend se hum Name bhej rahe hain)
+    const subject = await Subject.findOne({ className, subjectName });
+
+    if (!subject) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+
+    // 2. Aggregate: Chapters + Topics
+    const chapters = await Chapter.aggregate([
+      // Step A: Match Chapters for this Subject
+      { $match: { subject: subject._id } },
+
+      // Step B: Sort Chapters (1, 2, 3...)
+      { $sort: { chapterNumber: 1 } },
+
+      // Step C: Join with Topics Collection
+      {
+        $lookup: {
+          from: "topics", // DB collection name (plural)
+          localField: "_id", // Chapter ID
+          foreignField: "chapter", // Topic model mein field name
+          as: "topics", // Output array name
+        },
+      },
+    ]);
+
+    // 3. Javascript Sort for Topics (1.1, 1.2, 1.10 logic)
+    // MongoDB aggregation mein string numbers ko sort karna mushkil hota hai, isliye yahan kar rahe hain.
+    chapters.forEach((chap) => {
+      if (chap.topics && chap.topics.length > 0) {
+        chap.topics.sort((a, b) =>
+          a.topicNumber.localeCompare(b.topicNumber, undefined, {
+            numeric: true,
+          })
+        );
+      }
+    });
+
+    res.json(chapters);
+  } catch (err) {
+    console.error("Syllabus Fetch Error:", err);
+    res.status(500).json({ error: "Failed to fetch syllabus" });
+  }
+};
+
+// 1. ADD SINGLE CHAPTER (Old logic preserved)
 const addChapter = async (req, res) => {
   try {
     const { subjectId, chapterNumber, name } = req.body;
 
-    // Validation
     if (!subjectId || !chapterNumber || !name || !name.en) {
       return res
         .status(400)
@@ -22,7 +71,6 @@ const addChapter = async (req, res) => {
         .json({ error: `Chapter ${chapterNumber} already exists!` });
     }
 
-    // 1. Create Chapter (Ye Successfully Save ho rha tha)
     const newChapter = new Chapter({
       subject: subjectId,
       chapterNumber,
@@ -33,17 +81,16 @@ const addChapter = async (req, res) => {
     });
     await newChapter.save();
 
-    // 2. AUTOMATICALLY Create "General" Topic
-    // 🛑 FIX: Yahan 'name' string nahi, object hona chahiye jesa Chapter me hai
+    // Auto Create General Topic
     const defaultTopic = new Topic({
       chapter: newChapter._id,
       topicNumber: "0.0",
       name: {
         en: "General / Exercise Questions",
-        ur: "General / Mashqi Sawalaat", // Optional Urdu translation
+        ur: "General / Mashqi Sawalaat",
       },
     });
-    await defaultTopic.save(); // Ab ye fail nahi hoga
+    await defaultTopic.save();
 
     res.status(201).json(newChapter);
   } catch (err) {
@@ -52,7 +99,7 @@ const addChapter = async (req, res) => {
   }
 };
 
-// 2. GET CHAPTERS (No Change)
+// 2. GET CHAPTERS (Simple List)
 const getChaptersBySubject = async (req, res) => {
   try {
     const { subjectId } = req.params;
@@ -66,7 +113,7 @@ const getChaptersBySubject = async (req, res) => {
   }
 };
 
-// 3. UPDATE CHAPTER (No Change)
+// 3. UPDATE CHAPTER
 const updateChapter = async (req, res) => {
   try {
     const { chapterNumber, name } = req.body;
@@ -98,7 +145,7 @@ const updateChapter = async (req, res) => {
   }
 };
 
-// 4. DELETE CHAPTER (No Change)
+// 4. DELETE CHAPTER
 const deleteChapter = async (req, res) => {
   try {
     const { id } = req.params;
@@ -119,7 +166,7 @@ const deleteChapter = async (req, res) => {
   }
 };
 
-// 5. BULK UPLOAD (Fixed Topic Creation here too)
+// 5. BULK UPLOAD
 const addBulkChapters = async (req, res) => {
   try {
     const { chapters } = req.body;
@@ -128,15 +175,12 @@ const addBulkChapters = async (req, res) => {
       return res.status(400).json({ error: "No chapters provided" });
     }
 
-    // 1. Insert Chapters
     const result = await Chapter.insertMany(chapters, { ordered: false });
 
-    // 2. Create Topics
     if (result.length > 0) {
       const topicsPayload = result.map((ch) => ({
         chapter: ch._id,
         topicNumber: "0.0",
-        // 🛑 FIX: Name Object format mein
         name: {
           en: "General / Exercise Questions",
           ur: "General / Mashqi Sawalaat",
@@ -151,19 +195,15 @@ const addBulkChapters = async (req, res) => {
       data: result,
     });
   } catch (error) {
-    // 🛑 Handle Write Errors
     if (error.writeErrors) {
       const isDuplicate = error.writeErrors.some((e) => e.code === 11000);
 
       if (isDuplicate) {
         const insertedDocs = error.insertedDocs || [];
-
-        // Jo success huye unke topics banao
         if (insertedDocs.length > 0) {
           const topicsPayload = insertedDocs.map((ch) => ({
             chapter: ch._id,
             topicNumber: "0.0",
-            // 🛑 FIX: Name Object format mein yahan bhi
             name: {
               en: "General / Exercise Questions",
               ur: "General / Mashqi Sawalaat",
@@ -171,13 +211,11 @@ const addBulkChapters = async (req, res) => {
           }));
           await Topic.insertMany(topicsPayload);
         }
-
         return res.status(201).json({
           message: `Partial Success: ${insertedDocs.length} added. Others were duplicates.`,
           count: insertedDocs.length,
         });
       } else {
-        console.error("Validation Error:", error.writeErrors[0].err);
         return res.status(400).json({
           error: `Validation Failed: ${
             error.writeErrors[0].err.errmsg || "Check Data Fields"
@@ -185,7 +223,6 @@ const addBulkChapters = async (req, res) => {
         });
       }
     }
-
     console.error("Bulk Error:", error);
     res.status(500).json({ error: "Bulk upload failed" });
   }
@@ -197,4 +234,5 @@ module.exports = {
   getChaptersBySubject,
   updateChapter,
   deleteChapter,
+  getChaptersByFilter, // ✅ EXPORTED NEW FUNCTION
 };
