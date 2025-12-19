@@ -56,7 +56,7 @@ const Navbar = () => {
       <div className="nav-container">
         {/* LOGO */}
         <Link to="/" className="nav-logo" onClick={closeMenu}>
-          QuestBank <span>Pro</span>
+          Test <span>Mentor</span>
         </Link>
 
         {/* DESKTOP NAV LINKS */}
