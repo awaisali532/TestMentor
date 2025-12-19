@@ -19,14 +19,13 @@ const SyllabusSelector = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Expanded/Collapsed State
   const [expandedChapters, setExpandedChapters] = useState({});
-
-  // Selection State
   const [selectedTopicIds, setSelectedTopicIds] = useState([]);
 
-  // API Base URL
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  // ✅ UPDATED: Matching Admin Logic (VITE_BACKEND_URL)
+  const API_BASE_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
   // --- 1. FETCH SYLLABUS ---
   useEffect(() => {
     const fetchSyllabus = async () => {
@@ -34,10 +33,8 @@ const SyllabusSelector = ({
         setLoading(true);
         setError(null);
 
-        // ✅ FIX: Aapke UserContext ke mutabiq token 'token' key mein hai
         const token = localStorage.getItem("token");
 
-        // Config with Headers
         const config = {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
@@ -48,6 +45,7 @@ const SyllabusSelector = ({
           },
         };
 
+        // ✅ URL STRUCTURE FIXED
         const response = await axios.get(
           `${API_BASE_URL}/api/chapters/filter`,
           config
@@ -147,7 +145,6 @@ const SyllabusSelector = ({
     <div className="syl-wrapper">
       <h3 className="syl-title">Select Topics from {selectedSubject}</h3>
 
-      {/* 2 Columns Grid */}
       <div className="syl-grid">
         {chapters.map((chapter) => {
           const { checked, indeterminate } = getChapterStatus(chapter);
@@ -158,7 +155,6 @@ const SyllabusSelector = ({
               key={chapter._id}
               className={`syl-card ${isExpanded ? "expanded" : ""}`}
             >
-              {/* Card Header */}
               <div
                 className="syl-header"
                 onClick={() => toggleChapter(chapter._id)}
@@ -175,7 +171,6 @@ const SyllabusSelector = ({
                   <div className="syl-chap-badge">
                     CH-{chapter.chapterNumber}
                   </div>
-                  {/* Safe Name Access for Chapter */}
                   <span className="syl-chap-name">
                     {chapter.name?.en || chapter.name || "Chapter"}
                   </span>
@@ -186,7 +181,6 @@ const SyllabusSelector = ({
                 </span>
               </div>
 
-              {/* Topics List */}
               <div className={`syl-body ${isExpanded ? "open" : ""}`}>
                 {chapter.topics.length > 0 ? (
                   chapter.topics.map((topic) => (
@@ -198,8 +192,6 @@ const SyllabusSelector = ({
                         onChange={() => handleTopicCheck(topic._id)}
                       />
                       <span className="syl-topic-num">{topic.topicNumber}</span>
-
-                      {/* ✅ FIX: 0.0 Topic Name (General Questions) ab show hoga */}
                       <span className="syl-topic-text">
                         {topic.name?.en || topic.name || "General Questions"}
                       </span>
@@ -214,7 +206,6 @@ const SyllabusSelector = ({
         })}
       </div>
 
-      {/* Floating Next Button */}
       <button
         className={`syl-fab-btn ${
           selectedTopicIds.length === 0 ? "disabled" : ""

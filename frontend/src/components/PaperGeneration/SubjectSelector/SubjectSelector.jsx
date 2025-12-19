@@ -8,22 +8,21 @@ const SubjectSelector = ({ selectedClass, onSelect }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Backend URL (Make sure port is correct)
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  // ✅ UPDATED: Matching Admin Logic (VITE_BACKEND_URL)
+  const API_BASE_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // ✅ CORRECT ROUTE & PARAMETER
-        // Route: /api/subjects
-        // Param: className (Backend yahi maang raha hai)
+        // ✅ URL STRUCTURE FIXED
         const response = await axios.get(`${API_BASE_URL}/api/subjects`, {
           params: { className: selectedClass },
         });
 
-        // Agar backend filter kar raha hai to direct data use karein
         setSubjects(response.data);
         setLoading(false);
       } catch (err) {
@@ -40,8 +39,6 @@ const SubjectSelector = ({ selectedClass, onSelect }) => {
 
   // --- Handlers ---
   const handleCardClick = (subject) => {
-    // Subject ka naam aur ID bhej rahe hain
-    // Backend se data "_id" aur "subjectName" ke sath aa raha hoga
     onSelect(subject.subjectName);
   };
 
@@ -79,7 +76,6 @@ const SubjectSelector = ({ selectedClass, onSelect }) => {
             >
               {/* Image Section */}
               <div className="sub-img-box">
-                {/* Cloudinary URL check */}
                 {subject.image && subject.image.url ? (
                   <img
                     src={subject.image.url}
