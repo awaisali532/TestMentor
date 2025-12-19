@@ -26,8 +26,7 @@ const SyllabusSelector = ({
   const [selectedTopicIds, setSelectedTopicIds] = useState([]);
 
   // API Base URL
-  const API_BASE_URL = "http://localhost:5000";
-
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   // --- 1. FETCH SYLLABUS ---
   useEffect(() => {
     const fetchSyllabus = async () => {

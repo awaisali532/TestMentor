@@ -9,8 +9,7 @@ const SubjectSelector = ({ selectedClass, onSelect }) => {
   const [error, setError] = useState(null);
 
   // Backend URL (Make sure port is correct)
-  const API_BASE_URL = "http://localhost:5000";
-
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
