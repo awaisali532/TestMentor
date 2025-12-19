@@ -4,7 +4,7 @@ import { FaExclamationTriangle } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
 
 // Child Components
-import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadCrumb/WizardBreadCrumb"; // ✅ Import Added
+import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb"; // ✅ Import Added
 import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector";
 import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector";
 import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector";
