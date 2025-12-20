@@ -1,7 +1,6 @@
 import React from "react";
 import { FaHome, FaChevronRight, FaTimes, FaSun, FaMoon } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
-import "./WizardBreadCrumb.css";
 
 const WizardBreadCrumb = ({ step, setStep, paperData, onExit }) => {
   const { theme, toggleTheme } = useTheme();
