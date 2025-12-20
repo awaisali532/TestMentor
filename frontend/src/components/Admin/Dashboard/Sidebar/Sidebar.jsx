@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUser } from "../../../../context/UserContext";
 import { useTheme } from "../../../../context/ThemeContext";
+import { useUI } from "../../../../context/UIContext"; // ✅ Import Context
 import { MdSpaceDashboard } from "react-icons/md";
 import {
   FaFolder,
@@ -15,6 +16,8 @@ import {
   FaCogs,
   FaSun,
   FaMoon,
+  FaTimes,
+  FaLayerGroup,
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -23,15 +26,12 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { user, logout } = useUser();
   const { theme, toggleTheme } = useTheme();
+  const { isEditing } = useUI(); // ✅ Get Editing State
 
-  // State: Desktop (Open by default), Mobile (Closed by default)
   const [isOpen, setIsOpen] = useState(window.innerWidth > 992);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
-
-  // ✅ LOGOUT MODAL STATE
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Screen Resize Listener
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 992;
@@ -44,16 +44,21 @@ const Sidebar = () => {
   }, []);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
-  const handleLinkClick = () => {
-    if (isMobile) setIsOpen(false);
-  };
   const isActive = (path) => (location.pathname === path ? "active" : "");
 
-  // ✅ LOGOUT HANDLER
+  const handleLinkClick = (e) => {
+    // ✅ DISABLE LOGIC: Agar editing ho rahi hai to click na hone do
+    if (isEditing) {
+      e.preventDefault();
+      return;
+    }
+    if (isMobile) setIsOpen(false);
+  };
+
   const handleLogoutConfirm = () => {
-    logout(); // Context logout
+    logout();
     navigate("/login", { replace: true });
-    window.location.reload(); // Ensure clean state
+    window.location.reload();
   };
 
   const canAccess = (perm) => {
@@ -70,6 +75,9 @@ const Sidebar = () => {
     const hasAccess = !permission || canAccess(permission);
     const linkActive = isActive(to);
 
+    // ✅ VISUAL DISABLE STYLE
+    const itemStyle = isEditing ? { opacity: 0.5, cursor: "not-allowed" } : {};
+
     return (
       <li>
         {hasAccess ? (
@@ -77,7 +85,8 @@ const Sidebar = () => {
             to={to}
             className={`menu-link ${linkActive}`}
             onClick={handleLinkClick}
-            title={!isOpen && !isMobile ? label : ""}
+            style={itemStyle} // Apply style
+            title={isEditing ? "Please save changes first" : label}
           >
             <div className="icon-box">
               <Icon className="menu-icon" />
@@ -89,7 +98,7 @@ const Sidebar = () => {
             </span>
           </Link>
         ) : (
-          <div className="menu-link disabled-link" title="Access Denied">
+          <div className="menu-link disabled-link">
             <div className="icon-box">
               <Icon className="menu-icon" />
             </div>
@@ -108,7 +117,6 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* 1. FIXED TOP BAR */}
       <div className="top-header">
         <div className="d-flex align-items-center">
           <button className="toggle-btn" onClick={toggleSidebar}>
@@ -120,7 +128,6 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* 2. SIDEBAR CONTAINER */}
       {isMobile && isOpen && (
         <div className="sidebar-overlay" onClick={() => setIsOpen(false)}></div>
       )}
@@ -130,7 +137,15 @@ const Sidebar = () => {
           isMobile ? "mobile" : "desktop"
         }`}
       >
-        {/* Menu Items */}
+        {isMobile && (
+          <div className="d-flex justify-content-between align-items-center p-3 border-bottom mb-2">
+            <h4 className="brand-logo m-0">Menu</h4>
+            <button className="toggle-btn" onClick={() => setIsOpen(false)}>
+              <FaTimes />
+            </button>
+          </div>
+        )}
+
         <ul className="sidebar-menu">
           <SidebarItem
             to="/admin/dashboard"
@@ -150,12 +165,17 @@ const Sidebar = () => {
             permission="manage_subjects"
           />
           <SidebarItem
+            to="/admin/paper-patterns"
+            icon={FaLayerGroup}
+            label="Paper Patterns"
+            permission="manage_subjects"
+          />
+          <SidebarItem
             to="/admin/users"
             icon={FaUser}
             label="User Management"
             permission="manage_users"
           />
-
           {user && user.isSuperAdmin && (
             <SidebarItem
               to="/admin/site-settings"
@@ -163,7 +183,6 @@ const Sidebar = () => {
               label="Site Settings"
             />
           )}
-
           <SidebarItem
             to="/admin/recent-activity"
             icon={FaHistory}
@@ -176,15 +195,11 @@ const Sidebar = () => {
           />
         </ul>
 
-        {/* Footer */}
         <div className="sidebar-footer">
-          {/* Theme Toggle Button */}
+          {/* THEME TOGGLE (Always Active) */}
           <button
             onClick={toggleTheme}
             className="btn-sidebar-action theme-toggle mb-2"
-            title={
-              !isOpen ? (theme === "light" ? "Dark Mode" : "Light Mode") : ""
-            }
           >
             <div className="icon-box">
               {theme === "light" ? <FaMoon /> : <FaSun />}
@@ -196,11 +211,11 @@ const Sidebar = () => {
             </span>
           </button>
 
-          {/* Logout Button (Triggers Modal) */}
+          {/* LOGOUT (Disabled during Edit) */}
           <button
-            onClick={() => setShowLogoutModal(true)} // ✅ Trigger Modal
+            onClick={() => !isEditing && setShowLogoutModal(true)}
             className="btn-sidebar-action logout-btn"
-            title={!isOpen ? "Logout" : ""}
+            style={isEditing ? { opacity: 0.5, cursor: "not-allowed" } : {}}
           >
             <div className="icon-box">
               <FaSignOutAlt />
@@ -214,14 +229,11 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* --- 🔥 3. ADMIN LOGOUT MODAL --- */}
       {showLogoutModal && (
         <div className="admin-logout-overlay">
           <div className="admin-logout-box">
             <h4 className="logout-title">Sign Out?</h4>
-            <p className="logout-msg">
-              Are you sure you want to exit the admin panel?
-            </p>
+            <p className="logout-msg">Are you sure you want to exit?</p>
             <div className="logout-actions">
               <button
                 className="a-btn a-cancel"

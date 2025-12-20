@@ -1,7 +1,7 @@
 import React from "react";
 import { FaHome, FaChevronRight, FaTimes, FaSun, FaMoon } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
-import "./WizardBreadCrumb.css"; // Ensure CSS file exists or use PaperWizard.css styles
+import "./WizardBreadCrumb.css";
 
 const WizardBreadCrumb = ({ step, setStep, paperData, onExit }) => {
   const { theme, toggleTheme } = useTheme();
@@ -41,15 +41,18 @@ const WizardBreadCrumb = ({ step, setStep, paperData, onExit }) => {
           </>
         )}
 
-        {/* Step 3: Syllabus */}
+        {/* Step 3: Syllabus (Dynamic Label) */}
         {step >= 3 && (
           <>
             <FaChevronRight className="crumb-separator" />
             <div
               className={`crumb-item ${step === 3 ? "active" : "clickable"}`}
               onClick={() => setStep(3)}
+              title={paperData.syllabusLabel || "Select Syllabus"} // Tooltip for long text
             >
-              Select Syllabus
+              <span className="crumb-text">
+                {paperData.syllabusLabel || "Select Syllabus"}
+              </span>
             </div>
           </>
         )}
@@ -59,7 +62,7 @@ const WizardBreadCrumb = ({ step, setStep, paperData, onExit }) => {
           <>
             <FaChevronRight className="crumb-separator" />
             <div className={`crumb-item ${step === 4 ? "active" : ""}`}>
-              Paper Pattern
+              {paperData.selectedPattern?.presetName || "Paper Pattern"}
             </div>
           </>
         )}

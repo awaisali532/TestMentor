@@ -1,0 +1,135 @@
+/* Overlay Backdrop */
+.cm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    /* Always on top */
+}
+
+/* Modal Box */
+.cm-box {
+    background: var(--pw-card-bg, #ffffff);
+    border: 1px solid var(--pw-border, #e5e7eb);
+    padding: 30px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    color: var(--pw-text, #1f2937);
+    transform: scale(1);
+}
+
+/* Icon */
+.cm-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    font-size: 1.8rem;
+}
+
+.cm-icon-wrapper.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.cm-icon-wrapper.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+/* Text */
+.cm-title {
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    font-size: 1.4rem;
+}
+
+.cm-message {
+    color: var(--u-text-muted, #6b7280);
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* Buttons */
+.cm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.cm-btn {
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 0.9rem;
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.cm-btn:hover {
+    transform: translateY(-2px);
+}
+
+.cm-btn-cancel {
+    background: transparent;
+    border: 1px solid var(--pw-border, #e5e7eb);
+    color: var(--pw-text, #1f2937);
+}
+
+.cm-btn-cancel:hover {
+    background: var(--pw-hover, #f3f4f6);
+}
+
+.cm-btn-danger {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.cm-btn-danger:hover {
+    background: #dc2626;
+}
+
+.cm-btn-primary {
+    background: var(--pw-accent, #2563eb);
+    color: white;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.cm-btn-primary:hover {
+    opacity: 0.9;
+}
+
+/* Animation */
+.fade-in-up {
+    animation: fadeInUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}

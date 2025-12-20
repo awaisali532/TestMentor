@@ -45,14 +45,18 @@
     padding: 0 30px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     z-index: 10;
+    flex-shrink: 0;
+    /* Header shrink na ho */
 }
 
 .pw-breadcrumb {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-size: 0.95rem;
     font-weight: 500;
+    overflow: hidden;
+    /* Prevent overflow */
 }
 
 .crumb-item {
@@ -61,8 +65,21 @@
     color: var(--pw-text);
     opacity: 0.6;
     transition: 0.2s;
-    padding: 5px 10px;
+    padding: 5px 8px;
     border-radius: 6px;
+    white-space: nowrap;
+    /* Text wrap na ho */
+}
+
+/* ✅ NEW: Truncate Text for long syllabus names */
+.crumb-text {
+    display: block;
+    max-width: 150px;
+    /* Max width set karein */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* End mein ... dikhaye */
+    white-space: nowrap;
 }
 
 .crumb-item.active {
@@ -84,16 +101,17 @@
 .crumb-separator {
     font-size: 0.7rem;
     color: var(--pw-border);
+    flex-shrink: 0;
 }
 
-/* --- ACTIONS WRAPPER (New) --- */
+/* --- ACTIONS WRAPPER --- */
 .pw-actions {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
 }
 
-/* --- THEME TOGGLE BUTTON (New) --- */
 .pw-theme-btn {
     background: transparent;
     border: 1px solid var(--pw-border);
@@ -116,7 +134,6 @@
     border-color: var(--pw-accent);
 }
 
-/* --- EXIT BUTTON --- */
 .pw-close-btn {
     background: transparent;
     border: 1px solid var(--pw-border);
@@ -130,7 +147,6 @@
     font-size: 0.85rem;
     transition: 0.2s;
     height: 36px;
-    /* Matching height with theme button */
 }
 
 .pw-close-btn:hover {
@@ -180,7 +196,7 @@
     }
 }
 
-/* --- ✅ CUSTOM MODAL STYLES --- */
+/* --- MODAL STYLES --- */
 .pw-modal-overlay {
     position: fixed;
     top: 0;
@@ -268,7 +284,6 @@
     transform: translateY(-2px);
 }
 
-/* Animations */
 @keyframes popUp {
     from {
         transform: scale(0.8);

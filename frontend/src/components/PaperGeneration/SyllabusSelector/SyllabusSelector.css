@@ -3,9 +3,8 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  /* Extra padding top to prevent hiding behind fixed headers */
   padding-top: 20px;
-  padding-bottom: 80px; /* Space for FAB button */
+  padding-bottom: 80px;
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -29,16 +28,52 @@
   align-items: center;
   gap: 15px;
 }
+
 .spin {
   animation: spin 1s linear infinite;
 }
 
-/* --- GRID SYSTEM (2 Columns) --- */
+/* ✅ NEW: SELECT ALL BAR */
+.syl-select-all {
+  background: var(--pw-card-bg);
+  border: 2px solid var(--pw-border);
+  padding: 15px 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  color: var(--pw-text);
+}
+
+.syl-select-all:hover {
+  border-color: var(--pw-accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.syl-select-all.active {
+  background: rgba(37, 99, 235, 0.05);
+  border-color: var(--pw-accent);
+}
+
+.syl-all-icon {
+  font-size: 1.2rem;
+  color: var(--pw-accent);
+  opacity: 0.5;
+}
+
+.syl-select-all.active .syl-all-icon {
+  opacity: 1;
+}
+
+/* --- GRID SYSTEM --- */
 .syl-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 Columns fix */
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
-  align-items: start; /* Ensures height doesn't stretch unnecessarily */
+  align-items: start;
 }
 
 /* --- CHAPTER CARD --- */
@@ -116,9 +151,9 @@
   font-size: 1rem;
 }
 
-/* --- ACCORDION BODY (Topics) --- */
+/* --- ACCORDION BODY --- */
 .syl-body {
-  background: var(--pw-hover); /* Slightly darker inner bg */
+  background: var(--pw-hover);
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -126,7 +161,7 @@
 }
 
 .syl-body.open {
-  max-height: 500px; /* Allow expansion */
+  max-height: 500px;
   border-top-color: var(--pw-border);
   overflow-y: auto;
 }
@@ -134,7 +169,7 @@
 .syl-topic-row {
   display: flex;
   align-items: center;
-  padding: 10px 15px 10px 45px; /* Indented */
+  padding: 10px 15px 10px 45px;
   border-bottom: 1px solid var(--pw-border);
   cursor: pointer;
   transition: background 0.2s;
@@ -176,7 +211,7 @@
   font-style: italic;
 }
 
-/* --- FLOATING ACTION BUTTON (FAB) --- */
+/* --- FAB BUTTON --- */
 .syl-fab-btn {
   position: fixed;
   bottom: 30px;
@@ -213,7 +248,7 @@
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
   .syl-grid {
-    grid-template-columns: 1fr; /* Mobile par 1 column */
+    grid-template-columns: 1fr;
   }
 
   .syl-fab-btn {
@@ -230,15 +265,18 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

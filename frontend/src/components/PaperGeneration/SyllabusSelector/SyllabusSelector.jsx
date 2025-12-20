@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
   FaChevronDown,
@@ -6,6 +6,7 @@ import {
   FaSpinner,
   FaExclamationCircle,
   FaArrowRight,
+  FaCheckDouble,
 } from "react-icons/fa";
 import "./SyllabusSelector.css";
 
@@ -22,7 +23,6 @@ const SyllabusSelector = ({
   const [expandedChapters, setExpandedChapters] = useState({});
   const [selectedTopicIds, setSelectedTopicIds] = useState([]);
 
-  // ✅ UPDATED: Matching Admin Logic (VITE_BACKEND_URL)
   const API_BASE_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -32,63 +32,80 @@ const SyllabusSelector = ({
       try {
         setLoading(true);
         setError(null);
-
         const token = localStorage.getItem("token");
-
         const config = {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          params: {
-            className: selectedClass,
-            subjectName: selectedSubject,
-          },
+          headers: { Authorization: token ? `Bearer ${token}` : "" },
+          params: { className: selectedClass, subjectName: selectedSubject },
         };
 
-        // ✅ URL STRUCTURE FIXED
         const response = await axios.get(
           `${API_BASE_URL}/api/chapters/filter`,
           config
         );
-
         setChapters(response.data);
         setLoading(false);
       } catch (err) {
         console.error("Fetch Error:", err);
-        if (err.response && err.response.status === 401) {
-          setError("Session expired or Unauthorized. Please Login.");
-        } else {
-          setError("Failed to load syllabus.");
-        }
+        setError("Failed to load syllabus.");
         setLoading(false);
       }
     };
 
-    if (selectedClass && selectedSubject) {
-      fetchSyllabus();
-    }
+    if (selectedClass && selectedSubject) fetchSyllabus();
   }, [selectedClass, selectedSubject]);
 
-  // --- 2. HANDLERS ---
+  // --- 2. HELPERS ---
+
+  const allTopicIds = useMemo(() => {
+    return chapters.flatMap((ch) => ch.topics.map((t) => t._id));
+  }, [chapters]);
+
+  const isAllSelected =
+    allTopicIds.length > 0 && allTopicIds.length === selectedTopicIds.length;
+
+  // ✅ NEW: FUNCTION TO GENERATE LABEL AND UPDATE PARENT
+  const updateSelection = (newIds) => {
+    setSelectedTopicIds(newIds);
+
+    // 1. Generate Label Logic
+    let label = "Select Syllabus";
+
+    if (newIds.length > 0) {
+      if (newIds.length === allTopicIds.length) {
+        label = "Full Syllabus";
+      } else {
+        // Find which chapters are involved
+        const involvedChapters = chapters
+          .filter((ch) => ch.topics.some((t) => newIds.includes(t._id)))
+          .map((ch) => `CH-${ch.chapterNumber}`);
+
+        label = involvedChapters.join(", ");
+      }
+    }
+
+    // 2. Send both IDs and Label to Parent
+    onSelectionChange(newIds, label);
+  };
+
+  // --- 3. HANDLERS ---
 
   const toggleChapter = (chapId) => {
-    setExpandedChapters((prev) => ({
-      ...prev,
-      [chapId]: !prev[chapId],
-    }));
+    setExpandedChapters((prev) => ({ ...prev, [chapId]: !prev[chapId] }));
+  };
+
+  const handleSelectAll = () => {
+    const updated = isAllSelected ? [] : [...allTopicIds];
+    updateSelection(updated); // ✅ Using helper
   };
 
   const handleTopicCheck = (topicId) => {
-    setSelectedTopicIds((prev) => {
-      let updated;
-      if (prev.includes(topicId)) {
-        updated = prev.filter((id) => id !== topicId);
-      } else {
-        updated = [...prev, topicId];
-      }
-      onSelectionChange(updated);
-      return updated;
-    });
+    let updated;
+    if (selectedTopicIds.includes(topicId)) {
+      updated = selectedTopicIds.filter((id) => id !== topicId);
+    } else {
+      updated = [...selectedTopicIds, topicId];
+    }
+    updateSelection(updated); // ✅ Using helper
   };
 
   const handleChapterCheck = (chapter) => {
@@ -97,17 +114,16 @@ const SyllabusSelector = ({
       selectedTopicIds.includes(id)
     );
 
-    setSelectedTopicIds((prev) => {
-      let updated;
-      if (allSelected) {
-        updated = prev.filter((id) => !chapterTopicIds.includes(id));
-      } else {
-        const newIds = chapterTopicIds.filter((id) => !prev.includes(id));
-        updated = [...prev, ...newIds];
-      }
-      onSelectionChange(updated);
-      return updated;
-    });
+    let updated;
+    if (allSelected) {
+      updated = selectedTopicIds.filter((id) => !chapterTopicIds.includes(id));
+    } else {
+      const newIds = chapterTopicIds.filter(
+        (id) => !selectedTopicIds.includes(id)
+      );
+      updated = [...selectedTopicIds, ...newIds];
+    }
+    updateSelection(updated); // ✅ Using helper
   };
 
   const getChapterStatus = (chapter) => {
@@ -125,7 +141,6 @@ const SyllabusSelector = ({
   };
 
   // --- RENDER ---
-
   if (loading)
     return (
       <div className="syl-loading">
@@ -144,6 +159,23 @@ const SyllabusSelector = ({
   return (
     <div className="syl-wrapper">
       <h3 className="syl-title">Select Topics from {selectedSubject}</h3>
+
+      {/* Select All Bar */}
+      <div
+        className={`syl-select-all ${isAllSelected ? "active" : ""}`}
+        onClick={handleSelectAll}
+      >
+        <div className="d-flex align-items-center gap-3">
+          <input
+            type="checkbox"
+            className="syl-checkbox"
+            checked={isAllSelected}
+            readOnly
+          />
+          <span className="fw-bold">Select Full Syllabus (All Chapters)</span>
+        </div>
+        <FaCheckDouble className="syl-all-icon" />
+      </div>
 
       <div className="syl-grid">
         {chapters.map((chapter) => {
@@ -175,7 +207,6 @@ const SyllabusSelector = ({
                     {chapter.name?.en || chapter.name || "Chapter"}
                   </span>
                 </div>
-
                 <span className="syl-icon">
                   {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
                 </span>
@@ -193,7 +224,7 @@ const SyllabusSelector = ({
                       />
                       <span className="syl-topic-num">{topic.topicNumber}</span>
                       <span className="syl-topic-text">
-                        {topic.name?.en || topic.name || "General Questions"}
+                        {topic.name?.en || topic.name || "Topic"}
                       </span>
                     </label>
                   ))

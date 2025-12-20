@@ -4,10 +4,12 @@ import { FaExclamationTriangle } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
 
 // Child Components
-import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb"; // ✅ Import Added
+import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb";
 import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector";
 import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector";
 import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector";
+import PatternSelector from "../../../components/PaperGeneration/PatternSelector/PatternSelector";
+import PatternForm from "../../Admin/PaperPatterns/PatternForm"; // Reusing Admin Form
 import "./PaperWizard.css";
 
 const PaperWizard = () => {
@@ -28,17 +30,27 @@ const PaperWizard = () => {
       const parsedData = JSON.parse(savedData);
       const currentStep = parseInt(savedStep);
 
-      // Reset Logic on Refresh
+      if (currentStep === 4) return { ...parsedData, selectedPattern: null };
       if (currentStep === 3) return { ...parsedData, topics: [] };
       if (currentStep === 2) return { ...parsedData, subject: "", topics: [] };
 
       return parsedData;
     }
-
-    return { grade: "", subject: "", topics: [], chapters: [] };
+    return {
+      grade: "",
+      subject: "",
+      topics: [],
+      syllabusLabel: "Select Syllabus",
+      chapters: [],
+      selectedPattern: null,
+    };
   });
 
   const [showExitModal, setShowExitModal] = useState(false);
+
+  // ✅ NEW STATES FOR CUSTOM FORM
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [editingPreset, setEditingPreset] = useState(null);
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -70,23 +82,52 @@ const PaperWizard = () => {
     setStep(3);
   };
 
-  const handleSyllabusSelect = (selectedIds) => {
-    setPaperData({ ...paperData, topics: selectedIds });
+  const handleSyllabusSelect = (selectedIds, label) => {
+    setPaperData({
+      ...paperData,
+      topics: selectedIds,
+      syllabusLabel: label || "Select Syllabus",
+    });
+  };
+
+  const handlePatternSelect = (pattern) => {
+    setPaperData({ ...paperData, selectedPattern: pattern });
+  };
+
+  const handleGenerateClick = () => {
+    console.log("FINAL PAPER DATA:", paperData);
+    alert("Ready to Generate! (API Integration Next Step)");
+  };
+
+  // ✅ CUSTOM PATTERN HANDLERS
+  const handleCreateCustom = () => {
+    setEditingPreset(null); // Clear editing state for new creation
+    setShowCustomForm(true);
+  };
+
+  const handleEditCustom = (pattern) => {
+    setEditingPreset(pattern); // Load existing data
+    setShowCustomForm(true);
+  };
+
+  const handleCustomFormSave = (savedPattern) => {
+    // Save hone k baad usey select bhi kar lo
+    setPaperData({ ...paperData, selectedPattern: savedPattern });
+    setShowCustomForm(false);
+    setEditingPreset(null);
   };
 
   return (
     <div
       className={`pw-container ${theme === "dark" ? "pw-dark" : "pw-light"}`}
     >
-      {/* ✅ NEW: Using the Component we just filled */}
       <WizardBreadCrumb
         step={step}
-        setStep={setStep} // Passing function to allow clicking on crumbs
+        setStep={setStep}
         paperData={paperData}
         onExit={handleExitClick}
       />
 
-      {/* --- CONTENT AREA --- */}
       <div className="pw-content">
         {step === 1 && (
           <div className="fade-in">
@@ -117,15 +158,44 @@ const PaperWizard = () => {
           </div>
         )}
 
+        {/* ✅ STEP 4 LOGIC UPDATED */}
         {step === 4 && (
-          <div className="fade-in p-5 text-center">
-            <h2>Paper Pattern Settings</h2>
-            <p>Coming Soon...</p>
+          <div className="fade-in">
+            {showCustomForm ? (
+              // Show Form if Create/Edit mode is active
+              <PatternForm
+                onClose={() => {
+                  setShowCustomForm(false);
+                  setEditingPreset(null);
+                }}
+                initialData={
+                  editingPreset || {
+                    presetName: `${paperData.grade} ${paperData.subject} Custom`,
+                    gradeLevel: paperData.grade,
+                    subjects: paperData.subject,
+                    type: "CUSTOM",
+                    totalMarks: 50,
+                    isSystemPreset: false,
+                  }
+                }
+                isUserMode={true}
+                onSuccess={handleCustomFormSave}
+              />
+            ) : (
+              // Otherwise show Selector
+              <PatternSelector
+                grade={paperData.grade}
+                subject={paperData.subject}
+                onSelect={handlePatternSelect}
+                onNext={handleGenerateClick}
+                onCreateCustom={handleCreateCustom} // New
+                onEdit={handleEditCustom} // New (For Edit)
+              />
+            )}
           </div>
         )}
       </div>
 
-      {/* --- EXIT MODAL --- */}
       {showExitModal && (
         <div className="pw-modal-overlay">
           <div className="pw-modal-box">
