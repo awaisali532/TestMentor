@@ -1,0 +1,43 @@
+.qm-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid var(--pw-border);
+    padding-bottom: 15px;
+    margin-bottom: 10px;
+}
+
+.qm-tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--pw-border);
+    background: var(--pw-bg);
+    color: var(--u-text-muted);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.qm-tab-btn:hover {
+    background: var(--pw-hover);
+    color: var(--pw-text);
+}
+
+.qm-tab-btn.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--pw-accent);
+    border-color: var(--pw-accent);
+}
+
+.qm-tab-badge {
+    font-size: 0.75rem;
+    background: var(--pw-card-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--pw-border);
+}

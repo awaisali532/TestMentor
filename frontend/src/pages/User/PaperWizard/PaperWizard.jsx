@@ -9,7 +9,8 @@ import ClassSelector from "../../../components/PaperGeneration/ClassSelector/Cla
 import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector";
 import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector";
 import PatternSelector from "../../../components/PaperGeneration/PatternSelector/PatternSelector";
-import PatternForm from "../../Admin/PaperPatterns/PatternForm"; // Reusing Admin Form
+import PatternForm from "../../Admin/PaperPatterns/PatternForm";
+import ModeSelector from "../../../components/PaperGeneration/ModeSelector/ModeSelector"; // ✅ IMPORTED MODE SELECTOR
 import "./PaperWizard.css";
 
 const PaperWizard = () => {
@@ -30,25 +31,30 @@ const PaperWizard = () => {
       const parsedData = JSON.parse(savedData);
       const currentStep = parseInt(savedStep);
 
+      // Reset Logic on Refresh
+      if (currentStep === 5)
+        return { ...parsedData, mode: null, autoSettings: null };
       if (currentStep === 4) return { ...parsedData, selectedPattern: null };
       if (currentStep === 3) return { ...parsedData, topics: [] };
       if (currentStep === 2) return { ...parsedData, subject: "", topics: [] };
 
       return parsedData;
     }
+    // Default State
     return {
       grade: "",
       subject: "",
       topics: [],
       syllabusLabel: "Select Syllabus",
-      chapters: [],
       selectedPattern: null,
+      mode: null, // 'MANUAL' or 'AUTO'
+      autoSettings: null, // For auto mode config
     };
   });
 
   const [showExitModal, setShowExitModal] = useState(false);
 
-  // ✅ NEW STATES FOR CUSTOM FORM
+  // States for Custom Pattern Form
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
@@ -94,24 +100,38 @@ const PaperWizard = () => {
     setPaperData({ ...paperData, selectedPattern: pattern });
   };
 
-  const handleGenerateClick = () => {
-    console.log("FINAL PAPER DATA:", paperData);
-    alert("Ready to Generate! (API Integration Next Step)");
+  // Step 4 Next Button -> Go to Step 5 (Mode Selection)
+  const handlePatternConfirm = () => {
+    setStep(5);
   };
 
-  // ✅ CUSTOM PATTERN HANDLERS
+  // ✅ HANDLERS FOR STEP 5 (MODE)
+  const handleModeSelect = (mode, settings) => {
+    // State update kro
+    const finalData = { ...paperData, mode, autoSettings: settings };
+    setPaperData(finalData);
+
+    if (mode === "MANUAL") {
+      // ✅ NAVIGATE TO PAPER MAKER WITH DATA
+      navigate("/user/paper-maker", { state: finalData });
+    } else {
+      console.log("Starting Auto Generation with:", settings);
+      alert("Auto Generation Started! (API Integration Next)");
+    }
+  };
+
+  // --- CUSTOM PATTERN LOGIC ---
   const handleCreateCustom = () => {
-    setEditingPreset(null); // Clear editing state for new creation
+    setEditingPreset(null);
     setShowCustomForm(true);
   };
 
   const handleEditCustom = (pattern) => {
-    setEditingPreset(pattern); // Load existing data
+    setEditingPreset(pattern);
     setShowCustomForm(true);
   };
 
   const handleCustomFormSave = (savedPattern) => {
-    // Save hone k baad usey select bhi kar lo
     setPaperData({ ...paperData, selectedPattern: savedPattern });
     setShowCustomForm(false);
     setEditingPreset(null);
@@ -129,6 +149,7 @@ const PaperWizard = () => {
       />
 
       <div className="pw-content">
+        {/* STEP 1 */}
         {step === 1 && (
           <div className="fade-in">
             <ClassSelector
@@ -138,6 +159,7 @@ const PaperWizard = () => {
           </div>
         )}
 
+        {/* STEP 2 */}
         {step === 2 && (
           <div className="fade-in">
             <SubjectSelector
@@ -147,6 +169,7 @@ const PaperWizard = () => {
           </div>
         )}
 
+        {/* STEP 3 */}
         {step === 3 && (
           <div className="fade-in">
             <SyllabusSelector
@@ -158,11 +181,10 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* ✅ STEP 4 LOGIC UPDATED */}
+        {/* STEP 4: PATTERN */}
         {step === 4 && (
           <div className="fade-in">
             {showCustomForm ? (
-              // Show Form if Create/Edit mode is active
               <PatternForm
                 onClose={() => {
                   setShowCustomForm(false);
@@ -182,16 +204,25 @@ const PaperWizard = () => {
                 onSuccess={handleCustomFormSave}
               />
             ) : (
-              // Otherwise show Selector
               <PatternSelector
                 grade={paperData.grade}
                 subject={paperData.subject}
                 onSelect={handlePatternSelect}
-                onNext={handleGenerateClick}
-                onCreateCustom={handleCreateCustom} // New
-                onEdit={handleEditCustom} // New (For Edit)
+                onNext={handlePatternConfirm} // Go to Step 5
+                onCreateCustom={handleCreateCustom}
+                onEdit={handleEditCustom}
               />
             )}
+          </div>
+        )}
+
+        {/* ✅ STEP 5: MODE SELECTION */}
+        {step === 5 && (
+          <div className="fade-in">
+            <ModeSelector
+              onSelect={handleModeSelect}
+              onBack={() => setStep(4)} // Back to Pattern
+            />
           </div>
         )}
       </div>

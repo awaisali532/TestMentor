@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import ConfirmationModal from "../../common/ConfirmationModal/ConfirmationModal";
 import {
   FaCheckCircle,
   FaClock,
@@ -16,6 +15,9 @@ import {
   FaTrash,
   FaStar,
 } from "react-icons/fa";
+
+// ✅ FIXED IMPORT PATH (common with small 'c' and 2 levels up)
+import ConfirmationModal from "../../common/ConfirmationModal/ConfirmationModal";
 import "./PatternSelector.css";
 
 const PatternSelector = ({
@@ -32,7 +34,10 @@ const PatternSelector = ({
 
   const [selectedId, setSelectedId] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+
+  // ✅ Delete Modal State
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
+
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // --- 1. FETCH PRESETS ---
@@ -83,11 +88,13 @@ const PatternSelector = ({
     onEdit(pattern);
   };
 
-  // ✅ NEW: DELETE HANDLER
+  // ✅ DELETE HANDLER (OPENS MODAL)
   const handleDeleteClick = (e, id) => {
     e.stopPropagation();
-    setDeleteModal({ isOpen: true, id: id }); // Open Custom Modal
+    setDeleteModal({ isOpen: true, id: id });
   };
+
+  // ✅ CONFIRM DELETE ACTION
   const confirmDelete = async () => {
     if (!deleteModal.id) return;
     try {
@@ -95,16 +102,22 @@ const PatternSelector = ({
       await axios.delete(`${BASE_URL}/api/patterns/${deleteModal.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       toast.success("Preset Deleted");
+
+      // Update UI List
       setPatterns((prev) => prev.filter((p) => p._id !== deleteModal.id));
+
+      // If selected item was deleted, deselect it
       if (selectedId === deleteModal.id) {
         setSelectedId(null);
         onSelect(null);
       }
     } catch (err) {
-      toast.error("Failed to delete");
+      toast.error("Failed to delete preset");
     }
   };
+
   if (loading)
     return (
       <div className="ps-loading">
@@ -192,7 +205,7 @@ const PatternSelector = ({
 
               <h4 className="ps-card-name">{p.presetName}</h4>
 
-              {/* ✅ META INFO (Total Marks Moved Here) */}
+              {/* ✅ META INFO */}
               <div className="ps-card-meta">
                 <span className="meta-tag">
                   <FaStar className="text-warning" />{" "}
@@ -258,6 +271,8 @@ const PatternSelector = ({
           Next: Generate Paper <FaFileAlt className="ms-2" />
         </button>
       </div>
+
+      {/* ✅ DELETE CONFIRMATION MODAL */}
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, id: null })}

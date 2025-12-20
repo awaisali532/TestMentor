@@ -1,0 +1,35 @@
+/* Main Layout Container */
+.pm-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: #334155;
+    /* Dark Workspace Background */
+}
+
+/* Right Side Workspace (Scrollable) */
+.pm-workspace {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 40px;
+    background-image: radial-gradient(#475569 1px, transparent 1px);
+    background-size: 20px 20px;
+    /* Dot pattern for workspace feel */
+}
+
+/* Custom Scrollbar for Workspace */
+.pm-workspace::-webkit-scrollbar {
+    width: 10px;
+}
+
+.pm-workspace::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.pm-workspace::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 5px;
+}

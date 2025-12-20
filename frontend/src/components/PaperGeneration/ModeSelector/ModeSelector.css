@@ -1,0 +1,345 @@
+/* Container */
+.ms-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.ms-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--pw-text);
+    font-weight: 800;
+    font-size: 1.8rem;
+}
+
+.ms-subtitle {
+    text-align: center;
+    color: var(--u-text-muted);
+    margin-bottom: 40px;
+}
+
+/* Grid */
+.ms-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+/* --- CARD BASE STYLE --- */
+.ms-card {
+    background: var(--pw-card-bg);
+    border: 2px solid var(--pw-border);
+    border-radius: 24px;
+    padding: 35px 25px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    /* Stylish Shadow for Light Mode */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.ms-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Icon Container */
+.icon-bg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    transition: 0.3s;
+}
+
+.ms-icon {
+    font-size: 2.5rem;
+    transition: 0.3s;
+}
+
+/* --- MANUAL CARD SPECIFICS --- */
+.manual-icon-bg {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+/* Light Purple Bg */
+.manual-icon {
+    color: #8b5cf6;
+}
+
+.ms-card.manual-card:hover {
+    border-color: #8b5cf6;
+}
+
+.ms-card.manual-card:hover .manual-icon-bg {
+    background: #8b5cf6;
+}
+
+.ms-card.manual-card:hover .manual-icon {
+    color: white;
+}
+
+/* --- AUTO CARD SPECIFICS --- */
+.auto-icon-bg {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+/* Light Green Bg */
+.auto-icon {
+    color: #10b981;
+}
+
+.ms-card.auto-card:hover {
+    border-color: #10b981;
+}
+
+.ms-card.auto-card:hover .auto-icon-bg {
+    background: #10b981;
+}
+
+.ms-card.auto-card:hover .auto-icon {
+    color: white;
+}
+
+/* --- ACTIVE STATE (When Auto Selected) --- */
+.ms-card.active {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.03);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
+
+/* Keep icon lit up when active */
+.ms-card.active .auto-icon-bg {
+    background: #10b981;
+}
+
+.ms-card.active .auto-icon {
+    color: white;
+}
+
+.ms-card.dimmed {
+    opacity: 0.4;
+    filter: grayscale(0.8);
+    pointer-events: none;
+}
+
+.ms-card h4 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--pw-text);
+    margin-bottom: 10px;
+}
+
+.ms-card p {
+    font-size: 0.95rem;
+    color: var(--u-text-muted);
+    line-height: 1.5;
+}
+
+/* --- AUTO SETTINGS PANEL --- */
+.ms-settings-panel {
+    grid-column: span 2;
+    background: var(--pw-card-bg);
+    border: 1px solid var(--pw-border);
+    border-radius: 20px;
+    padding: 30px;
+    margin-top: 10px;
+    animation: slideDown 0.4s ease-out;
+    border-top: 4px solid #10b981;
+    /* Green Top Border */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.ms-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--pw-text);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--pw-border);
+}
+
+.text-accent {
+    color: var(--pw-accent);
+}
+
+.ms-options-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.sources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+/* CHECKBOX TILES (Color Coded) */
+.ms-checkbox-tile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--pw-bg);
+    border: 2px solid transparent;
+    /* No border initially */
+    padding: 12px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+    font-weight: 500;
+    color: var(--pw-text);
+}
+
+/* Hover generic */
+.ms-checkbox-tile:hover {
+    transform: translateY(-2px);
+}
+
+/* --- DIFFICULTY COLORS --- */
+/* Easy (Green) */
+.diff-easy:hover {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.diff-easy.checked {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+}
+
+/* Medium (Orange/Yellow) */
+.diff-medium:hover {
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.diff-medium.checked {
+    background: #f59e0b;
+    color: white;
+    border-color: #f59e0b;
+}
+
+/* Hard (Red) */
+.diff-hard:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.diff-hard.checked {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+/* --- SOURCE COLORS (Blue Accent) --- */
+.source-tile:hover {
+    border-color: var(--pw-accent);
+    color: var(--pw-accent);
+}
+
+.source-tile.checked {
+    background: var(--pw-accent);
+    color: white;
+    border-color: var(--pw-accent);
+}
+
+.ms-cb {
+    width: 18px;
+    height: 18px;
+    accent-color: white;
+    cursor: pointer;
+}
+
+/* Generate Button */
+.btn-generate {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.2s;
+}
+
+.btn-generate:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.5);
+}
+
+/* Footer */
+.ms-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 40px;
+}
+
+.btn-back {
+    background: transparent;
+    border: 1px solid var(--pw-border);
+    color: var(--pw-text);
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-back:hover {
+    background: var(--pw-hover);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ms-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ms-settings-panel {
+        grid-column: span 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

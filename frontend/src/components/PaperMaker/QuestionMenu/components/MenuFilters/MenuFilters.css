@@ -1,0 +1,38 @@
+.qm-filters {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.qm-select-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.qm-select-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--u-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.qm-select {
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--pw-border);
+    background: var(--pw-bg);
+    color: var(--pw-text);
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.qm-select:hover,
+.qm-select:focus {
+    border-color: var(--pw-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}

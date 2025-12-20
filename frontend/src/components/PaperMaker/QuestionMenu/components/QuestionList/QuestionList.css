@@ -1,0 +1,9 @@
+.qm-list-container {
+    padding-top: 10px;
+}
+
+.qm-empty-state {
+    text-align: center;
+    color: var(--u-text-muted);
+    padding: 40px;
+}

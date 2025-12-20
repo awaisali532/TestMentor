@@ -1,0 +1,286 @@
+/* Sidebar Container */
+.pm-sidebar {
+    width: 280px;
+    height: 100vh;
+    background-color: var(--pw-card-bg);
+    border-right: 1px solid var(--pw-border);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Smooth Width Animation */
+    z-index: 50;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.02);
+    position: relative;
+}
+
+/* ✅ COLLAPSED STATE */
+.pm-sidebar.collapsed {
+    width: 80px;
+}
+
+/* Collapse Button */
+.pm-collapse-btn {
+    position: absolute;
+    top: 20px;
+    right: -15px;
+    width: 30px;
+    height: 30px;
+    background: var(--pw-accent);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    transition: transform 0.2s;
+}
+
+.pm-collapse-btn:hover {
+    transform: scale(1.1);
+}
+
+/* --- 1. PROFILE SECTION --- */
+.pm-profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 10px 20px 10px;
+    text-align: center;
+    min-height: 180px;
+    /* Prevent jumping */
+    transition: 0.3s;
+}
+
+.pm-sidebar.collapsed .pm-profile-section {
+    padding: 20px 5px;
+    min-height: 100px;
+}
+
+.pm-avatar-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: var(--pw-bg);
+    border: 3px solid var(--pw-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--pw-accent);
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.pm-avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Small Avatar in Collapsed Mode */
+.pm-avatar-circle.small {
+    width: 50px;
+    height: 50px;
+    border-width: 2px;
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+/* User Info */
+.pm-user-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--pw-text);
+    text-transform: uppercase;
+    /* ✅ Capitalize Name */
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.pm-user-role {
+    font-size: 0.85rem;
+    color: var(--u-text-muted);
+    margin-top: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.pm-premium-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 5px;
+    color: #f59e0b;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: rgba(245, 158, 11, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.pm-divider {
+    height: 1px;
+    background: var(--pw-border);
+    margin: 0 25px 15px 25px;
+    opacity: 0.6;
+}
+
+/* --- 2. MENU LIST --- */
+.pm-menu-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pm-sidebar.collapsed .pm-menu-list {
+    padding: 10px 5px;
+    align-items: center;
+}
+
+.pm-spacer {
+    height: 15px;
+}
+
+/* Menu Item */
+.pm-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--pw-text);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    opacity: 0.8;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.pm-sidebar.collapsed .pm-item {
+    justify-content: center;
+    padding: 12px 0;
+    width: 50px;
+    height: 50px;
+}
+
+.pm-item:hover {
+    background: var(--pw-hover);
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+.pm-sidebar.collapsed .pm-item:hover {
+    transform: none;
+}
+
+.pm-item.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--pw-accent);
+    opacity: 1;
+    font-weight: 700;
+}
+
+.pw-dark .pm-item.active {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+/* Icons */
+.pm-icon-box {
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.text-green {
+    color: #10b981;
+}
+
+.text-red {
+    color: #ef4444;
+}
+
+.pm-item.danger {
+    color: #ef4444;
+}
+
+.pm-item.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* --- 3. FOOTER --- */
+.pm-sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid var(--pw-border);
+    display: flex;
+    justify-content: center;
+}
+
+.pm-theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: var(--pw-bg);
+    border: 1px solid var(--pw-border);
+    border-radius: 50px;
+    color: var(--pw-text);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.pm-sidebar.collapsed .pm-theme-toggle {
+    padding: 10px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+}
+
+.pm-theme-toggle:hover {
+    border-color: var(--pw-accent);
+    color: var(--pw-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.icon-sun {
+    color: #f59e0b;
+}
+
+.icon-moon {
+    color: #6366f1;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

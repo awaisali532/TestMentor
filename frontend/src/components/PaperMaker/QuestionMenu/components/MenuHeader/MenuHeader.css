@@ -1,0 +1,124 @@
+.qm-header {
+    height: 70px;
+    background: var(--pw-card-bg);
+    border-bottom: 1px solid var(--pw-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    flex-shrink: 0;
+}
+
+/* Info Section */
+.qm-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.qm-badge-group {
+    display: flex;
+    gap: 8px;
+}
+
+.qm-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.qm-badge.grade {
+    background: rgba(37, 99, 235, 0.1);
+    color: #3b82f6;
+}
+
+.qm-badge.subject {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.qm-syllabus-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--pw-text);
+    display: flex;
+    align-items: center;
+}
+
+/* Actions Section */
+.qm-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qm-divider-v {
+    width: 1px;
+    height: 25px;
+    background: var(--pw-border);
+    margin: 0 5px;
+}
+
+/* Buttons */
+.qm-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.qm-btn.outline {
+    background: transparent;
+    border: 1px solid var(--pw-border);
+    color: var(--u-text-muted);
+}
+
+.qm-btn.outline:hover {
+    border-color: var(--pw-accent);
+    color: var(--pw-accent);
+    background: var(--pw-hover);
+}
+
+.qm-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pw-bg);
+    border: 1px solid var(--pw-border);
+    color: var(--pw-text);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.qm-icon-btn:hover {
+    background: var(--pw-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.qm-icon-btn.close:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.icon-sun {
+    color: #f59e0b;
+}
+
+.icon-moon {
+    color: #6366f1;
+}

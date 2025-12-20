@@ -36,7 +36,7 @@ import PaperPatterns from "./pages/Admin/PaperPatterns/PaperPatterns"; // ✅ Im
 import PaperWizard from "./pages/User/PaperWizard/PaperWizard";
 import UserDashboard from "./pages/User/UserDashboard/UserDashboard";
 import UserSettings from "./pages/User/UserSettings/UserSettings";
-
+import PaperMaker from "./pages/User/PaperMaker/PaperMaker";
 const App = () => {
   const location = useLocation();
   const isDashboardRoute =
@@ -130,6 +130,7 @@ const App = () => {
                 }
               />
               <Route path="/user/generate-paper" element={<PaperWizard />} />
+              <Route path="/user/paper-maker" element={<PaperMaker />} />
             </Route>
           </Routes>
         </UIProvider>

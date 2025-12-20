@@ -1,0 +1,84 @@
+/* Container jo poora space lega */
+.preview-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center empty state */
+    padding: 20px;
+    position: relative;
+}
+
+/* --- EMPTY STATE DESIGN --- */
+.empty-state {
+    text-align: center;
+    color: #94a3b8;
+    /* Slate-400 */
+    max-width: 400px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+    color: var(--pw-accent, #3b82f6);
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    /* Light Text */
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    opacity: 0.8;
+}
+
+/* Optional Button inside empty state */
+.btn-start-add {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border: 1px solid #3b82f6;
+    padding: 10px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-start-add:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+/* --- FUTURE LIST STYLES --- */
+.questions-list {
+    width: 100%;
+    max-width: 900px;
+    /* Future mein yahan list ki styling ayegi */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
