@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBars,
@@ -18,33 +18,53 @@ import {
 import { useUser } from "../../../context/UserContext";
 import { useTheme } from "../../../context/ThemeContext";
 import ConfirmationModal from "../../common/ConfirmationModal/ConfirmationModal";
-// ❌ QuestionMenu import hata dein
 import "./MakerSidebar.css";
 
-// ✅ Receive onOpenMenu Prop
-const MakerSidebar = ({ paperData, onOpenMenu }) => {
+// ✅ CHANGE: Receive 'isCollapsed' & 'toggleCollapse' from Parent
+const MakerSidebar = ({
+  paperData,
+  onOpenMenu,
+  isMenuOpen,
+  isCollapsed,
+  toggleCollapse,
+}) => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { theme, toggleTheme } = useTheme();
 
   const [activeTab, setActiveTab] = useState("menu");
   const [showExitModal, setShowExitModal] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // ❌ Remove local isMenuOpen state
+  // ❌ Removed local 'isCollapsed' state (Lifted to Parent)
 
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+  // --- EXISTING EFFECT (Auto Open on Load) ---
+  useEffect(() => {
+    if (activeTab === "menu") {
+      onOpenMenu();
+    }
+  }, []);
+
+  // --- SYNC SIDEBAR WITH MENU STATE ---
+  useEffect(() => {
+    if (!isMenuOpen && activeTab === "menu") {
+      setActiveTab(""); // Deselect button
+    }
+  }, [isMenuOpen, activeTab]);
 
   const handleNavigation = (tab) => {
     setActiveTab(tab);
     if (tab === "menu") {
-      onOpenMenu(); // ✅ Call Parent Function
+      onOpenMenu();
     }
   };
 
   const confirmExit = () => navigate("/user/dashboard");
-  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
+  // ❌ Removed local toggleCollapse function (Using Prop)
+
+  // --- Image Logic (As requested, keeping same) ---
   const getProfileImage = () => {
     if (!user?.profileImage) return null;
     if (user.profileImage.startsWith("http")) return user.profileImage;
@@ -55,6 +75,7 @@ const MakerSidebar = ({ paperData, onOpenMenu }) => {
 
   return (
     <div className={`pm-sidebar ${isCollapsed ? "collapsed" : ""}`}>
+      {/* ✅ Use Parent's Toggle Function */}
       <button className="pm-collapse-btn" onClick={toggleCollapse}>
         {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
       </button>
@@ -206,8 +227,6 @@ const MakerSidebar = ({ paperData, onOpenMenu }) => {
         cancelText="Continue"
         isDanger={true}
       />
-
-      {/* ❌ REMOVED: Question Menu from here */}
     </div>
   );
 };

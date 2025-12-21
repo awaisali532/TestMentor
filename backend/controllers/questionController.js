@@ -338,7 +338,23 @@ const deleteAllQuestionsInTopic = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// ✅ Get Filters (Categories & Difficulties) directly from Schema
+const getQuestionFilters = async (req, res) => {
+  try {
+    // Mongoose Schema se Enum values nikalne ka tareeqa
+    const categories = Question.schema.path("questionCategory").enumValues;
+    const difficulties = Question.schema.path("difficulty").enumValues;
 
+    res.status(200).json({
+      success: true,
+      categories, // ["TEXT", "EXERCISE", ...]
+      difficulties, // ["Easy", "Medium", "Hard"]
+    });
+  } catch (error) {
+    console.error("Metadata Error:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch filters" });
+  }
+};
 // ✅ EXPORT ALL
 module.exports = {
   addQuestion,
@@ -349,4 +365,5 @@ module.exports = {
   addBulkQuestions,
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
+  getQuestionFilters,
 };

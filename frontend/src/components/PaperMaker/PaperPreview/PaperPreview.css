@@ -1,84 +1,154 @@
 /* Container jo poora space lega */
 .preview-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    /* Center empty state */
-    padding: 20px;
-    position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Agar content ho to top se start ho, empty ho to center */
+  justify-content: flex-start;
+  padding: 40px;
+  position: relative;
+  overflow-y: auto;
 }
 
-/* --- EMPTY STATE DESIGN --- */
+/* Jab Empty ho to Center kare */
+.preview-container:has(.empty-state) {
+  justify-content: center;
+}
+
+/* --- EMPTY STATE DESIGN (Theme Adaptive) --- */
 .empty-state {
-    text-align: center;
-    color: #94a3b8;
-    /* Slate-400 */
-    max-width: 400px;
-    animation: fadeIn 0.5s ease-out;
+  text-align: center;
+  color: var(--u-text-muted); /* Adaptive Color */
+  max-width: 400px;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .empty-icon {
-    font-size: 4rem;
-    margin-bottom: 20px;
-    opacity: 0.3;
-    color: var(--pw-accent, #3b82f6);
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.3;
+  color: var(--pw-accent); /* Blue Accent */
 }
 
 .empty-state h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    /* Light Text */
-    margin-bottom: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--pw-text); /* Adaptive Text */
+  margin-bottom: 10px;
 }
 
 .empty-state p {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 25px;
-    opacity: 0.8;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  opacity: 0.8;
+  color: var(--pw-text);
 }
 
-/* Optional Button inside empty state */
+/* Button inside empty state */
 .btn-start-add {
-    background: rgba(59, 130, 246, 0.1);
-    color: #60a5fa;
-    border: 1px solid #3b82f6;
-    padding: 10px 24px;
-    border-radius: 50px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
 }
 
 .btn-start-add:hover {
-    background: #3b82f6;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
-/* --- FUTURE LIST STYLES --- */
+/* --- QUESTIONS LIST STYLES --- */
 .questions-list {
-    width: 100%;
-    max-width: 900px;
-    /* Future mein yahan list ki styling ayegi */
+  width: 100%;
+  max-width: 800px; /* A4 width approx */
+  background: var(--pw-card-bg); /* Card BG based on theme */
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--pw-border);
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
+.preview-header {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--pw-border);
+  padding-bottom: 15px;
+}
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.preview-header h2 {
+  color: var(--pw-text);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.preview-header span {
+  color: var(--u-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Sections */
+.paper-section {
+  margin-bottom: 25px;
+}
+
+.sec-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--pw-text);
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+
+/* Divider Line */
+.sec-divider {
+  height: 1px;
+  background: var(--pw-border);
+  margin: 25px 0;
+  border-bottom: 1px dashed var(--u-text-muted);
+  opacity: 0.3;
+}
+
+/* Question Items */
+.qs-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  color: var(--pw-text);
+  align-items: baseline;
+}
+
+.qs-num {
+  font-weight: 700;
+  min-width: 25px;
+  color: var(--pw-accent);
+}
+
+.qs-text {
+  line-height: 1.5;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

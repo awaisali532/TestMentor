@@ -10,43 +10,57 @@ const {
   addBulkQuestions,
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
+  getQuestionFilters, // ✅ 1. Import New Controller Function
 } = require("../controllers/questionController");
 
 // Import Middleware
 const { protect, hasPermission } = require("../middleware/authMiddleware");
 
-// ✅ 1. Apply Protection (User must be logged in)
+// ✅ Apply Protection (User must be logged in for all routes)
 router.use(protect);
-router.get("/filter", protect, getQuestionsByFilter);
+
 // --- ROUTES ---
 
-// READ (Allowed for all logged in users, e.g. Teachers generating papers)
+// ✅ 2. NEW ROUTE: Fetch Categories & Difficulties (Metadata)
+// Yeh route Frontend ke QuestionMenu mein dropdowns fill karega
+router.get("/filters", getQuestionFilters);
+
+// READ (Existing Filter Logic for fetching actual questions)
+router.get("/filter", getQuestionsByFilter);
+
+// READ (Get questions by topic ID)
 router.get("/topic/:topicId", getQuestionsByTopic);
 
-// WRITE (Requires 'manage_questions' permission OR Super Admin)
+// --- WRITE OPERATIONS (Admin/Manager Only) ---
+
 router.post(
   "/add",
   hasPermission("manage_questions"),
   upload.single("image"),
   addQuestion
 );
+
 router.post("/bulk-add", hasPermission("manage_questions"), addBulkQuestions);
+
 router.post(
   "/delete-bulk",
   hasPermission("manage_questions"),
   deleteQuestionsBulk
 );
+
 router.delete(
   "/topic/:topicId/delete-all",
   hasPermission("manage_questions"),
   deleteAllQuestionsInTopic
 );
+
 router.put(
   "/:id",
   hasPermission("manage_questions"),
   upload.single("image"),
   updateQuestion
 );
+
 router.delete("/:id", hasPermission("manage_questions"), deleteQuestion);
 
 module.exports = router;

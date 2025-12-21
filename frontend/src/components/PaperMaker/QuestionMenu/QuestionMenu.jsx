@@ -1,65 +1,115 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import MenuHeader from "./components/MenuHeader/MenuHeader";
-import MenuFilters from "./components/MenuFilters/MenuFilters"; // Next Step
-import TypeTabs from "./components/TypeTabs/TypeTabs"; // Next Step
-import QuestionList from "./components/QuestionList/QuestionList"; // Next Step
+import MenuFilters from "./components/MenuFilters/MenuFilters";
+import TypeTabs from "./components/TypeTabs/TypeTabs";
+import QuestionList from "./components/QuestionList/QuestionList";
 import "./QuestionMenu.css";
 
-const QuestionMenu = ({ isOpen, onClose, paperData }) => {
+const QuestionMenu = ({
+  isOpen,
+  onClose,
+  paperData,
+  isSidebarCollapsed,
+  onEditPattern,
+}) => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
   // --- STATE ---
-  const [activeTab, setActiveTab] = useState("MCQ"); // MCQ, SHORT, LONG
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [difficultiesList, setDifficultiesList] = useState([]);
+  const [loadingFilters, setLoadingFilters] = useState(true);
+
+  const [activeTab, setActiveTab] = useState("MCQ");
+
   const [filters, setFilters] = useState({
-    category: "ALL", // EXERCISE, PAST_PAPER, etc.
-    difficulty: "ALL", // EASY, MEDIUM, HARD
+    category: [],
+    difficulty: [],
   });
 
-  // Animation handling
   const [show, setShow] = useState(false);
 
+  // ✅ FETCH FILTERS FROM BACKEND
   useEffect(() => {
-    if (isOpen) setShow(true);
-    else setTimeout(() => setShow(false), 300); // Wait for animation
+    const fetchFilters = async () => {
+      try {
+        setLoadingFilters(true);
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(`${BASE_URL}/api/questions/filters`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const fetchedCats = res.data.categories || [];
+        const fetchedDiffs = res.data.difficulties || [];
+
+        setCategoriesList(fetchedCats);
+        setDifficultiesList(fetchedDiffs);
+
+        // ✅ Default Select All
+        setFilters((prev) => ({
+          ...prev,
+          category: fetchedCats,
+          difficulty: fetchedDiffs,
+        }));
+      } catch (err) {
+        console.error("Failed to fetch filters:", err);
+        // Fallback
+        const fallbackCats = ["TEXT", "EXERCISE", "PAST_PAPER"];
+        const fallbackDiffs = ["Easy", "Medium", "Hard"];
+
+        setCategoriesList(fallbackCats);
+        setDifficultiesList(fallbackDiffs);
+
+        setFilters((prev) => ({
+          ...prev,
+          category: fallbackCats,
+          difficulty: fallbackDiffs,
+        }));
+      } finally {
+        setLoadingFilters(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchFilters();
+      setShow(true);
+    } else {
+      setTimeout(() => setShow(false), 300);
+    }
   }, [isOpen]);
 
   if (!show && !isOpen) return null;
 
   return (
-    <div className={`qm-overlay ${isOpen ? "open" : ""}`}>
+    <div
+      className={`qm-overlay ${isOpen ? "open" : ""} ${
+        isSidebarCollapsed ? "sidebar-collapsed" : ""
+      }`}
+    >
       <div className="qm-container">
-        {/* 1. HEADER (Info + Theme Toggle + Close) */}
-        <MenuHeader paperData={paperData} onClose={onClose} />
+        <MenuHeader
+          paperData={paperData}
+          onClose={onClose}
+          onEditPreset={onEditPattern}
+        />
 
         <div className="qm-body">
-          {/* 2. FILTERS & TABS (Sticky Top) */}
           <div className="qm-controls">
-            {/* Hum inko next step mein banayenge, abhi placeholder rakh lo */}
-            <div className="placeholder-controls">
-              <MenuFilters filters={filters} setFilters={setFilters} />
-              <TypeTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-              <p
-                style={{
-                  padding: "20px",
-                  textAlign: "center",
-                  color: "var(--u-text-muted)",
-                }}
-              >
-                Filters & Tabs coming soon...
-              </p>
-            </div>
+            {/* ✅ Pass Dynamic Lists to Filters */}
+            <MenuFilters
+              filters={filters}
+              setFilters={setFilters}
+              categoriesList={categoriesList}
+              difficultiesList={difficultiesList}
+              loading={loadingFilters}
+            />
+
+            <TypeTabs activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
 
-          {/* 3. QUESTIONS LIST (Scrollable) */}
           <div className="qm-content">
-            {/* <QuestionList ... /> */}
-            <p
-              style={{
-                padding: "50px",
-                textAlign: "center",
-                color: "var(--u-text-muted)",
-              }}
-            >
-              Questions will load here...
-            </p>
+            <QuestionList />
           </div>
         </div>
       </div>

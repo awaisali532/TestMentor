@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaArrowLeft, FaPlus, FaTrashAlt, FaSave } from "react-icons/fa";
 import toast from "react-hot-toast";
-// ❌ REMOVED: import Swal from "sweetalert2";
 import { useUI } from "../../../context/UIContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useUser } from "../../../context/UserContext";
-import ConfirmationModal from "../../../components/common/ConfirmationModal/ConfirmationModal"; // ✅ IMPORTED
+import ConfirmationModal from "../../../components/common/ConfirmationModal/ConfirmationModal";
 import "./PaperPatterns.css";
 
 const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
@@ -15,7 +14,6 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
   const { theme } = useTheme();
   const { user } = useUser();
 
-  // ✅ NEW STATE FOR MODAL
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // --- DEFAULT STATE ---
@@ -102,10 +100,9 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     onClose();
   };
 
-  // ✅ UPDATED: Use Custom Modal instead of Swal
   const handleSafeBack = () => {
     if (isDirty) {
-      setShowExitConfirm(true); // Open Modal
+      setShowExitConfirm(true);
     } else {
       handleCleanupAndClose();
     }
@@ -141,10 +138,40 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     setIsDirty(true);
   };
 
+  // ✅ LOGIC FIX: Prevent Attempt > Total
   const handleSectionChange = (index, field, value) => {
     const updated = [...formData.sections];
-    updated[index][field] = value;
+    let newVal = value;
+
+    // Handle Numbers
+    if (
+      ["totalQuestions", "toBeAttempted", "marksPerQuestion"].includes(field)
+    ) {
+      newVal = parseInt(value) || 0;
+      if (newVal < 0) newVal = 0; // Negative not allowed
+    }
+
+    updated[index][field] = newVal;
+
+    // ✅ CHECK 1: Agar Attempt change kia, to check kro Total se bara na ho
+    if (field === "toBeAttempted") {
+      const total = parseInt(updated[index].totalQuestions) || 0;
+      if (newVal > total) {
+        toast.error("Attempt cannot be more than Total Questions!");
+        updated[index][field] = total; // Revert to Total
+      }
+    }
+
+    // ✅ CHECK 2: Agar Total change kia, aur wo Attempt se chota ho gya
+    if (field === "totalQuestions") {
+      const attempt = parseInt(updated[index].toBeAttempted) || 0;
+      if (newVal < attempt) {
+        updated[index].toBeAttempted = newVal; // Reduce Attempt also
+      }
+    }
+
     if (field === "hasParts") updated[index][field] = value === "true";
+
     setFormData({ ...formData, sections: updated });
     setIsDirty(true);
   };
@@ -153,6 +180,20 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.presetName) return toast.error("Preset Name is required");
+
+    // ✅ FINAL VALIDATION LOOP
+    for (let i = 0; i < formData.sections.length; i++) {
+      const sec = formData.sections[i];
+      if (parseInt(sec.toBeAttempted) > parseInt(sec.totalQuestions)) {
+        return toast.error(
+          `Section ${i + 1}: Attempt cannot be greater than Total!`
+        );
+      }
+      if (parseInt(sec.totalQuestions) === 0) {
+        return toast.error(`Section ${i + 1}: Total Questions cannot be 0!`);
+      }
+    }
+
     setLoading(true);
 
     const payload = {
@@ -165,7 +206,7 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
         typeof formData.subjects === "string"
           ? formData.subjects.split(",").map((s) => s.trim())
           : formData.subjects,
-      isSystemPreset: isUserMode ? false : true, // Logic based on mode
+      isSystemPreset: isUserMode ? false : true,
       createdBy: user?._id,
     };
 
@@ -347,7 +388,7 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
               </div>
               <div className="pp-row-3">
                 <div className="pp-form-group">
-                  <label className="pp-label">Total</label>
+                  <label className="pp-label">Total Qs</label>
                   <input
                     type="number"
                     className="pp-input"
@@ -358,7 +399,7 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
                   />
                 </div>
                 <div className="pp-form-group">
-                  <label className="pp-label">Attempt</label>
+                  <label className="pp-label">To Attempt</label>
                   <input
                     type="number"
                     className="pp-input"
@@ -428,7 +469,6 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
         </form>
       </div>
 
-      {/* ✅ RENDER CONFIRMATION MODAL */}
       <ConfirmationModal
         isOpen={showExitConfirm}
         onClose={() => setShowExitConfirm(false)}

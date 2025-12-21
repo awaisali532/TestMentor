@@ -1,81 +1,106 @@
-/* Full Screen Overlay */
+/* Full Screen Overlay - Adjusted to show Sidebar */
 .qm-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    /* Modern Glass Effect */
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: fixed;
+  top: 0;
+
+  /* ✅ Default State (Sidebar Open = 280px) */
+  left: 280px;
+  width: calc(100vw - 280px);
+
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+
+  /* ✅ ADDED TRANSITION for smooth resizing */
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s ease,
+    width 0.3s ease;
+}
+
+/* ✅ NEW CLASS: When Sidebar is Collapsed (80px) */
+.qm-overlay.sidebar-collapsed {
+  left: 80px;
+  width: calc(100vw - 80px);
 }
 
 .qm-overlay.open {
-    opacity: 1;
-    visibility: visible;
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Main Modal Container */
 .qm-container {
-    width: 95%;
-    height: 95%;
-    background: var(--pw-card-bg);
-    /* Theme Aware */
-    border-radius: 20px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--pw-border);
-    transform: scale(0.95) translateY(20px);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 95%; /* ✅ Thora bara kar dia taake space achi lage */
+  height: 95%;
+  max-width: 1200px; /* Thora wide screen friendly */
+
+  background: var(--pw-card-bg);
+  color: var(--pw-text);
+  border: 1px solid var(--pw-border);
+
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  transform: scale(0.95) translateY(10px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .qm-overlay.open .qm-container {
-    transform: scale(1) translateY(0);
+  transform: scale(1) translateY(0);
 }
 
 /* Internal Layout */
 .qm-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background-color: var(--pw-bg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--pw-bg);
 }
 
 /* Controls Section (Sticky) */
 .qm-controls {
-    background: var(--pw-card-bg);
-    border-bottom: 1px solid var(--pw-border);
-    padding: 15px 20px;
-    z-index: 10;
+  background: var(--pw-card-bg);
+  border-bottom: 1px solid var(--pw-border);
+  padding: 15px 20px 0 20px;
+  z-index: 10;
 }
 
 /* Scrollable Content */
 .qm-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
 }
 
 /* Scrollbar Styling */
 .qm-content::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
-
 .qm-content::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
+}
+.qm-content::-webkit-scrollbar-thumb {
+  background-color: var(--pw-border);
+  border-radius: 10px;
+}
+.qm-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--pw-accent);
 }
 
-.qm-content::-webkit-scrollbar-thumb {
-    background-color: var(--pw-border);
-    border-radius: 10px;
+/* Responsive */
+@media (max-width: 768px) {
+  .qm-overlay,
+  .qm-overlay.sidebar-collapsed {
+    left: 0;
+    width: 100vw;
+  }
 }
