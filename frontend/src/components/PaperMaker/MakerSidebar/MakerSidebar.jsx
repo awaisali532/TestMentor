@@ -20,7 +20,6 @@ import { useTheme } from "../../../context/ThemeContext";
 import ConfirmationModal from "../../common/ConfirmationModal/ConfirmationModal";
 import "./MakerSidebar.css";
 
-// ✅ CHANGE: Receive 'isCollapsed' & 'toggleCollapse' from Parent
 const MakerSidebar = ({
   paperData,
   onOpenMenu,
@@ -35,52 +34,53 @@ const MakerSidebar = ({
   const [activeTab, setActiveTab] = useState("menu");
   const [showExitModal, setShowExitModal] = useState(false);
 
-  // ❌ Removed local 'isCollapsed' state (Lifted to Parent)
-
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // --- EXISTING EFFECT (Auto Open on Load) ---
+  // Auto-Open Logic
   useEffect(() => {
     if (activeTab === "menu") {
       onOpenMenu();
     }
   }, []);
 
-  // --- SYNC SIDEBAR WITH MENU STATE ---
+  // Sync Logic
   useEffect(() => {
     if (!isMenuOpen && activeTab === "menu") {
-      setActiveTab(""); // Deselect button
+      setActiveTab("");
     }
   }, [isMenuOpen, activeTab]);
 
   const handleNavigation = (tab) => {
+    // ✅ DISABLE CLICK IF MENU IS OPEN (Safety Check)
+    if (isMenuOpen && tab !== "menu") return;
+
     setActiveTab(tab);
     if (tab === "menu") {
       onOpenMenu();
     }
   };
 
-  const confirmExit = () => navigate("/user/dashboard");
+  // ✅ CONFIRM EXIT LOGIC (Go back to Mode Selector)
+  const confirmExit = () => {
+    // Hum 'keepData: true' bhej rahe hain taake Wizard data reset na kare
+    navigate("/user/generate-paper", { state: { keepData: true } });
+  };
 
-  // ❌ Removed local toggleCollapse function (Using Prop)
-
-  // --- Image Logic (As requested, keeping same) ---
   const getProfileImage = () => {
     if (!user?.profileImage) return null;
     if (user.profileImage.startsWith("http")) return user.profileImage;
     return `${BASE_URL}${user.profileImage}`;
   };
-
   const profilePic = getProfileImage();
 
   return (
     <div className={`pm-sidebar ${isCollapsed ? "collapsed" : ""}`}>
-      {/* ✅ Use Parent's Toggle Function */}
+      {/* Collapse Button - Isay disable nahi karna */}
       <button className="pm-collapse-btn" onClick={toggleCollapse}>
         {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
       </button>
 
-      {/* USER PROFILE */}
+      {/* User Profile */}
       <div className="pm-profile-section">
         <div className={`pm-avatar-circle ${isCollapsed ? "small" : ""}`}>
           {user?.image ? (
@@ -95,19 +95,15 @@ const MakerSidebar = ({
             <FaUserGraduate />
           )}
         </div>
-
         {!isCollapsed && (
           <div className="pm-user-details fade-in">
-            <h3 className="pm-user-name">{user?.name || "User Name"}</h3>
+            <h3 className="pm-user-name">{user?.name || "User"}</h3>
             {user?.isPremium ? (
               <div className="pm-premium-badge">
-                <FaCrown className="icon-crown" />
-                <span>PREMIUM USER</span>
+                <FaCrown /> PREMIUM
               </div>
             ) : (
-              <span className="pm-user-role">
-                {user?.role || "Administrator"}
-              </span>
+              <span className="pm-user-role">{user?.role || "Admin"}</span>
             )}
           </div>
         )}
@@ -115,11 +111,12 @@ const MakerSidebar = ({
 
       <div className="pm-divider"></div>
 
-      {/* MENU ITEMS */}
-      <div className="pm-menu-list">
+      {/* ✅ DISABLE MENU CONTAINER IF MENU IS OPEN */}
+      {/* Hum 'pointer-events-none' class lagayenge */}
+      <div className={`pm-menu-list ${isMenuOpen ? "disabled-sidebar" : ""}`}>
         <button
           className={`pm-item ${activeTab === "menu" ? "active" : ""}`}
-          onClick={() => handleNavigation("menu")}
+          onClick={() => handleNavigation("menu")} // Isay click krne dena ha taake menu khul sake
           title={isCollapsed ? "Question Menu" : ""}
         >
           <div className="pm-icon-box">
@@ -128,10 +125,11 @@ const MakerSidebar = ({
           {!isCollapsed && <span>Question's Menu</span>}
         </button>
 
+        {/* Baki Buttons */}
         <button
           className={`pm-item ${activeTab === "edit" ? "active" : ""}`}
           onClick={() => handleNavigation("edit")}
-          title={isCollapsed ? "Manual Editing" : ""}
+          title="Manual Editing"
         >
           <div className="pm-icon-box">
             <FaEdit />
@@ -142,7 +140,7 @@ const MakerSidebar = ({
         <button
           className={`pm-item ${activeTab === "save" ? "active" : ""}`}
           onClick={() => handleNavigation("save")}
-          title={isCollapsed ? "Save Paper" : ""}
+          title="Save Paper"
         >
           <div className="pm-icon-box text-green">
             <FaSave />
@@ -152,45 +150,44 @@ const MakerSidebar = ({
 
         <div className="pm-spacer"></div>
 
+        {/* Print Buttons */}
         <button
           className={`pm-item ${activeTab === "print_single" ? "active" : ""}`}
           onClick={() => handleNavigation("print_single")}
-          title={isCollapsed ? "Print Single" : ""}
         >
           <div className="pm-icon-box">
             <FaPrint />
           </div>
           {!isCollapsed && <span>Print Single</span>}
         </button>
-
         <button
           className={`pm-item ${activeTab === "print_dv" ? "active" : ""}`}
           onClick={() => handleNavigation("print_dv")}
-          title={isCollapsed ? "Print Double (V)" : ""}
         >
           <div className="pm-icon-box">
             <FaColumns />
           </div>
-          {!isCollapsed && <span>Print Double (Vertical)</span>}
+          {!isCollapsed && <span>Print Double (V)</span>}
         </button>
-
         <button
           className={`pm-item ${activeTab === "print_dh" ? "active" : ""}`}
           onClick={() => handleNavigation("print_dh")}
-          title={isCollapsed ? "Print Double (H)" : ""}
         >
           <div className="pm-icon-box">
             <FaBookOpen />
           </div>
-          {!isCollapsed && <span>Print Double (Horizontal)</span>}
+          {!isCollapsed && <span>Print Double (H)</span>}
         </button>
 
         <div className="pm-spacer"></div>
 
+        {/* Cancel - Isay disable nahi karna chahiye taake user wapis ja sake, 
+            Lekin agar aap chahte hain ke menu khula ho to cancel na ho, to isay bhi disable kr dein.
+            Filhal main isay disable kar raha hoon jesa aap ne kaha. */}
         <button
           className="pm-item danger"
           onClick={() => setShowExitModal(true)}
-          title={isCollapsed ? "Cancel Paper" : ""}
+          title="Cancel Paper"
         >
           <div className="pm-icon-box text-red">
             <FaTimes />
@@ -199,21 +196,14 @@ const MakerSidebar = ({
         </button>
       </div>
 
-      {/* FOOTER */}
       <div className="pm-sidebar-footer">
-        <button
-          className="pm-theme-toggle"
-          onClick={toggleTheme}
-          title="Toggle Theme"
-        >
+        <button className="pm-theme-toggle" onClick={toggleTheme}>
           {theme === "dark" ? (
             <FaSun className="icon-sun" />
           ) : (
             <FaMoon className="icon-moon" />
           )}
-          {!isCollapsed && (
-            <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-          )}
+          {!isCollapsed && <span>{theme === "dark" ? "Light" : "Dark"}</span>}
         </button>
       </div>
 
@@ -221,11 +211,11 @@ const MakerSidebar = ({
         isOpen={showExitModal}
         onClose={() => setShowExitModal(false)}
         onConfirm={confirmExit}
-        title="Cancel Paper?"
-        message="All progress will be lost. Are you sure?"
-        confirmText="Yes, Cancel"
-        cancelText="Continue"
-        isDanger={true}
+        title="Go Back?"
+        message="Your progress will be saved, and you will return to Mode Selection."
+        confirmText="Yes, Go Back"
+        cancelText="Stay Here"
+        isDanger={false} // Blue button
       />
     </div>
   );

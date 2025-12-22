@@ -93,7 +93,6 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
   }, [formData, isDirty]);
 
   // --- HANDLERS ---
-
   const handleCleanupAndClose = () => {
     localStorage.removeItem("pp_form_backup");
     setIsEditing(false);
@@ -119,6 +118,7 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
       ...formData,
       sections: [
         ...(formData.sections || []),
+        // Default 0 rakha hai, lkin validation submit pr rok degi
         {
           title: "",
           questionType: "SHORT",
@@ -138,35 +138,41 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     setIsDirty(true);
   };
 
-  // ✅ LOGIC FIX: Prevent Attempt > Total
+  // ✅ LOGIC UPDATE: Handle Inputs
   const handleSectionChange = (index, field, value) => {
     const updated = [...formData.sections];
     let newVal = value;
 
-    // Handle Numbers
     if (
       ["totalQuestions", "toBeAttempted", "marksPerQuestion"].includes(field)
     ) {
       newVal = parseInt(value) || 0;
-      if (newVal < 0) newVal = 0; // Negative not allowed
+      if (newVal < 0) newVal = 0;
     }
 
     updated[index][field] = newVal;
 
-    // ✅ CHECK 1: Agar Attempt change kia, to check kro Total se bara na ho
+    // Check 1: Attempt cannot be > Total
     if (field === "toBeAttempted") {
       const total = parseInt(updated[index].totalQuestions) || 0;
       if (newVal > total) {
         toast.error("Attempt cannot be more than Total Questions!");
-        updated[index][field] = total; // Revert to Total
+        updated[index][field] = total;
       }
     }
 
-    // ✅ CHECK 2: Agar Total change kia, aur wo Attempt se chota ho gya
+    // ✅ Check 2: Total Change Logic
     if (field === "totalQuestions") {
       const attempt = parseInt(updated[index].toBeAttempted) || 0;
+
+      // Case A: Agar Total kam kr dia Attempt se -> Attempt ko bhi kam kro
       if (newVal < attempt) {
-        updated[index].toBeAttempted = newVal; // Reduce Attempt also
+        updated[index].toBeAttempted = newVal;
+      }
+
+      // Case B: Agar Attempt 0 tha, aur Total barhaya -> Attempt ko Total k barabar kr do (User Ease)
+      if (attempt === 0 && newVal > 0) {
+        updated[index].toBeAttempted = newVal;
       }
     }
 
@@ -181,16 +187,26 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     e.preventDefault();
     if (!formData.presetName) return toast.error("Preset Name is required");
 
-    // ✅ FINAL VALIDATION LOOP
     for (let i = 0; i < formData.sections.length; i++) {
       const sec = formData.sections[i];
-      if (parseInt(sec.toBeAttempted) > parseInt(sec.totalQuestions)) {
+      const total = parseInt(sec.totalQuestions);
+      const attempt = parseInt(sec.toBeAttempted);
+
+      // Check 1: Total cannot be 0
+      if (total === 0) {
+        return toast.error(`Section ${i + 1}: Total Questions cannot be 0!`);
+      }
+
+      // ✅ Check 2: Attempt cannot be 0
+      if (attempt === 0) {
+        return toast.error(`Section ${i + 1}: 'To Attempt' cannot be 0!`);
+      }
+
+      // Check 3: Attempt > Total
+      if (attempt > total) {
         return toast.error(
           `Section ${i + 1}: Attempt cannot be greater than Total!`
         );
-      }
-      if (parseInt(sec.totalQuestions) === 0) {
-        return toast.error(`Section ${i + 1}: Total Questions cannot be 0!`);
       }
     }
 
@@ -214,8 +230,11 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
+      let responseData;
+
       if (initialData && initialData._id) {
-        await axios.put(
+        // UPDATE
+        const res = await axios.put(
           `${BASE_URL}/api/patterns/${initialData._id}`,
           payload,
           config
@@ -225,7 +244,9 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
             ? "Custom Pattern Updated!"
             : "Preset Updated Successfully!"
         );
+        responseData = res.data;
       } else {
+        // CREATE
         const res = await axios.post(
           `${BASE_URL}/api/patterns`,
           payload,
@@ -236,7 +257,13 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
             ? "Custom Pattern Created!"
             : "Preset Created Successfully!"
         );
-        if (onSuccess) onSuccess(res.data.data);
+        responseData = res.data;
+      }
+
+      // Fix for Response Structure (DataWrapper)
+      if (onSuccess) {
+        const cleanData = responseData.data || responseData;
+        onSuccess(cleanData);
       }
 
       localStorage.removeItem("pp_form_backup");

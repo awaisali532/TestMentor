@@ -15,96 +15,70 @@ const MenuFilters = ({
   loading,
 }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
-  const dropdownRef = useRef(null);
 
-  // Close on outside click
+  // ✅ ONE wrapper ref for ALL dropdowns
+  const filtersRef = useRef(null);
+
+  // ✅ Outside click handler (correct)
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (filtersRef.current && !filtersRef.current.contains(event.target)) {
         setOpenDropdown(null);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ ROBUST TOGGLE LOGIC WITH DEBUGGING
+  // Toggle selection logic
   const toggleSelection = (e, type, value, allOptions) => {
     e.stopPropagation();
 
-    console.log(`--- CLICKED: ${value} [${type}] ---`);
-
     setFilters((prev) => {
-      // 1. Current Selected List Uthao
       const currentList = prev[type] || [];
-      console.log("Current List Before:", currentList);
-
       let newList;
 
       if (value === "ALL") {
-        // Logic: Agar saare pehle se selected hain to sab hata do, warna sab select kro
         const areAllSelected = allOptions.every((opt) =>
           currentList.includes(opt)
         );
-
-        if (areAllSelected) {
-          newList = []; // Deselect All
-          console.log("Action: Unselecting ALL");
-        } else {
-          newList = [...allOptions]; // Select All
-          console.log("Action: Selecting ALL");
-        }
+        newList = areAllSelected ? [] : [...allOptions];
       } else {
-        // Logic: Check kro value list mein hai ya nahi
-        // Hum String comparison use karein ge taake koi whitespace ka masla na ho
         const exists = currentList.some(
           (item) => String(item) === String(value)
         );
 
-        if (exists) {
-          // Remove Item
-          newList = currentList.filter(
-            (item) => String(item) !== String(value)
-          );
-          console.log("Action: Removed", value);
-        } else {
-          // Add Item
-          newList = [...currentList, value];
-          console.log("Action: Added", value);
-        }
+        newList = exists
+          ? currentList.filter((item) => String(item) !== String(value))
+          : [...currentList, value];
       }
 
-      console.log("New List:", newList);
       return { ...prev, [type]: newList };
     });
   };
 
-  // Helper for Checkbox Icon
-  const renderCheckboxIcon = (isChecked) => {
-    return isChecked ? (
+  const renderCheckboxIcon = (isChecked) =>
+    isChecked ? (
       <FaCheckSquare className="qm-check-icon checked" />
     ) : (
       <FaRegSquare className="qm-check-icon" />
     );
-  };
 
-  // --- Render Dropdown ---
   const renderDropdown = (label, type, options) => {
     const safeOptions = options || [];
     const selected = filters[type] || [];
+    const isOpen = openDropdown === type;
 
-    // Check All Logic: Kya saare options selected list mein hain?
     const isAllSelected =
       safeOptions.length > 0 &&
       safeOptions.every((opt) => selected.includes(opt));
 
-    const isOpen = openDropdown === type;
-
     return (
-      <div className="qm-select-group" ref={dropdownRef}>
+      <div className="qm-select-group" style={{ zIndex: isOpen ? 100 : 1 }}>
         <label>{label}</label>
 
-        {/* Trigger Button */}
+        {/* Trigger */}
         <div
           className={`qm-custom-select ${isOpen ? "active" : ""}`}
           onClick={() => !loading && setOpenDropdown(isOpen ? null : type)}
@@ -125,10 +99,10 @@ const MenuFilters = ({
           <FaChevronDown className={`arrow-icon ${isOpen ? "rotate" : ""}`} />
         </div>
 
-        {/* Dropdown Menu */}
+        {/* Dropdown */}
         {isOpen && (
           <div className="qm-dropdown-menu">
-            {/* Select All Option */}
+            {/* Select All */}
             <div
               className="qm-dropdown-item"
               onClick={(e) => toggleSelection(e, type, "ALL", safeOptions)}
@@ -139,9 +113,8 @@ const MenuFilters = ({
 
             <div className="qm-divider-h"></div>
 
-            {/* Individual Options */}
+            {/* Options */}
             {safeOptions.map((opt) => {
-              // Strict Check: Kya ye option selected list mein hai?
               const isChecked = selected.some((s) => String(s) === String(opt));
 
               return (
@@ -164,7 +137,7 @@ const MenuFilters = ({
   };
 
   return (
-    <div className="qm-filters">
+    <div className="qm-filters" ref={filtersRef}>
       {renderDropdown("Category", "category", categoriesList)}
       {renderDropdown("Difficulty", "difficulty", difficultiesList)}
     </div>

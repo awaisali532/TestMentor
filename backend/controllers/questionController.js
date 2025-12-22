@@ -1,17 +1,87 @@
 const Question = require("../models/question");
 const Topic = require("../models/topic");
-// ✅ NEW IMPORT (Zaroori hai filter ke liye)
-const Subject = require("../models/subjectModel");
+const Subject = require("../models/subjectModel"); // Required for Wizard Filter
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 
 // ==========================================
-// ✅ 1. NEW FUNCTION: FILTER FOR WIZARD
+// 1. GET ALL (ADMIN PANEL - SAFE MODE)
+// ==========================================
+const getAllQuestions = async (req, res) => {
+  try {
+    // Standard fetch for Admin Table
+    const questions = await Question.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      count: questions.length,
+      data: questions,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ==========================================
+// 2. GET MENU QUESTIONS (FOR USER SIDE - FLEXIBLE)
+// ==========================================
+// This is the specific function for your "Question Menu" where you need editing/presets
+const getMenuQuestions = async (req, res) => {
+  try {
+    const questions = await Question.find()
+      .populate("topics", "name topicNumber")
+      .populate("chapter", "name chapterNumber")
+      .sort({ createdAt: -1 })
+      .lean(); // Faster query
+
+    // Modify data structure here if needed for the Frontend Menu
+    const formattedQuestions = questions.map((q) => ({
+      ...q,
+      menuContext: "user_view", // Flag to identify source
+      canEdit: true,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedQuestions,
+    });
+  } catch (err) {
+    console.error("Menu Error:", err);
+    res.status(500).json({ error: "Failed to fetch menu questions" });
+  }
+};
+
+// ==========================================
+// 3. GET FILTERS (METADATA FOR DROPDOWNS)
+// ==========================================
+const getQuestionFilters = async (req, res) => {
+  try {
+    // Extract Enum values from Mongoose Schema
+    const categories = Question.schema.path("questionCategory").enumValues;
+    const difficulties = Question.schema.path("difficulty").enumValues;
+
+    res.status(200).json({
+      success: true,
+      categories, // e.g. ["TEXT", "EXERCISE"]
+      difficulties, // e.g. ["Easy", "Medium", "Hard"]
+    });
+  } catch (error) {
+    console.error("Metadata Error:", error);
+    res.status(500).json({ success: false, error: "Failed to fetch filters" });
+  }
+};
+
+// ==========================================
+// 4. GET QUESTIONS BY FILTER (WIZARD LOGIC)
 // ==========================================
 const getQuestionsByFilter = async (req, res) => {
   try {
     // Frontend sends: ?grade=9th Class&subject=Physics
     const { grade, subject } = req.query;
+
+    if (!grade || !subject) {
+      // Fallback if no params provided
+      return getAllQuestions(req, res);
+    }
 
     // 1. Find Subject ID
     const subjectDoc = await Subject.findOne({
@@ -24,10 +94,9 @@ const getQuestionsByFilter = async (req, res) => {
     }
 
     // 2. Find Questions directly by Subject ID
-    // Hum "topics" aur "chapter" ko populate kar rahe hain taake frontend par groupings ban sakein
     const questions = await Question.find({ subject: subjectDoc._id })
-      .populate("topics", "name topicNumber") // Populate Topics
-      .populate("chapter", "name chapterNumber") // Populate Chapter
+      .populate("topics", "name topicNumber")
+      .populate("chapter", "name chapterNumber")
       .sort({ createdAt: -1 });
 
     res.json(questions);
@@ -38,7 +107,7 @@ const getQuestionsByFilter = async (req, res) => {
 };
 
 // ==========================================
-// 2. ADD QUESTION (Existing Logic)
+// 5. ADD QUESTION
 // ==========================================
 const addQuestion = async (req, res) => {
   try {
@@ -57,19 +126,11 @@ const addQuestion = async (req, res) => {
       questionCategory,
     } = req.body;
 
-    // Safety Checks
-    if (!subjectId || subjectId === "undefined") {
-      return res
-        .status(400)
-        .json({ error: "System Error: Subject ID is missing." });
-    }
-    if (!classLevel || classLevel === "undefined") {
-      return res
-        .status(400)
-        .json({ error: "System Error: Class Level is missing." });
-    }
+    if (!subjectId || subjectId === "undefined")
+      return res.status(400).json({ error: "Subject ID missing." });
+    if (!classLevel || classLevel === "undefined")
+      return res.status(400).json({ error: "Class Level missing." });
 
-    // Handle Topics Input
     let parsedTopics = [];
     if (topics) {
       try {
@@ -80,19 +141,15 @@ const addQuestion = async (req, res) => {
     }
 
     if (!parsedTopics || parsedTopics.length === 0 || !type) {
-      return res
-        .status(400)
-        .json({ error: "At least one Topic and Type are required" });
+      return res.status(400).json({ error: "Topic and Type are required" });
     }
 
-    // Parse JSON fields
     let parsedStatement = statement
       ? JSON.parse(statement)
       : { en: "", ur: "" };
     let parsedOptions = options ? JSON.parse(options) : [];
     let parsedTags = boardTags ? JSON.parse(boardTags) : [];
 
-    // Image Handling
     let imageData = null;
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
@@ -122,48 +179,12 @@ const addQuestion = async (req, res) => {
     res.status(201).json(newQuestion);
   } catch (err) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    console.error("Add Question Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // ==========================================
-// 3. GET QUESTIONS BY TOPIC (Existing)
-// ==========================================
-const getQuestionsByTopic = async (req, res) => {
-  try {
-    const { topicId } = req.params;
-    const questions = await Question.find({ topics: topicId }).sort({
-      createdAt: -1,
-    });
-    res.json(questions);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// ==========================================
-// 4. DELETE QUESTION (Existing)
-// ==========================================
-const deleteQuestion = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const question = await Question.findById(id);
-    if (!question) return res.status(404).json({ error: "Question not found" });
-
-    if (question.image && question.image.public_id) {
-      await cloudinary.uploader.destroy(question.image.public_id);
-    }
-
-    await Question.findByIdAndDelete(id);
-    res.json({ message: "Question deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// ==========================================
-// 5. UPDATE QUESTION (Existing)
+// 6. UPDATE QUESTION
 // ==========================================
 const updateQuestion = async (req, res) => {
   try {
@@ -224,18 +245,48 @@ const updateQuestion = async (req, res) => {
     res.json(updatedQ);
   } catch (err) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    console.error("Update Question Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // ==========================================
-// 6. BULK ADD (Existing)
+// 7. DELETE QUESTION
 // ==========================================
+const deleteQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const question = await Question.findById(id);
+    if (!question) return res.status(404).json({ error: "Question not found" });
+
+    if (question.image && question.image.public_id) {
+      await cloudinary.uploader.destroy(question.image.public_id);
+    }
+
+    await Question.findByIdAndDelete(id);
+    res.json({ message: "Question deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ==========================================
+// 8. UTILITY FUNCTIONS (Topic, Bulk)
+// ==========================================
+const getQuestionsByTopic = async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    const questions = await Question.find({ topics: topicId }).sort({
+      createdAt: -1,
+    });
+    res.json(questions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 const addBulkQuestions = async (req, res) => {
   try {
     const { questions, chapterId, subjectId, classLevel } = req.body;
-
     if (!questions || !Array.isArray(questions) || questions.length === 0) {
       return res.status(400).json({ error: "Invalid data format." });
     }
@@ -252,19 +303,16 @@ const addBulkQuestions = async (req, res) => {
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       let assignedTopicIds = [];
-
       if (q.topics && Array.isArray(q.topics)) {
         q.topics.forEach((num) => {
           if (topicMap[num]) assignedTopicIds.push(topicMap[num]);
           else console.warn(`Topic Number ${num} not found`);
         });
       }
-
       if (assignedTopicIds.length === 0) {
         errors.push(`Question #${i + 1}: No valid topics found`);
         continue;
       }
-
       formattedQuestions.push({
         ...q,
         topics: assignedTopicIds,
@@ -277,26 +325,23 @@ const addBulkQuestions = async (req, res) => {
       });
     }
 
-    if (formattedQuestions.length === 0) {
+    if (formattedQuestions.length === 0)
       return res
         .status(400)
         .json({ error: "No questions mapped", details: errors });
-    }
 
     await Question.insertMany(formattedQuestions);
-    res.status(201).json({
-      message: `${formattedQuestions.length} Questions added!`,
-      warnings: errors.length > 0 ? errors : null,
-    });
+    res
+      .status(201)
+      .json({
+        message: `${formattedQuestions.length} Questions added!`,
+        warnings: errors.length > 0 ? errors : null,
+      });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// ==========================================
-// 7. DELETE BULK (Existing)
-// ==========================================
 const deleteQuestionsBulk = async (req, res) => {
   try {
     const { ids } = req.body;
@@ -316,14 +361,10 @@ const deleteQuestionsBulk = async (req, res) => {
   }
 };
 
-// ==========================================
-// 8. DELETE ALL IN TOPIC (Existing)
-// ==========================================
 const deleteAllQuestionsInTopic = async (req, res) => {
   try {
     const { topicId } = req.params;
     const questions = await Question.find({ topics: topicId });
-
     if (questions.length === 0)
       return res.status(404).json({ error: "No questions found" });
 
@@ -338,32 +379,17 @@ const deleteAllQuestionsInTopic = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-// ✅ Get Filters (Categories & Difficulties) directly from Schema
-const getQuestionFilters = async (req, res) => {
-  try {
-    // Mongoose Schema se Enum values nikalne ka tareeqa
-    const categories = Question.schema.path("questionCategory").enumValues;
-    const difficulties = Question.schema.path("difficulty").enumValues;
 
-    res.status(200).json({
-      success: true,
-      categories, // ["TEXT", "EXERCISE", ...]
-      difficulties, // ["Easy", "Medium", "Hard"]
-    });
-  } catch (error) {
-    console.error("Metadata Error:", error);
-    res.status(500).json({ success: false, error: "Failed to fetch filters" });
-  }
-};
-// ✅ EXPORT ALL
 module.exports = {
+  getAllQuestions, // Admin
+  getMenuQuestions, // User/Frontend Menu (Flexible)
+  getQuestionFilters, // Metadata (Dropdowns)
+  getQuestionsByFilter, // Wizard Logic
   addQuestion,
-  getQuestionsByFilter, // ✅ New Export
-  getQuestionsByTopic,
-  deleteQuestion,
   updateQuestion,
+  deleteQuestion,
+  getQuestionsByTopic,
   addBulkQuestions,
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
-  getQuestionFilters,
 };

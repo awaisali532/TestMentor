@@ -1,38 +1,51 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
+const { protect, hasPermission } = require("../middleware/authMiddleware");
+
+// Import Controllers
 const {
+  getAllQuestions, // Admin List
+  getMenuQuestions, // NEW: User/Frontend Menu
+  getQuestionFilters, // NEW: Metadata
+  getQuestionsByFilter, // Wizard Logic
   addQuestion,
-  getQuestionsByFilter,
-  getQuestionsByTopic,
-  deleteQuestion,
   updateQuestion,
+  deleteQuestion,
+  getQuestionsByTopic,
   addBulkQuestions,
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
-  getQuestionFilters, // ✅ 1. Import New Controller Function
 } = require("../controllers/questionController");
 
-// Import Middleware
-const { protect, hasPermission } = require("../middleware/authMiddleware");
-
-// ✅ Apply Protection (User must be logged in for all routes)
+// Apply Protection (All routes require login)
 router.use(protect);
 
-// --- ROUTES ---
+// =======================
+// READ OPERATIONS (GET)
+// =======================
 
-// ✅ 2. NEW ROUTE: Fetch Categories & Difficulties (Metadata)
-// Yeh route Frontend ke QuestionMenu mein dropdowns fill karega
+// 1. Fetch Categories & Difficulties (For Dropdowns)
 router.get("/filters", getQuestionFilters);
 
-// READ (Existing Filter Logic for fetching actual questions)
+// 2. NEW ROUTE: Fetch Data for User Menu (Flexible/Editable)
+// Use this endpoint in your React "QuestionMenu" component
+router.get("/menu-data", getMenuQuestions);
+
+// 3. Fetch Questions based on Filters (Wizard: ?grade=X&subject=Y)
 router.get("/filter", getQuestionsByFilter);
 
-// READ (Get questions by topic ID)
+// 4. Fetch All Questions (For Admin Panel Table)
+router.get("/", getAllQuestions);
+
+// 5. Fetch Questions by Topic ID
 router.get("/topic/:topicId", getQuestionsByTopic);
 
-// --- WRITE OPERATIONS (Admin/Manager Only) ---
+// =======================
+// WRITE OPERATIONS (Admin/Manager Only)
+// =======================
 
+// Add Single Question
 router.post(
   "/add",
   hasPermission("manage_questions"),
@@ -40,20 +53,24 @@ router.post(
   addQuestion
 );
 
+// Add Bulk Questions
 router.post("/bulk-add", hasPermission("manage_questions"), addBulkQuestions);
 
+// Delete Bulk Questions
 router.post(
   "/delete-bulk",
   hasPermission("manage_questions"),
   deleteQuestionsBulk
 );
 
+// Delete All in Topic
 router.delete(
   "/topic/:topicId/delete-all",
   hasPermission("manage_questions"),
   deleteAllQuestionsInTopic
 );
 
+// Update Question
 router.put(
   "/:id",
   hasPermission("manage_questions"),
@@ -61,6 +78,7 @@ router.put(
   updateQuestion
 );
 
+// Delete Single Question
 router.delete("/:id", hasPermission("manage_questions"), deleteQuestion);
 
 module.exports = router;

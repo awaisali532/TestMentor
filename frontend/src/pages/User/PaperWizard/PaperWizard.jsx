@@ -1,75 +1,78 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // ✅ useLocation Import
 import { FaExclamationTriangle } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
 
-// Child Components
+// Child Components (Imports same rahengi)
 import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb";
 import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector";
 import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector";
 import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector";
 import PatternSelector from "../../../components/PaperGeneration/PatternSelector/PatternSelector";
 import PatternForm from "../../Admin/PaperPatterns/PatternForm";
-import ModeSelector from "../../../components/PaperGeneration/ModeSelector/ModeSelector"; // ✅ IMPORTED MODE SELECTOR
+import ModeSelector from "../../../components/PaperGeneration/ModeSelector/ModeSelector";
 import "./PaperWizard.css";
 
 const PaperWizard = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ Location hook
   const { theme } = useTheme();
 
-  // --- STATE ---
-  const [step, setStep] = useState(() => {
-    const savedStep = localStorage.getItem("pw_step");
-    return savedStep ? parseInt(savedStep) : 1;
-  });
+  // --- 1. DEFAULT EMPTY STATE ---
+  const defaultPaperData = {
+    grade: "",
+    subject: "",
+    topics: [],
+    syllabusLabel: "Select Syllabus",
+    selectedPattern: null,
+    mode: null,
+    autoSettings: null,
+  };
 
-  const [paperData, setPaperData] = useState(() => {
-    const savedData = localStorage.getItem("pw_data");
-    const savedStep = localStorage.getItem("pw_step");
+  // --- 2. STATE INITIALIZATION ---
+  const [step, setStep] = useState(1);
+  const [paperData, setPaperData] = useState(defaultPaperData);
 
-    if (savedData && savedStep) {
-      const parsedData = JSON.parse(savedData);
-      const currentStep = parseInt(savedStep);
+  // ✅ 3. RESET LOGIC (Fresh Start vs Back from Maker)
+  useEffect(() => {
+    // Check karein agr user PaperMaker se 'Cancel' kr k aya hai
+    if (location.state?.keepData) {
+      // LocalStorage se data uthao (Restore session)
+      const savedStep = localStorage.getItem("pw_step");
+      const savedData = localStorage.getItem("pw_data");
 
-      // Reset Logic on Refresh
-      if (currentStep === 5)
-        return { ...parsedData, mode: null, autoSettings: null };
-      if (currentStep === 4) return { ...parsedData, selectedPattern: null };
-      if (currentStep === 3) return { ...parsedData, topics: [] };
-      if (currentStep === 2) return { ...parsedData, subject: "", topics: [] };
-
-      return parsedData;
+      if (savedData) setPaperData(JSON.parse(savedData));
+      // Hamesha Step 5 (Mode Selector) pr le jao agr wapis aya hai
+      if (savedStep) setStep(5);
+    } else {
+      // Agar New aya hai -> Sab Clean kr do (Fresh Start)
+      localStorage.removeItem("pw_step");
+      localStorage.removeItem("pw_data");
+      setStep(1);
+      setPaperData(defaultPaperData);
     }
-    // Default State
-    return {
-      grade: "",
-      subject: "",
-      topics: [],
-      syllabusLabel: "Select Syllabus",
-      selectedPattern: null,
-      mode: null, // 'MANUAL' or 'AUTO'
-      autoSettings: null, // For auto mode config
-    };
-  });
+  }, []); // Run only once on mount
+
+  // --- 4. PERSIST DATA (Save on change) ---
+  useEffect(() => {
+    // Sirf tab save kro jab data exist krta ho (taake empty state save na ho jaye start ma)
+    if (paperData.grade) {
+      localStorage.setItem("pw_step", step);
+      localStorage.setItem("pw_data", JSON.stringify(paperData));
+    }
+  }, [step, paperData]);
 
   const [showExitModal, setShowExitModal] = useState(false);
-
-  // States for Custom Pattern Form
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
-  // --- EFFECTS ---
-  useEffect(() => {
-    localStorage.setItem("pw_step", step);
-    localStorage.setItem("pw_data", JSON.stringify(paperData));
-  }, [step, paperData]);
+  // --- REST OF THE HANDLERS (Copy Paste existing logic below) ---
 
   useEffect(() => {
     if (step > 1 && !paperData.grade) setStep(1);
     if (step > 2 && !paperData.subject) setStep(2);
   }, [step, paperData]);
 
-  // --- HANDLERS ---
   const handleExitClick = () => setShowExitModal(true);
 
   const confirmExit = () => {
@@ -100,27 +103,23 @@ const PaperWizard = () => {
     setPaperData({ ...paperData, selectedPattern: pattern });
   };
 
-  // Step 4 Next Button -> Go to Step 5 (Mode Selection)
   const handlePatternConfirm = () => {
     setStep(5);
   };
 
-  // ✅ HANDLERS FOR STEP 5 (MODE)
   const handleModeSelect = (mode, settings) => {
-    // State update kro
     const finalData = { ...paperData, mode, autoSettings: settings };
     setPaperData(finalData);
 
     if (mode === "MANUAL") {
-      // ✅ NAVIGATE TO PAPER MAKER WITH DATA
       navigate("/user/paper-maker", { state: finalData });
     } else {
-      console.log("Starting Auto Generation with:", settings);
-      alert("Auto Generation Started! (API Integration Next)");
+      console.log("Auto Generation:", settings);
+      alert("Auto Gen Coming Soon");
     }
   };
 
-  // --- CUSTOM PATTERN LOGIC ---
+  // Custom Pattern Logic
   const handleCreateCustom = () => {
     setEditingPreset(null);
     setShowCustomForm(true);
@@ -149,7 +148,6 @@ const PaperWizard = () => {
       />
 
       <div className="pw-content">
-        {/* STEP 1 */}
         {step === 1 && (
           <div className="fade-in">
             <ClassSelector
@@ -159,7 +157,6 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* STEP 2 */}
         {step === 2 && (
           <div className="fade-in">
             <SubjectSelector
@@ -169,7 +166,6 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* STEP 3 */}
         {step === 3 && (
           <div className="fade-in">
             <SyllabusSelector
@@ -181,7 +177,6 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* STEP 4: PATTERN */}
         {step === 4 && (
           <div className="fade-in">
             {showCustomForm ? (
@@ -208,7 +203,7 @@ const PaperWizard = () => {
                 grade={paperData.grade}
                 subject={paperData.subject}
                 onSelect={handlePatternSelect}
-                onNext={handlePatternConfirm} // Go to Step 5
+                onNext={handlePatternConfirm}
                 onCreateCustom={handleCreateCustom}
                 onEdit={handleEditCustom}
               />
@@ -216,12 +211,11 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* ✅ STEP 5: MODE SELECTION */}
         {step === 5 && (
           <div className="fade-in">
             <ModeSelector
               onSelect={handleModeSelect}
-              onBack={() => setStep(4)} // Back to Pattern
+              onBack={() => setStep(4)}
             />
           </div>
         )}

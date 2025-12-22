@@ -1,43 +1,120 @@
-.qm-tabs {
-    display: flex;
-    gap: 10px;
-    border-bottom: 1px solid var(--pw-border);
-    padding-bottom: 15px;
-    margin-bottom: 10px;
+/* --- CONTAINER --- */
+.qm-tabs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid var(--pw-border);
+  padding-bottom: 15px;
+  margin-bottom: 10px;
+}
+
+/* --- ROW 1: MAIN TABS (MCQ, Short, Long) --- */
+.qm-main-tabs {
+  display: flex;
+  gap: 10px;
 }
 
 .qm-tab-btn {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--pw-border);
-    background: var(--pw-bg);
-    color: var(--u-text-muted);
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--pw-border);
+  background: var(--pw-bg);
+  color: var(--u-text-muted);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .qm-tab-btn:hover {
-    background: var(--pw-hover);
-    color: var(--pw-text);
+  background: var(--pw-hover);
+  color: var(--pw-text);
 }
 
 .qm-tab-btn.active {
-    background: rgba(37, 99, 235, 0.1);
-    color: var(--pw-accent);
-    border-color: var(--pw-accent);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--pw-accent);
+  border-color: var(--pw-accent);
 }
 
+/* Main Tab Badge (Total Count) */
 .qm-tab-badge {
-    font-size: 0.75rem;
-    background: var(--pw-card-bg);
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid var(--pw-border);
+  font-size: 0.75rem;
+  background: var(--pw-card-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--pw-border);
+}
+
+.qm-tab-badge.full {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-color: #10b981;
+}
+
+/* --- ROW 2: SUB TABS (Section Pills) --- */
+.qm-sub-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 5px 2px;
+}
+
+/* Hide Scrollbar for Sub Tabs */
+.qm-sub-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sub Button Style */
+.qm-sub-btn {
+  padding: 6px 14px;
+  border-radius: 20px; /* Pill Shape */
+  border: 1px solid var(--pw-border);
+  background: var(--pw-card-bg);
+  color: var(--u-text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Gap between Name and Count */
+}
+
+.qm-sub-btn:hover {
+  background: var(--pw-hover);
+  color: var(--pw-text);
+}
+
+/* Active Sub Button */
+.qm-sub-btn.active {
+  background: var(--pw-accent);
+  color: white;
+  border-color: var(--pw-accent);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Counter Text inside Sub Button (e.g. 1/8) */
+.sub-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.qm-sub-btn.active .sub-count {
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* FULL State (Jab quota pura ho jaye) - Green Style */
+.qm-sub-btn.full:not(.active) {
+  border-color: #10b981;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
 }
