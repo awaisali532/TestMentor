@@ -1,172 +1,215 @@
-/* --- TOPIC HEADER STYLES (For QuestionList) --- */
-.ql-topic-header {
-  background: #f8fafc; /* Light gray background */
-  padding: 10px 15px;
-  border-radius: 6px;
-  margin: 20px 0 10px 0;
-  font-weight: 700;
-  color: #334155;
-  border-left: 4px solid #3b82f6; /* Blue accent */
+/* QuestionCard.css */
 
-  /* ✅ Split View Logic */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.topic-ur {
-  font-family: "Jameel Noori Nastaleeq", serif;
-  font-size: 1.2rem;
-  color: #1e293b;
-}
-
-/* --- QUESTION CARD STYLES --- */
 .qc-card {
-  background: var(--pw-bg, #fff);
+  background: var(--pw-bg, #ffffff);
   border: 1px solid var(--pw-border, #e2e8f0);
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 10px;
+  border-top: none;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   cursor: pointer;
-  transition: all 0.2s;
+
+  /* ✅ Smooth Transition for Glow */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  color: var(--pw-text, #333);
+  position: relative;
+  z-index: 1;
 }
 
+.qc-card:first-of-type {
+  border-top: 1px solid var(--pw-border, #e2e8f0);
+}
+
+/* ✅ GLOW EFFECT ON HOVER */
 .qc-card:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  /* Border color becomes accent */
+  border-color: var(--pw-accent, #3b82f6);
+
+  /* Background change nahi hoga (White issue fixed) */
+  background: var(--pw-bg, #ffffff);
+
+  /* Thora Upar Uthega */
+  transform: translateY(-3px);
+
+  /* GLOW SHADOW (Blueish Glow) */
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.15),
+    0 0 10px rgba(59, 130, 246, 0.1);
+
+  z-index: 10; /* Hover wala card upar aa jaye */
 }
 
+/* SELECTED STATE */
 .qc-card.selected {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.04);
+  background: rgba(16, 185, 129, 0.04); /* Very light green */
+  border-left: 4px solid #10b981;
 }
 
 .qc-body {
   flex: 1;
-  padding-right: 15px;
-  width: 100%; /* Ensure it takes full width */
-}
-
-/* ✅ CONTENT WRAPPER (The Smart Layout) */
-.qc-content-wrapper {
   width: 100%;
 }
 
-/* MODE 1: ROW (Side by Side) */
-.qc-content-wrapper.layout-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px; /* Space between Eng and Urdu */
+/* SPLIT CONTAINER */
+.qc-split-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: 100%;
+  align-items: start;
 }
-.qc-content-wrapper.layout-row .qc-text-en {
-  flex: 1; /* Takes available space */
+
+.qc-split-left {
   text-align: left;
-}
-.qc-content-wrapper.layout-row .qc-text-ur {
-  flex: 1; /* Takes available space */
-  text-align: right;
-  white-space: nowrap; /* Try to keep single line if possible */
-}
-
-/* MODE 2: STACKED (Top and Bottom) */
-.qc-content-wrapper.layout-stacked {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.qc-content-wrapper.layout-stacked .qc-text-en {
-  width: 100%;
-}
-.qc-content-wrapper.layout-stacked .qc-text-ur {
-  width: 100%;
-  text-align: right;
-  border-top: 1px dashed #e2e8f0; /* Optional separator line */
-  padding-top: 8px;
-}
-
-/* --- TEXT STYLING --- */
-.qc-text-en {
-  font-size: 0.95rem;
-  color: #334155;
+  font-size: 1rem;
   font-weight: 500;
   line-height: 1.5;
 }
 
-.qc-text-ur {
+.qc-split-right {
+  text-align: right;
   font-family: "Jameel Noori Nastaleeq", serif;
-  font-size: 1.3rem; /* Slightly larger for readability */
-  color: #1e293b;
+  font-size: 1.25rem;
   line-height: 1.6;
 }
 
+/* ✅ ENGLISH LABEL (Q.1) */
 .qc-q-label {
-  color: #94a3b8;
-  font-weight: 700;
-  margin-right: 5px;
+  font-weight: 800;
+  margin-right: 8px;
+  color: var(--pw-accent, #3b82f6); /* Theme color for number */
 }
 
-/* --- TAGS & META --- */
+/* ✅ URDU LABEL (.1) - Right Side */
+.qc-q-label-ur {
+  font-weight: 800;
+  margin-left: 10px; /* Text se thora gap */
+  color: var(--pw-accent, #3b82f6);
+  display: inline-block;
+}
+
+/* MCQ OPTIONS */
+.qc-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 30px;
+  row-gap: 12px;
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--pw-border, #e2e8f0);
+}
+
+.qc-option-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.opt-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.opt-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+.opt-text-ur {
+  font-family: "Jameel Noori Nastaleeq", serif;
+  font-size: 1.1rem;
+}
+
+/* META DATA Styling */
 .qc-meta {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   margin-top: 12px;
   align-items: center;
 }
 
+.qc-tags-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* Base Tag Style */
 .qc-tag {
   font-size: 0.7rem;
   padding: 3px 8px;
   border-radius: 4px;
-  font-weight: 700;
   text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
-.qc-tag.cat {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
+
+/* --- DIFFICULTY COLORS --- */
 .qc-tag.diff.easy {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
 }
 .qc-tag.diff.medium {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
 }
 .qc-tag.diff.hard {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+/* --- CATEGORY COLORS --- */
+.qc-tag.cat {
+  border: 1px solid transparent;
+}
+
+/* Exercise (Greenish) */
+.qc-tag.cat.exercise {
+  background: #3f6212;
+  color: white;
+}
+
+/* Text / Conceptual (Blueish) */
+.qc-tag.cat.text,
+.qc-tag.cat.conceptual {
+  background: #1e40af;
+  color: white;
+}
+
+/* Past Papers (Purple/Dark) */
+.qc-tag.cat.pastpaper {
+  background: #581c87;
+  color: white;
+}
+
+/* Default Fallback */
+.qc-tag.cat.general {
+  background: #475569;
+  color: white;
 }
 
 .qc-marks {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 0.8rem;
+  color: #94a3b8;
   font-weight: 600;
-  margin-left: auto;
 }
 
-/* --- CHECKBOX --- */
+/* Checkbox */
 .qc-select-indicator {
+  padding-left: 15px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding-top: 5px;
+  height: 100%;
 }
-
 .qc-checkbox {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: 18px;
+  height: 18px;
   border: 2px solid #cbd5e1;
+  border-radius: 4px;
   transition: 0.2s;
 }
 .qc-card.selected .qc-checkbox {
-  border-color: #10b981;
   background: #10b981;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='14px' height='14px'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
-  background-position: center;
-  background-repeat: no-repeat;
+  border-color: #10b981;
 }

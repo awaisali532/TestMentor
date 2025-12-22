@@ -8,7 +8,7 @@ const TypeTabs = ({
   paperData,
   activeSection,
   setActiveSection,
-  selectedQuestions = [],
+  selectedQuestions = [], // This receives 'tempSelected' from Parent
 }) => {
   const mainTabs = [
     { id: "MCQ", label: "Multiple Choice" },
@@ -16,13 +16,12 @@ const TypeTabs = ({
     { id: "LONG", label: "Long Questions" },
   ];
 
-  // Helper to count questions inside specific sections
+  // ✅ Helper to count questions inside specific sections (Live Updates)
   const getSectionCount = (sectionId) => {
     return selectedQuestions.filter((q) => q.tabId === sectionId).length;
   };
 
   const getSubTabs = () => {
-    // ✅ FIX: Robust check for sections location
     let sections = [];
     if (paperData?.selectedPattern?.sections) {
       sections = paperData.selectedPattern.sections;
@@ -30,7 +29,6 @@ const TypeTabs = ({
       sections = paperData.paperPattern.sections;
     }
 
-    // If no specific sections structure exists (e.g. simple preset), return empty
     if (!sections || sections.length === 0) return [];
 
     const subTabs = [];
@@ -40,14 +38,14 @@ const TypeTabs = ({
 
     if (activeTab === "MCQ") return [];
 
-    // --- SHORT QUESTIONS LOGIC ---
+    // --- SHORT QUESTIONS ---
     if (activeTab === "SHORT") {
       relevantSections.forEach((sec, index) => {
         const secId = `sec_${index}`;
         const total = parseInt(sec.totalQuestions || sec.quantity) || 0;
-        const current = getSectionCount(secId);
 
-        // Auto Numbering: MCQ is Q.1, Short starts at Q.2
+        // ✅ Live Count for this specific Q.2 / Q.3 etc.
+        const current = getSectionCount(secId);
         const qNum = index + 2;
 
         subTabs.push({
@@ -60,9 +58,8 @@ const TypeTabs = ({
       });
     }
 
-    // --- LONG QUESTIONS LOGIC ---
+    // --- LONG QUESTIONS ---
     if (activeTab === "LONG") {
-      // Calculate Start Number (After Short Questions)
       const shortSectionsCount = sections.filter(
         (s) => s.questionType === "SHORT"
       ).length;
@@ -118,7 +115,7 @@ const TypeTabs = ({
 
   const subTabsList = getSubTabs();
 
-  // Auto-select first sub-tab if needed
+  // Auto-select first sub-tab
   useEffect(() => {
     if (subTabsList.length > 0 && !activeSection) {
       setActiveSection(subTabsList[0].id);
@@ -127,10 +124,8 @@ const TypeTabs = ({
 
   return (
     <div className="qm-tabs-container">
-      {/* 1. MAIN TABS */}
       <div className="qm-main-tabs">
         {mainTabs.map((tab) => {
-          // ✅ FIX: Safe Access to typeCounts
           const countData =
             typeCounts && typeCounts[tab.id]
               ? typeCounts[tab.id]
@@ -154,7 +149,6 @@ const TypeTabs = ({
         })}
       </div>
 
-      {/* 2. SUB TABS */}
       {subTabsList.length > 0 && (
         <div className="qm-sub-tabs">
           {subTabsList.map((sub) => (

@@ -1,11 +1,30 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import { FaExclamationCircle } from "react-icons/fa";
 import MenuHeader from "./components/MenuHeader/MenuHeader";
 import MenuFilters from "./components/MenuFilters/MenuFilters";
 import TypeTabs from "./components/TypeTabs/TypeTabs";
 import QuestionList from "./components/QuestionList/QuestionList";
-import MenuFooter from "./components/MenuFooter/MenuFooter";
+import MenuFooter from "./components/MenuFooter/MenuFooter"; // ✅ Updated Footer Import
 import "./QuestionMenu.css";
+
+// CUSTOM ALERT COMPONENT
+const CustomAlert = ({ message, onClose }) => {
+  if (!message) return null;
+  return (
+    <div className="qm-alert-overlay">
+      <div className="qm-alert-box">
+        <div className="qm-alert-icon">
+          <FaExclamationCircle />
+        </div>
+        <div className="qm-alert-msg">{message}</div>
+        <button className="qm-alert-btn" onClick={onClose}>
+          OK
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const QuestionMenu = ({
   isOpen,
@@ -27,11 +46,13 @@ const QuestionMenu = ({
   const [activeSection, setActiveSection] = useState(null);
   const [filters, setFilters] = useState({ category: [], difficulty: [] });
   const [show, setShow] = useState(false);
+  const [alertMsg, setAlertMsg] = useState(null);
   const [tempSelected, setTempSelected] = useState([]);
 
-  // --- ANIMATION ---
+  // --- INIT ---
   useEffect(() => {
     if (isOpen) {
+      setTempSelected(selectedQuestions || []);
       setShow(true);
     } else {
       const timer = setTimeout(() => setShow(false), 300);
@@ -39,10 +60,9 @@ const QuestionMenu = ({
     }
   }, [isOpen]);
 
-  // --- RESET ON TAB CHANGE ---
+  // --- RESET SECTION ---
   useEffect(() => {
     setActiveSection(null);
-    setTempSelected([]);
   }, [activeTab]);
 
   // --- FETCH FILTERS ---
@@ -55,13 +75,9 @@ const QuestionMenu = ({
         const res = await axios.get(`${BASE_URL}/api/questions/filters`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         if (res.data.success) {
           setCategoriesList(res.data.categories);
           setDifficultiesList(res.data.difficulties);
-        } else {
-          setCategoriesList(res.data.categories || []);
-          setDifficultiesList(res.data.difficulties || []);
         }
       } catch (err) {
         console.error("Error fetching filters:", err);
@@ -72,27 +88,93 @@ const QuestionMenu = ({
     fetchFilters();
   }, [isOpen]);
 
-  // --- TOGGLE SELECTION ---
+  // ============================================================
+  // ✅ HELPER: GET CURRENT SECTION LIMIT (For Footer & Logic)
+  // ============================================================
+  const getCurrentLimit = () => {
+    const pattern = paperData.selectedPattern || paperData.paperPattern;
+    const sections = pattern?.sections || [];
+    if (sections.length === 0) return 0;
+
+    if (activeTab === "MCQ") {
+      const mcqSection = sections.find((s) => s.questionType === "MCQ");
+      if (mcqSection)
+        return parseInt(mcqSection.totalQuestions || mcqSection.quantity || 0);
+      // Fallback
+      const oldMcq = pattern.mcqs || pattern.objective;
+      return parseInt(oldMcq?.quantity || 0);
+    }
+
+    if (!activeSection) return 0; // No section selected
+
+    // Extract index from ID (sec_0 -> 0)
+    const parts = activeSection.split("_");
+    const secIndex = parseInt(parts[1]);
+    const relevantSections = sections.filter(
+      (s) => s.questionType === activeTab
+    );
+
+    if (relevantSections[secIndex]) {
+      if (activeTab === "LONG") return 1; // Long Q parts are 1 per slot
+      return parseInt(relevantSections[secIndex].totalQuestions || 0);
+    }
+
+    return 0;
+  };
+
+  // ============================================================
+  // LIMIT CHECKING LOGIC
+  // ============================================================
   const handleToggleSelect = (question) => {
-    setTempSelected((prev) => {
-      const exists = prev.find((q) => q._id === question._id);
-      if (exists) return prev.filter((q) => q._id !== question._id);
-      return [...prev, question];
-    });
+    // 1. DESELECT
+    const isAlreadySelected = tempSelected.some((q) => q._id === question._id);
+    if (isAlreadySelected) {
+      setTempSelected((prev) => prev.filter((q) => q._id !== question._id));
+      return;
+    }
+
+    // 2. CHECK LIMIT
+    const limit = getCurrentLimit(); // Reuse helper
+    let currentCount = 0;
+    let sectionIdToSave = null;
+
+    if (activeTab === "MCQ") {
+      currentCount = tempSelected.filter((q) => q.type === "MCQ").length;
+      sectionIdToSave = "MCQ";
+    } else {
+      if (!activeSection) {
+        setAlertMsg("Please select a Question Number (e.g., Q.2) first!");
+        return;
+      }
+      currentCount = tempSelected.filter(
+        (q) => q.tabId === activeSection
+      ).length;
+      sectionIdToSave = activeSection;
+    }
+
+    if (limit > 0 && currentCount >= limit) {
+      setAlertMsg(`Limit Reached! (${currentCount}/${limit}) selected.`);
+      return;
+    }
+
+    // ✅ ADD
+    setTempSelected((prev) => [
+      ...prev,
+      { ...question, tabId: sectionIdToSave },
+    ]);
   };
 
   const handleConfirmAdd = () => {
     if (onAddQuestionsToPaper) {
-      onAddQuestionsToPaper(tempSelected, activeSection);
+      onAddQuestionsToPaper(tempSelected);
     }
-    setTempSelected([]);
   };
 
   const handleAutoSelect = () => {
-    alert("Auto Select Logic Coming Soon!");
+    alert("Auto Select Coming Soon!");
   };
 
-  // --- ✅ FIXED: PAPER LIMITS CALCULATION ---
+  // --- COUNTS FOR TABS ---
   const typeCounts = useMemo(() => {
     const counts = {
       MCQ: { total: 0, current: 0 },
@@ -101,67 +183,35 @@ const QuestionMenu = ({
     };
 
     if (!paperData) return counts;
+    const pattern = paperData.selectedPattern || paperData.paperPattern;
+    const sections = pattern?.sections || [];
 
-    // ✅ FIX: Check both locations (Wizard data might vary)
-    const pattern = paperData.paperPattern || paperData.selectedPattern || {};
+    sections.forEach((sec) => {
+      const type = sec.questionType;
+      let qty = parseInt(sec.totalQuestions || sec.quantity) || 0;
+      if (type === "LONG" && sec.hasParts) qty = qty * 2;
+      if (counts[type]) counts[type].total += qty;
+    });
 
-    // 1. MCQs Total
-    // Check various casing: mcqs, MCQ, objective
-    const mcqData = pattern.mcqs || pattern.MCQ || pattern.objective;
-    if (mcqData) {
-      counts.MCQ.total = parseInt(
-        mcqData.quantity || mcqData.totalQuestions || 0
-      );
-    }
-
-    // 2. Short Questions Total
-    const shortData = pattern.shortQuestions || pattern.SHORT || pattern.short;
-    if (shortData) {
-      if (Array.isArray(shortData)) {
-        // Sum up all sections
-        counts.SHORT.total = shortData.reduce(
-          (sum, sec) =>
-            sum + (parseInt(sec.quantity || sec.totalQuestions) || 0),
-          0
-        );
-      } else {
-        counts.SHORT.total = parseInt(
-          shortData.quantity || shortData.totalQuestions || 0
-        );
-      }
-    }
-
-    // 3. Long Questions Total
-    const longData = pattern.longQuestions || pattern.LONG || pattern.long;
-    if (longData) {
-      if (Array.isArray(longData)) {
-        counts.LONG.total = longData.reduce(
-          (sum, sec) =>
-            sum + (parseInt(sec.quantity || sec.totalQuestions) || 0),
-          0
-        );
-      } else {
-        counts.LONG.total = parseInt(
-          longData.quantity || longData.totalQuestions || 0
-        );
-      }
-    }
-
-    // 4. Current Selected
-    if (selectedQuestions && selectedQuestions.length > 0) {
-      counts.MCQ.current = selectedQuestions.filter(
-        (q) => q.type === "MCQ"
-      ).length;
-      counts.SHORT.current = selectedQuestions.filter(
+    if (tempSelected.length > 0) {
+      counts.MCQ.current = tempSelected.filter((q) => q.type === "MCQ").length;
+      counts.SHORT.current = tempSelected.filter(
         (q) => q.type === "SHORT"
       ).length;
-      counts.LONG.current = selectedQuestions.filter(
+      counts.LONG.current = tempSelected.filter(
         (q) => q.type === "LONG"
       ).length;
     }
-
     return counts;
-  }, [paperData, selectedQuestions]);
+  }, [paperData, tempSelected]);
+
+  // ✅ Calculate current count for Footer
+  const currentSelectionCount = useMemo(() => {
+    if (activeTab === "MCQ")
+      return tempSelected.filter((q) => q.type === "MCQ").length;
+    if (!activeSection) return 0;
+    return tempSelected.filter((q) => q.tabId === activeSection).length;
+  }, [tempSelected, activeTab, activeSection]);
 
   if (!show) return null;
 
@@ -171,6 +221,8 @@ const QuestionMenu = ({
         isSidebarCollapsed ? "sidebar-collapsed" : ""
       }`}
     >
+      <CustomAlert message={alertMsg} onClose={() => setAlertMsg(null)} />
+
       <div className="qm-container">
         <MenuHeader
           paperData={paperData}
@@ -189,13 +241,15 @@ const QuestionMenu = ({
             <TypeTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              typeCounts={typeCounts} // ✅ Correct Counts passed
+              typeCounts={typeCounts}
               paperData={paperData}
               activeSection={activeSection}
               setActiveSection={setActiveSection}
-              selectedQuestions={selectedQuestions}
+              selectedQuestions={tempSelected}
             />
           </div>
+
+          {/* Content Area with Padding Fix */}
           <div className="qm-content">
             <QuestionList
               filters={filters}
@@ -205,11 +259,16 @@ const QuestionMenu = ({
               onToggleSelect={handleToggleSelect}
             />
           </div>
+
+          {/* ✅ Footer with Dynamic Limit & Count */}
           <MenuFooter
-            count={tempSelected.length}
+            count={currentSelectionCount}
+            limit={getCurrentLimit()}
             sectionLabel={
               activeSection
                 ? activeSection.replace(/_/g, " ").toUpperCase()
+                : activeTab === "MCQ"
+                ? "MCQ SECTION"
                 : "SECTION"
             }
             onAdd={handleConfirmAdd}

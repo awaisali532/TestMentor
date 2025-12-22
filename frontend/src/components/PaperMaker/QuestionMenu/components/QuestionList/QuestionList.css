@@ -1,36 +1,34 @@
+/* QuestionList.css */
+
 .ql-container {
-  padding-bottom: 80px; /* Space for Footer */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* No gap here, we handle spacing via padding inside cards */
 }
+
 .ql-loading,
 .ql-empty {
-  text-align: center;
-  padding: 50px;
-  color: var(--u-text-muted);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-}
-.spin {
-  animation: spin 1s linear infinite;
+  justify-content: center;
+  padding: 40px;
+  color: #64748b;
+  font-size: 1rem;
 }
 
+/* ✅ NEW TOPIC HEADER STYLE (Figure 2 Style) */
 .ql-topic-header {
-  position: sticky;
-  top: 0;
-  background: var(--pw-card-bg);
-  padding: 8px 12px;
+  background-color: #1e3a8a; /* Dark Blue like Screenshot */
+  color: white;
+  text-align: center;
   font-weight: 700;
-  color: var(--pw-accent);
-  border-bottom: 2px solid var(--pw-border);
-  margin: 15px 0 10px 0;
-  z-index: 5;
+  padding: 10px 15px;
+  font-size: 1.1rem;
+  border-radius: 4px 4px 0 0; /* Top rounded only */
+  margin-top: 15px; /* Thora gap pichle section se */
+  margin-bottom: 0; /* Niche koi gap nahi, card ke sath stick karega */
   text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 1px;
-}
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
+  letter-spacing: 0.5px;
 }

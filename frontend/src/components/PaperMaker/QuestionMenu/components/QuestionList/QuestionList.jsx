@@ -20,6 +20,11 @@ const QuestionList = ({
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
+
+        console.group("🚀 FETCHING QUESTIONS");
+        console.log("Filters:", filters);
+        console.groupEnd();
+
         const res = await axios.get(`${BASE_URL}/api/questions/filter`, {
           headers: { Authorization: `Bearer ${token}` },
           params: {
@@ -48,6 +53,7 @@ const QuestionList = ({
         <FaSpinner className="spin" /> Loading Questions...
       </div>
     );
+
   if (questions.length === 0)
     return (
       <div className="ql-empty">
@@ -59,20 +65,18 @@ const QuestionList = ({
 
   return (
     <div className="ql-container">
-      {questions.map((q) => {
+      {questions.map((q, index) => {
+        // ✅ Added index here
         const topicId = q.topics?.[0]?._id || "unknown";
         const rawName = q.topics?.[0]?.name;
 
-        // ✅ Safely extract English and Urdu Topic Names
-        let topicEn = "General Questions";
-        let topicUr = "";
-
+        // Topic Name Extraction
+        let topicName = "General Questions";
         if (rawName) {
           if (typeof rawName === "object") {
-            topicEn = rawName.en || "General Questions";
-            topicUr = rawName.ur || "";
+            topicName = `${rawName.en} ${rawName.ur ? `(${rawName.ur})` : ""}`;
           } else {
-            topicEn = rawName;
+            topicName = rawName;
           }
         }
 
@@ -83,20 +87,12 @@ const QuestionList = ({
 
         return (
           <React.Fragment key={q._id}>
-            {/* ✅ UPDATED TOPIC HEADER (Split View) */}
-            {showHeader && (
-              <div className="ql-topic-header">
-                <span className="topic-en">{topicEn}</span>
-                {topicUr && (
-                  <span className="topic-ur" dir="rtl">
-                    {topicUr}
-                  </span>
-                )}
-              </div>
-            )}
+            {/* SOLID BAR TOPIC HEADER */}
+            {showHeader && <div className="ql-topic-header">{topicName}</div>}
 
             <QuestionCard
               question={q}
+              index={index + 1} // ✅ Pass Question Number (1, 2, 3...)
               isSelected={isSelected}
               onToggle={onToggleSelect}
             />

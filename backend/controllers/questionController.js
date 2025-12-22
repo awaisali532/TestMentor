@@ -69,65 +69,84 @@ const getQuestionFilters = async (req, res) => {
 // ==========================================
 // 4. GET QUESTIONS BY FILTER (WIZARD LOGIC - FIXED)
 // ==========================================
+// questionController.js
+
+// ==========================================
+// 4. GET QUESTIONS BY FILTER (WIZARD LOGIC - DEBUGGED)
+// ==========================================
 const getQuestionsByFilter = async (req, res) => {
   try {
-    // ✅ Extract all filter params from Query String
-    const { grade, subject, type, category, difficulty, topics } = req.query;
+    console.log("🔍 API HIT: /filter");
+    console.log("👉 Query Params Received:", req.query);
+
+    const { grade, subject, type } = req.query;
+
+    // ✅ FIX: Handle keys with brackets (category[] vs category)
+    // Axios aksar arrays ko 'key[]' ke naam se bhejta hai
+    const rawCategory = req.query.category || req.query["category[]"];
+    const rawDifficulty = req.query.difficulty || req.query["difficulty[]"];
+    const rawTopics = req.query.topics || req.query["topics[]"];
 
     if (!grade || !subject) {
       return res.status(400).json({ error: "Grade and Subject are required" });
     }
 
-    // 1. Find Subject ID
+    // 1. Find Subject
     const subjectDoc = await Subject.findOne({
       className: grade,
       subjectName: subject,
     });
 
     if (!subjectDoc) {
+      console.log("❌ Subject Not Found:", grade, subject);
       return res.status(404).json({ error: "Subject not found" });
     }
 
-    // 2. Build Dynamic Query
+    // 2. Build Query
     let query = { subject: subjectDoc._id };
 
-    // ✅ Filter by Type (MCQ, SHORT, LONG) - Crucial for Tabs
-    if (type) {
+    // --- TYPE ---
+    if (type && type !== "ALL") {
       query.type = type;
     }
 
-    // ✅ Filter by Difficulty (Handle Arrays)
-    if (difficulty) {
-      const diffArray = Array.isArray(difficulty) ? difficulty : [difficulty];
-      if (diffArray.length > 0) {
-        query.difficulty = { $in: diffArray };
-      }
+    // ✅ Helper to normalize to Array
+    const normalizeArray = (val) => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      return [val]; // Convert single string to array
+    };
+
+    // --- CATEGORY ---
+    const catArray = normalizeArray(rawCategory);
+    if (catArray.length > 0) {
+      query.questionCategory = { $in: catArray };
     }
 
-    // ✅ Filter by Category (Text, Exercise, etc.)
-    if (category) {
-      const catArray = Array.isArray(category) ? category : [category];
-      if (catArray.length > 0) {
-        query.questionCategory = { $in: catArray };
-      }
+    // --- DIFFICULTY ---
+    const diffArray = normalizeArray(rawDifficulty);
+    if (diffArray.length > 0) {
+      query.difficulty = { $in: diffArray };
     }
 
-    // ✅ Filter by Topics (Specific Chapter Topics)
-    if (topics) {
-      const topicArray = Array.isArray(topics) ? topics : [topics];
-      if (topicArray.length > 0) {
-        query.topics = { $in: topicArray };
-      }
+    // --- TOPICS ---
+    const topicArray = normalizeArray(rawTopics);
+    if (topicArray.length > 0) {
+      query.topics = { $in: topicArray };
     }
 
-    // 3. Execute Query
+    console.log("🛠️ FINAL MONGO QUERY:", JSON.stringify(query, null, 2));
+
+    // 3. Execute
     const questions = await Question.find(query)
       .populate("topics", "name topicNumber")
       .populate("chapter", "name chapterNumber")
-      .sort({ createdAt: -1 }) // Newest first
+      .sort({ createdAt: -1 })
       .lean();
 
-    // 4. Format for Frontend
+    console.log(`✅ Found ${questions.length} questions`);
+
+    // 4. Send
     const formattedQuestions = questions.map((q) => ({
       ...q,
       menuContext: "filter_api",
@@ -135,7 +154,7 @@ const getQuestionsByFilter = async (req, res) => {
 
     res.status(200).json(formattedQuestions);
   } catch (err) {
-    console.error("Filter Error:", err);
+    console.error("❌ Filter Error:", err);
     res.status(500).json({ error: "Failed to fetch questions" });
   }
 };

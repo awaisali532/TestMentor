@@ -1,21 +1,17 @@
 import React from "react";
+// ✅ IMPORT FROM COMMON (Path check kr lena apne folder structure k hisab se)
+import RenderText from "../../../../common/RenderText";
 import "./QuestionCard.css";
 
-const QuestionCard = ({ question, isSelected, onToggle }) => {
+const QuestionCard = ({ question, index, isSelected, onToggle }) => {
   // Extract Text safely
-  // Handle case where statement is string or object
-  const textEn =
-    typeof question.statement === "object"
-      ? question.statement.en
-      : question.statement;
-  const textUr =
-    typeof question.statement === "object" ? question.statement.ur : null;
+  const textEn = question.statement?.en || "";
+  const textUr = question.statement?.ur || null;
 
-  // ✅ SMART LAYOUT LOGIC
-  // Agar English text 85 characters se zyada hai, ya Urdu text bohat lamba hai -> Stack Mode
-  const isLongText =
-    (textEn && textEn.length > 85) || (textUr && textUr.length > 85);
-  const layoutClass = isLongText ? "layout-stacked" : "layout-row";
+  // Helper for Category Class (for styling tags)
+  const categoryClass = question.questionCategory
+    ? question.questionCategory.toLowerCase().replace(/\s+/g, "")
+    : "general";
 
   return (
     <div
@@ -23,33 +19,82 @@ const QuestionCard = ({ question, isSelected, onToggle }) => {
       onClick={() => onToggle(question)}
     >
       <div className="qc-body">
-        {/* ✅ DYNAMIC CONTENT WRAPPER */}
-        <div className={`qc-content-wrapper ${layoutClass}`}>
-          {/* English Section */}
-          <div className="qc-text-en">
-            <span className="qc-q-label">Q. </span>
-            {textEn}
+        {/* --- 50/50 SPLIT LAYOUT --- */}
+        <div className="qc-split-container">
+          {/* LEFT: English (With Math & Numbering) */}
+          <div className="qc-split-left">
+            <span className="qc-q-label">Q.{index} </span>
+            {/* ✅ RenderText for Math Equations */}
+            <RenderText text={textEn} />
           </div>
 
-          {/* Urdu Section */}
+          {/* RIGHT: Urdu (With Math & RTL & Numbering) */}
           {textUr && (
-            <div className="qc-text-ur" dir="rtl">
-              {textUr}
+            <div className="qc-split-right" dir="rtl">
+              {/* ✅ URDU NUMBERING ADDED */}
+              <span className="qc-q-label-ur">{index}.</span>
+              <RenderText text={textUr} />
             </div>
           )}
         </div>
 
-        {/* Tags / Meta Info */}
+        {/* --- MCQ OPTIONS GRID --- */}
+        {question.type === "MCQ" &&
+          question.options &&
+          question.options.length > 0 && (
+            <div className="qc-options-grid">
+              {question.options.map((opt, i) => {
+                const label = String.fromCharCode(65 + i); // A, B, C, D
+                const optEn = opt.en || "";
+                const optUr = opt.ur || "";
+
+                return (
+                  <div key={i} className="qc-option-item">
+                    <div className="opt-left">
+                      <span className="opt-label">({label})</span>
+                      <span className="opt-text-en">
+                        {/* ✅ Render Option English */}
+                        <RenderText text={optEn} />
+                      </span>
+                    </div>
+
+                    {optUr && (
+                      <div className="opt-right" dir="rtl">
+                        <span className="opt-text-ur">
+                          {/* ✅ Render Option Urdu */}
+                          <RenderText text={optUr} />
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        {/* --- METADATA TAGS --- */}
         <div className="qc-meta">
-          <span className="qc-tag cat">{question.questionCategory}</span>
-          <span className={`qc-tag diff ${question.difficulty.toLowerCase()}`}>
-            {question.difficulty}
-          </span>
+          <div className="qc-tags-group">
+            {/* Category Tag */}
+            <span className={`qc-tag cat ${categoryClass}`}>
+              {question.questionCategory || "General"}
+            </span>
+
+            {/* Difficulty Tag */}
+            {question.difficulty && (
+              <span
+                className={`qc-tag diff ${question.difficulty.toLowerCase()}`}
+              >
+                {question.difficulty}
+              </span>
+            )}
+          </div>
+
           <span className="qc-marks">Marks: {question.marks}</span>
         </div>
       </div>
 
-      {/* Selection Indicator */}
+      {/* Checkbox */}
       <div className="qc-select-indicator">
         <div className={`qc-checkbox ${isSelected ? "checked" : ""}`}></div>
       </div>

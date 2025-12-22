@@ -1,88 +1,136 @@
 .qm-footer {
-  position: absolute;
+  /* Sticky Positioning Logic handled by Parent (QuestionMenu.css) 
+     Lekin yahan hum isay bottom pr fix dikhane k liye styling de rahe hain */
+
+  position: absolute; /* Parent relative hai, to ye bottom pr chipak jayega */
   bottom: 0;
   left: 0;
   right: 0;
-  height: 70px;
-  background: var(--pw-card-bg);
-  border-top: 1px solid var(--pw-border);
+
+  height: 80px; /* Thora bara kiya taake comfortable lage */
+  background: var(--pw-card-bg, #ffffff);
+  border-top: 1px solid var(--pw-border, #e2e8f0);
+
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 25px;
-  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
-  z-index: 20;
+  padding: 0 30px;
+
+  /* Upwards Shadow for depth */
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  z-index: 50; /* List ke upar rahe */
 }
 
+/* LEFT SIDE */
 .qm-footer-left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 .qm-selection-info {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-.count-badge {
-  background: var(--pw-text);
-  color: var(--pw-bg);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 800;
-  font-size: 0.9rem;
-}
-.count-text {
-  color: var(--pw-text);
-  font-size: 0.9rem;
-}
-.count-text strong {
-  color: var(--pw-accent);
+  gap: 12px;
 }
 
+/* Progress Pill (0/5) */
+.progress-pill {
+  background: var(--pw-bg, #f1f5f9);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--pw-text, #333);
+  border: 1px solid var(--pw-border, #cbd5e1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress-pill.success {
+  background: #d1fae5; /* Light Green */
+  color: #065f46;
+  border-color: #10b981;
+}
+
+.progress-pill.error {
+  background: #fee2e2; /* Light Red */
+  color: #991b1b;
+  border-color: #ef4444;
+}
+
+.count-text {
+  color: var(--u-text-muted, #64748b);
+  font-size: 0.95rem;
+}
+.count-text strong {
+  color: var(--pw-accent, #3b82f6);
+  font-weight: 600;
+}
+
+/* BUTTONS */
 .qm-footer-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: 0.2s;
+  gap: 10px;
+  transition: all 0.2s ease;
   border: none;
+  outline: none;
 }
 
+/* Primary Button (Add) */
 .qm-footer-btn.primary {
-  background: #10b981;
+  background: #10b981; /* Success Green */
   color: white;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 .qm-footer-btn.primary:hover {
   background: #059669;
   transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.5);
 }
-.qm-footer-btn.primary:disabled {
-  background: var(--pw-border);
-  color: var(--u-text-muted);
+.qm-footer-btn.primary:active {
+  transform: translateY(0);
+}
+
+/* Disabled Button */
+.qm-footer-btn.disabled {
+  background: var(--pw-bg-hover, #f1f5f9);
+  color: var(--u-text-muted, #94a3b8);
+  border: 1px solid var(--pw-border, #e2e8f0);
   cursor: not-allowed;
   box-shadow: none;
-  transform: none;
 }
 
+/* Outline Button (Auto Pick) */
 .qm-footer-btn.outline {
   background: transparent;
-  border: 1px solid var(--pw-border);
-  color: var(--pw-text);
+  border: 1px solid var(--pw-border, #cbd5e1);
+  color: var(--pw-text, #333);
 }
 .qm-footer-btn.outline:hover {
-  border-color: var(--pw-accent);
-  color: var(--pw-accent);
-  background: var(--pw-hover);
+  border-color: var(--pw-accent, #3b82f6);
+  color: var(--pw-accent, #3b82f6);
+  background: rgba(59, 130, 246, 0.05);
 }
 
+/* Mobile Responsive */
 @media (max-width: 600px) {
+  .qm-footer {
+    padding: 0 15px;
+    height: 70px;
+  }
   .hide-mobile {
     display: none;
+  }
+  .count-text {
+    display: none; /* Mobile pr text chupa do, sirf 4/5 dikhao */
   }
 }
