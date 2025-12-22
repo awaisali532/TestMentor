@@ -18,149 +18,151 @@ const QuestionMenu = ({
 }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // --- STATE MANAGEMENT ---
+  // --- STATE ---
   const [categoriesList, setCategoriesList] = useState([]);
   const [difficultiesList, setDifficultiesList] = useState([]);
   const [loadingFilters, setLoadingFilters] = useState(true);
 
   const [activeTab, setActiveTab] = useState("MCQ");
   const [activeSection, setActiveSection] = useState(null);
-
   const [filters, setFilters] = useState({ category: [], difficulty: [] });
-
-  // Animation State
   const [show, setShow] = useState(false);
-
-  // ✅ TEMP SELECTION STATE (Currently selected in this menu session)
   const [tempSelected, setTempSelected] = useState([]);
 
-  // --- ANIMATION LOGIC ---
+  // --- ANIMATION ---
   useEffect(() => {
     if (isOpen) {
       setShow(true);
     } else {
-      const timer = setTimeout(() => setShow(false), 300); // Wait for transition
+      const timer = setTimeout(() => setShow(false), 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // --- RESET SELECTION ON TAB CHANGE ---
-  // Safety: Don't mix MCQ selections with Short Question selections
+  // --- RESET ON TAB CHANGE ---
   useEffect(() => {
     setActiveSection(null);
     setTempSelected([]);
   }, [activeTab]);
 
-  // --- FETCH FILTERS (The Fix) ---
+  // --- FETCH FILTERS ---
   useEffect(() => {
-    // Only fetch if menu is open
     if (!isOpen) return;
-
     const fetchFilters = async () => {
       setLoadingFilters(true);
       try {
-        const token = localStorage.getItem("token"); // ✅ Get Token
-
+        const token = localStorage.getItem("token");
         const res = await axios.get(`${BASE_URL}/api/questions/filters`, {
-          headers: {
-            Authorization: `Bearer ${token}`, // ✅ Send Token
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        // ✅ Handle New Response Structure
         if (res.data.success) {
           setCategoriesList(res.data.categories);
           setDifficultiesList(res.data.difficulties);
         } else {
-          // Fallback
           setCategoriesList(res.data.categories || []);
           setDifficultiesList(res.data.difficulties || []);
         }
       } catch (err) {
         console.error("Error fetching filters:", err);
       } finally {
-        setLoadingFilters(false); // ✅ Stop Loading
+        setLoadingFilters(false);
       }
     };
-
     fetchFilters();
   }, [isOpen]);
 
-  // --- TOGGLE SELECTION LOGIC ---
+  // --- TOGGLE SELECTION ---
   const handleToggleSelect = (question) => {
     setTempSelected((prev) => {
       const exists = prev.find((q) => q._id === question._id);
-      if (exists) {
-        // Remove if exists
-        return prev.filter((q) => q._id !== question._id);
-      }
-      // Add if new
+      if (exists) return prev.filter((q) => q._id !== question._id);
       return [...prev, question];
     });
   };
 
-  // --- CONFIRM ADD TO PAPER ---
   const handleConfirmAdd = () => {
     if (onAddQuestionsToPaper) {
-      // Send selected questions + target section to Parent
       onAddQuestionsToPaper(tempSelected, activeSection);
     }
-    setTempSelected([]); // Clear temp after adding
-    // onClose(); // Uncomment if you want to close menu automatically
+    setTempSelected([]);
   };
 
-  // --- AUTO SELECT LOGIC (Placeholder) ---
   const handleAutoSelect = () => {
     alert("Auto Select Logic Coming Soon!");
   };
 
-  // --- PAPER LIMITS CALCULATION ---
-  // Calculates how many questions are allowed vs selected
+  // --- ✅ FIXED: PAPER LIMITS CALCULATION ---
   const typeCounts = useMemo(() => {
-    if (!paperData || !paperData.paperPattern) {
-      return {
-        MCQ: { total: 0, current: 0 },
-        SHORT: { total: 0, current: 0 },
-        LONG: { total: 0, current: 0 },
-      };
+    const counts = {
+      MCQ: { total: 0, current: 0 },
+      SHORT: { total: 0, current: 0 },
+      LONG: { total: 0, current: 0 },
+    };
+
+    if (!paperData) return counts;
+
+    // ✅ FIX: Check both locations (Wizard data might vary)
+    const pattern = paperData.paperPattern || paperData.selectedPattern || {};
+
+    // 1. MCQs Total
+    // Check various casing: mcqs, MCQ, objective
+    const mcqData = pattern.mcqs || pattern.MCQ || pattern.objective;
+    if (mcqData) {
+      counts.MCQ.total = parseInt(
+        mcqData.quantity || mcqData.totalQuestions || 0
+      );
     }
 
-    // Helper to count selected questions by type
-    const countCurrent = (type) =>
-      selectedQuestions.filter((q) => q.type === type).length;
-
-    // Helper to sum totals from Paper Pattern
-    const countTotal = (typeKey) => {
-      const section = paperData.paperPattern[typeKey];
-      if (!section) return 0;
-      // If array of sections (like Short Questions), sum them up
-      if (Array.isArray(section)) {
-        return section.reduce(
-          (sum, item) => sum + (parseInt(item.quantity) || 0),
+    // 2. Short Questions Total
+    const shortData = pattern.shortQuestions || pattern.SHORT || pattern.short;
+    if (shortData) {
+      if (Array.isArray(shortData)) {
+        // Sum up all sections
+        counts.SHORT.total = shortData.reduce(
+          (sum, sec) =>
+            sum + (parseInt(sec.quantity || sec.totalQuestions) || 0),
           0
         );
+      } else {
+        counts.SHORT.total = parseInt(
+          shortData.quantity || shortData.totalQuestions || 0
+        );
       }
-      // If single object (like MCQs)
-      return parseInt(section.quantity) || 0;
-    };
+    }
 
-    return {
-      MCQ: {
-        total: countTotal("mcqs"),
-        current: countCurrent("MCQ"),
-      },
-      SHORT: {
-        total: countTotal("shortQuestions"),
-        current: countCurrent("SHORT"),
-      },
-      LONG: {
-        total: countTotal("longQuestions"),
-        current: countCurrent("LONG"),
-      },
-    };
+    // 3. Long Questions Total
+    const longData = pattern.longQuestions || pattern.LONG || pattern.long;
+    if (longData) {
+      if (Array.isArray(longData)) {
+        counts.LONG.total = longData.reduce(
+          (sum, sec) =>
+            sum + (parseInt(sec.quantity || sec.totalQuestions) || 0),
+          0
+        );
+      } else {
+        counts.LONG.total = parseInt(
+          longData.quantity || longData.totalQuestions || 0
+        );
+      }
+    }
+
+    // 4. Current Selected
+    if (selectedQuestions && selectedQuestions.length > 0) {
+      counts.MCQ.current = selectedQuestions.filter(
+        (q) => q.type === "MCQ"
+      ).length;
+      counts.SHORT.current = selectedQuestions.filter(
+        (q) => q.type === "SHORT"
+      ).length;
+      counts.LONG.current = selectedQuestions.filter(
+        (q) => q.type === "LONG"
+      ).length;
+    }
+
+    return counts;
   }, [paperData, selectedQuestions]);
 
-  // --- RENDER ---
   if (!show) return null;
 
   return (
@@ -170,15 +172,12 @@ const QuestionMenu = ({
       }`}
     >
       <div className="qm-container">
-        {/* HEADER */}
         <MenuHeader
           paperData={paperData}
           onClose={onClose}
           onEditPreset={onEditPattern}
         />
-
         <div className="qm-body">
-          {/* CONTROLS (Filters + Tabs) */}
           <div className="qm-controls">
             <MenuFilters
               filters={filters}
@@ -187,19 +186,16 @@ const QuestionMenu = ({
               difficultiesList={difficultiesList}
               loading={loadingFilters}
             />
-
             <TypeTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              typeCounts={typeCounts}
+              typeCounts={typeCounts} // ✅ Correct Counts passed
               paperData={paperData}
               activeSection={activeSection}
               setActiveSection={setActiveSection}
               selectedQuestions={selectedQuestions}
             />
           </div>
-
-          {/* LIST CONTENT */}
           <div className="qm-content">
             <QuestionList
               filters={filters}
@@ -209,15 +205,11 @@ const QuestionMenu = ({
               onToggleSelect={handleToggleSelect}
             />
           </div>
-
-          {/* STICKY FOOTER */}
           <MenuFooter
             count={tempSelected.length}
             sectionLabel={
               activeSection
                 ? activeSection.replace(/_/g, " ").toUpperCase()
-                : activeTab === "MCQ"
-                ? "MCQ SECTION"
                 : "SECTION"
             }
             onAdd={handleConfirmAdd}

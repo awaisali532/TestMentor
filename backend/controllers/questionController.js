@@ -9,7 +9,6 @@ const fs = require("fs");
 // ==========================================
 const getAllQuestions = async (req, res) => {
   try {
-    // Standard fetch for Admin Table
     const questions = await Question.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -24,19 +23,17 @@ const getAllQuestions = async (req, res) => {
 // ==========================================
 // 2. GET MENU QUESTIONS (FOR USER SIDE - FLEXIBLE)
 // ==========================================
-// This is the specific function for your "Question Menu" where you need editing/presets
 const getMenuQuestions = async (req, res) => {
   try {
     const questions = await Question.find()
       .populate("topics", "name topicNumber")
       .populate("chapter", "name chapterNumber")
       .sort({ createdAt: -1 })
-      .lean(); // Faster query
+      .lean();
 
-    // Modify data structure here if needed for the Frontend Menu
     const formattedQuestions = questions.map((q) => ({
       ...q,
-      menuContext: "user_view", // Flag to identify source
+      menuContext: "user_view",
       canEdit: true,
     }));
 
@@ -55,14 +52,13 @@ const getMenuQuestions = async (req, res) => {
 // ==========================================
 const getQuestionFilters = async (req, res) => {
   try {
-    // Extract Enum values from Mongoose Schema
     const categories = Question.schema.path("questionCategory").enumValues;
     const difficulties = Question.schema.path("difficulty").enumValues;
 
     res.status(200).json({
       success: true,
-      categories, // e.g. ["TEXT", "EXERCISE"]
-      difficulties, // e.g. ["Easy", "Medium", "Hard"]
+      categories,
+      difficulties,
     });
   } catch (error) {
     console.error("Metadata Error:", error);
@@ -71,16 +67,15 @@ const getQuestionFilters = async (req, res) => {
 };
 
 // ==========================================
-// 4. GET QUESTIONS BY FILTER (WIZARD LOGIC)
+// 4. GET QUESTIONS BY FILTER (WIZARD LOGIC - FIXED)
 // ==========================================
 const getQuestionsByFilter = async (req, res) => {
   try {
-    // Frontend sends: ?grade=9th Class&subject=Physics
-    const { grade, subject } = req.query;
+    // ✅ Extract all filter params from Query String
+    const { grade, subject, type, category, difficulty, topics } = req.query;
 
     if (!grade || !subject) {
-      // Fallback if no params provided
-      return getAllQuestions(req, res);
+      return res.status(400).json({ error: "Grade and Subject are required" });
     }
 
     // 1. Find Subject ID
@@ -93,13 +88,52 @@ const getQuestionsByFilter = async (req, res) => {
       return res.status(404).json({ error: "Subject not found" });
     }
 
-    // 2. Find Questions directly by Subject ID
-    const questions = await Question.find({ subject: subjectDoc._id })
+    // 2. Build Dynamic Query
+    let query = { subject: subjectDoc._id };
+
+    // ✅ Filter by Type (MCQ, SHORT, LONG) - Crucial for Tabs
+    if (type) {
+      query.type = type;
+    }
+
+    // ✅ Filter by Difficulty (Handle Arrays)
+    if (difficulty) {
+      const diffArray = Array.isArray(difficulty) ? difficulty : [difficulty];
+      if (diffArray.length > 0) {
+        query.difficulty = { $in: diffArray };
+      }
+    }
+
+    // ✅ Filter by Category (Text, Exercise, etc.)
+    if (category) {
+      const catArray = Array.isArray(category) ? category : [category];
+      if (catArray.length > 0) {
+        query.questionCategory = { $in: catArray };
+      }
+    }
+
+    // ✅ Filter by Topics (Specific Chapter Topics)
+    if (topics) {
+      const topicArray = Array.isArray(topics) ? topics : [topics];
+      if (topicArray.length > 0) {
+        query.topics = { $in: topicArray };
+      }
+    }
+
+    // 3. Execute Query
+    const questions = await Question.find(query)
       .populate("topics", "name topicNumber")
       .populate("chapter", "name chapterNumber")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 }) // Newest first
+      .lean();
 
-    res.json(questions);
+    // 4. Format for Frontend
+    const formattedQuestions = questions.map((q) => ({
+      ...q,
+      menuContext: "filter_api",
+    }));
+
+    res.status(200).json(formattedQuestions);
   } catch (err) {
     console.error("Filter Error:", err);
     res.status(500).json({ error: "Failed to fetch questions" });
@@ -270,7 +304,7 @@ const deleteQuestion = async (req, res) => {
 };
 
 // ==========================================
-// 8. UTILITY FUNCTIONS (Topic, Bulk)
+// 8. UTILITY FUNCTIONS
 // ==========================================
 const getQuestionsByTopic = async (req, res) => {
   try {
@@ -331,12 +365,10 @@ const addBulkQuestions = async (req, res) => {
         .json({ error: "No questions mapped", details: errors });
 
     await Question.insertMany(formattedQuestions);
-    res
-      .status(201)
-      .json({
-        message: `${formattedQuestions.length} Questions added!`,
-        warnings: errors.length > 0 ? errors : null,
-      });
+    res.status(201).json({
+      message: `${formattedQuestions.length} Questions added!`,
+      warnings: errors.length > 0 ? errors : null,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -381,10 +413,10 @@ const deleteAllQuestionsInTopic = async (req, res) => {
 };
 
 module.exports = {
-  getAllQuestions, // Admin
-  getMenuQuestions, // User/Frontend Menu (Flexible)
-  getQuestionFilters, // Metadata (Dropdowns)
-  getQuestionsByFilter, // Wizard Logic
+  getAllQuestions,
+  getMenuQuestions,
+  getQuestionFilters,
+  getQuestionsByFilter,
   addQuestion,
   updateQuestion,
   deleteQuestion,

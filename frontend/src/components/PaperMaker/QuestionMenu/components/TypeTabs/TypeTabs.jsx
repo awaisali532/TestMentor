@@ -16,36 +16,43 @@ const TypeTabs = ({
     { id: "LONG", label: "Long Questions" },
   ];
 
-  // Helper to count questions
+  // Helper to count questions inside specific sections
   const getSectionCount = (sectionId) => {
     return selectedQuestions.filter((q) => q.tabId === sectionId).length;
   };
 
   const getSubTabs = () => {
-    const sections = paperData?.selectedPattern?.sections || [];
-    const subTabs = [];
+    // ✅ FIX: Robust check for sections location
+    let sections = [];
+    if (paperData?.selectedPattern?.sections) {
+      sections = paperData.selectedPattern.sections;
+    } else if (paperData?.paperPattern?.sections) {
+      sections = paperData.paperPattern.sections;
+    }
 
+    // If no specific sections structure exists (e.g. simple preset), return empty
+    if (!sections || sections.length === 0) return [];
+
+    const subTabs = [];
     const relevantSections = sections.filter(
       (s) => s.questionType === activeTab
     );
 
     if (activeTab === "MCQ") return [];
 
-    // --- SHORT QUESTIONS LOGIC (UPDATED) ---
+    // --- SHORT QUESTIONS LOGIC ---
     if (activeTab === "SHORT") {
       relevantSections.forEach((sec, index) => {
         const secId = `sec_${index}`;
-        const total = parseInt(sec.totalQuestions) || 0;
+        const total = parseInt(sec.totalQuestions || sec.quantity) || 0;
         const current = getSectionCount(secId);
 
-        // ✅ AUTO NUMBERING LOGIC:
-        // MCQ Q.1 hota hai, to Short Q.2 se start hoga.
-        // Index 0 = Q.2, Index 1 = Q.3, etc.
+        // Auto Numbering: MCQ is Q.1, Short starts at Q.2
         const qNum = index + 2;
 
         subTabs.push({
           id: secId,
-          label: `Q.${qNum}`, // ✅ Ab Title ignore hoga, Auto Q.Number ayega
+          label: `Q.${qNum}`,
           originalSection: sec,
           countLabel: `${current}/${total}`,
           isFull: current >= total && total > 0,
@@ -55,17 +62,14 @@ const TypeTabs = ({
 
     // --- LONG QUESTIONS LOGIC ---
     if (activeTab === "LONG") {
-      // 1. Calculate Start Number
-      // Total Short Sections count karo taake Long ka number uske baad aye
+      // Calculate Start Number (After Short Questions)
       const shortSectionsCount = sections.filter(
         (s) => s.questionType === "SHORT"
       ).length;
-
-      // MCQ (1) + Short Sections count + 1 = Long Start Number
       let startQNum = shortSectionsCount + 2;
 
       relevantSections.forEach((sec, index) => {
-        const totalQs = parseInt(sec.totalQuestions) || 0;
+        const totalQs = parseInt(sec.totalQuestions || sec.quantity) || 0;
 
         for (let i = 0; i < totalQs; i++) {
           const currentQNum = startQNum + i;
@@ -93,7 +97,7 @@ const TypeTabs = ({
               isPart: true,
             });
           } else {
-            // Direct Question
+            // Full Question
             const idFull = `long_${index}_${i}_full`;
             const currFull = getSectionCount(idFull);
             subTabs.push({
@@ -105,7 +109,6 @@ const TypeTabs = ({
             });
           }
         }
-        // Aglay loop ke liye number barha do
         startQNum += totalQs;
       });
     }
@@ -115,21 +118,24 @@ const TypeTabs = ({
 
   const subTabsList = getSubTabs();
 
-  // Auto-select first sub-tab
+  // Auto-select first sub-tab if needed
   useEffect(() => {
     if (subTabsList.length > 0 && !activeSection) {
       setActiveSection(subTabsList[0].id);
     }
-  }, [activeTab, subTabsList]);
+  }, [activeTab, subTabsList, activeSection]);
 
   return (
     <div className="qm-tabs-container">
       {/* 1. MAIN TABS */}
       <div className="qm-main-tabs">
         {mainTabs.map((tab) => {
-          const countData = typeCounts
-            ? typeCounts[tab.id]
-            : { current: 0, total: 0 };
+          // ✅ FIX: Safe Access to typeCounts
+          const countData =
+            typeCounts && typeCounts[tab.id]
+              ? typeCounts[tab.id]
+              : { current: 0, total: 0 };
+
           const isFull =
             countData.current >= countData.total && countData.total > 0;
 
