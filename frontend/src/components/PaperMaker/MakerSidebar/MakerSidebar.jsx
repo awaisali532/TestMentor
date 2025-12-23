@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// Remove useNavigate, we use parent's handler
 import {
   FaBars,
   FaEdit,
@@ -26,8 +26,8 @@ const MakerSidebar = ({
   isMenuOpen,
   isCollapsed,
   toggleCollapse,
+  onCancel, // ✅ Receive Handler
 }) => {
-  const navigate = useNavigate();
   const { user } = useUser();
   const { theme, toggleTheme } = useTheme();
 
@@ -43,7 +43,6 @@ const MakerSidebar = ({
     }
   }, []);
 
-  // Sync Logic
   useEffect(() => {
     if (!isMenuOpen && activeTab === "menu") {
       setActiveTab("");
@@ -51,19 +50,20 @@ const MakerSidebar = ({
   }, [isMenuOpen, activeTab]);
 
   const handleNavigation = (tab) => {
-    // ✅ DISABLE CLICK IF MENU IS OPEN (Safety Check)
     if (isMenuOpen && tab !== "menu") return;
-
     setActiveTab(tab);
     if (tab === "menu") {
       onOpenMenu();
     }
   };
 
-  // ✅ CONFIRM EXIT LOGIC (Go back to Mode Selector)
+  // ✅ CONFIRM EXIT LOGIC
   const confirmExit = () => {
-    // Hum 'keepData: true' bhej rahe hain taake Wizard data reset na kare
-    navigate("/user/generate-paper", { state: { keepData: true } });
+    // Parent function call karo jo Dashboard pr le jayega aur reset karega
+    if (onCancel) {
+      onCancel();
+    }
+    setShowExitModal(false);
   };
 
   const getProfileImage = () => {
@@ -71,16 +71,13 @@ const MakerSidebar = ({
     if (user.profileImage.startsWith("http")) return user.profileImage;
     return `${BASE_URL}${user.profileImage}`;
   };
-  const profilePic = getProfileImage();
 
   return (
     <div className={`pm-sidebar ${isCollapsed ? "collapsed" : ""}`}>
-      {/* Collapse Button - Isay disable nahi karna */}
       <button className="pm-collapse-btn" onClick={toggleCollapse}>
         {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
       </button>
 
-      {/* User Profile */}
       <div className="pm-profile-section">
         <div className={`pm-avatar-circle ${isCollapsed ? "small" : ""}`}>
           {user?.image ? (
@@ -111,12 +108,10 @@ const MakerSidebar = ({
 
       <div className="pm-divider"></div>
 
-      {/* ✅ DISABLE MENU CONTAINER IF MENU IS OPEN */}
-      {/* Hum 'pointer-events-none' class lagayenge */}
       <div className={`pm-menu-list ${isMenuOpen ? "disabled-sidebar" : ""}`}>
         <button
           className={`pm-item ${activeTab === "menu" ? "active" : ""}`}
-          onClick={() => handleNavigation("menu")} // Isay click krne dena ha taake menu khul sake
+          onClick={() => handleNavigation("menu")}
           title={isCollapsed ? "Question Menu" : ""}
         >
           <div className="pm-icon-box">
@@ -125,7 +120,6 @@ const MakerSidebar = ({
           {!isCollapsed && <span>Question's Menu</span>}
         </button>
 
-        {/* Baki Buttons */}
         <button
           className={`pm-item ${activeTab === "edit" ? "active" : ""}`}
           onClick={() => handleNavigation("edit")}
@@ -150,7 +144,6 @@ const MakerSidebar = ({
 
         <div className="pm-spacer"></div>
 
-        {/* Print Buttons */}
         <button
           className={`pm-item ${activeTab === "print_single" ? "active" : ""}`}
           onClick={() => handleNavigation("print_single")}
@@ -181,9 +174,7 @@ const MakerSidebar = ({
 
         <div className="pm-spacer"></div>
 
-        {/* Cancel - Isay disable nahi karna chahiye taake user wapis ja sake, 
-            Lekin agar aap chahte hain ke menu khula ho to cancel na ho, to isay bhi disable kr dein.
-            Filhal main isay disable kar raha hoon jesa aap ne kaha. */}
+        {/* Cancel Paper */}
         <button
           className="pm-item danger"
           onClick={() => setShowExitModal(true)}
@@ -211,11 +202,11 @@ const MakerSidebar = ({
         isOpen={showExitModal}
         onClose={() => setShowExitModal(false)}
         onConfirm={confirmExit}
-        title="Go Back?"
-        message="Your progress will be saved, and you will return to Mode Selection."
-        confirmText="Yes, Go Back"
-        cancelText="Stay Here"
-        isDanger={false} // Blue button
+        title="Discard Paper?"
+        message="All progress will be lost. You will return to Dashboard."
+        confirmText="Discard & Exit"
+        cancelText="Cancel"
+        isDanger={true}
       />
     </div>
   );

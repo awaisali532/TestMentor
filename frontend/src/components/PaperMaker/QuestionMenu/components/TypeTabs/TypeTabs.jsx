@@ -8,7 +8,7 @@ const TypeTabs = ({
   paperData,
   activeSection,
   setActiveSection,
-  selectedQuestions = [], // This receives 'tempSelected' from Parent
+  selectedQuestions = [],
 }) => {
   const mainTabs = [
     { id: "MCQ", label: "Multiple Choice" },
@@ -16,7 +16,7 @@ const TypeTabs = ({
     { id: "LONG", label: "Long Questions" },
   ];
 
-  // ✅ Helper to count questions inside specific sections (Live Updates)
+  // Helper count
   const getSectionCount = (sectionId) => {
     return selectedQuestions.filter((q) => q.tabId === sectionId).length;
   };
@@ -43,33 +43,32 @@ const TypeTabs = ({
       relevantSections.forEach((sec, index) => {
         const secId = `sec_${index}`;
         const total = parseInt(sec.totalQuestions || sec.quantity) || 0;
-
-        // ✅ Live Count for this specific Q.2 / Q.3 etc.
         const current = getSectionCount(secId);
-        const qNum = index + 2;
+        const qNum = index + 2; // Q.2, Q.3...
 
         subTabs.push({
           id: secId,
           label: `Q.${qNum}`,
-          originalSection: sec,
           countLabel: `${current}/${total}`,
           isFull: current >= total && total > 0,
         });
       });
     }
 
-    // --- LONG QUESTIONS ---
+    // --- LONG QUESTIONS (Numbering Fix) ---
     if (activeTab === "LONG") {
       const shortSectionsCount = sections.filter(
         (s) => s.questionType === "SHORT"
       ).length;
-      let startQNum = shortSectionsCount + 2;
+      let startQNum = shortSectionsCount + 2; // Start after Short Qs (e.g., Q.5)
 
       relevantSections.forEach((sec, index) => {
         const totalQs = parseInt(sec.totalQuestions || sec.quantity) || 0;
 
+        // Loop through slots (Each slot is ONE Question Number, e.g. Q5)
         for (let i = 0; i < totalQs; i++) {
-          const currentQNum = startQNum + i;
+          // Current Number for this entire Block
+          const currentQLabel = startQNum;
 
           if (sec.hasParts) {
             // Part A
@@ -77,7 +76,7 @@ const TypeTabs = ({
             const currA = getSectionCount(idA);
             subTabs.push({
               id: idA,
-              label: `Q.${currentQNum} (Part A)`,
+              label: `Q.${currentQLabel} (a)`, // ✅ Q3 (a)
               countLabel: currA > 0 ? "1/1" : "0/1",
               isFull: currA > 0,
               isPart: true,
@@ -88,7 +87,7 @@ const TypeTabs = ({
             const currB = getSectionCount(idB);
             subTabs.push({
               id: idB,
-              label: `Q.${currentQNum} (Part B)`,
+              label: `Q.${currentQLabel} (b)`, // ✅ Q3 (b)
               countLabel: currB > 0 ? "1/1" : "0/1",
               isFull: currB > 0,
               isPart: true,
@@ -99,14 +98,16 @@ const TypeTabs = ({
             const currFull = getSectionCount(idFull);
             subTabs.push({
               id: idFull,
-              label: `Q.${currentQNum}`,
+              label: `Q.${currentQLabel}`, // ✅ Q3
               countLabel: currFull > 0 ? "1/1" : "0/1",
               isFull: currFull > 0,
               isPart: false,
             });
           }
+
+          // Increment Question Number ONLY after creating slots for this question
+          startQNum++;
         }
-        startQNum += totalQs;
       });
     }
 
@@ -115,22 +116,26 @@ const TypeTabs = ({
 
   const subTabsList = getSubTabs();
 
-  // Auto-select first sub-tab
+  // ✅ FIX ISSUE 3: Auto-select first Sub-tab when Main Tab changes
   useEffect(() => {
-    if (subTabsList.length > 0 && !activeSection) {
-      setActiveSection(subTabsList[0].id);
+    if (subTabsList.length > 0) {
+      // Check if current activeSection is valid for this new list
+      const isValid = subTabsList.some((tab) => tab.id === activeSection);
+
+      // If no section selected OR selected section is not in current list -> Select First
+      if (!activeSection || !isValid) {
+        setActiveSection(subTabsList[0].id);
+      }
+    } else {
+      setActiveSection(null);
     }
-  }, [activeTab, subTabsList, activeSection]);
+  }, [activeTab, paperData]); // Removed subTabsList dependency to avoid loops, rely on activeTab
 
   return (
     <div className="qm-tabs-container">
       <div className="qm-main-tabs">
         {mainTabs.map((tab) => {
-          const countData =
-            typeCounts && typeCounts[tab.id]
-              ? typeCounts[tab.id]
-              : { current: 0, total: 0 };
-
+          const countData = typeCounts?.[tab.id] || { current: 0, total: 0 };
           const isFull =
             countData.current >= countData.total && countData.total > 0;
 

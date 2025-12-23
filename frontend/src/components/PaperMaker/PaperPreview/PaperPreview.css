@@ -46,7 +46,7 @@
 
 .pp-ph-ur {
   font-family: "Jameel Noori Nastaleeq", serif;
-  font-size: 1.3rem;
+  font-size: 1rem;
 }
 
 /* Question Header (Q.1 Choose...) */
@@ -66,7 +66,7 @@
 }
 
 .pp-hd-ur {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   flex: 1;
   text-align: right;
   direction: rtl;
@@ -136,7 +136,7 @@
 .pp-text-en {
   text-align: left;
   flex: 1; /* Takes 50% space */
-  font-size: 0.95rem;
+  font-size: 0.7rem;
   line-height: 1.4;
 }
 
@@ -144,7 +144,7 @@
   text-align: right;
   flex: 1; /* Takes 50% space */
   font-family: "Jameel Noori Nastaleeq", serif;
-  font-size: 1.15rem;
+  font-size: 0.8rem;
   line-height: 1.5;
   direction: rtl;
 }
@@ -178,7 +178,7 @@
 
 .pp-opt-lbl {
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   opacity: 0.8;
   white-space: nowrap;
 }
@@ -195,13 +195,13 @@
 
 .pp-opt-en {
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.7rem;
   text-align: left;
 }
 
 .pp-opt-ur {
   font-family: "Jameel Noori Nastaleeq", serif;
-  font-size: 1.1rem;
+  font-size: 0.8rem;
   /* Ensure Urdu renders correctly but doesn't break Flex order */
   direction: rtl;
   unicode-bidi: embed;

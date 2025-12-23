@@ -1,22 +1,39 @@
 import React from "react";
-import { FaPlus, FaRandom, FaCheck } from "react-icons/fa";
+import { FaPlus, FaRandom, FaCheck, FaSync } from "react-icons/fa";
 import "./MenuFooter.css";
 
 const MenuFooter = ({
-  count, // Abhi kitne select kiye hain
-  limit, // Total kitne chahiye (Target)
+  count,
+  limit,
   onAdd,
   onAutoSelect,
   sectionLabel,
+  isChanged = false, // ✅ NEW PROP: Pata chalega ke user ne changing ki hai ya nahi
 }) => {
-  // Logic: Kya Add karna allow hai?
-  // Add tabhi hoga jab Count > 0 aur Count == Limit (Exact match)
-  // Note: Long Questions mein parts ki waja se logic thori flexible ho sakti hai,
-  // lekin filhal hum strict check laga rahe hain taake user ghalti na kare.
-
   const isComplete = limit > 0 && count === limit;
-  const isOvershot = count > limit; // Safety check
-  const isDisabled = !isComplete;
+  const isOvershot = count > limit;
+
+  // ✅ LOGIC UPDATE:
+  // Button tabhi active hoga jab:
+  // 1. Limit poori ho (isComplete)
+  // 2. AUR User ne koi tabdeeli ki ho (isChanged)
+  const isDisabled = !isComplete || (isComplete && !isChanged);
+
+  // Helper to determine button Text & Icon
+  const getButtonContent = () => {
+    if (isComplete) {
+      if (isChanged) {
+        return { text: "Update Paper", icon: <FaSync /> }; // Change hui hai
+      }
+      return { text: "Saved (No Changes)", icon: <FaCheck /> }; // Change nahi hui
+    }
+    if (count === 0) {
+      return { text: "Select Questions", icon: <FaPlus /> };
+    }
+    return { text: `Select ${limit - count} more`, icon: <FaPlus /> };
+  };
+
+  const { text, icon } = getButtonContent();
 
   return (
     <div className="qm-footer">
@@ -31,7 +48,7 @@ const MenuFooter = ({
         </button>
 
         <div className="qm-selection-info">
-          {/* Progress Indicator */}
+          {/* Progress Pill */}
           <div
             className={`progress-pill ${
               isComplete ? "success" : isOvershot ? "error" : ""
@@ -51,17 +68,14 @@ const MenuFooter = ({
       {/* Right: Add Action */}
       <div className="qm-footer-right">
         <button
-          className={`qm-footer-btn ${isComplete ? "primary" : "disabled"}`}
+          // Agar complete hai aur change hai, to Primary color, warna Disabled look
+          className={`qm-footer-btn ${
+            isComplete && isChanged ? "primary" : "disabled"
+          }`}
           disabled={isDisabled}
           onClick={onAdd}
         >
-          {isComplete ? <FaCheck /> : <FaPlus />}
-
-          {isComplete
-            ? "Add to Paper"
-            : count === 0
-            ? "Select Questions"
-            : `Select ${limit - count} more`}
+          {icon} {text}
         </button>
       </div>
     </div>
