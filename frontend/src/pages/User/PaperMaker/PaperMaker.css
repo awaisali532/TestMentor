@@ -1,28 +1,32 @@
-/* Main Layout Container */
+/* ✅ FIX 2: Container ko Screen par fit karein */
 .pm-container {
   display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  height: 100vh; /* Pori Screen Height */
+  width: 100%; /* 100vw ki jagah 100% use karein (scrollbar issue se bachne k liye) */
+  overflow: hidden; /* Koi bhi cheez bahir na nikle */
   background-color: #334155;
-  /* Dark Workspace Background */
+  position: relative; /* Safety ke liye */
 }
 
-/* Right Side Workspace (Scrollable) */
+/* ✅ FIX 3: Workspace ko Flexible aur Scrollable banayein */
 .pm-workspace {
-  flex: 1;
+  flex: 1; /* Baki bachi hui jagah lega */
+  height: 100%; /* Parent ki full height */
   display: flex;
   justify-content: center;
-  overflow-y: auto;
-  padding: 40px;
+  align-items: flex-start; /* Content top se shuru ho */
+  overflow-y: auto; /* Sirf Yahan scroll aye ga */
+  overflow-x: hidden;
+
+  /* Background styling */
   background-image: radial-gradient(#475569 1px, transparent 1px);
   background-size: 20px 20px;
-  /* Dot pattern for workspace feel */
+  /* padding-bottom: 50px; Thora space neechay taake content chipke na */
 }
 
-/* Custom Scrollbar for Workspace */
+/* Custom Scrollbar */
 .pm-workspace::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 .pm-workspace::-webkit-scrollbar-track {
@@ -31,11 +35,14 @@
 
 .pm-workspace::-webkit-scrollbar-thumb {
   background: #64748b;
-  border-radius: 5px;
+  border-radius: 4px;
 }
-/* ... Existing Styles ... */
 
-/* Pattern Edit Modal Overlay */
+.pm-workspace::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ... Modal Styles Wese hi rahenge ... */
 .pm-modal-overlay {
   position: fixed;
   top: 0;
@@ -44,7 +51,7 @@
   height: 100vh;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
-  z-index: 2000; /* Sidebar se upar */
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -53,7 +60,7 @@
 
 .pm-modal-content {
   width: 95%;
-  max-width: 600px; /* Form size */
+  max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
   background: transparent;

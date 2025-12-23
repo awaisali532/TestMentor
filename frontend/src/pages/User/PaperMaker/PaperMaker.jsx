@@ -13,20 +13,41 @@ const PaperMaker = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  // ✅ 1. State for Paper Data (Includes 'questions' array now)
-  const [paperData, setPaperData] = useState(() => {
-    // Initial State mein empty questions array rakhte hain
-    const data = location.state;
-    if (data && !data.questions) {
-      return { ...data, questions: [] };
+  // ============================================================
+  // 1. SMART INITIALIZATION
+  // ============================================================
+  const [sessionState, setSessionState] = useState(() => {
+    const savedKey = localStorage.getItem("paperSessionKey");
+    const currentKey = location.key;
+
+    if (savedKey === currentKey) {
+      const savedData = localStorage.getItem("currentPaperData");
+      const savedMenu = localStorage.getItem("isMenuOpen");
+      return {
+        data: savedData ? JSON.parse(savedData) : null,
+        menuOpen: savedMenu ? JSON.parse(savedMenu) : false,
+      };
+    } else {
+      localStorage.removeItem("currentPaperData");
+      localStorage.removeItem("isMenuOpen");
+      localStorage.setItem("paperSessionKey", currentKey);
+
+      let initialData = location.state;
+      if (initialData && !initialData.questions) {
+        initialData = { ...initialData, questions: [] };
+      }
+      return { data: initialData, menuOpen: true };
     }
-    return data;
   });
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [paperData, setPaperData] = useState(sessionState.data);
+  const [isMenuOpen, setIsMenuOpen] = useState(sessionState.menuOpen);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showPatternEdit, setShowPatternEdit] = useState(false);
 
+  // ============================================================
+  // 2. EFFECTS
+  // ============================================================
   useEffect(() => {
     if (!paperData) {
       navigate("/user/generate-paper");
@@ -45,80 +66,143 @@ const PaperMaker = () => {
 
   if (!paperData) return null;
 
-  // --- HANDLER: Update Pattern ---
-  const handlePatternUpdate = (updatedPattern) => {
-    setPaperData((prev) => ({
-      ...prev,
-      selectedPattern: updatedPattern,
-    }));
-    setShowPatternEdit(false);
+  // ============================================================
+  // 3. HANDLERS
+  // ============================================================
+
+  const handleCancelPaper = () => {
+    if (window.confirm("Discard paper and return?")) {
+      localStorage.removeItem("currentPaperData");
+      localStorage.removeItem("paperSessionKey");
+      localStorage.removeItem("isMenuOpen");
+      navigate("/user/dashboard");
+    }
   };
 
   // ============================================================
-  // ✅ NEW HANDLER: ADD / OVERWRITE QUESTIONS
+  // ✅ FIXED: HANDLE PATTERN UPDATE (INDEX MATCHING FIXED)
   // ============================================================
-  const handleAddQuestionsToPaper = (newQuestions, sectionId) => {
-    if (!newQuestions || newQuestions.length === 0) return;
-
-    // 1. Identify Type (MCQ, SHORT, LONG) from the first question
-    const typeToAdd = newQuestions[0].type;
-
-    // Note: sectionId humein Menu se mil raha hai (e.g., "MCQ", "sec_0", "long_0_0_a")
-
+  const handlePatternUpdate = (updatedPattern) => {
     setPaperData((prevData) => {
-      const existingQuestions = prevData.questions || [];
+      let currentQuestions = [...prevData.questions];
+      const newSections = updatedPattern.sections || [];
 
-      // 2. OVERWRITE LOGIC:
-      // Hum purane questions ko filter karenge.
-      // Agar "tabId" match kar gaya, to usay remove kar denge taake naya data aa sake.
+      // Filter Logic
+      currentQuestions = currentQuestions.filter((q) => {
+        // 1. Keep MCQs Safe
+        if (q.type === "MCQ") return true;
 
-      const filteredQuestions = existingQuestions.filter((q) => {
-        // Agar MCQ add kar rahe hain, to purane saare MCQs hata do
-        if (typeToAdd === "MCQ") {
-          return q.type !== "MCQ";
+        // Safety Check for ID
+        if (!q.tabId) return true;
+
+        // Parse ID: e.g., "sec_0" means 0th Short Section
+        const parts = q.tabId.split("_");
+        // part[1] is the index WITHIN that specific type
+        const secIndex = parseInt(parts[1]);
+
+        // ---------------------------------------------
+        // ✅ FIX FOR SHORT QUESTIONS
+        // ---------------------------------------------
+        if (q.type === "SHORT") {
+          // Hum sirf SHORT type ke sections nikalenge
+          const shortSections = newSections.filter(
+            (s) => s.questionType === "SHORT"
+          );
+
+          // Check karein k kya ye wala Short Section abhi bhi exist krta hai?
+          const targetSection = shortSections[secIndex];
+
+          // Agar section exist karta hai -> KEEP IT (True)
+          // Agar section delete ho gya -> DELETE IT (False)
+          return !!targetSection;
         }
 
-        // Agar Short/Long hai, to sirf USI SECTION ke questions hatao (e.g. Q.2)
-        // Baaki Q.3, Q.4 wese hi rahenge
-        return q.tabId !== sectionId;
+        // ---------------------------------------------
+        // ✅ FIX FOR LONG QUESTIONS
+        // ---------------------------------------------
+        if (q.type === "LONG") {
+          // Hum sirf LONG type ke sections nikalenge
+          const longSections = newSections.filter(
+            (s) => s.questionType === "LONG"
+          );
+          const targetSection = longSections[secIndex];
+
+          // Agar Section hi nahi raha -> Delete
+          if (!targetSection) return false;
+
+          // Check Parts Structure (Strict Check)
+          const isFullQuestion = q.tabId.endsWith("_full");
+          const isPartQuestion =
+            q.tabId.endsWith("_a") || q.tabId.endsWith("_b");
+
+          // Case A: Pattern says Parts Yes, but Question is Full -> DELETE
+          if (targetSection.hasParts && isFullQuestion) return false;
+
+          // Case B: Pattern says Parts No, but Question is Part -> DELETE
+          if (!targetSection.hasParts && isPartQuestion) return false;
+
+          return true; // Structure matches -> Keep
+        }
+
+        return true; // Fallback
       });
-
-      // 3. MERGE: Purane (Filtered) + Naye Questions
-      const updatedQuestions = [...filteredQuestions, ...newQuestions];
-
-      // Console log for debugging
-      console.log(
-        "📝 Paper Updated:",
-        updatedQuestions.length,
-        "questions total."
-      );
 
       return {
         ...prevData,
-        questions: updatedQuestions, // Update State
+        selectedPattern: updatedPattern,
+        questions: currentQuestions,
       };
     });
 
-    // Note: Hum setIsMenuOpen(false) nahi kar rahe, taake user aur sections add kar sake.
+    setShowPatternEdit(false);
+    toast.success("Pattern Updated Successfully!");
   };
 
-  // ✅ Helper to pass selected questions back to menu (For "Done" check or Re-edit)
-  // Ye Menu ko batayega ke "Bhai ye questions pehle se added hain"
+  // ============================================================
+  // ✅ ADD QUESTIONS (MERGE, DON'T OVERWRITE)
+  // ============================================================
+  const handleAddQuestionsToPaper = (incomingQuestions, typeToUpdate) => {
+    setPaperData((prevData) => {
+      const existingQuestions = prevData.questions || [];
+
+      // 1. Remove OLD questions of THIS TYPE only
+      const keepQuestions = existingQuestions.filter(
+        (q) => q.type !== typeToUpdate
+      );
+
+      // 2. Merge: Kept Questions + New Incoming Questions
+      const newFullList = [...keepQuestions, ...incomingQuestions];
+
+      return {
+        ...prevData,
+        questions: newFullList,
+      };
+    });
+
+    if (incomingQuestions.length > 0) {
+      toast.success(`${typeToUpdate} Added Successfully!`);
+    } else {
+      toast(`${typeToUpdate} Cleared!`, { icon: "🗑️" });
+    }
+  };
+
   const currentPaperQuestions = paperData.questions || [];
 
   return (
     <div
       className={`pm-container ${theme === "dark" ? "pw-dark" : "pw-light"}`}
     >
+      <Toaster position="top-center" reverseOrder={false} />
+
       <MakerSidebar
         paperData={paperData}
         onOpenMenu={() => setIsMenuOpen(true)}
         isMenuOpen={isMenuOpen}
         isCollapsed={isSidebarCollapsed}
         toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onCancel={handleCancelPaper}
       />
 
-      {/* ✅ PREVIEW AREA (Yahan update nazar ayega) */}
       <div className="pm-workspace">
         <PaperPreview
           paperData={paperData}
@@ -126,7 +210,6 @@ const PaperMaker = () => {
         />
       </div>
 
-      {/* ✅ QUESTION MENU (Connected) */}
       <QuestionMenu
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
@@ -137,7 +220,6 @@ const PaperMaker = () => {
         selectedQuestions={currentPaperQuestions}
       />
 
-      {/* PATTERN EDIT MODAL */}
       {showPatternEdit && (
         <div className="pm-modal-overlay">
           <div className="pm-modal-content">
