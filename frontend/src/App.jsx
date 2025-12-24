@@ -5,7 +5,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { UIProvider } from "./context/UIContext"; // ✅ Context Import
+import { UIProvider } from "./context/UIContext";
 import { Toaster } from "react-hot-toast";
 
 // Components
@@ -17,7 +17,7 @@ import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
 import UserLayout from "./layouts/UserLayout/UserLayout";
 
-// Pages
+// Pages - General
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Contact from "./pages/Contact/Contact";
@@ -25,6 +25,8 @@ import Subjects from "./pages/Subjects/Subjects";
 import SubjectDetails from "./pages/Subjects/SubjectDetails/SubjectDetails";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
+
+// Pages - Admin
 import Dashboard from "./pages/Admin/Dashboard/Dashboard";
 import ManageSubjects from "./pages/Admin/ManageSubjects/ManageSubjects";
 import QuestionBank from "./pages/Admin/QuestionBank/QuestionBank";
@@ -32,11 +34,16 @@ import RecentActivity from "./pages/Admin/RecentActivity/RecentActivity";
 import UserManagement from "./pages/Admin/UserManagement/UserManagement";
 import ProfileSettings from "./pages/Admin/ProfileSettings/ProfileSettings";
 import SiteSettings from "./pages/Admin/SiteSettings/SiteSettings";
-import PaperPatterns from "./pages/Admin/PaperPatterns/PaperPatterns"; // ✅ Import Patterns
+import PaperPatterns from "./pages/Admin/PaperPatterns/PaperPatterns";
+
+// Pages - User (✅ NEW IMPORTS)
 import PaperWizard from "./pages/User/PaperWizard/PaperWizard";
-import UserDashboard from "./pages/User/UserDashboard/UserDashboard";
+import UserDashboard from "./pages/User/UserDashboard/UserDashboard"; // Ye hum niche update karenge
 import UserSettings from "./pages/User/UserSettings/UserSettings";
 import PaperMaker from "./pages/User/PaperMaker/PaperMaker";
+import SavedPapers from "./pages/User/SavedPapers/SavedPapers"; // ✅ List Page
+import ViewPaper from "./pages/User/ViewPaper/ViewPaper"; // ✅ View/Print Page
+
 const App = () => {
   const location = useLocation();
   const isDashboardRoute =
@@ -49,13 +56,12 @@ const App = () => {
         <UIProvider>
           {!isDashboardRoute && <Navbar />}
 
-          {/* ✅ TOAST STYLING FIXED HERE */}
           <Toaster
             position="top-center"
             reverseOrder={false}
             toastOptions={{
               style: {
-                background: "var(--card-bg)", // Dark/Light Theme Support
+                background: "var(--card-bg)",
                 color: "var(--text-main)",
                 border: "1px solid var(--border-color)",
               },
@@ -105,11 +111,20 @@ const App = () => {
 
             {/* USER ROUTES */}
             <Route element={<PrivateRoute />}>
+              {/* Dashboard & Settings (With Layout) */}
               <Route
                 path="/user/dashboard"
                 element={
                   <UserLayout>
-                    <UserDashboard />
+                    <UserDashboard /> {/* ✅ Ab yahan Cards dikhenge */}
+                  </UserLayout>
+                }
+              />
+              <Route
+                path="/user/saved-papers"
+                element={
+                  <UserLayout>
+                    <SavedPapers /> {/* ✅ Full List Page */}
                   </UserLayout>
                 }
               />
@@ -121,16 +136,13 @@ const App = () => {
                   </UserLayout>
                 }
               />
-              <Route
-                path="/user/past-papers"
-                element={
-                  <UserLayout>
-                    <div className="p-4">Past Papers Coming Soon...</div>
-                  </UserLayout>
-                }
-              />
+              {/* Tools (No Layout or Custom Layout) */}
               <Route path="/user/generate-paper" element={<PaperWizard />} />
               <Route path="/user/paper-maker" element={<PaperMaker />} />
+              <Route path="/user/manual-maker" element={<PaperMaker />} />{" "}
+              {/* ✅ For Editing */}
+              {/* View/Print Paper (Separate Page) */}
+              <Route path="/user/view-paper/:id" element={<ViewPaper />} />
             </Route>
           </Routes>
         </UIProvider>

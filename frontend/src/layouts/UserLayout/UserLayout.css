@@ -53,7 +53,7 @@
 
 /* --- MAIN CONTENT --- */
 .usr-layout-main {
-  padding: 30px;
+  padding: 10px;
   overflow-y: auto;
   position: relative;
 }

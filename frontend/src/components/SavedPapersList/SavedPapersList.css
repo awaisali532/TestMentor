@@ -1,0 +1,161 @@
+/* Table Container */
+.sp-table-container {
+  background: var(--u-bg-card);
+  border: 1px solid var(--u-border);
+  border-radius: 16px;
+  overflow-x: auto; /* Ab ye dropdown ko nahi katega */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  padding-bottom: 20px; /* Thodi space niche */
+}
+
+.sp-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+/* Headers */
+.sp-table th {
+  text-align: left;
+  padding: 18px 24px;
+  background: var(--u-bg-card);
+  border-bottom: 2px solid var(--u-border);
+  color: var(--u-text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.sp-table th.text-right {
+  text-align: right;
+}
+
+/* Rows */
+.sp-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--u-border);
+  color: var(--u-text-main);
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.sp-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sp-table tr:hover td {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* Typography Helpers */
+.fw-bold {
+  font-weight: 600;
+}
+
+/* ✅ Fix for Title Color Issue */
+.text-main {
+  color: var(--u-text-main) !important; /* Force Theme Color */
+}
+
+.text-muted {
+  color: var(--u-text-muted);
+  font-size: 0.85rem;
+}
+
+/* Subject Pill */
+.sp-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.sp-pill.blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+/* --- 3 DOTS MENU STYLING --- */
+
+.sp-action-toggle {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--u-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sp-action-toggle:hover {
+  background: var(--u-border);
+  color: var(--u-text-main);
+}
+
+/* ✅ Dropdown Box (Fixed Positioning Logic) */
+.sp-dropdown-menu.fixed-menu {
+  position: fixed; /* Screen ke hisab se position lega */
+  background: var(--u-bg-card);
+  border: 1px solid var(--u-border);
+  border-radius: 12px;
+  width: 160px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Strong shadow */
+  z-index: 9999; /* Sabse upar */
+  padding: 6px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Dark mode specific fix for shadow if needed */
+[data-theme="dark"] .sp-dropdown-menu.fixed-menu {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border-color: #374151;
+}
+
+/* Dropdown Items */
+.sp-dropdown-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--u-text-main);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.sp-dropdown-menu button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.sp-dropdown-menu button.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.sp-dropdown-menu .icon {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

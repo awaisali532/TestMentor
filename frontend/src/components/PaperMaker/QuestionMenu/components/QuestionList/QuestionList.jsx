@@ -8,7 +8,7 @@ const QuestionList = ({
   filters,
   activeTab,
   paperData,
-  tempSelected,
+  tempSelected, // Mixed Array (Saved + New)
   onToggleSelect,
 }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -20,11 +20,6 @@ const QuestionList = ({
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-
-        console.group("🚀 FETCHING QUESTIONS");
-        console.log("Filters:", filters);
-        console.groupEnd();
-
         const res = await axios.get(`${BASE_URL}/api/questions/filter`, {
           headers: { Authorization: `Bearer ${token}` },
           params: {
@@ -47,6 +42,15 @@ const QuestionList = ({
     if (paperData && activeTab) fetchQuestions();
   }, [paperData, activeTab, filters]);
 
+  // ✅ HELPER: Get Real ID for Comparison
+  const getRealID = (q) => {
+    if (!q) return null;
+    if (q.questionId) {
+      return typeof q.questionId === "object" ? q.questionId._id : q.questionId;
+    }
+    return q._id;
+  };
+
   if (loading)
     return (
       <div className="ql-loading">
@@ -66,11 +70,9 @@ const QuestionList = ({
   return (
     <div className="ql-container">
       {questions.map((q, index) => {
-        // ✅ Added index here
         const topicId = q.topics?.[0]?._id || "unknown";
         const rawName = q.topics?.[0]?.name;
 
-        // Topic Name Extraction
         let topicName = "General Questions";
         if (rawName) {
           if (typeof rawName === "object") {
@@ -83,17 +85,21 @@ const QuestionList = ({
         const showHeader = topicId !== lastTopicId;
         lastTopicId = topicId;
 
-        const isSelected = tempSelected.some((sel) => sel._id === q._id);
+        // ✅ FIXED VISUAL SELECTION
+        // List mein jo question hai wo 'q' hai (Live ID)
+        // Saved list mein 'savedQ' hai (Reference ID)
+        const isSelected = tempSelected.some((savedQ) => {
+          return String(getRealID(savedQ)) === String(q._id);
+        });
 
         return (
           <React.Fragment key={q._id}>
-            {/* SOLID BAR TOPIC HEADER */}
             {showHeader && <div className="ql-topic-header">{topicName}</div>}
 
             <QuestionCard
               question={q}
-              index={index + 1} // ✅ Pass Question Number (1, 2, 3...)
-              isSelected={isSelected}
+              index={index + 1}
+              isSelected={isSelected} // ✅ Ab ye 100% Green dikhayega
               onToggle={onToggleSelect}
             />
           </React.Fragment>

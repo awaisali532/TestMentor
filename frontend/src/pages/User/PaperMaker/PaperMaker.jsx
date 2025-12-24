@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../../context/ThemeContext";
 import toast, { Toaster } from "react-hot-toast";
@@ -6,16 +7,16 @@ import MakerSidebar from "../../../components/PaperMaker/MakerSidebar/MakerSideb
 import PaperPreview from "../../../components/PaperMaker/PaperPreview/PaperPreview";
 import QuestionMenu from "../../../components/PaperMaker/QuestionMenu/QuestionMenu";
 import PatternForm from "../../Admin/PaperPatterns/PatternForm";
+import SavePaperModal from "../../../components/PaperMaker/SaveModal/SavePaperModal";
 import "./PaperMaker.css";
 
 const PaperMaker = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  // ============================================================
-  // 1. SMART INITIALIZATION
-  // ============================================================
+  // --- Session State Logic ---
   const [sessionState, setSessionState] = useState(() => {
     const savedKey = localStorage.getItem("paperSessionKey");
     const currentKey = location.key;
@@ -44,10 +45,10 @@ const PaperMaker = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(sessionState.menuOpen);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showPatternEdit, setShowPatternEdit] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // ============================================================
-  // 2. EFFECTS
-  // ============================================================
+  // --- Effects ---
   useEffect(() => {
     if (!paperData) {
       navigate("/user/generate-paper");
@@ -64,87 +65,57 @@ const PaperMaker = () => {
     localStorage.setItem("isMenuOpen", JSON.stringify(isMenuOpen));
   }, [isMenuOpen]);
 
+  // Prevent accidental back/refresh
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
   if (!paperData) return null;
 
-  // ============================================================
-  // 3. HANDLERS
-  // ============================================================
+  // --- Handlers ---
 
   const handleCancelPaper = () => {
-    if (window.confirm("Discard paper and return?")) {
-      localStorage.removeItem("currentPaperData");
-      localStorage.removeItem("paperSessionKey");
-      localStorage.removeItem("isMenuOpen");
-      navigate("/user/dashboard");
-    }
+    window.onbeforeunload = null;
+    localStorage.removeItem("currentPaperData");
+    localStorage.removeItem("paperSessionKey");
+    localStorage.removeItem("isMenuOpen");
+    navigate("/user/dashboard");
   };
 
-  // ============================================================
-  // ✅ FIXED: HANDLE PATTERN UPDATE (INDEX MATCHING FIXED)
-  // ============================================================
   const handlePatternUpdate = (updatedPattern) => {
     setPaperData((prevData) => {
       let currentQuestions = [...prevData.questions];
       const newSections = updatedPattern.sections || [];
 
-      // Filter Logic
       currentQuestions = currentQuestions.filter((q) => {
-        // 1. Keep MCQs Safe
         if (q.type === "MCQ") return true;
-
-        // Safety Check for ID
         if (!q.tabId) return true;
 
-        // Parse ID: e.g., "sec_0" means 0th Short Section
         const parts = q.tabId.split("_");
-        // part[1] is the index WITHIN that specific type
         const secIndex = parseInt(parts[1]);
+        const targetSection = newSections[secIndex];
 
-        // ---------------------------------------------
-        // ✅ FIX FOR SHORT QUESTIONS
-        // ---------------------------------------------
+        if (!targetSection) return false;
+
         if (q.type === "SHORT") {
-          // Hum sirf SHORT type ke sections nikalenge
-          const shortSections = newSections.filter(
-            (s) => s.questionType === "SHORT"
-          );
-
-          // Check karein k kya ye wala Short Section abhi bhi exist krta hai?
-          const targetSection = shortSections[secIndex];
-
-          // Agar section exist karta hai -> KEEP IT (True)
-          // Agar section delete ho gya -> DELETE IT (False)
-          return !!targetSection;
+          return targetSection.questionType === "SHORT";
         }
 
-        // ---------------------------------------------
-        // ✅ FIX FOR LONG QUESTIONS
-        // ---------------------------------------------
         if (q.type === "LONG") {
-          // Hum sirf LONG type ke sections nikalenge
-          const longSections = newSections.filter(
-            (s) => s.questionType === "LONG"
-          );
-          const targetSection = longSections[secIndex];
+          if (targetSection.questionType !== "LONG") return false;
+          const isFull = q.tabId.endsWith("_full");
+          const isPart = q.tabId.endsWith("_a") || q.tabId.endsWith("_b");
 
-          // Agar Section hi nahi raha -> Delete
-          if (!targetSection) return false;
-
-          // Check Parts Structure (Strict Check)
-          const isFullQuestion = q.tabId.endsWith("_full");
-          const isPartQuestion =
-            q.tabId.endsWith("_a") || q.tabId.endsWith("_b");
-
-          // Case A: Pattern says Parts Yes, but Question is Full -> DELETE
-          if (targetSection.hasParts && isFullQuestion) return false;
-
-          // Case B: Pattern says Parts No, but Question is Part -> DELETE
-          if (!targetSection.hasParts && isPartQuestion) return false;
-
-          return true; // Structure matches -> Keep
+          if (targetSection.hasParts && isFull) return false;
+          if (!targetSection.hasParts && isPart) return false;
+          return true;
         }
-
-        return true; // Fallback
+        return true;
       });
 
       return {
@@ -158,19 +129,12 @@ const PaperMaker = () => {
     toast.success("Pattern Updated Successfully!");
   };
 
-  // ============================================================
-  // ✅ ADD QUESTIONS (MERGE, DON'T OVERWRITE)
-  // ============================================================
   const handleAddQuestionsToPaper = (incomingQuestions, typeToUpdate) => {
     setPaperData((prevData) => {
       const existingQuestions = prevData.questions || [];
-
-      // 1. Remove OLD questions of THIS TYPE only
       const keepQuestions = existingQuestions.filter(
         (q) => q.type !== typeToUpdate
       );
-
-      // 2. Merge: Kept Questions + New Incoming Questions
       const newFullList = [...keepQuestions, ...incomingQuestions];
 
       return {
@@ -186,7 +150,82 @@ const PaperMaker = () => {
     }
   };
 
-  const currentPaperQuestions = paperData.questions || [];
+  // ============================================================
+  // ✅ SMART SAVE LOGIC (Update vs Create)
+  // ============================================================
+  const handleSaveToDatabase = async (paperTitle) => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("token");
+
+      // Payload tayyar karein
+      const payload = {
+        title: paperTitle,
+        subject: paperData.subject,
+        grade: paperData.grade,
+        totalMarks: paperData.selectedPattern?.totalMarks || 0,
+        pattern: paperData.selectedPattern,
+        // ✅ Question ID handling (Live vs Saved)
+        questions: paperData.questions.map((q) => ({
+          questionId: q._id || q.questionId,
+          statement: q.statement,
+          type: q.type,
+          options: q.options,
+          marks: q.marks,
+          tabId: q.tabId,
+        })),
+      };
+
+      let apiUrl = `${BASE_URL}/api/papers/save`;
+      let method = "post"; // Default: New Create
+      let isUpdate = false;
+
+      // Check 1: Agar Paper ID hai AUR Title same hai -> UPDATE
+      if (paperData._id && paperData.title === paperTitle) {
+        apiUrl = `${BASE_URL}/api/papers/${paperData._id}`;
+        method = "put";
+        isUpdate = true;
+      }
+      // Check 2: Agar Paper ID hai lekin Title CHANGE ho gaya -> CONFIRM NEW
+      else if (paperData._id && paperData.title !== paperTitle) {
+        const confirmNew = window.confirm(
+          "You changed the paper name. This will create a NEW paper file.\n\nClick OK to Create New, or Cancel to edit name."
+        );
+        if (!confirmNew) {
+          setSaving(false);
+          return; // Rukk jao agar user cancel kare
+        }
+        // Method POST hi rahega (Create New)
+      }
+
+      // API Call
+      const res = await axios[method](apiUrl, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        toast.success(
+          isUpdate
+            ? "Paper Updated Successfully!"
+            : "New Paper Saved Successfully!"
+        );
+
+        // Cleanup & Redirect
+        window.onbeforeunload = null;
+        localStorage.removeItem("currentPaperData");
+        localStorage.removeItem("paperSessionKey");
+        localStorage.removeItem("isMenuOpen");
+
+        navigate("/user/dashboard");
+      }
+    } catch (error) {
+      console.error("Save Error:", error);
+      toast.error("Failed to save paper.");
+    } finally {
+      setSaving(false);
+      setShowSaveModal(false);
+    }
+  };
 
   return (
     <div
@@ -201,6 +240,7 @@ const PaperMaker = () => {
         isCollapsed={isSidebarCollapsed}
         toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onCancel={handleCancelPaper}
+        onSave={() => setShowSaveModal(true)}
       />
 
       <div className="pm-workspace">
@@ -217,7 +257,7 @@ const PaperMaker = () => {
         isSidebarCollapsed={isSidebarCollapsed}
         onEditPattern={() => setShowPatternEdit(true)}
         onAddQuestionsToPaper={handleAddQuestionsToPaper}
-        selectedQuestions={currentPaperQuestions}
+        selectedQuestions={paperData.questions || []}
       />
 
       {showPatternEdit && (
@@ -232,6 +272,15 @@ const PaperMaker = () => {
           </div>
         </div>
       )}
+
+      {/* ✅ Pass initialTitle so input is pre-filled */}
+      <SavePaperModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onConfirm={handleSaveToDatabase}
+        loading={saving}
+        initialTitle={paperData.title}
+      />
     </div>
   );
 };

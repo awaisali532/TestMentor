@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-// Remove useNavigate, we use parent's handler
 import {
   FaBars,
   FaEdit,
@@ -26,7 +25,8 @@ const MakerSidebar = ({
   isMenuOpen,
   isCollapsed,
   toggleCollapse,
-  onCancel, // ✅ Receive Handler
+  onCancel, // ✅ Receive Cancel Handler
+  onSave, // ✅ Receive Save Handler
 }) => {
   const { user } = useUser();
   const { theme, toggleTheme } = useTheme();
@@ -43,41 +43,45 @@ const MakerSidebar = ({
     }
   }, []);
 
+  // Sync Logic
   useEffect(() => {
     if (!isMenuOpen && activeTab === "menu") {
       setActiveTab("");
     }
   }, [isMenuOpen, activeTab]);
 
+  // ✅ FIXED NAVIGATION HANDLER
   const handleNavigation = (tab) => {
+    // 1. Agar Menu khula hai to baqi buttons disable rakho (optional UX preference)
     if (isMenuOpen && tab !== "menu") return;
+
     setActiveTab(tab);
+
+    // 2. Specific Actions based on Tab
     if (tab === "menu") {
       onOpenMenu();
     }
-  };
 
-  // ✅ CONFIRM EXIT LOGIC
-  const confirmExit = () => {
-    // Parent function call karo jo Dashboard pr le jayega aur reset karega
-    if (onCancel) {
-      onCancel();
+    // ✅ SAVE BUTTON CLICK FIX
+    if (tab === "save") {
+      if (onSave) onSave(); // Call the Parent Function
     }
-    setShowExitModal(false);
   };
 
-  const getProfileImage = () => {
-    if (!user?.profileImage) return null;
-    if (user.profileImage.startsWith("http")) return user.profileImage;
-    return `${BASE_URL}${user.profileImage}`;
+  // Confirm Exit Logic
+  const confirmExit = () => {
+    if (onCancel) onCancel();
+    setShowExitModal(false);
   };
 
   return (
     <div className={`pm-sidebar ${isCollapsed ? "collapsed" : ""}`}>
+      {/* Collapse Button */}
       <button className="pm-collapse-btn" onClick={toggleCollapse}>
         {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
       </button>
 
+      {/* User Profile */}
       <div className="pm-profile-section">
         <div className={`pm-avatar-circle ${isCollapsed ? "small" : ""}`}>
           {user?.image ? (
@@ -108,6 +112,7 @@ const MakerSidebar = ({
 
       <div className="pm-divider"></div>
 
+      {/* Menu List */}
       <div className={`pm-menu-list ${isMenuOpen ? "disabled-sidebar" : ""}`}>
         <button
           className={`pm-item ${activeTab === "menu" ? "active" : ""}`}
@@ -131,9 +136,10 @@ const MakerSidebar = ({
           {!isCollapsed && <span>Manual Editing</span>}
         </button>
 
+        {/* ✅ SAVE BUTTON */}
         <button
           className={`pm-item ${activeTab === "save" ? "active" : ""}`}
-          onClick={() => handleNavigation("save")}
+          onClick={() => handleNavigation("save")} // Ab ye onSave call karega
           title="Save Paper"
         >
           <div className="pm-icon-box text-green">
@@ -144,6 +150,7 @@ const MakerSidebar = ({
 
         <div className="pm-spacer"></div>
 
+        {/* Print Buttons (Future) */}
         <button
           className={`pm-item ${activeTab === "print_single" ? "active" : ""}`}
           onClick={() => handleNavigation("print_single")}
@@ -174,7 +181,7 @@ const MakerSidebar = ({
 
         <div className="pm-spacer"></div>
 
-        {/* Cancel Paper */}
+        {/* Cancel Button */}
         <button
           className="pm-item danger"
           onClick={() => setShowExitModal(true)}

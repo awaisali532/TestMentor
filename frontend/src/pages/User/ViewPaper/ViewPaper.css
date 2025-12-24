@@ -1,0 +1,114 @@
+/* --- CONTAINER --- */
+.vp-container {
+  min-height: 100vh;
+  /* Dashboard variables use kar raha hai */
+  background-color: var(--u-bg-main, #f3f4f6);
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease;
+}
+
+/* --- HEADER --- */
+.vp-header {
+  background-color: var(--u-bg-card, #ffffff);
+  border-bottom: 1px solid var(--u-border, #e5e7eb);
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.vp-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--u-text-main, #1f2937);
+  margin: 0;
+  margin-left: 15px;
+}
+
+/* --- BUTTONS --- */
+.vp-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.vp-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+/* Back Button */
+.vp-btn.back {
+  background: var(--u-bg-main, #e2e8f0);
+  color: var(--u-text-muted, #4b5563);
+  border: 1px solid var(--u-border);
+}
+.vp-btn.back:hover {
+  background: var(--u-border);
+}
+
+/* Edit Button */
+.vp-btn.edit {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+}
+.vp-btn.edit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(245, 158, 11, 0.4);
+}
+
+/* --- PAPER AREA --- */
+.vp-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.vp-paper-wrapper {
+  /* Paper Background adapts to Theme on Screen */
+  background-color: var(--u-bg-card, #ffffff);
+  color: var(--u-text-main, #000);
+
+  max-width: 210mm; /* A4 Width */
+  width: 100%;
+  min-height: 297mm; /* A4 Height */
+
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 0;
+}
+
+/* --- LOADING & ERROR --- */
+.vp-loading,
+.vp-error {
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  color: var(--u-text-muted, #64748b);
+  background: var(--u-bg-main);
+  gap: 10px;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

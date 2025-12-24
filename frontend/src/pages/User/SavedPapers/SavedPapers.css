@@ -1,0 +1,161 @@
+/* Container */
+.sp-page-container {
+  padding: 40px;
+  /* Background parent layout se aayega, yahan sirf text color set karein */
+  color: var(--u-text-main);
+  min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+/* Header */
+.sp-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.sp-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  /* ✅ Fixed: Uses Dashboard Variable */
+  color: var(--u-text-main);
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.sp-subtitle {
+  /* ✅ Fixed: Uses Dashboard Variable */
+  color: var(--u-text-muted);
+  margin: 8px 0 0 0;
+  font-size: 1.05rem;
+}
+
+/* Create Button (Neon Style - Same as before) */
+.sp-create-btn {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.sp-create-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+}
+
+/* Search Bar (Theme Aware) */
+.sp-search-bar {
+  /* ✅ Fixed: Background & Border adapt to theme */
+  background: var(--u-bg-card);
+  border: 1px solid var(--u-border);
+  padding: 14px 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  max-width: 600px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+/* Focus hone par border color */
+.sp-search-bar:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.sp-search-icon {
+  color: var(--u-text-muted);
+  font-size: 1.2rem;
+}
+
+.sp-search-bar input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 1.1rem;
+  /* ✅ Input Text Color Fix */
+  color: var(--u-text-main);
+  background: transparent;
+}
+
+.sp-search-bar input::placeholder {
+  color: var(--u-text-muted);
+  opacity: 0.7;
+}
+
+/* Grid Layout */
+.sp-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+}
+
+/* Empty State (Theme Aware) */
+.sp-empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  /* ✅ Fixed: Empty Box styling */
+  background: var(--u-bg-card);
+  border: 2px dashed var(--u-border);
+  color: var(--u-text-muted);
+  border-radius: 24px;
+}
+
+.sp-empty-img {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+/* Loader */
+.sp-loader-container {
+  height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  color: var(--u-text-muted);
+  font-size: 1.2rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .sp-page-container {
+    padding: 20px;
+  }
+  .sp-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .sp-create-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .sp-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}

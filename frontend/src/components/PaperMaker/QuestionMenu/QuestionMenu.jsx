@@ -47,7 +47,18 @@ const QuestionMenu = ({
   const [alertMsg, setAlertMsg] = useState(null);
   const [tempSelected, setTempSelected] = useState([]);
 
-  // Sync with Parent
+  // ✅ UNIVERSAL ID HELPER (Most Important Function)
+  // Ye check karta hai ke question Saved hai ya New, aur hamesha Asal ID deta hai
+  const getRealID = (q) => {
+    if (!q) return null;
+    // Agar Saved Paper wala object hai to 'questionId' use karo
+    if (q.questionId) {
+      return typeof q.questionId === "object" ? q.questionId._id : q.questionId;
+    }
+    // Agar Live List wala object hai to '_id' use karo
+    return q._id;
+  };
+
   useEffect(() => {
     if (isOpen) {
       setTempSelected(selectedQuestions || []);
@@ -84,7 +95,6 @@ const QuestionMenu = ({
     fetchFilters();
   }, [isOpen]);
 
-  // Limit Logic
   const getCurrentLimit = () => {
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     const sections = pattern?.sections || [];
@@ -112,11 +122,10 @@ const QuestionMenu = ({
   };
 
   const isSelectionChanged = useMemo(() => {
-    // Check changes specifically for the Active Tab
     const filterByTab = (list) =>
       list
         .filter((q) => q.type === activeTab)
-        .map((q) => q._id)
+        .map((q) => String(getRealID(q))) // ✅ Using Helper
         .sort();
 
     const originalIds = filterByTab(selectedQuestions);
@@ -126,13 +135,30 @@ const QuestionMenu = ({
     return JSON.stringify(originalIds) !== JSON.stringify(newIds);
   }, [tempSelected, selectedQuestions, activeTab]);
 
-  const handleToggleSelect = (question) => {
-    const isAlreadySelected = tempSelected.some((q) => q._id === question._id);
+  // ============================================================
+  // ✅ FIXED TOGGLE LOGIC (Robust ID Matching)
+  // ============================================================
+  const handleToggleSelect = (clickedQuestion) => {
+    // Clicked Question hamesha Live List se aata hai, to uski ID hamesha '_id' hoti hai
+    const targetID = String(clickedQuestion._id);
+
+    // 1. Check karo: Kya ye ID humare tempSelected mein majood hai?
+    const isAlreadySelected = tempSelected.some((q) => {
+      return String(getRealID(q)) === targetID;
+    });
+
+    // 2. Unselect (Remove) Logic
     if (isAlreadySelected) {
-      setTempSelected((prev) => prev.filter((q) => q._id !== question._id));
+      setTempSelected((prev) =>
+        prev.filter((q) => {
+          // Remove wahi karo jiski Real ID match ho rahi hai
+          return String(getRealID(q)) !== targetID;
+        })
+      );
       return;
     }
 
+    // 3. Select (Add) Logic - Check Limit First
     const limit = getCurrentLimit();
     let currentCount = 0;
     let sectionIdToSave = null;
@@ -142,7 +168,7 @@ const QuestionMenu = ({
       sectionIdToSave = "MCQ";
     } else {
       if (!activeSection) {
-        setAlertMsg("Please select a Question Number first!");
+        setAlertMsg("Please select a Question Number (Q.2, Q.3) first!");
         return;
       }
       currentCount = tempSelected.filter(
@@ -156,22 +182,17 @@ const QuestionMenu = ({
       return;
     }
 
+    // Add karte waqt hum clickedQuestion ko add karte hain
+    // NOTE: Jab hum 'Save' karenge to Backend khud 'questionId' handle karega
     setTempSelected((prev) => [
       ...prev,
-      { ...question, tabId: sectionIdToSave },
+      { ...clickedQuestion, tabId: sectionIdToSave },
     ]);
   };
 
-  // ============================================================
-  // ✅ FIXED: HANDLE CONFIRM ADD (Send Specific Type Data)
-  // ============================================================
   const handleConfirmAdd = () => {
     if (onAddQuestionsToPaper) {
-      // 1. Sirf wo questions uthao jo Active Tab (MCQ, SHORT, LONG) ke hain
-      // Is se faida ye hoga k agr hum Short update kr rhy hain to Long mix nahi honge
       const questionsToSend = tempSelected.filter((q) => q.type === activeTab);
-
-      // 2. Parent ko bhejo: (Data, Type)
       onAddQuestionsToPaper(questionsToSend, activeTab);
     }
   };
@@ -180,6 +201,7 @@ const QuestionMenu = ({
     alert("Auto Select Coming Soon!");
   };
 
+  // Counts Logic
   const typeCounts = useMemo(() => {
     const counts = {
       MCQ: { total: 0, current: 0 },
@@ -232,6 +254,7 @@ const QuestionMenu = ({
           onClose={onClose}
           onEditPreset={onEditPattern}
         />
+
         <div className="qm-body">
           <div className="qm-controls">
             <MenuFilters
@@ -253,6 +276,7 @@ const QuestionMenu = ({
           </div>
 
           <div className="qm-content">
+            {/* Question List Component */}
             <QuestionList
               filters={filters}
               activeTab={activeTab}
