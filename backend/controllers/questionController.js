@@ -76,9 +76,6 @@ const getQuestionFilters = async (req, res) => {
 // ==========================================
 const getQuestionsByFilter = async (req, res) => {
   try {
-    console.log("🔍 API HIT: /filter");
-    console.log("👉 Query Params Received:", req.query);
-
     const { grade, subject, type } = req.query;
 
     // ✅ FIX: Handle keys with brackets (category[] vs category)

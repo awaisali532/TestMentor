@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaSpinner, FaEdit } from "react-icons/fa";
+import { FaArrowLeft, FaSpinner, FaEdit, FaPrint } from "react-icons/fa"; // ✅ Print Icon
 import { useTheme } from "../../../context/ThemeContext";
 
 import PaperPreview from "../../../components/PaperMaker/PaperPreview/PaperPreview";
@@ -44,17 +44,21 @@ const ViewPaper = () => {
 
   const handleEdit = () => {
     if (!paper) return;
-
     const makerData = {
       _id: paper._id,
       title: paper.title,
       subject: paper.subject,
       grade: paper.grade,
       selectedPattern: paper.paperPattern || paper.selectedPattern,
-      questions: paper.questions, // Array as-is bhej rahe hain
+      questions: paper.questions,
     };
-
     navigate("/user/manual-maker", { state: makerData });
+  };
+
+  // ✅ PRINT HANDLER
+  const handlePrint = () => {
+    if (!paper) return;
+    navigate("/user/print-paper", { state: paper });
   };
 
   if (loading)
@@ -84,6 +88,15 @@ const ViewPaper = () => {
         <div className="vp-actions">
           <button onClick={handleEdit} className="vp-btn edit">
             <FaEdit /> Edit
+          </button>
+
+          {/* ✅ PRINT BUTTON */}
+          <button
+            onClick={handlePrint}
+            className="vp-btn print"
+            style={{ background: "#10b981", color: "white" }}
+          >
+            <FaPrint /> Print
           </button>
         </div>
       </div>

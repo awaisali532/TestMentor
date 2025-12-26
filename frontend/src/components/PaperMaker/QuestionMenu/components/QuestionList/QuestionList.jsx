@@ -8,7 +8,7 @@ const QuestionList = ({
   filters,
   activeTab,
   paperData,
-  tempSelected, // Mixed Array (Saved + New)
+  tempSelected,
   onToggleSelect,
 }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -42,13 +42,31 @@ const QuestionList = ({
     if (paperData && activeTab) fetchQuestions();
   }, [paperData, activeTab, filters]);
 
-  // ✅ HELPER: Get Real ID for Comparison
-  const getRealID = (q) => {
-    if (!q) return null;
-    if (q.questionId) {
-      return typeof q.questionId === "object" ? q.questionId._id : q.questionId;
-    }
-    return q._id;
+  // ✅ SAME MATCH HELPER (Copy from QuestionMenu)
+  const checkMatch = (itemInState, targetId) => {
+    if (!itemInState || !targetId) return false;
+    const target = String(targetId);
+
+    // 1. Try Direct _id
+    if (itemInState._id && String(itemInState._id) === target) return true;
+
+    // 2. Try questionId (String)
+    if (
+      itemInState.questionId &&
+      typeof itemInState.questionId !== "object" &&
+      String(itemInState.questionId) === target
+    )
+      return true;
+
+    // 3. Try questionId._id (Populated)
+    if (
+      itemInState.questionId &&
+      itemInState.questionId._id &&
+      String(itemInState.questionId._id) === target
+    )
+      return true;
+
+    return false;
   };
 
   if (loading)
@@ -85,12 +103,10 @@ const QuestionList = ({
         const showHeader = topicId !== lastTopicId;
         lastTopicId = topicId;
 
-        // ✅ FIXED VISUAL SELECTION
-        // List mein jo question hai wo 'q' hai (Live ID)
-        // Saved list mein 'savedQ' hai (Reference ID)
-        const isSelected = tempSelected.some((savedQ) => {
-          return String(getRealID(savedQ)) === String(q._id);
-        });
+        // ✅ USE CHECKMATCH FOR VISUALS
+        const isSelected = tempSelected.some((savedQ) =>
+          checkMatch(savedQ, q._id)
+        );
 
         return (
           <React.Fragment key={q._id}>
@@ -99,7 +115,7 @@ const QuestionList = ({
             <QuestionCard
               question={q}
               index={index + 1}
-              isSelected={isSelected} // ✅ Ab ye 100% Green dikhayega
+              isSelected={isSelected} // ✅ Green Highlight
               onToggle={onToggleSelect}
             />
           </React.Fragment>

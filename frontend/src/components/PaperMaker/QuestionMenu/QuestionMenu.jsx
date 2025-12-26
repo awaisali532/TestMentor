@@ -47,16 +47,19 @@ const QuestionMenu = ({
   const [alertMsg, setAlertMsg] = useState(null);
   const [tempSelected, setTempSelected] = useState([]);
 
-  // ✅ UNIVERSAL ID HELPER (Most Important Function)
-  // Ye check karta hai ke question Saved hai ya New, aur hamesha Asal ID deta hai
-  const getRealID = (q) => {
-    if (!q) return null;
-    // Agar Saved Paper wala object hai to 'questionId' use karo
+  // ✅ MAGIC HELPER (Ye ID ko String banata hai taake Comparison sahi ho)
+  const getSafeID = (q) => {
+    if (!q) return "";
+
+    // Priority 1: Agar Saved Question hai
     if (q.questionId) {
-      return typeof q.questionId === "object" ? q.questionId._id : q.questionId;
+      return typeof q.questionId === "object"
+        ? String(q.questionId._id)
+        : String(q.questionId);
     }
-    // Agar Live List wala object hai to '_id' use karo
-    return q._id;
+
+    // Priority 2: Agar New Question hai
+    return String(q._id);
   };
 
   useEffect(() => {
@@ -121,44 +124,46 @@ const QuestionMenu = ({
     return 0;
   };
 
+  // ============================================================
+  // ✅ FIX: BULLETPROOF CHANGE DETECTION
+  // ============================================================
   const isSelectionChanged = useMemo(() => {
-    const filterByTab = (list) =>
-      list
-        .filter((q) => q.type === activeTab)
-        .map((q) => String(getRealID(q))) // ✅ Using Helper
-        .sort();
+    // 1. Parent se aaye hue questions ki IDs nikalo (Sirf Active Tab ki)
+    const originalIDs = selectedQuestions
+      .filter((q) => q.type === activeTab)
+      .map((q) => getSafeID(q))
+      .sort();
 
-    const originalIds = filterByTab(selectedQuestions);
-    const newIds = filterByTab(tempSelected);
+    // 2. Abhi Menu mein jo select kiye hain unki IDs nikalo (Sirf Active Tab ki)
+    const currentIDs = tempSelected
+      .filter((q) => q.type === activeTab)
+      .map((q) => getSafeID(q))
+      .sort();
 
-    if (originalIds.length !== newIds.length) return true;
-    return JSON.stringify(originalIds) !== JSON.stringify(newIds);
+    // 3. Compare karo
+    // Agar length barabar nahi, matlb change hua hai
+    if (originalIDs.length !== currentIDs.length) return true;
+
+    // Agar length same hai, to check karo IDs same hain ya nahi
+    // JSON.stringify arrays ko string bana kar compare karega ["1", "2"] vs ["1", "3"]
+    return JSON.stringify(originalIDs) !== JSON.stringify(currentIDs);
   }, [tempSelected, selectedQuestions, activeTab]);
 
-  // ============================================================
-  // ✅ FIXED TOGGLE LOGIC (Robust ID Matching)
-  // ============================================================
   const handleToggleSelect = (clickedQuestion) => {
-    // Clicked Question hamesha Live List se aata hai, to uski ID hamesha '_id' hoti hai
     const targetID = String(clickedQuestion._id);
 
-    // 1. Check karo: Kya ye ID humare tempSelected mein majood hai?
-    const isAlreadySelected = tempSelected.some((q) => {
-      return String(getRealID(q)) === targetID;
-    });
+    // Check karo: Kya ye ID list mein hai? (Using Helper)
+    const isAlreadySelected = tempSelected.some(
+      (q) => getSafeID(q) === targetID
+    );
 
-    // 2. Unselect (Remove) Logic
+    // UNSELECT LOGIC
     if (isAlreadySelected) {
-      setTempSelected((prev) =>
-        prev.filter((q) => {
-          // Remove wahi karo jiski Real ID match ho rahi hai
-          return String(getRealID(q)) !== targetID;
-        })
-      );
+      setTempSelected((prev) => prev.filter((q) => getSafeID(q) !== targetID));
       return;
     }
 
-    // 3. Select (Add) Logic - Check Limit First
+    // SELECT LOGIC
     const limit = getCurrentLimit();
     let currentCount = 0;
     let sectionIdToSave = null;
@@ -182,8 +187,7 @@ const QuestionMenu = ({
       return;
     }
 
-    // Add karte waqt hum clickedQuestion ko add karte hain
-    // NOTE: Jab hum 'Save' karenge to Backend khud 'questionId' handle karega
+    // Add to list
     setTempSelected((prev) => [
       ...prev,
       { ...clickedQuestion, tabId: sectionIdToSave },
@@ -201,7 +205,6 @@ const QuestionMenu = ({
     alert("Auto Select Coming Soon!");
   };
 
-  // Counts Logic
   const typeCounts = useMemo(() => {
     const counts = {
       MCQ: { total: 0, current: 0 },
@@ -276,7 +279,6 @@ const QuestionMenu = ({
           </div>
 
           <div className="qm-content">
-            {/* Question List Component */}
             <QuestionList
               filters={filters}
               activeTab={activeTab}
@@ -298,7 +300,7 @@ const QuestionMenu = ({
             }
             onAdd={handleConfirmAdd}
             onAutoSelect={handleAutoSelect}
-            isChanged={isSelectionChanged}
+            isChanged={isSelectionChanged} // ✅ Ab ye sahi True/False bhejega
           />
         </div>
       </div>

@@ -11,6 +11,10 @@ import {
   FaSpinner,
   FaEdit,
   FaTrash,
+  FaUniversity,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaBuilding,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useUser } from "../../../context/UserContext"; // Import User Context
@@ -21,9 +25,11 @@ const UserSettings = () => {
   const { user, setUser } = useUser();
   const [loading, setLoading] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
+  const [instLogoLoading, setInstLogoLoading] = useState(false);
 
   // ✅ Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // 'profile' or 'institute'
 
   // Local States for Editing
   const [name, setName] = useState("");
@@ -33,10 +39,22 @@ const UserSettings = () => {
     confirm: "",
   });
 
-  // Initialize Name from User Context
+  // ✅ Institute States
+  const [institute, setInstitute] = useState({
+    name: "",
+    address: "",
+    phone: "",
+  });
+
+  // Initialize Data from User Context
   useEffect(() => {
     if (user) {
       setName(user.name);
+      setInstitute({
+        name: user.institute?.name || "",
+        address: user.institute?.address || "",
+        phone: user.institute?.phone || "",
+      });
     }
   }, [user]);
 
@@ -44,7 +62,7 @@ const UserSettings = () => {
   const formatDate = (date) =>
     date ? new Date(date).toLocaleDateString() : "Lifetime";
 
-  // 1. Handle Image Upload
+  // --- 1. PROFILE IMAGE HANDLERS ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -83,40 +101,105 @@ const UserSettings = () => {
     }
   };
 
-  // ✅ 2. Trigger Delete Modal
-  const handleDeleteClick = () => {
-    setShowDeleteModal(true);
-  };
+  // --- 2. INSTITUTE LOGO HANDLERS ---
+  const handleInstLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  // ✅ 3. Confirm Delete (API Call)
-  const confirmRemoveImage = async () => {
-    setShowDeleteModal(false); // Close Modal
-    setImgLoading(true);
-    const toastId = toast.loading("Removing photo...");
+    const formData = new FormData();
+    formData.append("logo", file);
+
+    setInstLogoLoading(true);
+    const toastId = toast.loading("Uploading logo...");
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
+      const res = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/institute/logo`,
+        formData,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      const updatedUser = { ...user, image: "" };
+      const updatedUser = {
+        ...user,
+        institute: { ...user.institute, logo: res.data.logo },
+      };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      toast.success("Photo removed!", { id: toastId });
+      toast.success("Logo updated!", { id: toastId });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to remove", { id: toastId });
+      toast.error("Upload failed", { id: toastId });
     } finally {
-      setImgLoading(false);
+      setInstLogoLoading(false);
     }
   };
 
-  // 4. Handle Profile Update
+  // ✅ Trigger Delete Modal
+  const handleDeleteClick = (target) => {
+    setDeleteTarget(target);
+    setShowDeleteModal(true);
+  };
+
+  // ✅ Confirm Delete Logic
+  const confirmDelete = async () => {
+    setShowDeleteModal(false);
+
+    if (deleteTarget === "profile") {
+      // ... (Existing Profile Delete Logic)
+      setImgLoading(true);
+      const toastId = toast.loading("Removing photo...");
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const updatedUser = { ...user, image: "" };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        toast.success("Photo removed!", { id: toastId });
+      } catch (err) {
+        toast.error("Failed to remove", { id: toastId });
+      } finally {
+        setImgLoading(false);
+      }
+    } else if (deleteTarget === "institute") {
+      // ... (New Institute Logo Delete Logic)
+      setInstLogoLoading(true);
+      const toastId = toast.loading("Removing logo...");
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/api/users/institute/logo`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const updatedUser = {
+          ...user,
+          institute: { ...user.institute, logo: "" },
+        };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        toast.success("Logo removed!", { id: toastId });
+      } catch (err) {
+        toast.error("Failed to remove", { id: toastId });
+      } finally {
+        setInstLogoLoading(false);
+      }
+    }
+  };
+
+  // 3. Handle Profile Update
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     if (!name.trim()) return toast.error("Name cannot be empty");
@@ -138,6 +221,34 @@ const UserSettings = () => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 4. Handle Institute Info Update
+  const handleUpdateInstitute = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/institute/info`,
+        institute,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const updatedUser = {
+        ...user,
+        institute: { ...user.institute, ...res.data.institute },
+      };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success("Institute details updated!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update institute info");
     } finally {
       setLoading(false);
     }
@@ -213,7 +324,7 @@ const UserSettings = () => {
                 {user.image && (
                   <button
                     className="us-delete-btn"
-                    onClick={handleDeleteClick} // ✅ Triggers Modal
+                    onClick={() => handleDeleteClick("profile")}
                     title="Remove Photo"
                   >
                     <FaTrash size={12} />
@@ -292,6 +403,7 @@ const UserSettings = () => {
 
           {/* --- RIGHT COLUMN --- */}
           <div className="us-right-col">
+            {/* 1. PERSONAL INFO */}
             <div className="us-card form-card">
               <div className="us-card-header">
                 <FaEdit className="text-accent" />
@@ -333,13 +445,130 @@ const UserSettings = () => {
                     <FaSpinner className="icon-spin" />
                   ) : (
                     <>
-                      <FaSave /> Save Changes
+                      <FaSave /> Save Personal Info
                     </>
                   )}
                 </button>
               </form>
             </div>
 
+            {/* 2. ✅ INSTITUTE SETTINGS (NEW) */}
+            <div className="us-card form-card">
+              <div className="us-card-header">
+                <FaUniversity className="text-accent" />
+                <h5>Institute Settings</h5>
+              </div>
+
+              {/* Logo Upload Section */}
+              <div className="inst-logo-section">
+                <div className="us-avatar-wrapper inst-logo-wrapper">
+                  {instLogoLoading ? (
+                    <div className="us-avatar-placeholder square">
+                      <FaSpinner className="icon-spin" />
+                    </div>
+                  ) : user.institute?.logo ? (
+                    <img
+                      src={user.institute.logo}
+                      alt="Logo"
+                      className="us-avatar-img square"
+                    />
+                  ) : (
+                    <div className="us-avatar-placeholder square">
+                      <FaUniversity />
+                    </div>
+                  )}
+
+                  <label className="us-camera-btn" title="Upload Logo">
+                    <FaCamera />
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleInstLogoUpload}
+                    />
+                  </label>
+
+                  {user.institute?.logo && (
+                    <button
+                      className="us-delete-btn"
+                      onClick={() => handleDeleteClick("institute")}
+                      title="Remove Logo"
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-center text-muted">
+                  Institute Logo (Square Recommended)
+                </p>
+              </div>
+
+              <form onSubmit={handleUpdateInstitute}>
+                <div className="form-group mb-3">
+                  <label>Institute Name</label>
+                  <div className="input-with-icon">
+                    <FaBuilding className="input-icon" />
+                    <input
+                      type="text"
+                      className="us-input"
+                      placeholder="e.g. Bright Future Academy"
+                      value={institute.name}
+                      onChange={(e) =>
+                        setInstitute({ ...institute, name: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group mb-3">
+                  <label>Address</label>
+                  <div className="input-with-icon">
+                    <FaMapMarkerAlt className="input-icon" />
+                    <input
+                      type="text"
+                      className="us-input"
+                      placeholder="e.g. Main Boulevard, Lahore"
+                      value={institute.address}
+                      onChange={(e) =>
+                        setInstitute({ ...institute, address: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group mb-4">
+                  <label>Phone Number</label>
+                  <div className="input-with-icon">
+                    <FaPhone className="input-icon" />
+                    <input
+                      type="text"
+                      className="us-input"
+                      placeholder="e.g. 0300-1234567"
+                      value={institute.phone}
+                      onChange={(e) =>
+                        setInstitute({ ...institute, phone: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn-us-save"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <FaSpinner className="icon-spin" />
+                  ) : (
+                    <>
+                      <FaSave /> Save Institute Info
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* 3. CHANGE PASSWORD */}
             <div className="us-card form-card">
               <div className="us-card-header">
                 <FaLock className="text-accent" />
@@ -397,14 +626,17 @@ const UserSettings = () => {
         </div>
       </div>
 
-      {/* --- ✅ CUSTOM DELETE MODAL --- */}
+      {/* --- DELETE MODAL --- */}
       {showDeleteModal && (
         <div className="delete-modal-overlay">
           <div className="delete-modal-box">
-            <h3 className="dm-title">Delete Photo?</h3>
+            <h3 className="dm-title">
+              Delete {deleteTarget === "profile" ? "Photo" : "Logo"}?
+            </h3>
             <p className="dm-msg">
-              Are you sure you want to delete your profile photo? This action
-              cannot be undone.
+              Are you sure you want to delete your{" "}
+              {deleteTarget === "profile" ? "profile photo" : "institute logo"}?
+              This action cannot be undone.
             </p>
             <div className="dm-actions">
               <button
@@ -413,10 +645,7 @@ const UserSettings = () => {
               >
                 Cancel
               </button>
-              <button
-                className="dm-btn dm-confirm"
-                onClick={confirmRemoveImage}
-              >
+              <button className="dm-btn dm-confirm" onClick={confirmDelete}>
                 Delete
               </button>
             </div>

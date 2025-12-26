@@ -1,0 +1,97 @@
+/* =========================================
+   PrintLayout.css - Layout & Sheet Only
+   ========================================= */
+
+/* --- MAIN CONTAINER (Background) --- */
+.pl-container {
+    background-color: #525659;
+    /* Standard Print Preview Grey */
+    min-height: 100vh;
+    padding-top: 180px;
+    /* Space for Settings Bar */
+    padding-bottom: 50px;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    /* Horizontal scroll if paper is too wide */
+}
+
+/* --- THE PAPER SHEET (A4 Size) --- */
+.pl-paper-sheet {
+    background: white;
+    width: 210mm;
+    /* Exact A4 Width */
+    min-height: 297mm;
+    /* Minimum A4 Height */
+    padding: 10mm;
+    /* Default Padding inside paper */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    /* Shadow for realism */
+    margin-bottom: 20px;
+    box-sizing: border-box;
+
+    /* ✅ CSS Variables Injection Point (Settings se control honge) */
+    line-height: var(--pl-line-h, 1.2);
+    color: var(--pl-color, #000);
+    font-weight: var(--pl-weight, 400);
+}
+
+/* --- FONT SIZE OVERRIDES (Applied to Questions) --- */
+/* Ye classes PaperPreview component ke andar hoti hain */
+
+.pl-paper-sheet .pp-text-en,
+.pl-paper-sheet .pp-opt-en {
+    font-size: var(--pl-font-en, 14px) !important;
+}
+
+.pl-paper-sheet .pp-text-ur,
+.pl-paper-sheet .pp-opt-ur,
+.pl-paper-sheet .pp-hd-ur {
+    font-size: var(--pl-font-ur, 16px) !important;
+}
+
+/* Math Equations Size Control */
+.pl-paper-sheet .math-jax-output,
+.pl-paper-sheet .katex {
+    font-size: var(--pl-eq-size, 14px) !important;
+}
+
+/* --- OPTIONAL: BORDER AROUND QUESTIONS --- */
+.pl-content.with-border .pp-item,
+.pl-content.with-border .pp-item-mcq {
+    border-bottom: 1px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+/* ========================================= */
+/* 🖨️ PRINT MEDIA QUERY (Crucial) */
+/* ========================================= */
+@media print {
+
+    /* Background aur Scrolling khatam */
+    .pl-container {
+        padding: 0;
+        margin: 0;
+        background: white;
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+
+    /* Paper ko full width/height pe force karo */
+    .pl-paper-sheet {
+        width: 100%;
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+        /* Browser margin handle karega */
+        border: none;
+    }
+
+    /* Colors Exact Print hon (Background graphics enable karne k liye) */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}

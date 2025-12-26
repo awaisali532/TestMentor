@@ -155,7 +155,7 @@
 
 .card-info p {
   color: var(--u-text-muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   margin: 0;
 }
 
@@ -199,13 +199,11 @@
 /* Locked State */
 .ud-card.locked {
   opacity: 0.9;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--u-bg-card),
-    var(--u-bg-card) 10px,
-    var(--u-hover-bg) 10px,
-    var(--u-hover-bg) 20px
-  );
+  background: repeating-linear-gradient(45deg,
+      var(--u-bg-card),
+      var(--u-bg-card) 10px,
+      var(--u-hover-bg) 10px,
+      var(--u-hover-bg) 20px);
 }
 
 .btn-locked {
@@ -367,10 +365,12 @@
     font-size: 1.6rem;
   }
 }
+
 /* --- Yellow Theme for Saved Papers --- */
 .yellow-glow {
   background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b; /* Amber-500 */
+  color: #f59e0b;
+  /* Amber-500 */
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
 }
 

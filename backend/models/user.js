@@ -11,8 +11,6 @@ const userSchema = new mongoose.Schema(
     resume: { type: String, default: "" }, // For Admins/Staff
 
     // --- Roles & Status ---
-    // We removed 'student'/'teacher'. Now everyone is a 'user'.
-    // Only 'admin' exists for management purposes.
     role: {
       type: String,
       enum: ["user", "admin"],
@@ -25,14 +23,14 @@ const userSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     permissions: {
       type: [String],
-      default: [], // e.g., ["manage_users", "view_reports"]
+      default: [],
     },
 
     // --- NEW: Freemium Plan Logic ---
     planType: {
       type: String,
       enum: ["free", "paid"],
-      default: "free", // Everyone starts as Free
+      default: "free",
     },
 
     // Limits for Free Users
@@ -43,11 +41,19 @@ const userSchema = new mongoose.Schema(
 
     // Subscription Info (For Paid Users)
     subscription: {
-      status: { type: Boolean, default: false }, // true = Active Paid Member
-      validUntil: { type: Date, default: null }, // Expiry Date
+      status: { type: Boolean, default: false },
+      validUntil: { type: Date, default: null },
     },
 
-    // --- Site Settings (For Super Admin) ---
+    // --- NEW: INSTITUTE SETTINGS (For Paper Header) ---
+    institute: {
+      name: { type: String, default: "" },
+      address: { type: String, default: "" },
+      phone: { type: String, default: "" },
+      logo: { type: String, default: "" }, // Cloudinary URL
+    },
+
+    // --- Site Settings (For Super Admin Only) ---
     businessInfo: {
       phone: { type: String, default: "+92 300 1234567" },
       officeAddress: { type: String, default: "Lahore, Pakistan" },

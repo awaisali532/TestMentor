@@ -15,7 +15,8 @@
 /* --- GRID LAYOUT --- */
 .us-grid-layout {
   display: grid;
-  grid-template-columns: 320px 1fr; /* Left Sidebar Fixed, Right Fluid */
+  grid-template-columns: 320px 1fr;
+  /* Left Sidebar Fixed, Right Fluid */
   gap: 25px;
 }
 
@@ -71,7 +72,8 @@
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--u-bg-card);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); /* Neon Glow */
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  /* Neon Glow */
 }
 
 .us-avatar-placeholder {
@@ -112,7 +114,8 @@
   position: absolute;
   bottom: 0;
   left: -5px;
-  background: #ef4444; /* Red */
+  background: #ef4444;
+  /* Red */
   color: white;
   width: 32px;
   height: 32px;
@@ -137,6 +140,7 @@
   color: var(--u-text-main);
   font-weight: 700;
 }
+
 .us-profile-email {
   margin: 0 0 15px 0;
   color: var(--u-text-muted);
@@ -153,11 +157,13 @@
   align-items: center;
   gap: 8px;
 }
+
 .us-plan-badge.free {
   background: rgba(107, 114, 128, 0.1);
   color: var(--u-text-muted);
   border: 1px solid var(--u-border);
 }
+
 .us-plan-badge.paid {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
@@ -177,10 +183,12 @@
   justify-content: space-between;
   color: var(--u-text-muted);
 }
+
 .detail-row span:last-child {
   color: var(--u-text-main);
   font-weight: 600;
 }
+
 .text-gold {
   color: #f59e0b !important;
 }
@@ -189,10 +197,12 @@
 .usage-bar-wrap {
   margin-top: 5px;
 }
+
 .text-xs {
   font-size: 0.75rem;
   color: var(--u-text-muted);
 }
+
 .progress-bg {
   width: 100%;
   height: 8px;
@@ -200,6 +210,7 @@
   border-radius: 10px;
   overflow: hidden;
 }
+
 .progress-fill {
   height: 100%;
   border-radius: 10px;
@@ -218,6 +229,7 @@
   cursor: pointer;
   transition: transform 0.2s;
 }
+
 .btn-us-upgrade:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
@@ -248,7 +260,8 @@
 .us-input {
   width: 100%;
   padding: 12px 15px;
-  padding-left: 40px; /* Space for icon */
+  padding-left: 40px;
+  /* Space for icon */
   background-color: var(--u-bg-body);
   border: 1px solid var(--u-border);
   border-radius: 8px;
@@ -256,6 +269,7 @@
   outline: none;
   transition: border 0.3s;
 }
+
 .us-input:focus {
   border-color: var(--u-accent);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
@@ -266,6 +280,7 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
+
 .badge-locked {
   background: #ef4444;
   color: white;
@@ -290,6 +305,7 @@
   gap: 8px;
   transition: 0.2s;
 }
+
 .btn-us-save:hover {
   background: #2563eb;
 }
@@ -304,6 +320,7 @@
   font-weight: 600;
   transition: 0.2s;
 }
+
 .btn-us-outline:hover {
   border-color: var(--u-accent);
   color: var(--u-accent);
@@ -314,12 +331,14 @@
   .us-grid-layout {
     grid-template-columns: 1fr;
   }
+
   .us-left-col {
     display: flex;
     flex-direction: column;
     gap: 20px;
   }
 }
+
 /* --- ✅ DELETE MODAL STYLES (Modern Neon) --- */
 .delete-modal-overlay {
   position: fixed;
@@ -400,17 +419,56 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
+
 @keyframes popUp {
   from {
     transform: scale(0.8);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* Add these new classes to UserSettings.css */
+
+/* Institute Logo Section */
+.inst-logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.inst-logo-wrapper {
+  width: 100px;
+  /* Same size as profile */
+  height: 100px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Square Avatar for Logo */
+.us-avatar-img.square,
+.us-avatar-placeholder.square {
+  border-radius: 16px;
+  /* Rounded Square instead of Circle */
+}
+
+/* Ensure Camera/Delete buttons are positioned correctly on square */
+.inst-logo-wrapper .us-camera-btn {
+  right: -10px;
+  bottom: -10px;
+}
+
+.inst-logo-wrapper .us-delete-btn {
+  left: -10px;
+  bottom: -10px;
 }

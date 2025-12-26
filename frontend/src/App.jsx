@@ -36,13 +36,16 @@ import ProfileSettings from "./pages/Admin/ProfileSettings/ProfileSettings";
 import SiteSettings from "./pages/Admin/SiteSettings/SiteSettings";
 import PaperPatterns from "./pages/Admin/PaperPatterns/PaperPatterns";
 
-// Pages - User (✅ NEW IMPORTS)
+// Pages - User
 import PaperWizard from "./pages/User/PaperWizard/PaperWizard";
-import UserDashboard from "./pages/User/UserDashboard/UserDashboard"; // Ye hum niche update karenge
+import UserDashboard from "./pages/User/UserDashboard/UserDashboard";
 import UserSettings from "./pages/User/UserSettings/UserSettings";
 import PaperMaker from "./pages/User/PaperMaker/PaperMaker";
-import SavedPapers from "./pages/User/SavedPapers/SavedPapers"; // ✅ List Page
-import ViewPaper from "./pages/User/ViewPaper/ViewPaper"; // ✅ View/Print Page
+import SavedPapers from "./pages/User/SavedPapers/SavedPapers";
+import ViewPaper from "./pages/User/ViewPaper/ViewPaper";
+
+// ✅ NEW: Print Layout Import
+import PrintLayout from "./pages/User/PrintPaper/PrintLayout";
 
 const App = () => {
   const location = useLocation();
@@ -116,7 +119,7 @@ const App = () => {
                 path="/user/dashboard"
                 element={
                   <UserLayout>
-                    <UserDashboard /> {/* ✅ Ab yahan Cards dikhenge */}
+                    <UserDashboard />
                   </UserLayout>
                 }
               />
@@ -124,7 +127,7 @@ const App = () => {
                 path="/user/saved-papers"
                 element={
                   <UserLayout>
-                    <SavedPapers /> {/* ✅ Full List Page */}
+                    <SavedPapers />
                   </UserLayout>
                 }
               />
@@ -136,13 +139,17 @@ const App = () => {
                   </UserLayout>
                 }
               />
+
               {/* Tools (No Layout or Custom Layout) */}
               <Route path="/user/generate-paper" element={<PaperWizard />} />
               <Route path="/user/paper-maker" element={<PaperMaker />} />
-              <Route path="/user/manual-maker" element={<PaperMaker />} />{" "}
-              {/* ✅ For Editing */}
-              {/* View/Print Paper (Separate Page) */}
+              <Route path="/user/manual-maker" element={<PaperMaker />} />
+
+              {/* View Paper */}
               <Route path="/user/view-paper/:id" element={<ViewPaper />} />
+
+              {/* ✅ NEW: Print Paper Route (Outside Layout for full screen print) */}
+              <Route path="/user/print-paper" element={<PrintLayout />} />
             </Route>
           </Routes>
         </UIProvider>
