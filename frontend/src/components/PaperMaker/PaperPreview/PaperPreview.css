@@ -257,7 +257,6 @@
 
 /* HIDE ADD BUTTON ON PRINT */
 @media print {
-
   .pp-btn-add,
   .pp-empty-state {
     display: none !important;

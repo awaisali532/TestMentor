@@ -11,7 +11,6 @@ import "./PrintLayout.css";
 const PrintLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // ✅ FIX 1: Initialize Ref with null
   const componentRef = useRef(null);
   const { user } = useUser();
 
@@ -32,26 +31,24 @@ const PrintLayout = () => {
     showAnswerKey: false,
   });
 
-  // ✅ FIX 2: Updated Hook Syntax for newer react-to-print versions
   const handlePrint = useReactToPrint({
-    contentRef: componentRef, // 'content' ki jagah 'contentRef' use karein
+    contentRef: componentRef,
     documentTitle: paperData?.title || "Exam_Paper",
-    onAfterPrint: () => console.log("Printed Successfully"), // Optional Debugging
   });
 
   if (!paperData)
     return <div className="p-5 text-center">No Paper Data Found. Go back.</div>;
 
+  // ✅ FIX: Strict Institute Data (No Fallbacks to User Profile)
   const instituteInfo = {
-    name: user?.institute?.name || user?.name || "Institute Name",
+    name: user?.institute?.name || "", // Default empty if not set
     address: user?.institute?.address || "",
     phone: user?.institute?.phone || "",
-    logo: user?.institute?.logo || user?.image || null,
+    logo: user?.institute?.logo || null, // ✅ Sirf Institute Logo ayega, User Image nahi
   };
 
   return (
     <div className="pl-container">
-      {/* 1. Top Settings Bar */}
       <PrintSettingsBar
         settings={settings}
         setSettings={setSettings}
@@ -59,8 +56,6 @@ const PrintLayout = () => {
         onBack={() => navigate(-1)}
       />
 
-      {/* 2. Paper Preview Area */}
-      {/* ✅ FIX 3: Ref yahan laga hona zaroori hai */}
       <div
         className="pl-paper-sheet"
         ref={componentRef}
@@ -73,14 +68,12 @@ const PrintLayout = () => {
           "--pl-weight": settings.fontWeight,
         }}
       >
-        {/* Header */}
         <ExamHeader
           paperData={paperData}
           settings={settings}
           institute={instituteInfo}
         />
 
-        {/* Content */}
         <div
           className={`pl-content ${settings.showBorder ? "with-border" : ""}`}
         >
@@ -91,7 +84,6 @@ const PrintLayout = () => {
           />
         </div>
 
-        {/* Answer Key (Conditional) */}
         {settings.showAnswerKey && (
           <div className="pl-page-break">
             <AnswerKey paperData={paperData} />

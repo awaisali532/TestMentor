@@ -13,7 +13,7 @@ const ExamHeader = ({ paperData, settings, institute }) => {
   // Calculate Total MCQs
   const mcqCount =
     paperData.questions?.filter((q) => q.type === "MCQ").length || 0;
-  // Agar MCQs na hon to sample k liye 5 dikha do, warna jitne hain utne
+
   const bubblesToShow = mcqCount > 0 ? mcqCount : 10;
 
   const ExamField = ({ label, value, widthClass }) => (
@@ -32,14 +32,15 @@ const ExamHeader = ({ paperData, settings, institute }) => {
             className="eh-institute-name"
             style={{ transform: `scale(${settings.headerSize})` }}
           >
-            {institute.name || "BRIGHT FUTURE SCHOOL SYSTEM & ACADEMY"}
+            {/* ✅ Fix: Only show name if exists, no default text */}
+            {institute.name}
           </h1>
           <p className="eh-address">
             {institute.address} {institute.phone && `PH: ${institute.phone}`}
           </p>
         </div>
 
-        {/* Logo Right Side */}
+        {/* Logo Right Side - Only Shows if Institute Logo Exists */}
         {institute.logo && (
           <div className="eh-logo-wrapper">
             <img src={institute.logo} alt="Logo" className="eh-logo" />
@@ -100,7 +101,7 @@ const ExamHeader = ({ paperData, settings, institute }) => {
         </div>
       </div>
 
-      {/* 3. BUBBLE SHEET STRIP (Grid Layout) */}
+      {/* 3. BUBBLE SHEET STRIP */}
       {settings.showBubbleSheet && (
         <div className="eh-bubble-strip">
           {Array.from({ length: bubblesToShow }).map((_, i) => (
