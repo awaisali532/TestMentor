@@ -26,7 +26,7 @@ const savePaper = async (req, res) => {
       grade,
       totalMarks,
       paperPattern: pattern,
-      questions: questions,
+      questions: questions, // ✅ Saves full Snapshot (Edited Text + isCorrect)
       examLabel: examLabel || "",
       syllabusLabel: syllabusLabel || "",
       examDate: examDate || null,
@@ -45,12 +45,11 @@ const savePaper = async (req, res) => {
   }
 };
 
-// 2. Get All User Papers (✅ FIX HERE)
+// 2. Get All User Papers
 const getMyPapers = async (req, res) => {
   try {
     const papers = await SavedPaper.find({ user: req.user.id })
       .select(
-        // 👇 Maine yahan 'examDate' add kar diya hai
         "title subject grade totalMarks examLabel examDate syllabusLabel createdAt"
       )
       .sort({ createdAt: -1 });
@@ -72,12 +71,11 @@ const getPaperById = async (req, res) => {
   }
 };
 
-// 4. UPDATE PAPER (✅ FIX HERE ALSO)
+// 4. UPDATE PAPER
 const updatePaper = async (req, res) => {
   try {
     const paperId = req.params.id;
 
-    // ✅ ADDED: examDate receive kar rahe hain
     const {
       title,
       questions,
@@ -98,14 +96,11 @@ const updatePaper = async (req, res) => {
 
     // Fields Update
     paper.title = title || paper.title;
-    paper.questions = questions || paper.questions;
+    paper.questions = questions || paper.questions; // ✅ Updates Snapshot
     paper.totalMarks = totalMarks || paper.totalMarks;
 
-    // Update Labels
     if (examLabel !== undefined) paper.examLabel = examLabel;
     if (syllabusLabel !== undefined) paper.syllabusLabel = syllabusLabel;
-
-    // ✅ ADDED: Date Update Logic
     if (examDate !== undefined) paper.examDate = examDate;
 
     if (pattern) {
@@ -129,7 +124,6 @@ const updatePaper = async (req, res) => {
 const deletePaper = async (req, res) => {
   try {
     const paperId = req.params.id;
-
     const paper = await SavedPaper.findOne({ _id: paperId, user: req.user.id });
 
     if (!paper) {
@@ -139,7 +133,6 @@ const deletePaper = async (req, res) => {
     }
 
     await SavedPaper.findByIdAndDelete(paperId);
-
     res.json({ success: true, message: "Paper Deleted Successfully!" });
   } catch (error) {
     console.error("Delete Error:", error);

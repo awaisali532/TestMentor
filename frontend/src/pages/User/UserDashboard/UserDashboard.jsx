@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom"; // Link added for navigation
+import { Link } from "react-router-dom";
 import {
   FaPlus,
   FaLaptopCode,
@@ -18,30 +18,23 @@ const UserDashboard = () => {
 
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // --- STATE ---
   const [savedCount, setSavedCount] = useState(0);
-  const [recentPapers, setRecentPapers] = useState([]); // ✅ Recent papers store krne k liye
+  const [recentPapers, setRecentPapers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- 1. FETCH DATA ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        // Fetch Papers
         const res = await axios.get(`${BASE_URL}/api/papers/my-papers`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (res.data.success) {
           const allPapers = res.data.papers;
-
-          // 1. Total Count set kro
           setSavedCount(allPapers.length);
-
-          // 2. Sirf pehle 5 papers (Recent) nikal kr set kro
           setRecentPapers(allPapers.slice(0, 5));
         }
       } catch (error) {
@@ -54,7 +47,6 @@ const UserDashboard = () => {
     fetchData();
   }, []);
 
-  // Limits Logic
   const isFree = currentUser.planType !== "premium";
   const limitReached = isFree && (currentUser.usage?.papersGenerated || 0) >= 1;
 
@@ -82,7 +74,6 @@ const UserDashboard = () => {
 
       {/* --- GRID SECTION --- */}
       <div className="ud-grid">
-        {/* 1. Generate Paper Card */}
         <DashboardActionCard
           title="Generate Paper"
           description="Create professional PDF papers."
@@ -95,7 +86,6 @@ const UserDashboard = () => {
           buttonText="Create Now"
         />
 
-        {/* 2. Online Test Card */}
         <DashboardActionCard
           title="Online Test"
           description="Attempt MCQs and check result."
@@ -108,7 +98,6 @@ const UserDashboard = () => {
           buttonText="Start Quiz"
         />
 
-        {/* 3. Saved Papers Card */}
         <DashboardActionCard
           title="Saved Papers"
           description="Access your previously created papers."
@@ -121,7 +110,6 @@ const UserDashboard = () => {
           buttonText="View All"
         />
 
-        {/* 4. Stats Card */}
         <div className="ud-card stats-card">
           <div className="stats-header">
             <span>Paper Usage</span>
@@ -155,7 +143,7 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* --- ✅ RECENT ACTIVITY SECTION (Dynamic Data) --- */}
+      {/* --- ✅ RECENT ACTIVITY SECTION --- */}
       <div className="ud-section">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4 className="section-title mb-0">Recent Activity</h4>
@@ -167,11 +155,12 @@ const UserDashboard = () => {
           </Link>
         </div>
 
-        <div className="ud-table-wrapper">
+        <div className="ud-table-wrapper activity-table-wrapper">
           {loading ? (
-            <p className="text-muted p-3">Loading recent activity...</p>
+            <p className="p-3 ud-text-muted">Loading recent activity...</p>
           ) : recentPapers.length === 0 ? (
-            <div className="text-center p-4 text-muted bg-light rounded">
+            // ✅ CUSTOM EMPTY STATE CLASS
+            <div className="ud-empty-box">
               No papers generated yet. Start by creating one!
             </div>
           ) : (
@@ -188,21 +177,19 @@ const UserDashboard = () => {
               <tbody>
                 {recentPapers.map((paper) => (
                   <tr key={paper._id}>
-                    <td className="fw-bold text-main">{paper.title}</td>
+                    <td className="fw-bold ud-text-main">{paper.title}</td>
                     <td>
-                      <span className="badge bg-light text-dark border">
-                        {paper.subject}
-                      </span>
+                      {/* ✅ CUSTOM BADGE CLASS */}
+                      <span className="ud-badge">{paper.subject}</span>
                     </td>
-                    <td>{paper.grade}</td>
-                    <td className="text-muted small">
+                    <td className="ud-text-main">{paper.grade}</td>
+                    <td className="ud-text-muted small">
                       {new Date(paper.createdAt).toLocaleDateString()}
                     </td>
                     <td className="text-right">
-                      {/* View Link - Goes to Saved Papers page logic */}
                       <Link
                         to="/user/saved-papers"
-                        state={{ highlight: paper._id }} // Optional: Highlight logic agr lgana chaho
+                        state={{ highlight: paper._id }}
                         className="btn-icon-small"
                         title="View"
                       >

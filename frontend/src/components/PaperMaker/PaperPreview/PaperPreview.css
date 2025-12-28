@@ -10,7 +10,7 @@
   overflow-y: auto;
 
   /* ✅ SCREEN PADDING (Taake content chipke na) */
-  padding: 40px;
+  padding: 10px;
 
   /* ✅ THEME VARIABLES (UserLayout.css se) */
   background-color: var(--u-bg-card, #ffffff);
@@ -35,17 +35,12 @@
 .pp-sheet {
   width: 100%;
   max-width: 100%;
+  padding-left: 20px;
 }
 
 /* =======================================
    HEADERS & SECTIONS
    ======================================= */
-.pp-section {
-  margin-bottom: 15px;
-}
-.pp-sub-section {
-  margin-bottom: 20px;
-}
 
 .pp-part-header {
   display: flex;
@@ -56,11 +51,9 @@
   /* ✅ Dynamic Border (Theme Aware) */
   border-bottom: 2px solid var(--u-text-main, #000);
 
-  padding-bottom: 5px;
-  margin-bottom: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .pp-header-sep {
@@ -71,18 +64,19 @@
 
 .pp-ph-ur {
   font-family: "Jameel Noori Nastaleeq", serif;
-  font-size: var(--pl-font-ur, 1rem);
+  font-size: var(--pl-font-ur, 0.9rem);
 }
-
+.pp-ph-en {
+  font-size: var(--pl-font-ur, 0.8rem);
+}
 /* Question Header */
 .pp-q-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+
   /* ✅ Theme Border */
   border-bottom: 1px dashed var(--u-border, #ccc);
-  padding-bottom: 5px;
 }
 
 .pp-hd-en {
@@ -101,7 +95,7 @@
 
 .pp-hd-marks {
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   padding: 0 10px;
   white-space: nowrap;
 }
@@ -126,7 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  margin-bottom: 5px;
+
   /* ✅ Theme Border */
   border-bottom: 1px dotted var(--u-border, #e5e7eb);
 
@@ -143,7 +137,7 @@
 .pp-num {
   font-weight: 800;
   min-width: 20px;
-  font-size: 0.95rem;
+  font-size: 0.7rem;
 }
 
 .pp-ur-num {
@@ -307,4 +301,95 @@
   .pp-empty-state {
     display: none !important;
   }
+}
+/* =========================================
+   ✏️ MANUAL EDIT MODE STYLES
+   ========================================= */
+
+/* Highlight Active Container */
+.pp-container.manual-active .pp-sheet {
+  border: 2px dashed #3b82f6; /* Blue dashed border shows edit mode */
+}
+
+/* Edit Inputs (TextArea) */
+.pp-edit-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  background-color: #fff;
+  resize: vertical;
+}
+
+.pp-edit-input:focus {
+  border-color: #2563eb;
+  outline: none;
+  background-color: #eff6ff;
+}
+
+/* Edit Inputs Small (Options) */
+.pp-edit-input-sm {
+  width: 90%;
+  padding: 2px 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* 🗑️ INDIVIDUAL DELETE BUTTON */
+.pp-item {
+  position: relative; /* Context for absolute button */
+}
+
+.pp-item-mcq {
+  position: relative;
+}
+
+.pp-item-del-btn {
+  position: absolute;
+  left: -35px; /* Outside left margin */
+  top: 0;
+  width: 25px;
+  height: 25px;
+  background-color: #fee2e2;
+  color: #ef4444;
+  border: 1px solid #fca5a5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: 0.2s;
+  z-index: 10;
+}
+
+.pp-item-del-btn:hover {
+  background-color: #ef4444;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* 🗑️ SECTION DELETE BUTTON (Header) */
+.pp-sec-del-btn {
+  margin-left: auto;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pp-sec-del-btn:hover {
+  background-color: #b91c1c;
+  color: white;
 }

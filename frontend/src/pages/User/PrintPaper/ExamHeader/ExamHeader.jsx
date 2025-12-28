@@ -112,7 +112,7 @@ const ExamHeader = ({ paperData, settings, institute }) => {
           <ExamField
             label="Subject Name"
             value={paperData.subject}
-            widthClass="w-40"
+            widthClass="w-30"
           />
           <ExamField
             label="Time Allowed"
@@ -138,7 +138,7 @@ const ExamHeader = ({ paperData, settings, institute }) => {
             <ExamField
               label="Exam Syllabus"
               value={getSyllabusText()}
-              widthClass="w-40"
+              widthClass="w-30"
             />
             <div className="eh-field-box w-20" style={{ flex: 1 }}>
               <span className="eh-field-label">Exam</span>

@@ -13,6 +13,7 @@ import {
   FaCrown,
   FaChevronLeft,
   FaChevronRight,
+  FaCheckCircle,
 } from "react-icons/fa";
 import { useUser } from "../../../context/UserContext";
 import { useTheme } from "../../../context/ThemeContext";
@@ -28,6 +29,9 @@ const MakerSidebar = ({
   onCancel,
   onSave,
   onPrint, // ✅ Receive Print Handler
+  // ✅ New Props
+  isManualMode,
+  toggleManualMode,
 }) => {
   const { user } = useUser();
   const { theme, toggleTheme } = useTheme();
@@ -49,29 +53,37 @@ const MakerSidebar = ({
     }
   }, [isMenuOpen, activeTab]);
 
-  // ✅ NAVIGATION HANDLER
+  // ✅ NAVIGATION HANDLER (UPDATED FOR PRINT MODES)
   const handleNavigation = (tab) => {
-    // 1. Agar Menu khula hai to baqi buttons disable rakho
+    // 1. Manual Mode Toggle Logic
+    if (tab === "edit") {
+      toggleManualMode();
+      // Don't change tab if turning OFF
+      if (!isManualMode) setActiveTab("edit");
+      else setActiveTab("");
+      return;
+    }
+
+    // 2. Normal Logic (Disable sidebar items if menu is open)
     if (isMenuOpen && tab !== "menu") return;
 
     setActiveTab(tab);
 
-    // 2. Specific Actions based on Tab
-    if (tab === "menu") {
-      onOpenMenu();
-    }
+    // 3. Specific Actions based on Tab
+    if (tab === "menu") onOpenMenu();
+    if (tab === "save" && onSave) onSave();
 
-    if (tab === "save") {
-      if (onSave) onSave();
-    }
-
-    // ✅ PRINT SINGLE LOGIC ADDED
+    // ✅ PRINT LOGIC: Pass specific modes to onPrint
     if (tab === "print_single") {
-      if (onPrint) onPrint();
+      if (onPrint) onPrint("SINGLE");
+    }
+
+    if (tab === "print_dh") {
+      // Double Horizontal
+      if (onPrint) onPrint("DUAL_H");
     }
   };
 
-  // Confirm Exit Logic
   const confirmExit = () => {
     if (onCancel) onCancel();
     setShowExitModal(false);
@@ -91,9 +103,7 @@ const MakerSidebar = ({
             <img
               src={user.image}
               alt="Profile"
-              onError={(e) => {
-                e.target.style.display = "none";
-              }}
+              onError={(e) => (e.target.style.display = "none")}
             />
           ) : (
             <FaUserGraduate />
@@ -128,18 +138,20 @@ const MakerSidebar = ({
           {!isCollapsed && <span>Question's Menu</span>}
         </button>
 
+        {/* ✅ MANUAL EDIT TOGGLE */}
         <button
-          className={`pm-item ${activeTab === "edit" ? "active" : ""}`}
+          className={`pm-item ${isManualMode ? "active editing" : ""}`}
           onClick={() => handleNavigation("edit")}
           title="Manual Editing"
         >
           <div className="pm-icon-box">
-            <FaEdit />
+            {isManualMode ? <FaCheckCircle /> : <FaEdit />}
           </div>
-          {!isCollapsed && <span>Manual Editing</span>}
+          {!isCollapsed && (
+            <span>{isManualMode ? "Done Editing" : "Manual Editing"}</span>
+          )}
         </button>
 
-        {/* SAVE BUTTON */}
         <button
           className={`pm-item ${activeTab === "save" ? "active" : ""}`}
           onClick={() => handleNavigation("save")}
@@ -153,10 +165,11 @@ const MakerSidebar = ({
 
         <div className="pm-spacer"></div>
 
-        {/* ✅ PRINT BUTTON (Linked) */}
+        {/* ✅ PRINT BUTTONS (Now linked to new logic) */}
         <button
           className={`pm-item ${activeTab === "print_single" ? "active" : ""}`}
           onClick={() => handleNavigation("print_single")}
+          title="Print Single A4"
         >
           <div className="pm-icon-box">
             <FaPrint />
@@ -165,17 +178,9 @@ const MakerSidebar = ({
         </button>
 
         <button
-          className={`pm-item ${activeTab === "print_dv" ? "active" : ""}`}
-          onClick={() => handleNavigation("print_dv")}
-        >
-          <div className="pm-icon-box">
-            <FaColumns />
-          </div>
-          {!isCollapsed && <span>Print Double (V)</span>}
-        </button>
-        <button
           className={`pm-item ${activeTab === "print_dh" ? "active" : ""}`}
           onClick={() => handleNavigation("print_dh")}
+          title="2 Papers on 1 Page (Horizontal)"
         >
           <div className="pm-icon-box">
             <FaBookOpen />

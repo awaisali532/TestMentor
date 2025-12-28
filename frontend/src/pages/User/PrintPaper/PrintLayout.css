@@ -1,7 +1,3 @@
-/* =========================================
-   PrintLayout.css - Fixed Watermark in Print
-   ========================================= */
-
 @font-face {
   font-family: "Jameel Noori Nastaleeq";
   src: url("/fonts/JameelNooriNastaleeq.ttf") format("truetype");
@@ -12,195 +8,249 @@
 .pl-container {
   background-color: #525659;
   min-height: 100vh;
-  padding-top: 180px;
+  padding-top: 100px;
   padding-bottom: 50px;
   display: flex;
   justify-content: center;
   overflow-x: auto;
 }
 
-/* --- THE PAPER SHEET (Screen View) --- */
-.pl-paper-sheet {
-  /* Theme Colors */
-  background-color: var(--u-bg-card, #ffffff);
-  color: var(--u-text-main, #000000);
+/* ==================================================
+   📄 VIEWPORT (The Sheet Wrapper)
+   ================================================== */
+.pl-print-viewport {
+  background-color: white; /* Base Sheet White */
+  color: #000;
 
+  /* Default Dimensions (Portrait A4) */
   width: 210mm;
   min-height: 297mm;
-
-  /* Padding Settings */
-  padding: 5mm 8mm;
+  height: auto;
 
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   margin-bottom: 20px;
   box-sizing: border-box;
 
-  line-height: var(--pl-line-h, 1.1);
+  line-height: var(--pl-line-h, 1.2);
   font-weight: var(--pl-weight, 400);
 
-  transition: background-color 0.3s, color 0.3s;
+  position: relative;
+  overflow: visible;
+
+  /* Flex for Double Mode */
+  display: flex;
 }
 
-/* --- FONT SIZE OVERRIDES --- */
-.pl-paper-sheet .pp-text-en,
-.pl-paper-sheet .pp-opt-en {
-  font-size: var(--pl-font-en, 11px) !important;
+/* ✅ CRITICAL FIX: Make ALL content layers transparent 
+   taake Watermark jo sab se neeche hai wo nazar aye */
+.pl-sheet-copy,
+.pl-paper-content-wrapper,
+.pl-content,
+.pp-container,
+.pp-sheet {
+  background-color: transparent !important;
+  position: relative;
+  z-index: 2; /* Content Watermark k uper rahe */
 }
 
-.pl-paper-sheet .pp-text-ur,
-.pl-paper-sheet .pp-opt-ur,
-.pl-paper-sheet .pp-hd-ur {
+/* ==================================================
+   1. SINGLE MODE (Normal Settings)
+   ================================================== */
+.mode-single {
+  display: block;
+  /* Standard A4 Padding */
+  padding: 10mm 12mm;
+}
+
+.mode-single .pl-sheet-copy {
+  width: 100%;
+}
+
+/* ==================================================
+   2. DUAL HORIZONTAL (Compact Settings)
+   ================================================== */
+.mode-dual_h {
+  /* Screen Preview k liye Width barha di (Landscape) */
+  width: 297mm !important;
+  min-height: 210mm;
+
+  flex-direction: row;
+  justify-content: space-between;
+
+  /* ✅ PADDING FIX: Side margins barha diye */
+  padding: 5mm 15mm !important;
+
+  /* Force Smaller Fonts */
+  --pl-font-en: 9px !important;
+  --pl-font-ur: 11px !important;
+  --pl-eq-size: 10px !important;
+  --pl-line-h: 1.1 !important;
+}
+
+.mode-dual_h .pl-sheet-copy {
+  /* 48% Width taake beech me jagah bache */
+  width: 48%;
+  padding: 0 4px;
+}
+
+/* ==================================================
+   ✂️ SEPARATOR (Cut Line)
+   ================================================== */
+.pl-print-separator {
+  width: 0;
+  border-right: 1px dashed #999;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.cut-icon {
+  background: white;
+  padding: 5px 0;
+  position: absolute;
+  color: #666;
+  font-size: 14px;
+  z-index: 3;
+}
+
+/* ==================================================
+   🔤 INTERNAL FONT SIZES (Dynamic)
+   ================================================== */
+
+.pl-content .pp-text-en,
+.pl-content .pp-opt-en,
+.pl-content .pp-hd-en {
+  font-size: var(--pl-font-en) !important;
+}
+
+.pl-content .pp-text-ur,
+.pl-content .pp-opt-ur,
+.pl-content .pp-hd-ur {
   font-family: "Jameel Noori Nastaleeq", "Arial", sans-serif;
-  font-size: var(--pl-font-ur, 13px) !important;
+  font-size: var(--pl-font-ur) !important;
   line-height: 1.4 !important;
 }
 
-.pl-paper-sheet .math-jax-output,
-.pl-paper-sheet .katex {
-  font-size: var(--pl-eq-size, 12px) !important;
-  color: inherit !important;
+.pl-content .math-jax-output,
+.pl-content .katex {
+  font-size: var(--pl-eq-size) !important;
 }
 
-/* --- DEFAULT SEPARATOR (Halki Line) --- */
-.pl-content .pp-item,
-.pl-content .pp-item-mcq {
-  border-bottom: 1px solid var(--u-border, #000);
-  padding-bottom: 4px;
-  margin-bottom: 4px;
+/* ==================================================
+   💧 WATERMARK (Fixed Logic)
+   ================================================== */
+.pl-watermark-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  /* Flex Center */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* ✅ Z-INDEX FIX: Watermark 1 pe, Content 2 pe */
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.pl-watermark-overlay img {
+  width: 50%;
+  opacity: 0.12; /* Halka sa visible */
+  filter: grayscale(100%);
+}
+
+.pl-watermark-overlay.text-only h1 {
+  font-size: 4rem;
+  color: #ccc;
+  opacity: 0.2;
+  transform: rotate(-45deg);
+  text-align: center;
+  width: 80%;
 }
 
 /* =========================================
-   🖨️ PRINT OVERRIDE (FIXED GREY BOX & EXTRA PAGE)
+   🖨️ PRINT MEDIA QUERY (Printer Output)
    ========================================= */
 @media print {
-  /* 1. Page Setup */
   @page {
-    size: A4;
-    margin: 5mm;
+    /* Printer Margin */
+    margin: 10mm;
+    size: auto;
   }
 
-  /* 2. Body & HTML Reset */
+  /* Body Reset */
   html,
   body {
     margin: 0 !important;
     padding: 0 !important;
-    background-color: white !important;
+    background: white !important;
     height: auto !important;
     overflow: visible !important;
   }
 
-  /* 3. Main Container Reset */
+  /* Container Reset */
   .pl-container {
     display: block !important;
     padding: 0 !important;
     margin: 0 !important;
     background: white !important;
     height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
   }
 
-  /* 4. Paper Sheet Fixes */
-  .pl-paper-sheet {
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
+  /* Viewport Reset */
+  .pl-print-viewport {
     box-shadow: none !important;
     border: none !important;
-    min-height: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+
+    /* Default Single Mode Padding */
+    padding: 0 5mm !important;
+
+    width: 100% !important;
     height: auto !important;
-    background-color: white !important;
-    color: black !important;
+    overflow: visible !important;
+    display: flex !important;
   }
 
-  .pl-content .pp-item,
-  .pl-content .pp-item-mcq {
-    border-bottom: 1px solid black !important;
+  /* ✅ DUAL MODE PRINT SETTINGS */
+  .mode-dual_h {
+    width: 100% !important;
+    /* Dual Mode me sides pr padding di hai taake printer cut na kare */
+    padding: 0 10mm !important;
   }
 
+  .mode-dual_h .pl-sheet-copy {
+    width: 48% !important;
+    border-right: none;
+    /* Print me bhi transparent hona chahiye */
+    background-color: transparent !important;
+  }
+
+  /* Separator Line for Print */
+  .mode-dual_h .pl-print-separator {
+    border-right: 1px dashed #ccc;
+  }
+
+  /* Hide UI */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Color Exactness */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-}
 
-/* =========================================
-   ✅ WATERMARK STYLING (CENTERING FIXED)
-   ========================================= */
-.pl-paper-sheet {
-  position: relative;
-  overflow: hidden;
-}
-
-.pl-watermark-overlay {
-  position: absolute;
-  /* ✅ OLD: top: 50%, left: 50% REMOVED */
-  /* ✅ NEW: Stretch to cover full page */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-
-  /* ✅ Flexbox handles the centering now */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* 1. Image Watermark (Logo) */
-.pl-watermark-overlay img {
-  width: 60%; /* Page ka 60% area cover karega */
-  height: auto;
-  opacity: 0.12;
-  filter: grayscale(100%);
-}
-
-/* 2. Text Watermark (Institute Name) */
-.pl-watermark-overlay.text-only h1 {
-  font-size: 5rem;
-  font-weight: 900;
-  color: #ccc;
-  opacity: 0.3;
-  transform: rotate(-45deg);
-
-  white-space: normal;
-  text-align: center;
-  line-height: 1.2;
-  width: 80%; /* Text ko thora spread honay do */
-  word-break: keep-all;
-  text-transform: uppercase;
-}
-
-/* 🖨️ Print Specifics */
-@media print {
-  .pl-watermark-overlay {
-    position: absolute !important;
-    z-index: 0 !important; /* Ensure it is behind text but visible */
-
-    /* ✅ Force Full Coverage in Print */
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    padding-top: 150px;
-    /* ✅ Force Centering in Print */
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-  }
-
+  /* Print Watermark Opacity */
   .pl-watermark-overlay img {
     opacity: 0.1 !important;
-    width: 60% !important; /* Size maintain rakhein */
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .pl-watermark-overlay.text-only h1 {
-    opacity: 0.15 !important;
-    color: #000 !important;
   }
 }

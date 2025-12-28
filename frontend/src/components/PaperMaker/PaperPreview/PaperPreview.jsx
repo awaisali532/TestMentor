@@ -1,10 +1,18 @@
 import React from "react";
-import { FaPlusCircle, FaRegFileAlt } from "react-icons/fa";
+import { FaPlusCircle, FaRegFileAlt, FaTrash } from "react-icons/fa";
 import RenderText from "../../common/RenderText";
 import "./PaperPreview.css";
 
-// ✅ Added 'isPrintMode' prop to hide buttons when printing/viewing final layout
-const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
+const PaperPreview = ({
+  paperData,
+  onOpenMenu,
+  isPrintMode = false,
+  // ✅ Manual Mode Props
+  isManualMode,
+  onManualUpdate,
+  onManualDelete,
+  onSectionDelete,
+}) => {
   const questions = paperData?.questions || [];
 
   // --- FILTERING ---
@@ -22,16 +30,13 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
   const longQs = questions.filter((q) => q.type === "LONG");
   const hasQuestions = questions.length > 0;
 
-  // Safe Check
   const hasSubjective =
     (shortQuestionsMap && Object.keys(shortQuestionsMap).length > 0) ||
     (longQs && longQs.length > 0);
 
-  // Helper to find Section Config from Pattern
   const getSectionConfig = (type, index = null) => {
     const pattern = paperData?.selectedPattern || paperData?.paperPattern;
     const sections = pattern?.sections || [];
-
     if (type === "LONG") {
       return sections.find((s) => s.questionType === "LONG");
     }
@@ -39,9 +44,6 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
     return shortSections[index];
   };
 
-  // ==========================================================
-  // GROUP LONG QUESTIONS
-  // ==========================================================
   const getGroupedLongQuestions = () => {
     const grouped = {};
     longQs.forEach((q) => {
@@ -65,9 +67,6 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
 
   const groupedLongQs = getGroupedLongQuestions();
 
-  // ==========================================================
-  // INSTRUCTIONS LOGIC
-  // ==========================================================
   const getLongInstructions = () => {
     const longSec = getSectionConfig("LONG");
     const attemptLimit = parseInt(longSec?.toBeAttempted || 0);
@@ -89,8 +88,11 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
 
   const longInstr = getLongInstructions();
 
+  // Helper: Get Question ID safely
+  const getQId = (q) => q.questionId?._id || q.questionId || q._id;
+
   return (
-    <div className="pp-container">
+    <div className={`pp-container ${isManualMode ? "manual-active" : ""}`}>
       {!hasQuestions ? (
         <div className="pp-empty-state">
           <div className="pp-empty-icon">
@@ -98,8 +100,6 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
           </div>
           <h3>Paper Empty</h3>
           <p>Add questions from the menu.</p>
-
-          {/* ✅ FIX: Hide Button if in Print Mode */}
           {!isPrintMode && (
             <button className="pp-btn-add" onClick={onOpenMenu}>
               <FaPlusCircle /> Open Menu
@@ -129,22 +129,71 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
                 <div className="pp-hd-ur" dir="rtl">
                   <strong>سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔
                 </div>
+                {/* ✅ DELETE SECTION BUTTON */}
+                {isManualMode && (
+                  <button
+                    className="pp-sec-del-btn"
+                    onClick={() => onSectionDelete("MCQ")}
+                    title="Delete All MCQs"
+                  >
+                    <FaTrash /> Delete Q.1
+                  </button>
+                )}
               </div>
 
               <div className="pp-list">
                 {mcqs.map((q, i) => (
-                  <div key={q._id || i} className="pp-item-mcq">
+                  <div key={getQId(q)} className="pp-item-mcq">
+                    {/* ✅ INDIVIDUAL DELETE BUTTON */}
+                    {isManualMode && (
+                      <button
+                        className="pp-item-del-btn"
+                        onClick={() => onManualDelete(getQId(q))}
+                      >
+                        <FaTrash />
+                      </button>
+                    )}
+
                     <div className="pp-stmt">
                       <span className="pp-num">{i + 1}.</span>
                       <div className="pp-text-en">
-                        <RenderText text={q.statement?.en} />
+                        {isManualMode ? (
+                          <textarea
+                            className="pp-edit-input"
+                            value={q.statement?.en || ""}
+                            onChange={(e) =>
+                              onManualUpdate(
+                                getQId(q),
+                                "statement",
+                                "en",
+                                e.target.value
+                              )
+                            }
+                          />
+                        ) : (
+                          <RenderText text={q.statement?.en} />
+                        )}
                       </div>
-                      {q.statement?.ur && (
-                        <div className="pp-text-ur" dir="rtl">
-                          <span className="pp-ur-num">{i + 1}.</span>
-                          <RenderText text={q.statement.ur} />
-                        </div>
-                      )}
+                      <div className="pp-text-ur" dir="rtl">
+                        <span className="pp-ur-num">{i + 1}.</span>
+                        {isManualMode ? (
+                          <textarea
+                            className="pp-edit-input"
+                            dir="rtl"
+                            value={q.statement?.ur || ""}
+                            onChange={(e) =>
+                              onManualUpdate(
+                                getQId(q),
+                                "statement",
+                                "ur",
+                                e.target.value
+                              )
+                            }
+                          />
+                        ) : (
+                          <RenderText text={q.statement?.ur} />
+                        )}
+                      </div>
                     </div>
                     {q.options && (
                       <div className="pp-opt-grid">
@@ -155,13 +204,44 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
                               <span className="pp-opt-lbl">({label})</span>
                               <div className="pp-opt-content">
                                 <span className="pp-opt-en">
-                                  <RenderText text={opt.en} />
+                                  {isManualMode ? (
+                                    <input
+                                      className="pp-edit-input-sm"
+                                      value={opt.en || ""}
+                                      onChange={(e) =>
+                                        onManualUpdate(
+                                          getQId(q),
+                                          "options",
+                                          "en",
+                                          e.target.value,
+                                          idx
+                                        )
+                                      }
+                                    />
+                                  ) : (
+                                    <RenderText text={opt.en} />
+                                  )}
                                 </span>
-                                {opt.ur && (
-                                  <span className="pp-opt-ur" dir="rtl">
+                                <span className="pp-opt-ur" dir="rtl">
+                                  {isManualMode ? (
+                                    <input
+                                      className="pp-edit-input-sm"
+                                      dir="rtl"
+                                      value={opt.ur || ""}
+                                      onChange={(e) =>
+                                        onManualUpdate(
+                                          getQId(q),
+                                          "options",
+                                          "ur",
+                                          e.target.value,
+                                          idx
+                                        )
+                                      }
+                                    />
+                                  ) : (
                                     <RenderText text={opt.ur} />
-                                  </span>
-                                )}
+                                  )}
+                                </span>
                               </div>
                             </div>
                           );
@@ -210,21 +290,70 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
                         <strong>سوال نمبر {qNumber}:</strong> کوئی سے{" "}
                         {attemptLimit} سوالات کے مختصر جوابات لکھیں۔
                       </div>
+                      {/* ✅ DELETE SECTION BUTTON */}
+                      {isManualMode && (
+                        <button
+                          className="pp-sec-del-btn"
+                          onClick={() => onSectionDelete("SHORT", secKey)}
+                          title="Delete This Short Section"
+                        >
+                          <FaTrash /> Delete Q.{qNumber}
+                        </button>
+                      )}
                     </div>
 
                     <div className="pp-list">
                       {sectionQs.map((q, i) => (
-                        <div key={q._id || i} className="pp-item">
+                        <div key={getQId(q)} className="pp-item">
+                          {/* ✅ INDIVIDUAL DELETE BUTTON */}
+                          {isManualMode && (
+                            <button
+                              className="pp-item-del-btn"
+                              onClick={() => onManualDelete(getQId(q))}
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
+
                           <span className="pp-num">({i + 1})</span>
                           <div className="pp-text-en">
-                            <RenderText text={q.statement?.en} />
+                            {isManualMode ? (
+                              <textarea
+                                className="pp-edit-input"
+                                value={q.statement?.en || ""}
+                                onChange={(e) =>
+                                  onManualUpdate(
+                                    getQId(q),
+                                    "statement",
+                                    "en",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            ) : (
+                              <RenderText text={q.statement?.en} />
+                            )}
                           </div>
-                          {q.statement?.ur && (
-                            <div className="pp-text-ur" dir="rtl">
-                              <span className="pp-ur-num">({i + 1})</span>
+                          <div className="pp-text-ur" dir="rtl">
+                            <span className="pp-ur-num">({i + 1})</span>
+                            {isManualMode ? (
+                              <textarea
+                                className="pp-edit-input"
+                                dir="rtl"
+                                value={q.statement?.ur || ""}
+                                onChange={(e) =>
+                                  onManualUpdate(
+                                    getQId(q),
+                                    "statement",
+                                    "ur",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            ) : (
                               <RenderText text={q.statement.ur} />
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -243,6 +372,16 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
                     <div className="pp-hd-ur" dir="rtl">
                       <strong>{longInstr.ur}</strong> (حصہ دوم)
                     </div>
+                    {/* ✅ DELETE SECTION BUTTON */}
+                    {isManualMode && (
+                      <button
+                        className="pp-sec-del-btn"
+                        onClick={() => onSectionDelete("LONG")}
+                        title="Delete All Long Qs"
+                      >
+                        <FaTrash /> Delete Section II
+                      </button>
+                    )}
                   </div>
 
                   <div className="pp-list">
@@ -264,18 +403,57 @@ const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
                         }
 
                         return (
-                          <div key={q._id || i} className="pp-item">
+                          <div key={getQId(q)} className="pp-item">
+                            {/* ✅ INDIVIDUAL DELETE BUTTON */}
+                            {isManualMode && (
+                              <button
+                                className="pp-item-del-btn"
+                                onClick={() => onManualDelete(getQId(q))}
+                              >
+                                <FaTrash />
+                              </button>
+                            )}
+
                             <span className="pp-num">{label}</span>
                             <div className="pp-text-en">
-                              <RenderText text={q.statement?.en} />
+                              {isManualMode ? (
+                                <textarea
+                                  className="pp-edit-input"
+                                  value={q.statement?.en || ""}
+                                  onChange={(e) =>
+                                    onManualUpdate(
+                                      getQId(q),
+                                      "statement",
+                                      "en",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              ) : (
+                                <RenderText text={q.statement?.en} />
+                              )}
                             </div>
 
-                            {q.statement?.ur && (
-                              <div className="pp-text-ur" dir="rtl">
-                                <span className="pp-ur-num">{urLabel}</span>
+                            <div className="pp-text-ur" dir="rtl">
+                              <span className="pp-ur-num">{urLabel}</span>
+                              {isManualMode ? (
+                                <textarea
+                                  className="pp-edit-input"
+                                  dir="rtl"
+                                  value={q.statement?.ur || ""}
+                                  onChange={(e) =>
+                                    onManualUpdate(
+                                      getQId(q),
+                                      "statement",
+                                      "ur",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              ) : (
                                 <RenderText text={q.statement.ur} />
-                              </div>
-                            )}
+                              )}
+                            </div>
                             <div className="pp-marks-right">[{q.marks}]</div>
                           </div>
                         );

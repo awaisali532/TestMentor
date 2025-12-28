@@ -2,7 +2,7 @@
 .eh-container {
   width: 100%;
   font-family: "Times New Roman", serif;
-  margin-bottom: 10px;
+
   position: relative;
   box-sizing: border-box;
   padding: 0 5px;
@@ -17,7 +17,7 @@
   align-items: center;
   justify-content: space-between;
   position: relative;
-  margin-bottom: 6px;
+
   padding-top: 10px;
 }
 
@@ -62,8 +62,6 @@
 .eh-grid-wrapper {
   display: flex;
   flex-direction: column;
-
-  margin-top: 5px;
 }
 
 .eh-row {
@@ -128,7 +126,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 5px 10px;
-  margin-top: 15px;
+  margin-top: 5px;
   padding: 5px;
   /* ✅ Theme Border */
   border: 1px solid var(--u-border, #000);

@@ -77,7 +77,6 @@
   background-color: var(--u-bg-card);
   border: 1px solid var(--u-border);
   border-radius: 20px;
-  /* Softer Edges */
   padding: 25px;
   display: flex;
   flex-direction: column;
@@ -88,12 +87,10 @@
   height: 220px;
 }
 
-/* Card Hover Effect: Lift & Glow */
 .ud-card:hover {
   transform: translateY(-8px);
   border-color: rgba(59, 130, 246, 0.3);
   box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
-  /* Shadow */
 }
 
 /* Top Section of Card */
@@ -115,12 +112,11 @@
   border-radius: 6px;
 }
 
-/* Modern Icons (Fully Round + Glow) */
+/* Modern Icons */
 .card-icon-bg {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  /* Perfect Circle */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -136,14 +132,12 @@
   background: rgba(59, 130, 246, 0.1);
   color: #3b82f6;
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
-  /* Blue Halo */
 }
 
 .purple-glow {
   background: rgba(139, 92, 246, 0.1);
   color: #8b5cf6;
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
-  /* Purple Halo */
 }
 
 .card-info h5 {
@@ -182,7 +176,6 @@
 .btn-blue:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
-  /* Stronger Glow */
 }
 
 .btn-purple {
@@ -199,11 +192,13 @@
 /* Locked State */
 .ud-card.locked {
   opacity: 0.9;
-  background: repeating-linear-gradient(45deg,
-      var(--u-bg-card),
-      var(--u-bg-card) 10px,
-      var(--u-hover-bg) 10px,
-      var(--u-hover-bg) 20px);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--u-bg-card),
+    var(--u-bg-card) 10px,
+    var(--u-hover-bg) 10px,
+    var(--u-hover-bg) 20px
+  );
 }
 
 .btn-locked {
@@ -265,7 +260,7 @@
   color: var(--u-text-muted);
 }
 
-/* --- ACTIVITY TABLE --- */
+/* --- ✅ ACTIVITY TABLE STYLING (FIXED COLORS) --- */
 .ud-section {
   margin-top: 15px;
 }
@@ -278,7 +273,7 @@
 }
 
 .activity-table-wrapper {
-  background: var(--u-bg-card);
+  background: var(--u-bg-card); /* Theme Color */
   border: 1px solid var(--u-border);
   border-radius: 20px;
   overflow: hidden;
@@ -293,8 +288,8 @@
 .ud-table th {
   text-align: left;
   padding: 18px 25px;
-  background: var(--u-hover-bg);
-  color: var(--u-text-muted);
+  background: var(--u-hover-bg); /* Theme Hover Color */
+  color: var(--u-text-muted); /* Theme Muted Text */
   font-size: 0.85rem;
   text-transform: uppercase;
   font-weight: 700;
@@ -304,11 +299,13 @@
 .ud-table td {
   padding: 18px 25px;
   border-bottom: 1px solid var(--u-border);
-  color: var(--u-text-main);
+  color: var(--u-text-main); /* ✅ Fixed Main Text */
   font-size: 0.95rem;
   transition: background 0.2s;
+  vertical-align: middle;
 }
 
+/* Row Hover */
 .ud-table tr:hover td {
   background: var(--u-hover-bg);
 }
@@ -317,24 +314,60 @@
   border-bottom: none;
 }
 
-.text-sm {
-  font-size: 0.85rem;
-  color: var(--u-text-muted);
+/* ✅ CUSTOM TEXT CLASSES OVERRIDES */
+.ud-text-main {
+  color: var(--u-text-main) !important;
 }
 
-/* Status Badge */
-.status-badge {
+.ud-text-muted {
+  color: var(--u-text-muted) !important;
+}
+
+/* ✅ SUBJECT BADGE */
+.ud-badge {
+  background-color: var(--u-hover-bg);
+  color: var(--u-text-main);
+  border: 1px solid var(--u-border);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
 }
 
-.status-badge.success {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+/* ✅ EMPTY STATE */
+.ud-empty-box {
+  text-align: center;
+  padding: 40px;
+  color: var(--u-text-muted);
+  background-color: var(--u-bg-card);
+  font-size: 0.95rem;
+  border-radius: 20px;
+  border: 1px dashed var(--u-border);
+}
+
+/* ✅ VIEW ACTION BUTTON */
+.btn-icon-small {
+  color: var(--u-text-muted);
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.2s;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.btn-icon-small:hover {
+  color: var(--u-accent, #3b82f6);
+  background-color: var(--u-hover-bg);
+}
+
+.text-right {
+  text-align: right;
 }
 
 /* Fade In Animation */
@@ -370,7 +403,6 @@
 .yellow-glow {
   background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
-  /* Amber-500 */
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
 }
 

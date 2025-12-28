@@ -36,7 +36,7 @@
   overflow-x: hidden;
 
   /* Background styling */
-  background-image: radial-gradient(#475569 1px, transparent 1px);
+  /* background-image: radial-gradient(#475569 1px, transparent 1px); */
   background-size: 20px 20px;
 }
 

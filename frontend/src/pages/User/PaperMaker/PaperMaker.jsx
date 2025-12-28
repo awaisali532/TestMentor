@@ -8,8 +8,8 @@ import PaperPreview from "../../../components/PaperMaker/PaperPreview/PaperPrevi
 import QuestionMenu from "../../../components/PaperMaker/QuestionMenu/QuestionMenu";
 import PatternForm from "../../Admin/PaperPatterns/PatternForm";
 import SavePaperModal from "../../../components/PaperMaker/SaveModal/SavePaperModal";
+import ConfirmationModal from "../../../components/common/ConfirmationModal/ConfirmationModal";
 import "./PaperMaker.css";
-
 import "../../../layouts/UserLayout/UserLayout.css";
 
 const PaperMaker = () => {
@@ -18,7 +18,7 @@ const PaperMaker = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  // --- SESSION MANAGEMENT (UNCHANGED) ---
+  // --- SESSION MANAGEMENT ---
   const [sessionState, setSessionState] = useState(() => {
     const savedKey = localStorage.getItem("paperSessionKey");
     const currentKey = location.key;
@@ -49,6 +49,17 @@ const PaperMaker = () => {
   const [showPatternEdit, setShowPatternEdit] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // ✅ MANUAL EDIT MODE STATE
+  const [isManualMode, setIsManualMode] = useState(false);
+
+  // ✅ DELETE MODAL STATE
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    type: null,
+    id: null,
+    extra: null,
+  });
 
   useEffect(() => {
     if (!paperData) {
@@ -85,7 +96,7 @@ const PaperMaker = () => {
     navigate("/user/dashboard");
   };
 
-  // --- PATTERN UPDATE LOGIC (UNCHANGED) ---
+  // --- PATTERN UPDATE ---
   const handlePatternUpdate = (updatedPattern) => {
     setPaperData((prevData) => {
       let currentQuestions = [...prevData.questions];
@@ -150,26 +161,112 @@ const PaperMaker = () => {
     }
   };
 
-  const handlePrintPaper = () => {
-    navigate("/user/print-paper", { state: paperData });
+  // ✅ UPDATED PRINT HANDLER (Accepts Mode)
+  const handlePrintPaper = (mode = "SINGLE") => {
+    // Navigate to Print Page with Data AND Mode
+    navigate("/user/print-paper", {
+      state: {
+        ...paperData,
+        printSettings: { mode: mode }, // 👈 Ye naya data ja raha hai
+      },
+    });
   };
 
-  // --- ✅ SAVE LOGIC (UPDATED) ---
+  // =========================================================
+  // ✅ MANUAL EDITING HANDLERS
+  // =========================================================
+
+  // 1. Trigger Delete Modal for Single Question
+  const handleManualDelete = (qId) => {
+    setDeleteModal({ isOpen: true, type: "SINGLE", id: qId, extra: null });
+  };
+
+  // 2. Trigger Delete Modal for Section
+  const handleSectionDelete = (type, tabIdPrefix = null) => {
+    setDeleteModal({
+      isOpen: true,
+      type: "SECTION",
+      id: type,
+      extra: tabIdPrefix,
+    });
+  };
+
+  // 3. EXECUTE DELETE
+  const handleConfirmDelete = () => {
+    const { type, id, extra } = deleteModal;
+
+    setPaperData((prev) => {
+      if (type === "SINGLE") {
+        return {
+          ...prev,
+          questions: prev.questions.filter((q) => {
+            const currentId = q.questionId?._id || q.questionId || q._id;
+            return currentId !== id && q._id !== id;
+          }),
+        };
+      }
+
+      if (type === "SECTION") {
+        return {
+          ...prev,
+          questions: prev.questions.filter((q) => {
+            if (id === "MCQ" && q.type === "MCQ") return false;
+            if (id === "LONG" && q.type === "LONG") return false;
+            if (id === "SHORT" && q.type === "SHORT") {
+              return extra ? !q.tabId?.startsWith(extra) : false;
+            }
+            return true;
+          }),
+        };
+      }
+      return prev;
+    });
+
+    setDeleteModal({ isOpen: false, type: null, id: null, extra: null });
+    toast.success("Deleted successfully");
+  };
+
+  // 4. Update Question Content
+  const handleManualUpdate = (qId, field, lang, value, optIndex = null) => {
+    setPaperData((prev) => {
+      const updatedQuestions = prev.questions.map((q) => {
+        const id = q.questionId?._id || q.questionId || q._id;
+        if (id === qId || q._id === qId) {
+          if (field === "options" && optIndex !== null) {
+            const newOptions = [...q.options];
+            newOptions[optIndex] = {
+              ...newOptions[optIndex],
+              [lang]: value,
+            };
+            return { ...q, options: newOptions };
+          }
+          if (field === "statement") {
+            return {
+              ...q,
+              statement: { ...q.statement, [lang]: value },
+            };
+          }
+        }
+        return q;
+      });
+      return { ...prev, questions: updatedQuestions };
+    });
+  };
+
+  // =========================================================
+
   const handleSaveToDatabase = async (paperTitle) => {
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
+
+      // ✅ PREPARE DATA FOR SNAPSHOT SAVE
       const questionsToSave = paperData.questions.map((q) => {
-        let finalID = q._id;
-        if (q.questionId) {
-          finalID =
-            typeof q.questionId === "object" ? q.questionId._id : q.questionId;
-        }
         return {
-          questionId: finalID,
-          statement: q.statement,
+          questionId: q.questionId?._id || q.questionId || q._id, // Keep Ref
+          statement: q.statement, // Updated Text
           type: q.type,
-          options: q.options,
+          options: q.options, // Updated Options (including isCorrect)
           marks: q.marks,
           tabId: q.tabId,
         };
@@ -182,12 +279,8 @@ const PaperMaker = () => {
         totalMarks: paperData.selectedPattern?.totalMarks || 0,
         pattern: paperData.selectedPattern,
         questions: questionsToSave,
-
-        // ✅ Existing Fields
         examLabel: paperData.examLabel || "",
         syllabusLabel: paperData.syllabusLabel || "",
-
-        // ✅ NEW: SEND EXAM DATE TO BACKEND
         examDate: paperData.examDate || null,
       };
 
@@ -239,11 +332,17 @@ const PaperMaker = () => {
         onCancel={handleCancelPaper}
         onSave={() => setShowSaveModal(true)}
         onPrint={handlePrintPaper}
+        isManualMode={isManualMode}
+        toggleManualMode={() => setIsManualMode(!isManualMode)}
       />
       <div className="pm-workspace">
         <PaperPreview
           paperData={paperData}
           onOpenMenu={() => setIsMenuOpen(true)}
+          isManualMode={isManualMode}
+          onManualUpdate={handleManualUpdate}
+          onManualDelete={handleManualDelete}
+          onSectionDelete={handleSectionDelete}
         />
       </div>
       <QuestionMenu
@@ -273,6 +372,24 @@ const PaperMaker = () => {
         onConfirm={handleSaveToDatabase}
         loading={saving}
         initialTitle={paperData.title}
+      />
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, type: null, id: null })}
+        onConfirm={handleConfirmDelete}
+        title={
+          deleteModal.type === "SECTION"
+            ? "Delete Entire Section?"
+            : "Delete Question?"
+        }
+        message={
+          deleteModal.type === "SECTION"
+            ? "Are you sure you want to remove all questions in this section?"
+            : "Are you sure you want to remove this question?"
+        }
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        isDanger={true}
       />
     </div>
   );
