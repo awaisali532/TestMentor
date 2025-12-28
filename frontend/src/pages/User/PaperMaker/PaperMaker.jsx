@@ -10,12 +10,15 @@ import PatternForm from "../../Admin/PaperPatterns/PatternForm";
 import SavePaperModal from "../../../components/PaperMaker/SaveModal/SavePaperModal";
 import "./PaperMaker.css";
 
+import "../../../layouts/UserLayout/UserLayout.css";
+
 const PaperMaker = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useTheme();
 
+  // --- SESSION MANAGEMENT (UNCHANGED) ---
   const [sessionState, setSessionState] = useState(() => {
     const savedKey = localStorage.getItem("paperSessionKey");
     const currentKey = location.key;
@@ -82,12 +85,8 @@ const PaperMaker = () => {
     navigate("/user/dashboard");
   };
 
+  // --- PATTERN UPDATE LOGIC (UNCHANGED) ---
   const handlePatternUpdate = (updatedPattern) => {
-    // ... (Your Existing Pattern Update Logic - Keep AS IS) ...
-    // Note: I'm skipping pasting the long function to save space,
-    // BUT YOU SHOULD KEEP YOUR EXISTING LOGIC HERE.
-
-    // Copy Paste the SAFE logic we created before:
     setPaperData((prevData) => {
       let currentQuestions = [...prevData.questions];
       const oldLongSec = prevData.selectedPattern?.sections?.find(
@@ -151,15 +150,12 @@ const PaperMaker = () => {
     }
   };
 
-  // ✅ PRINT HANDLER (Navigates to Print Page)
   const handlePrintPaper = () => {
-    // Data ko safe format mein bhejna zaroori hai
     navigate("/user/print-paper", { state: paperData });
   };
 
-  // ... (handleSaveToDatabase Logic Keep AS IS) ...
+  // --- ✅ SAVE LOGIC (UPDATED) ---
   const handleSaveToDatabase = async (paperTitle) => {
-    // (Your existing save logic here...)
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
@@ -178,6 +174,7 @@ const PaperMaker = () => {
           tabId: q.tabId,
         };
       });
+
       const payload = {
         title: paperTitle,
         subject: paperData.subject,
@@ -185,7 +182,15 @@ const PaperMaker = () => {
         totalMarks: paperData.selectedPattern?.totalMarks || 0,
         pattern: paperData.selectedPattern,
         questions: questionsToSave,
+
+        // ✅ Existing Fields
+        examLabel: paperData.examLabel || "",
+        syllabusLabel: paperData.syllabusLabel || "",
+
+        // ✅ NEW: SEND EXAM DATE TO BACKEND
+        examDate: paperData.examDate || null,
       };
+
       let apiUrl = `${BASE_URL}/api/papers/save`;
       let method = "post";
       if (paperData._id && paperData.title === paperTitle) {
@@ -220,7 +225,9 @@ const PaperMaker = () => {
 
   return (
     <div
-      className={`pm-container ${theme === "dark" ? "pw-dark" : "pw-light"}`}
+      className={`pm-container ${
+        theme === "dark" ? "u-dark pw-dark" : "u-light pw-light"
+      }`}
     >
       <Toaster position="top-center" reverseOrder={false} />
       <MakerSidebar
@@ -231,7 +238,7 @@ const PaperMaker = () => {
         toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onCancel={handleCancelPaper}
         onSave={() => setShowSaveModal(true)}
-        onPrint={handlePrintPaper} // ✅ Pass Print Handler to Sidebar (Update Sidebar if needed)
+        onPrint={handlePrintPaper}
       />
       <div className="pm-workspace">
         <PaperPreview

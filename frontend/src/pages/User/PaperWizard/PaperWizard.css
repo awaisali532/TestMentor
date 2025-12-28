@@ -1,297 +1,384 @@
 /* Full Page Container */
 .pw-container {
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    font-family: 'Inter', sans-serif;
-    transition: background 0.3s, color 0.3s;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* Light Theme Variables */
 .pw-light {
-    --pw-bg: #f3f4f6;
-    --pw-card-bg: #ffffff;
-    --pw-text: #1f2937;
-    --pw-border: #e5e7eb;
-    --pw-accent: #2563eb;
-    --pw-hover: #eff6ff;
+  --pw-bg: #f3f4f6;
+  --pw-card-bg: #ffffff;
+  --pw-text: #1f2937;
+  --pw-border: #cbd5e1; /* Thora Dark kia taake border nazar aaye */
+  --pw-accent: #2563eb;
+  --pw-hover: #eff6ff;
 }
 
 /* Dark Theme Variables */
 .pw-dark {
-    --pw-bg: #0f172a;
-    --pw-card-bg: #1e293b;
-    --pw-text: #f8fafc;
-    --pw-border: #334155;
-    --pw-accent: #3b82f6;
-    --pw-hover: #1e293b;
+  --pw-bg: #0f172a;
+  --pw-card-bg: #1e293b;
+  --pw-text: #f8fafc;
+  --pw-border: #475569; /* Visible border for dark mode */
+  --pw-accent: #3b82f6;
+  --pw-hover: #1e293b;
 }
 
 .pw-container {
-    background-color: var(--pw-bg);
-    color: var(--pw-text);
+  background-color: var(--pw-bg);
+  color: var(--pw-text);
 }
 
 /* --- HEADER / BREADCRUMB --- */
 .pw-header {
-    height: 65px;
-    background-color: var(--pw-card-bg);
-    border-bottom: 1px solid var(--pw-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-    z-index: 10;
-    flex-shrink: 0;
-    /* Header shrink na ho */
+  height: 65px;
+  background-color: var(--pw-card-bg);
+  border-bottom: 1px solid var(--pw-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .pw-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    overflow: hidden;
-    /* Prevent overflow */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  overflow: hidden;
 }
 
 .crumb-item {
-    display: flex;
-    align-items: center;
-    color: var(--pw-text);
-    opacity: 0.6;
-    transition: 0.2s;
-    padding: 5px 8px;
-    border-radius: 6px;
-    white-space: nowrap;
-    /* Text wrap na ho */
+  display: flex;
+  align-items: center;
+  color: var(--pw-text);
+  opacity: 0.6;
+  transition: 0.2s;
+  padding: 5px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
-/* ✅ NEW: Truncate Text for long syllabus names */
 .crumb-text {
-    display: block;
-    max-width: 150px;
-    /* Max width set karein */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    /* End mein ... dikhaye */
-    white-space: nowrap;
+  display: block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .crumb-item.active {
-    opacity: 1;
-    color: var(--pw-accent);
-    font-weight: 700;
-    background: var(--pw-hover);
+  opacity: 1;
+  color: var(--pw-accent);
+  font-weight: 700;
+  background: var(--pw-hover);
 }
 
 .crumb-item.clickable {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .crumb-item.clickable:hover {
-    opacity: 1;
-    background: var(--pw-hover);
+  opacity: 1;
+  background: var(--pw-hover);
 }
 
 .crumb-separator {
-    font-size: 0.7rem;
-    color: var(--pw-border);
-    flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--pw-border);
+  flex-shrink: 0;
 }
 
 /* --- ACTIONS WRAPPER --- */
 .pw-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .pw-theme-btn {
-    background: transparent;
-    border: 1px solid var(--pw-border);
-    color: var(--pw-text);
-    padding: 8px;
-    height: 36px;
-    width: 36px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 1rem;
+  background: transparent;
+  border: 1px solid var(--pw-border);
+  color: var(--pw-text);
+  padding: 8px;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 1rem;
 }
 
 .pw-theme-btn:hover {
-    background: var(--pw-hover);
-    color: var(--pw-accent);
-    border-color: var(--pw-accent);
+  background: var(--pw-hover);
+  color: var(--pw-accent);
+  border-color: var(--pw-accent);
 }
 
 .pw-close-btn {
-    background: transparent;
-    border: 1px solid var(--pw-border);
-    color: var(--pw-text);
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    transition: 0.2s;
-    height: 36px;
+  background: transparent;
+  border: 1px solid var(--pw-border);
+  color: var(--pw-text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  transition: 0.2s;
+  height: 36px;
 }
 
 .pw-close-btn:hover {
-    border-color: #ef4444;
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.05);
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
 }
 
 /* --- CONTENT AREA --- */
 .pw-content {
-    flex: 1;
-    padding: 20px 40px;
-    overflow-y: auto;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
+  flex: 1;
+  padding: 20px 40px;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
 }
 
 .pw-content::-webkit-scrollbar {
-    width: 10px;
+  width: 10px;
 }
 
 .pw-content::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 .pw-content::-webkit-scrollbar-thumb {
-    background-color: var(--pw-border);
-    border-radius: 5px;
-    border: 2px solid var(--pw-bg);
+  background-color: var(--pw-border);
+  border-radius: 5px;
+  border: 2px solid var(--pw-bg);
 }
 
 /* Animation */
 .fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --- MODAL STYLES --- */
 .pw-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(5px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    animation: fadeIn 0.2s ease-out;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .pw-modal-box {
-    background: var(--pw-card-bg);
-    border: 1px solid var(--pw-border);
-    padding: 30px;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    transform: scale(1);
-    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: var(--pw-card-bg);
+  border: 1px solid var(--pw-border);
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  transform: scale(1);
+  animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .pw-modal-icon {
-    font-size: 2.5rem;
-    color: #f59e0b;
-    margin-bottom: 15px;
+  font-size: 2.5rem;
+  color: #f59e0b;
+  margin-bottom: 15px;
 }
 
 .pw-modal-title {
-    margin: 0 0 10px 0;
-    color: var(--pw-text);
-    font-weight: 700;
-    font-size: 1.4rem;
+  margin: 0 0 10px 0;
+  color: var(--pw-text);
+  font-weight: 700;
+  font-size: 1.4rem;
 }
 
 .pw-modal-desc {
-    color: var(--pw-text);
-    opacity: 0.7;
-    font-size: 0.95rem;
-    margin-bottom: 25px;
-    line-height: 1.5;
+  color: var(--pw-text);
+  opacity: 0.7;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
 }
 
 .pw-modal-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
 }
 
 .pw-btn-cancel {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 1px solid var(--pw-border);
-    background: transparent;
-    color: var(--pw-text);
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--pw-border);
+  background: transparent;
+  color: var(--pw-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
 .pw-btn-cancel:hover {
-    background: var(--pw-hover);
+  background: var(--pw-hover);
 }
 
 .pw-btn-confirm {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    background: #ef4444;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    transition: 0.2s;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transition: 0.2s;
 }
 
 .pw-btn-confirm:hover {
-    background: #dc2626;
-    transform: translateY(-2px);
+  background: #dc2626;
+  transform: translateY(-2px);
 }
 
 @keyframes popUp {
-    from {
-        transform: scale(0.8);
-        opacity: 0;
-    }
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
+/* ==========================================================
+   ✅ STEP 5 FIXES: INPUT BORDERS & LAYOUT (NEWLY ADDED)
+   ========================================================== */
+
+/* Main Card for Final Step */
+.pw-final-card {
+  max-width: 600px;
+  margin: 0 auto 30px auto;
+  padding: 25px;
+  background: var(--pw-card-bg);
+  border: 1px solid var(--pw-border); /* Visible Border */
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.pw-final-title {
+  margin-bottom: 20px;
+  color: var(--pw-text);
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+/* Labels */
+.pw-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--pw-text);
+  font-size: 0.95rem;
+}
+
+.pw-label span {
+  font-size: 0.8rem;
+  color: var(--pw-text);
+  opacity: 0.6;
+  font-weight: 400;
+  margin-left: 5px;
+}
+
+/* ✅ INPUT FIELDS STYLE FIX */
+.pw-input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+
+  /* Important: Border styling for visibility */
+  border: 1px solid var(--pw-border);
+
+  background-color: var(--pw-bg); /* Slight contrast background */
+  color: var(--pw-text);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box; /* Fix width issues */
+}
+
+/* Focus State (Blue Border) */
+.pw-input:focus {
+  border-color: var(--pw-accent);
+  background-color: var(--pw-card-bg);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); /* Soft Glow */
+}
+
+/* Info Text */
+.pw-info-text {
+  font-size: 0.85rem;
+  color: var(--pw-text);
+  opacity: 0.6;
+  margin-top: 20px;
+  text-align: center;
+  font-style: italic;
+}
+/* =========================================
+   📅 DATE PICKER ICON FIX
+   ========================================= */
+
+/* Default Icon Style */
+.pw-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: 0.2s;
+}
+
+/* Hover par thora bright ho */
+.pw-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* 🌑 DARK MODE MAGIC */
+/* Jab Dark Mode active ho, to Icon ko Invert (White) kar do */
+.pw-dark .pw-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }

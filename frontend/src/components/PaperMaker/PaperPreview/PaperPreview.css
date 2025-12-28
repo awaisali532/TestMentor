@@ -1,22 +1,35 @@
 /* =======================================
-   PaperPreview.css - UPDATED WITH VARIABLES
+   PaperPreview.css - THEME & PADDING FIXED
    ======================================= */
 
-/* --- UNIQUE CONTAINER (pp- prefix) --- */
+/* --- UNIQUE CONTAINER --- */
 .pp-container {
   width: 100%;
   height: 100%;
-  padding: 30px;
-  overflow-y: auto;
-  /* Use Theme or Print Variables if available, else default */
-  background-color: var(--pw-bg, #ffffff);
-
-  /* ✅ Dynamic Settings Support */
-  color: var(--pl-color, #000000);
-  font-weight: var(--pl-weight, 400);
-  line-height: var(--pl-line-h, 1.3);
-
   box-sizing: border-box;
+  overflow-y: auto;
+
+  /* ✅ SCREEN PADDING (Taake content chipke na) */
+  padding: 40px;
+
+  /* ✅ THEME VARIABLES (UserLayout.css se) */
+  background-color: var(--u-bg-card, #ffffff);
+  color: var(--u-text-main, #000000);
+
+  /* Fonts defaults */
+  font-weight: var(--pl-weight, 400);
+  line-height: var(--pl-line-h, 1.4);
+
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* ⚠️ SPECIAL FIX FOR PRINT PAGE */
+/* Jab ye Print Layout ke andar ho, to parent ki settings le */
+.pl-paper-sheet .pp-container {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  overflow: visible;
 }
 
 .pp-sheet {
@@ -28,7 +41,10 @@
    HEADERS & SECTIONS
    ======================================= */
 .pp-section {
-  margin-bottom: 5px;
+  margin-bottom: 15px;
+}
+.pp-sub-section {
+  margin-bottom: 20px;
 }
 
 .pp-part-header {
@@ -36,13 +52,15 @@
   justify-content: center;
   align-items: center;
   gap: 15px;
-  border-bottom: 2px solid var(--pl-color, #000);
-  /* Dynamic Color */
-  padding-bottom: 8px;
-  margin-bottom: 20px;
+
+  /* ✅ Dynamic Border (Theme Aware) */
+  border-bottom: 2px solid var(--u-text-main, #000);
+
+  padding-bottom: 5px;
+  margin-bottom: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .pp-header-sep {
@@ -54,29 +72,27 @@
 .pp-ph-ur {
   font-family: "Jameel Noori Nastaleeq", serif;
   font-size: var(--pl-font-ur, 1rem);
-  /* ✅ Variable */
 }
 
-/* Question Header (Q.1 Choose...) */
+/* Question Header */
 .pp-q-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
-  border-bottom: 1px dashed #ccc;
-  padding-bottom: 8px;
+  /* ✅ Theme Border */
+  border-bottom: 1px dashed var(--u-border, #ccc);
+  padding-bottom: 5px;
 }
 
 .pp-hd-en {
   font-size: var(--pl-font-en, 0.9rem);
-  /* ✅ Variable */
   flex: 1;
   text-align: left;
 }
 
 .pp-hd-ur {
   font-size: var(--pl-font-ur, 0.9rem);
-  /* ✅ Variable */
   flex: 1;
   text-align: right;
   direction: rtl;
@@ -90,41 +106,38 @@
   white-space: nowrap;
 }
 
-.pp-sub-section {
-  margin-bottom: 30px;
-}
-
 /* =======================================
-   QUESTION ITEMS
+   QUESTION LISTS
    ======================================= */
 .pp-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 5px;
 }
 
-.pp-item,
+.pp-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* MCQ Wrapper */
 .pp-item-mcq {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-/* MCQ Specific Wrapper */
-.pp-item-mcq {
   flex-direction: column;
   gap: 5px;
-  margin-bottom: 8px;
-  border-bottom: 1px dotted #eee;
-  padding-bottom: 8px;
+  margin-bottom: 5px;
+  /* ✅ Theme Border */
+  border-bottom: 1px dotted var(--u-border, #e5e7eb);
+
   width: 100%;
 }
 
 .pp-stmt {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  align-items: flex-start;
+  align-items: baseline;
 }
 
 .pp-num {
@@ -140,12 +153,11 @@
   font-family: sans-serif;
 }
 
-/* ✅ Text Split Logic with Variables */
+/* Text Styling */
 .pp-text-en {
   text-align: left;
   flex: 1;
-  font-size: var(--pl-font-en, 0.8rem);
-  /* ✅ Variable */
+  font-size: var(--pl-font-en, 0.9rem);
   line-height: inherit;
 }
 
@@ -154,7 +166,6 @@
   flex: 1;
   font-family: "Jameel Noori Nastaleeq", serif;
   font-size: var(--pl-font-ur, 0.9rem);
-  /* ✅ Variable */
   line-height: inherit;
   direction: rtl;
 }
@@ -166,66 +177,81 @@
 }
 
 /* =======================================
-   MCQ OPTIONS (Fixed Grid Layout)
+   MCQ GRID (4 in 1 Row)
    ======================================= */
 .pp-opt-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr); /* 4 Columns Fixed */
   width: 100%;
-  gap: 8px 20px;
+  gap: 10px 15px;
   margin-top: 5px;
-  padding-left: 30px;
+  padding-left: 25px;
   box-sizing: border-box;
+}
+
+/* Mobile Responsiveness (Sirf Dashboard Preview ke liye) */
+@media (max-width: 768px) {
+  .pp-opt-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pp-container {
+    padding: 15px;
+  }
 }
 
 .pp-opt {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pp-opt-lbl {
   font-weight: 700;
-  font-size: 0.7rem;
-  opacity: 0.8;
-  white-space: nowrap;
+  font-size: 0.75rem;
+  opacity: 0.9;
 }
 
 .pp-opt-content {
   display: flex;
   flex-direction: row;
   align-items: baseline;
-  justify-content: flex-start;
-  gap: 60px;
-  /* Can use var(--pl-opt-gap) if needed */
-  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .pp-opt-en {
   font-weight: 500;
-  font-size: var(--pl-font-en, 0.75rem);
-  /* ✅ Variable */
+  font-size: var(--pl-font-en, 0.8rem);
   text-align: left;
 }
 
 .pp-opt-ur {
   font-family: "Jameel Noori Nastaleeq", serif;
-  font-size: var(--pl-font-ur, 0.85rem);
-  /* ✅ Variable */
+  font-size: var(--pl-font-ur, 0.9rem);
   direction: rtl;
   unicode-bidi: embed;
 }
 
-/* ✅ MATH EQUATION OVERRIDE */
+/* Brackets for Urdu */
+.pp-opt-ur::before {
+  content: "(";
+  margin-left: 3px;
+}
+.pp-opt-ur::after {
+  content: ")";
+  margin-right: 3px;
+}
+
+/* Math Fix */
 .math-jax-output,
 .katex {
   font-size: var(--pl-eq-size, 1em) !important;
-  /* ✅ New Variable */
+  color: inherit !important;
 }
 
-/* =======================================
-   EMPTY STATE (Hidden on Print)
-   ======================================= */
+/* Empty State */
 .pp-container:has(.pp-empty-state) {
   justify-content: center;
   align-items: center;
@@ -235,6 +261,7 @@
 .pp-empty-state {
   text-align: center;
   opacity: 0.6;
+  color: var(--u-text-muted); /* Theme Variable */
 }
 
 .pp-empty-icon {
@@ -245,7 +272,7 @@
 .pp-btn-add {
   margin-top: 20px;
   padding: 10px 20px;
-  background: var(--pw-accent, #3b82f6);
+  background: var(--u-accent, #3b82f6);
   color: white;
   border: none;
   border-radius: 6px;
@@ -255,8 +282,27 @@
   gap: 8px;
 }
 
-/* HIDE ADD BUTTON ON PRINT */
+/* =========================================
+   🖨️ PRINT MEDIA OVERRIDES (Force White/Black)
+   ========================================= */
 @media print {
+  .pp-container {
+    padding: 0 !important;
+    background-color: white !important;
+    color: black !important;
+  }
+  .pp-opt-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* Force Black Borders on Print */
+  .pp-part-header,
+  .pp-q-header,
+  .pp-item-mcq {
+    border-bottom-color: black !important;
+    border-color: black !important;
+  }
+
   .pp-btn-add,
   .pp-empty-state {
     display: none !important;

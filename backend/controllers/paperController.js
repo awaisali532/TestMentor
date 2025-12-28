@@ -1,22 +1,35 @@
-const SavedPaper = require("../models/SavedPaper");
+const SavedPaper = require("../models/savedPaper");
 
 // 1. Save New Paper
 const savePaper = async (req, res) => {
   try {
-    const { title, subject, grade, totalMarks, pattern, questions } = req.body;
+    const {
+      title,
+      subject,
+      grade,
+      totalMarks,
+      pattern,
+      questions,
+      examLabel,
+      examDate,
+      syllabusLabel,
+    } = req.body;
 
     if (!questions || questions.length === 0) {
       return res.status(400).json({ success: false, message: "No questions" });
     }
 
     const newPaper = new SavedPaper({
-      user: req.user.id, // Auth Middleware se aayega
+      user: req.user.id,
       title,
       subject,
       grade,
       totalMarks,
-      paperPattern: pattern, // Frontend 'pattern' bhejta hai, Model 'paperPattern' mangta hai
+      paperPattern: pattern,
       questions: questions,
+      examLabel: examLabel || "",
+      syllabusLabel: syllabusLabel || "",
+      examDate: examDate || null,
     });
 
     const saved = await newPaper.save();
@@ -32,11 +45,14 @@ const savePaper = async (req, res) => {
   }
 };
 
-// 2. Get All User Papers
+// 2. Get All User Papers (✅ FIX HERE)
 const getMyPapers = async (req, res) => {
   try {
     const papers = await SavedPaper.find({ user: req.user.id })
-      .select("title subject grade totalMarks createdAt") // Sirf zaroori fields lo
+      .select(
+        // 👇 Maine yahan 'examDate' add kar diya hai
+        "title subject grade totalMarks examLabel examDate syllabusLabel createdAt"
+      )
       .sort({ createdAt: -1 });
 
     res.json({ success: true, papers });
@@ -56,13 +72,22 @@ const getPaperById = async (req, res) => {
   }
 };
 
-// ✅ 4. UPDATE PAPER (New Function)
+// 4. UPDATE PAPER (✅ FIX HERE ALSO)
 const updatePaper = async (req, res) => {
   try {
     const paperId = req.params.id;
-    const { title, questions, totalMarks, pattern } = req.body;
 
-    // 1. Paper dhoondo aur check karo ke user wahi hai
+    // ✅ ADDED: examDate receive kar rahe hain
+    const {
+      title,
+      questions,
+      totalMarks,
+      pattern,
+      examLabel,
+      syllabusLabel,
+      examDate,
+    } = req.body;
+
     let paper = await SavedPaper.findOne({ _id: paperId, user: req.user.id });
 
     if (!paper) {
@@ -71,16 +96,22 @@ const updatePaper = async (req, res) => {
         .json({ success: false, message: "Paper not found or unauthorized" });
     }
 
-    // 2. Fields Update karo
+    // Fields Update
     paper.title = title || paper.title;
     paper.questions = questions || paper.questions;
     paper.totalMarks = totalMarks || paper.totalMarks;
+
+    // Update Labels
+    if (examLabel !== undefined) paper.examLabel = examLabel;
+    if (syllabusLabel !== undefined) paper.syllabusLabel = syllabusLabel;
+
+    // ✅ ADDED: Date Update Logic
+    if (examDate !== undefined) paper.examDate = examDate;
 
     if (pattern) {
       paper.paperPattern = pattern;
     }
 
-    // 3. Save Updated Paper
     await paper.save();
 
     res.json({
@@ -94,10 +125,32 @@ const updatePaper = async (req, res) => {
   }
 };
 
-// ✅ EXPORTS UPDATE (Ab updatePaper bhi export ho raha hai)
+// 5. DELETE PAPER
+const deletePaper = async (req, res) => {
+  try {
+    const paperId = req.params.id;
+
+    const paper = await SavedPaper.findOne({ _id: paperId, user: req.user.id });
+
+    if (!paper) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Paper not found or unauthorized" });
+    }
+
+    await SavedPaper.findByIdAndDelete(paperId);
+
+    res.json({ success: true, message: "Paper Deleted Successfully!" });
+  } catch (error) {
+    console.error("Delete Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 module.exports = {
   savePaper,
   getMyPapers,
   getPaperById,
   updatePaper,
+  deletePaper,
 };

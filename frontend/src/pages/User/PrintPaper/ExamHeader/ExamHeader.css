@@ -2,20 +2,23 @@
 .eh-container {
   width: 100%;
   font-family: "Times New Roman", serif;
-  margin-bottom: 10px; /* Reduced bottom margin */
+  margin-bottom: 10px;
   position: relative;
-  box-sizing: border-box; /* Ensure padding is included in width */
-  padding: 0 5px; /* Slight padding inside */
+  box-sizing: border-box;
+  padding: 0 5px;
+
+  /* ✅ Theme Text Color */
+  color: var(--u-text-main, #000);
 }
 
-/* --- 1. TOP SECTION (Institute Name & Logo) --- */
+/* --- TOP SECTION --- */
 .eh-top-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
-  margin-bottom: 10px;
-  padding-top: 10px; /* Thora sa neechay laye */
+  margin-bottom: 6px;
+  padding-top: 10px;
 }
 
 .eh-title-box {
@@ -24,24 +27,25 @@
 }
 
 .eh-institute-name {
-  font-size: 24px; /* Thora chota kia taake cut na ho */
+  font-size: 26px;
   font-weight: 900;
   text-transform: uppercase;
   margin: 0;
   line-height: 1.1;
-  color: black;
+  color: inherit;
 }
 
 .eh-address {
   font-size: 12px;
   font-weight: bold;
-  margin-top: 3px;
+  margin-top: 4px;
   text-transform: uppercase;
+  color: inherit;
 }
 
 .eh-logo-wrapper {
-  width: 80px; /* Reduced size */
-  height: 80px;
+  width: 85px;
+  height: 85px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,39 +58,41 @@
   object-fit: contain;
 }
 
-/* --- 2. GRID INFO SECTION (Compact) --- */
+/* --- GRID INFO SECTION --- */
 .eh-grid-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 5px; /* Reduced gap */
+
   margin-top: 5px;
 }
 
 .eh-row {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   width: 100%;
 }
 
 .eh-field-box {
   position: relative;
-  border: 1px solid black;
-  height: 32px; /* Reduced height to save space */
+  /* ✅ Theme Border */
+  border: 1px solid var(--u-border, #000);
+  height: 25px;
   display: flex;
   align-items: center;
   padding: 0 8px;
-  margin-top: 8px; /* Space for label */
+  margin-top: 8px;
 }
 
 .eh-field-label {
   position: absolute;
   top: -8px;
   left: 8px;
-  background: white;
+  /* ✅ Theme Background (Taake border chip jaye) */
+  background: var(--u-bg-card, #fff);
   padding: 0 4px;
-  font-size: 10px; /* Smaller label */
+  font-size: 10px;
   font-weight: bold;
-  color: black;
+  color: var(--u-text-main, #000);
   line-height: 1;
 }
 
@@ -99,7 +105,8 @@
   background: transparent;
   outline: none;
   font-family: inherit;
-  font-size: 12px; /* Smaller value */
+  font-size: 12px;
+  color: inherit;
 }
 
 /* Flex Sizes */
@@ -116,14 +123,15 @@
   flex: 1;
 }
 
-/* --- 3. BUBBLE SHEET GRID (Compact) --- */
+/* --- BUBBLE SHEET GRID --- */
 .eh-bubble-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 5px 10px;
   margin-top: 15px;
-  padding: 8px;
-  border: 1px solid black;
+  padding: 5px;
+  /* ✅ Theme Border */
+  border: 1px solid var(--u-border, #000);
 }
 
 .eh-bubble-group {
@@ -138,6 +146,7 @@
   font-size: 12px;
   min-width: 15px;
   text-align: right;
+  color: inherit;
 }
 
 .eh-bubbles {
@@ -146,9 +155,10 @@
 }
 
 .eh-circle {
-  width: 16px; /* Smaller bubbles */
+  width: 16px;
   height: 16px;
-  border: 1px solid black;
+  /* ✅ Theme Border */
+  border: 1px solid var(--u-border, #000);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -156,20 +166,32 @@
   font-size: 9px;
   font-weight: bold;
   line-height: 1;
+  color: inherit;
 }
 
+/* =========================================
+   🖨️ PRINT OVERRIDE (Black on White)
+   ========================================= */
 @media print {
-  .eh-container {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  .eh-container,
+  .eh-institute-name,
+  .eh-address,
+  .eh-field-val,
+  .eh-field-label,
+  .eh-q-num,
+  .eh-circle {
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
+
   .eh-field-box,
   .eh-bubble-strip,
   .eh-circle {
     border: 1px solid black !important;
   }
+
   .eh-field-label {
-    background: white !important;
-    print-color-adjust: exact;
+    background: white !important; /* Print par white background hi chahiye */
   }
 }

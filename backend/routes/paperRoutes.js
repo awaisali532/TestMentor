@@ -7,6 +7,7 @@ const {
   getMyPapers,
   getPaperById,
   updatePaper, // ✅ Ab ye Controller se mil jayega
+  deletePaper,
 } = require("../controllers/paperController");
 
 // Create New
@@ -18,5 +19,5 @@ router.put("/:id", protect, updatePaper);
 // Get Lists
 router.get("/my-papers", protect, getMyPapers);
 router.get("/:id", protect, getPaperById);
-
+router.delete("/:id", protect, deletePaper);
 module.exports = router;

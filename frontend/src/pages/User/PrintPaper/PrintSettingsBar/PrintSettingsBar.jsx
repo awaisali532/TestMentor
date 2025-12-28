@@ -1,6 +1,6 @@
 import React from "react";
 import { FaPrint, FaArrowLeft } from "react-icons/fa";
-import "./PrintSettingsBar.css"; // ✅ New CSS File
+import "./PrintSettingsBar.css";
 
 const PrintSettingsBar = ({ settings, setSettings, onPrint, onBack }) => {
   const handleChange = (e) => {
@@ -68,6 +68,22 @@ const PrintSettingsBar = ({ settings, setSettings, onPrint, onBack }) => {
               onChange={handleChange}
             />
           </div>
+
+          {/* ✅ NEW: WATERMARK DROPDOWN */}
+          <div className="col-md-2 col-4">
+            <label className="ps-label">Watermark</label>
+            <select
+              className="ps-select"
+              name="watermark"
+              value={settings.watermark}
+              onChange={handleChange}
+            >
+              <option value="none">None</option>
+              <option value="logo">Institute Logo</option>
+              <option value="confidential">Institute Name</option>
+            </select>
+          </div>
+
           <div className="col-md-2 col-4">
             <label className="ps-label">Font Weight</label>
             <select
@@ -116,15 +132,6 @@ const PrintSettingsBar = ({ settings, setSettings, onPrint, onBack }) => {
                 onChange={handleChange}
               />
               <span className="ps-toggle-text">Syllabus Info</span>
-            </label>
-            <label className="ps-toggle-wrapper">
-              <input
-                type="checkbox"
-                name="showBorder"
-                checked={settings.showBorder}
-                onChange={handleChange}
-              />
-              <span className="ps-toggle-text">Show Borders</span>
             </label>
             <label className="ps-toggle-wrapper">
               <input

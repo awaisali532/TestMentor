@@ -4,10 +4,8 @@ import toast from "react-hot-toast";
 import {
   FaCheckCircle,
   FaClock,
-  FaLayerGroup,
   FaFileAlt,
-  FaSpinner,
-  FaExclamationCircle,
+  FaExclamationCircle, // ❌ FaSpinner Removed
   FaChevronDown,
   FaChevronUp,
   FaPlusCircle,
@@ -16,9 +14,11 @@ import {
   FaStar,
 } from "react-icons/fa";
 
-// ✅ FIXED IMPORT PATH (common with small 'c' and 2 levels up)
 import ConfirmationModal from "../../common/ConfirmationModal/ConfirmationModal";
 import "./PatternSelector.css";
+
+// ✅ Import Custom TM Loader
+import TMLoader from "../../common/TMLoader/TMLoader";
 
 const PatternSelector = ({
   grade,
@@ -35,21 +35,29 @@ const PatternSelector = ({
   const [selectedId, setSelectedId] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
 
-  // ✅ Delete Modal State
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // --- 1. FETCH PRESETS ---
   const fetchPatterns = async () => {
+    // ✅ 1 Second Delay Logic
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 1000));
+
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get(`${BASE_URL}/api/patterns`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { grade: grade, subject: subject },
-      });
-      setPatterns(res.data);
+
+      // ✅ API + Timer Together
+      const [response] = await Promise.all([
+        axios.get(`${BASE_URL}/api/patterns`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { grade: grade, subject: subject },
+        }),
+        minDelay,
+      ]);
+
+      setPatterns(response.data);
       setLoading(false);
     } catch (err) {
       console.error("Pattern Fetch Error:", err);
@@ -62,7 +70,7 @@ const PatternSelector = ({
     if (grade && subject) fetchPatterns();
   }, [grade, subject]);
 
-  // --- 2. HANDLERS ---
+  // --- 2. HANDLERS (Same as before) ---
 
   const handleCardClick = (pattern) => {
     if (selectedId === pattern._id) {
@@ -79,22 +87,18 @@ const PatternSelector = ({
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  const handleCustomClick = () => {
-    onCreateCustom();
-  };
+  const handleCustomClick = () => onCreateCustom();
 
   const handleEditClick = (e, pattern) => {
     e.stopPropagation();
     onEdit(pattern);
   };
 
-  // ✅ DELETE HANDLER (OPENS MODAL)
   const handleDeleteClick = (e, id) => {
     e.stopPropagation();
     setDeleteModal({ isOpen: true, id: id });
   };
 
-  // ✅ CONFIRM DELETE ACTION
   const confirmDelete = async () => {
     if (!deleteModal.id) return;
     try {
@@ -104,11 +108,8 @@ const PatternSelector = ({
       });
 
       toast.success("Preset Deleted");
-
-      // Update UI List
       setPatterns((prev) => prev.filter((p) => p._id !== deleteModal.id));
 
-      // If selected item was deleted, deselect it
       if (selectedId === deleteModal.id) {
         setSelectedId(null);
         onSelect(null);
@@ -118,12 +119,12 @@ const PatternSelector = ({
     }
   };
 
-  if (loading)
-    return (
-      <div className="ps-loading">
-        <FaSpinner className="spin" /> Loading Patterns...
-      </div>
-    );
+  // ✅ LOADER LOGIC
+  if (loading) {
+    return <TMLoader message={`Loading Patterns for ${subject}...`} />;
+  }
+
+  // --- ERROR STATE ---
   if (error)
     return (
       <div className="ps-error">
@@ -131,8 +132,11 @@ const PatternSelector = ({
       </div>
     );
 
+  // --- MAIN UI ---
   return (
     <div className="ps-container fade-in">
+      {" "}
+      {/* Added Animation */}
       <h3 className="ps-title">Choose Paper Pattern</h3>
       <p className="ps-subtitle">
         Select a preset or create your own for{" "}
@@ -140,7 +144,6 @@ const PatternSelector = ({
           {grade} - {subject}
         </strong>
       </p>
-
       <div className="ps-grid">
         {/* CREATE CUSTOM CARD */}
         <div className="ps-card custom-card" onClick={handleCustomClick}>
@@ -165,14 +168,14 @@ const PatternSelector = ({
               }`}
               onClick={() => handleCardClick(p)}
             >
-              {/* CHECKMARK (Left Top) */}
+              {/* CHECKMARK */}
               {isSelected && (
                 <div className="ps-check">
                   <FaCheckCircle />
                 </div>
               )}
 
-              {/* ✅ ACTION BUTTONS (Right Top - Only for User Presets) */}
+              {/* ACTIONS */}
               {isUserPreset && (
                 <div className="ps-card-actions">
                   <button
@@ -192,7 +195,7 @@ const PatternSelector = ({
                 </div>
               )}
 
-              {/* HEADER (Only Badge) */}
+              {/* HEADER */}
               <div className="ps-card-header">
                 <span
                   className={`ps-badge ${
@@ -205,7 +208,7 @@ const PatternSelector = ({
 
               <h4 className="ps-card-name">{p.presetName}</h4>
 
-              {/* ✅ META INFO */}
+              {/* META INFO */}
               <div className="ps-card-meta">
                 <span className="meta-tag">
                   <FaStar className="text-warning" />{" "}
@@ -261,7 +264,6 @@ const PatternSelector = ({
           );
         })}
       </div>
-
       <div className="ps-actions">
         <button
           className="btn btn-primary px-5 py-3"
@@ -271,8 +273,7 @@ const PatternSelector = ({
           Next: Generate Paper <FaFileAlt className="ms-2" />
         </button>
       </div>
-
-      {/* ✅ DELETE CONFIRMATION MODAL */}
+      {/* DELETE CONFIRMATION MODAL */}
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, id: null })}

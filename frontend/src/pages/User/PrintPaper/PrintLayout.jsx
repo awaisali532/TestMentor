@@ -18,17 +18,17 @@ const PrintLayout = () => {
 
   // --- SETTINGS STATE ---
   const [settings, setSettings] = useState({
-    lineHeight: 1.3,
-    urduFontSize: 18,
-    engFontSize: 14,
-    eqFontSize: 14,
+    lineHeight: 1,
+    urduFontSize: 13,
+    engFontSize: 12,
+    eqFontSize: 12,
     headerSize: 1,
     fontColor: "#000000",
     fontWeight: "400",
     showBubbleSheet: true,
     showSyllabus: true,
-    showBorder: false,
     showAnswerKey: false,
+    watermark: "logo", // ✅ DEFAULT LOGO
   });
 
   const handlePrint = useReactToPrint({
@@ -39,12 +39,11 @@ const PrintLayout = () => {
   if (!paperData)
     return <div className="p-5 text-center">No Paper Data Found. Go back.</div>;
 
-  // ✅ FIX: Strict Institute Data (No Fallbacks to User Profile)
   const instituteInfo = {
-    name: user?.institute?.name || "", // Default empty if not set
+    name: user?.institute?.name || "",
     address: user?.institute?.address || "",
     phone: user?.institute?.phone || "",
-    logo: user?.institute?.logo || null, // ✅ Sirf Institute Logo ayega, User Image nahi
+    logo: user?.institute?.logo || null,
   };
 
   return (
@@ -68,20 +67,33 @@ const PrintLayout = () => {
           "--pl-weight": settings.fontWeight,
         }}
       >
-        <ExamHeader
-          paperData={paperData}
-          settings={settings}
-          institute={instituteInfo}
-        />
+        {/* ✅ WATERMARK RENDERING LOGIC */}
+        {settings.watermark === "logo" && instituteInfo.logo && (
+          <div className="pl-watermark-overlay">
+            <img src={instituteInfo.logo} alt="Watermark" />
+          </div>
+        )}
 
-        <div
-          className={`pl-content ${settings.showBorder ? "with-border" : ""}`}
-        >
-          <PaperPreview
+        {settings.watermark === "confidential" && (
+          <div className="pl-watermark-overlay text-only">
+            <h1>{instituteInfo.name || "INSTITUTE NAME"}</h1>{" "}
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <ExamHeader
             paperData={paperData}
-            onOpenMenu={() => {}}
-            isPrintMode={true}
+            settings={settings}
+            institute={instituteInfo}
           />
+          <div className="pl-content">
+            <PaperPreview
+              paperData={paperData}
+              onOpenMenu={() => {}}
+              isPrintMode={true}
+            />
+          </div>
         </div>
 
         {settings.showAnswerKey && (

@@ -1,28 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { FaSpinner, FaPlus, FaSearch } from "react-icons/fa";
-import toast from "react-hot-toast";
+import { FaPlus, FaSearch } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
 
-// ✅ Import New List Component
+// ✅ Custom TM Loader
+import TMLoader from "../../../components/common/TMLoader/TMLoader";
 import SavedPapersList from "../../../components/SavedPapersList/SavedPapersList";
 import "./SavedPapers.css";
 
 const SavedPapers = () => {
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ✅ LOADERS STATE
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false); // 🆕 New State for Print
+
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
+  // --- 1. FETCH PAPERS LIST ---
   useEffect(() => {
     const fetchPapers = async () => {
+      const minDelay = new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${BASE_URL}/api/papers/my-papers`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+
+        const [res] = await Promise.all([
+          axios.get(`${BASE_URL}/api/papers/my-papers`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          minDelay,
+        ]);
+
         if (res.data.success) {
           setPapers(res.data.papers);
         }
@@ -36,13 +50,37 @@ const SavedPapers = () => {
     fetchPapers();
   }, []);
 
-  // --- Actions ---
+  // --- ACTIONS ---
 
   const handleView = (id) => navigate(`/user/view-paper/${id}`);
 
-  const handlePrint = (paper) => {
-    // Filhal View page par le jate hain jahan Print ka option hota hai
-    navigate(`/user/view-paper/${paper._id}`);
+  // ✅ UPDATED: PRINT WITH TM LOADER
+  const handlePrint = async (paperSummary) => {
+    // 1. TM Loader Start
+    setIsPrinting(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      // 2. Full Data Fetch
+      const res = await axios.get(
+        `${BASE_URL}/api/papers/${paperSummary._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.data.success) {
+        // 3. Success hone par navigate (Loader band karne ki zaroorat nahi, page badal jayega)
+        navigate("/user/print-paper", { state: res.data.paper });
+      } else {
+        setIsPrinting(false); // Agar success false ho to loader band kro
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not load paper for printing.");
+      setIsPrinting(false); // Error par loader band kro
+    }
   };
 
   const handleEdit = async (paper) => {
@@ -60,8 +98,10 @@ const SavedPapers = () => {
           ...fullData,
           selectedPattern: fullData.paperPattern,
           questions: fullData.questions,
+          examLabel: fullData.examLabel,
+          syllabusLabel: fullData.syllabusLabel,
         };
-        navigate("/user/manual-maker", { state: makerData });
+        navigate("/user/paper-maker", { state: makerData, keepData: true });
       }
     } catch (err) {
       toast.error("Cannot open for editing.");
@@ -69,77 +109,88 @@ const SavedPapers = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this paper?")) return;
+    setIsDeleting(true); // 🟢 DELETE LOADER ON
+
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`${BASE_URL}/api/papers/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setPapers((prev) => prev.filter((p) => p._id !== id));
       toast.success("Paper deleted successfully");
     } catch (error) {
+      console.error(error);
       toast.error("Failed to delete paper");
+    } finally {
+      setIsDeleting(false); // 🔴 LOADER OFF
     }
   };
 
+  // Search Filter
   const filteredPapers = papers.filter(
     (p) =>
       p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading)
-    return (
-      <div className="sp-loader-container">
-        <FaSpinner className="spin" /> <span>Loading your papers...</span>
-      </div>
-    );
-
   return (
     <div className="sp-page-container">
-      {/* Header Section */}
-      <div className="sp-page-header">
-        <div>
-          <h2 className="sp-title">My Saved Papers</h2>
-          <p className="sp-subtitle">Manage and print your generated exams</p>
-        </div>
-        <button
-          className="sp-create-btn"
-          onClick={() => navigate("/user/generate-paper")}
-        >
-          <FaPlus /> Create New Paper
-        </button>
-      </div>
+      <Toaster position="top-right" />
 
-      {/* Search Bar */}
-      <div className="sp-search-bar">
-        <FaSearch className="sp-search-icon" />
-        <input
-          type="text"
-          placeholder="Search by title or subject..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      {/* ✅ 1. SHOW LOADER IF PRINTING */}
+      {isPrinting && <TMLoader message="Preparing Paper for Print..." />}
 
-      {/* Content Section (Table) */}
-      {filteredPapers.length === 0 ? (
-        <div className="sp-empty-state">
-          <div className="sp-empty-img">📄</div>
-          <h3>No papers found</h3>
-          <p>
-            You haven't created any papers yet, or no search results matched.
-          </p>
-        </div>
+      {/* ✅ 2. SHOW LOADER IF DELETING */}
+      {isDeleting && <TMLoader message="Deleting Paper..." />}
+
+      {/* ✅ 3. SHOW LOADER IF INITIAL FETCHING */}
+      {loading ? (
+        <TMLoader message="Loading your papers..." />
       ) : (
-        /* ✅ Replaced Grid with List Component */
-        <SavedPapersList
-          papers={filteredPapers}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onPrint={handlePrint}
-        />
+        <>
+          {/* Header Section */}
+          <div className="sp-page-header">
+            <div>
+              <h2 className="sp-title">My Saved Papers</h2>
+              <p className="sp-subtitle">
+                Manage and print your generated exams
+              </p>
+            </div>
+            <button
+              className="sp-create-btn"
+              onClick={() => navigate("/user/generate-paper")}
+            >
+              <FaPlus /> Create New Paper
+            </button>
+          </div>
+
+          <div className="sp-search-bar">
+            <FaSearch className="sp-search-icon" />
+            <input
+              type="text"
+              placeholder="Search by title or subject..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {filteredPapers.length === 0 ? (
+            <div className="sp-empty-state">
+              <div className="sp-empty-img">📄</div>
+              <h3>No papers found</h3>
+              <p>You haven't created any papers yet.</p>
+            </div>
+          ) : (
+            <SavedPapersList
+              papers={filteredPapers}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onPrint={handlePrint}
+            />
+          )}
+        </>
       )}
     </div>
   );

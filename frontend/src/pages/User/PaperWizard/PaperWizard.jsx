@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // ✅ useLocation Import
-import { FaExclamationTriangle } from "react-icons/fa";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaExclamationTriangle, FaCalendarAlt } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
 
-// Child Components (Imports same rahengi)
+// ✅ Custom Loader
+import TMLoader from "../../../components/common/TMLoader/TMLoader";
+
+// Child Components
 import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb";
-import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector";
+import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector.jsx";
 import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector";
 import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector";
 import PatternSelector from "../../../components/PaperGeneration/PatternSelector/PatternSelector";
@@ -15,10 +18,10 @@ import "./PaperWizard.css";
 
 const PaperWizard = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ Location hook
+  const location = useLocation();
   const { theme } = useTheme();
 
-  // --- 1. DEFAULT EMPTY STATE ---
+  // --- 1. DEFAULT STATE ---
   const defaultPaperData = {
     grade: "",
     subject: "",
@@ -27,35 +30,43 @@ const PaperWizard = () => {
     selectedPattern: null,
     mode: null,
     autoSettings: null,
+    examLabel: "",
+    examDate: "",
   };
 
-  // --- 2. STATE INITIALIZATION ---
   const [step, setStep] = useState(1);
   const [paperData, setPaperData] = useState(defaultPaperData);
+  const [wizardLoading, setWizardLoading] = useState(false);
 
-  // ✅ 3. RESET LOGIC (Fresh Start vs Back from Maker)
+  // --- 2. GET TODAY'S DATE (For Validation) ---
+  // Ye function aaj ki date nikalta hai YYYY-MM-DD format mein
+  const getMinDate = () => {
+    const today = new Date();
+    // Local Timezone adjustment taake date accurate rahe
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // --- 3. RESET LOGIC ---
   useEffect(() => {
-    // Check karein agr user PaperMaker se 'Cancel' kr k aya hai
     if (location.state?.keepData) {
-      // LocalStorage se data uthao (Restore session)
       const savedStep = localStorage.getItem("pw_step");
       const savedData = localStorage.getItem("pw_data");
 
       if (savedData) setPaperData(JSON.parse(savedData));
-      // Hamesha Step 5 (Mode Selector) pr le jao agr wapis aya hai
       if (savedStep) setStep(5);
     } else {
-      // Agar New aya hai -> Sab Clean kr do (Fresh Start)
       localStorage.removeItem("pw_step");
       localStorage.removeItem("pw_data");
       setStep(1);
       setPaperData(defaultPaperData);
     }
-  }, []); // Run only once on mount
+  }, []);
 
-  // --- 4. PERSIST DATA (Save on change) ---
+  // --- 4. PERSIST DATA ---
   useEffect(() => {
-    // Sirf tab save kro jab data exist krta ho (taake empty state save na ho jaye start ma)
     if (paperData.grade) {
       localStorage.setItem("pw_step", step);
       localStorage.setItem("pw_data", JSON.stringify(paperData));
@@ -66,8 +77,7 @@ const PaperWizard = () => {
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
-  // --- REST OF THE HANDLERS (Copy Paste existing logic below) ---
-
+  // --- HANDLERS ---
   useEffect(() => {
     if (step > 1 && !paperData.grade) setStep(1);
     if (step > 2 && !paperData.subject) setStep(2);
@@ -112,14 +122,15 @@ const PaperWizard = () => {
     setPaperData(finalData);
 
     if (mode === "MANUAL") {
-      navigate("/user/paper-maker", { state: finalData });
+      setWizardLoading(true);
+      setTimeout(() => {
+        navigate("/user/manual-maker", { state: finalData });
+      }, 1500);
     } else {
-      console.log("Auto Generation:", settings);
       alert("Auto Gen Coming Soon");
     }
   };
 
-  // Custom Pattern Logic
   const handleCreateCustom = () => {
     setEditingPreset(null);
     setShowCustomForm(true);
@@ -140,6 +151,8 @@ const PaperWizard = () => {
     <div
       className={`pw-container ${theme === "dark" ? "pw-dark" : "pw-light"}`}
     >
+      {wizardLoading && <TMLoader message="Preparing your workspace..." />}
+
       <WizardBreadCrumb
         step={step}
         setStep={setStep}
@@ -211,8 +224,53 @@ const PaperWizard = () => {
           </div>
         )}
 
+        {/* ✅ STEP 5: FINALIZATION */}
         {step === 5 && (
           <div className="fade-in">
+            <div className="pw-final-card">
+              <h4 className="pw-final-title">Final Details</h4>
+
+              <div className="row g-3">
+                {/* 1. Exam Label Input */}
+                <div className="col-md-7">
+                  <label className="pw-label">
+                    Exam Title <span>(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="pw-input"
+                    placeholder="e.g. Weekly Test #1"
+                    value={paperData.examLabel}
+                    onChange={(e) =>
+                      setPaperData({ ...paperData, examLabel: e.target.value })
+                    }
+                  />
+                </div>
+
+                {/* 2. Exam Date Input */}
+                <div className="col-md-5">
+                  <label className="pw-label">
+                    <FaCalendarAlt className="me-2" /> Exam Date
+                  </label>
+                  <input
+                    type="date"
+                    className="pw-input"
+                    // ✅ THIS LINE DISABLES PAST DATES
+                    min={getMinDate()}
+                    value={paperData.examDate}
+                    onChange={(e) =>
+                      setPaperData({ ...paperData, examDate: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <p className="pw-info-text">
+                Add these details to easily identify this paper later in "Saved
+                Papers".
+              </p>
+            </div>
+
             <ModeSelector
               onSelect={handleModeSelect}
               onBack={() => setStep(4)}

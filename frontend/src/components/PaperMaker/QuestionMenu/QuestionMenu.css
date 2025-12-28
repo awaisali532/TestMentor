@@ -1,15 +1,26 @@
-/* Full Screen Overlay - Adjusted to show Sidebar */
+/* =========================================
+   QUESTION MENU (Desktop Zoom-able Mode)
+   ========================================= */
+
+/* Full Screen Overlay - Fixed Desktop Size */
 .qm-overlay {
   position: fixed;
   top: 0;
 
-  /* ✅ Default State (Sidebar Open = 280px) */
+  /* ✅ Left Sidebar Space (280px) */
   left: 280px;
-  width: calc(100vw - 280px);
+
+  /* ✅ CHANGE: 100vw ki jagah Right Anchor use kia */
+  right: 0;
+  width: auto;
+
+  /* ✅ CRITICAL: Zabardasti Wide rakho taake Mobile shrink na kare */
+  /* Logic: Total 1280px (PaperMaker) - 280px (Sidebar) = 1000px */
+  min-width: 1000px;
 
   height: 100vh;
 
-  /* ✅ REMOVED BACKGROUND & BLUR */
+  /* Transparent BG (Jesa aapne manga) */
   background: transparent;
   backdrop-filter: none;
 
@@ -20,18 +31,18 @@
   opacity: 0;
   visibility: hidden;
 
-  /* ✅ CLICK THROUGH: Taake user picha paper dekh sake */
+  /* Click Through */
   pointer-events: none;
 
   /* Animation */
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s ease,
-    width 0.3s ease;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s ease;
 }
 
 /* ✅ When Sidebar is Collapsed (80px) */
 .qm-overlay.sidebar-collapsed {
   left: 80px;
-  width: calc(100vw - 80px);
+  /* Logic: 1280px - 80px = 1200px */
+  min-width: 1200px;
 }
 
 .qm-overlay.open {
@@ -41,20 +52,18 @@
 
 /* Main Modal Container */
 .qm-container {
-  /* ✅ RE-ENABLE CLICKS: Menu pr click ho sake */
   pointer-events: auto;
 
-  /* ✅ INCREASED SIZE */
-  width: 98%; /* Screen ka 98% hissa lega */
-  height: 98%; /* Height bhi full lega */
-  max-width: 100%; /* Limit khatam kr di taake full wide ho */
+  /* ✅ Size Logic */
+  width: 98%;
+  height: 98%;
+  max-width: 100%;
 
   background: var(--pw-card-bg);
   color: var(--pw-text);
   border: 1px solid var(--pw-border);
 
   border-radius: 12px;
-  /* Shadow thora strong kia taake transparent background pr prominent ho */
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
 
   display: flex;
@@ -78,7 +87,7 @@
   background-color: var(--pw-bg);
 }
 
-/* Controls Section (Sticky) */
+/* Controls Section */
 .qm-controls {
   background: var(--pw-card-bg);
   border-bottom: 1px solid var(--pw-border);
@@ -109,21 +118,28 @@
   background-color: var(--pw-accent);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .qm-overlay,
-  .qm-overlay.sidebar-collapsed {
-    left: 0;
-    width: 100vw;
-  }
-  .qm-container {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-  }
+/* Footer */
+.qm-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+
+  background: var(--pw-card-bg, #ffffff);
+  border-top: 1px solid var(--pw-border, #e2e8f0);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  z-index: 50;
 }
+
 /* =========================================
-   ✅ CUSTOM ALERT STYLES (THEME FIXED)
+   ✅ CUSTOM ALERT STYLES
    ========================================= */
 
 .qm-alert-overlay {
@@ -132,45 +148,33 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-
-  /* Background Dim */
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px); /* Thora blur taake focus alert pr rahe */
-
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000; /* Sabse upar */
-
-  /* 🔴 CRITICAL FIX: Clicks Enable Karein */
+  z-index: 10000;
   pointer-events: auto;
 }
 
 .qm-alert-box {
-  /* Theme Variables for Light/Dark Mode */
   background: var(--pw-card-bg, #ffffff);
   color: var(--pw-text, #1e293b);
   border: 1px solid var(--pw-border, #e2e8f0);
-
   padding: 30px;
-  border-radius: 16px; /* Smooth rounded corners */
+  border-radius: 16px;
   width: 90%;
   max-width: 380px;
   text-align: center;
-
-  /* Strong Shadow for Pop effect */
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
     0 10px 10px -5px rgba(0, 0, 0, 0.1);
-
   animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .qm-alert-icon {
   font-size: 3.5rem;
-  color: #ef4444; /* Error Red (Fixed Color) */
+  color: #ef4444;
   margin-bottom: 15px;
-
-  /* Thora Bounce effect icon ke liye */
   animation: bounceIn 0.4s ease;
 }
 
@@ -179,11 +183,11 @@
   font-weight: 600;
   margin-bottom: 25px;
   line-height: 1.6;
-  color: var(--pw-text, #1e293b); /* Theme Text Color */
+  color: var(--pw-text, #1e293b);
 }
 
 .qm-alert-btn {
-  background: #ef4444; /* Red Button */
+  background: #ef4444;
   color: white;
   border: none;
   padding: 12px 30px;
@@ -196,7 +200,7 @@
 }
 
 .qm-alert-btn:hover {
-  background: #dc2626; /* Darker Red */
+  background: #dc2626;
   transform: translateY(-2px);
   box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.4);
 }
@@ -205,7 +209,6 @@
   transform: translateY(0);
 }
 
-/* Animations */
 @keyframes popIn {
   from {
     transform: scale(0.8) translateY(10px);
@@ -228,21 +231,5 @@
     transform: scale(1);
   }
 }
-.qm-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px; /* Fixed Height */
 
-  background: var(--pw-card-bg, #ffffff);
-  border-top: 1px solid var(--pw-border, #e2e8f0);
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 30px;
-
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
-  z-index: 50; /* Content ke upar rahe */
-}
+/* ❌ NOTE: Mobile Media Queries REMOVED to keep Desktop Layout on Mobile */

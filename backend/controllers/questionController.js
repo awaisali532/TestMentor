@@ -132,16 +132,12 @@ const getQuestionsByFilter = async (req, res) => {
       query.topics = { $in: topicArray };
     }
 
-    console.log("🛠️ FINAL MONGO QUERY:", JSON.stringify(query, null, 2));
-
     // 3. Execute
     const questions = await Question.find(query)
       .populate("topics", "name topicNumber")
       .populate("chapter", "name chapterNumber")
       .sort({ createdAt: -1 })
       .lean();
-
-    console.log(`✅ Found ${questions.length} questions`);
 
     // 4. Send
     const formattedQuestions = questions.map((q) => ({

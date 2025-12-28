@@ -1,161 +1,181 @@
-/* Table Container */
+/* --- TABLE CONTAINER --- */
 .sp-table-container {
   background: var(--u-bg-card);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--u-border);
-  border-radius: 16px;
-  overflow-x: auto; /* Ab ye dropdown ko nahi katega */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  padding-bottom: 20px; /* Thodi space niche */
+  overflow-x: auto;
+  min-height: 300px;
 }
 
+/* Dark Mode specific shadow removal */
+.u-dark .sp-table-container {
+  box-shadow: none;
+}
+
+/* --- TABLE STYLES --- */
 .sp-table {
   width: 100%;
+  min-width: 1000px;
   border-collapse: collapse;
-  min-width: 600px;
 }
 
-/* Headers */
+/* HEADER Styling */
 .sp-table th {
-  text-align: left;
-  padding: 18px 24px;
-  background: var(--u-bg-card);
-  border-bottom: 2px solid var(--u-border);
-  color: var(--u-text-muted);
+  background: var(--u-bg-main);
+  /* ✅ Force Header Color */
+  color: var(--u-text-muted) !important;
+  font-weight: 600;
   font-size: 0.85rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.sp-table th.text-right {
-  text-align: right;
-}
-
-/* Rows */
-.sp-table td {
-  padding: 16px 24px;
+  padding: 14px 16px;
+  text-align: left;
+  white-space: nowrap;
   border-bottom: 1px solid var(--u-border);
-  color: var(--u-text-main);
+}
+
+/* BODY CELL Styling */
+.sp-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--u-border);
+  /* ✅ Force Default Text Color (Paper Name, User etc.) */
+  color: var(--u-text-main) !important;
   font-size: 0.95rem;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
-.sp-table tr:last-child td {
-  border-bottom: none;
+/* Row Hover */
+.sp-table tbody tr:hover {
+  background-color: var(--u-hover);
 }
 
-.sp-table tr:hover td {
-  background: rgba(59, 130, 246, 0.05);
-}
+/* --- TEXT COLORS OVERRIDES (Bootstrap Fixes) --- */
 
-/* Typography Helpers */
-.fw-bold {
-  font-weight: 600;
-}
-
-/* ✅ Fix for Title Color Issue */
-.text-main {
+/* 1. Paper Name & Bold Text */
+.sp-table .fw-bold,
+.sp-table .text-main {
   color: var(--u-text-main) !important; /* Force Theme Color */
 }
 
-.text-muted {
-  color: var(--u-text-muted);
-  font-size: 0.85rem;
+/* 2. Dates & Secondary Info (Bootstrap .text-muted override) */
+.sp-table .text-muted {
+  color: var(--u-text-muted) !important; /* Force Theme Muted Color */
 }
+
+/* 3. Small Text */
+.sp-table .small {
+  font-size: 0.85rem;
+  color: var(--u-text-main) !important;
+}
+
+/* --- BADGES & PILLS --- */
 
 /* Subject Pill */
 .sp-pill {
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: capitalize;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
 }
 
+/* Blue Pill (Subject) */
 .sp-pill.blue {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+/* Dark Mode Blue Pill */
+.u-dark .sp-pill.blue {
+  background-color: rgba(13, 110, 253, 0.2);
+  color: #60a5fa; /* Lighter Blue for visibility */
 }
 
-/* --- 3 DOTS MENU STYLING --- */
+/* Exam Name Badge */
+.badge-gray {
+  background-color: var(--u-bg-main);
+  border: 1px solid var(--u-border);
+  /* ✅ Badge Text Color Fix */
+  color: var(--u-text-muted) !important;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* --- ACTION BUTTONS --- */
+.text-right {
+  text-align: right;
+}
 
 .sp-action-toggle {
   background: transparent;
   border: none;
-  width: 32px;
-  height: 32px;
+  color: var(--u-text-muted) !important; /* Fix Icon Color */
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 8px;
   border-radius: 50%;
-  display: inline-flex;
+  transition: 0.2s;
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--u-text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
 .sp-action-toggle:hover {
-  background: var(--u-border);
-  color: var(--u-text-main);
+  background-color: var(--u-hover);
+  color: var(--u-accent) !important;
 }
 
-/* ✅ Dropdown Box (Fixed Positioning Logic) */
-.sp-dropdown-menu.fixed-menu {
-  position: fixed; /* Screen ke hisab se position lega */
+/* --- DROPDOWN MENU --- */
+.sp-dropdown-menu {
+  position: fixed;
   background: var(--u-bg-card);
   border: 1px solid var(--u-border);
-  border-radius: 12px;
-  width: 160px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Strong shadow */
-  z-index: 9999; /* Sabse upar */
-  padding: 6px;
-  animation: fadeIn 0.15s ease-out;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 5px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
 }
 
-/* Dark mode specific fix for shadow if needed */
-[data-theme="dark"] .sp-dropdown-menu.fixed-menu {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  border-color: #374151;
+.u-dark .sp-dropdown-menu {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
-/* Dropdown Items */
 .sp-dropdown-menu button {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 10px 15px;
   width: 100%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  /* ✅ Fix Dropdown Text Color */
+  color: var(--u-text-main) !important;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border: none;
-  background: transparent;
-  color: var(--u-text-main);
-  font-size: 0.9rem;
-  text-align: left;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.2s;
+  transition: 0.2s;
 }
 
 .sp-dropdown-menu button:hover {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background-color: var(--u-hover);
 }
 
+/* Danger Button */
 .sp-dropdown-menu button.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background-color: #fee2e2;
+  color: #ef4444 !important;
+}
+.u-dark .sp-dropdown-menu button.danger:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171 !important;
 }
 
 .sp-dropdown-menu .icon {
-  font-size: 0.9rem;
+  font-size: 1rem;
   opacity: 0.7;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }

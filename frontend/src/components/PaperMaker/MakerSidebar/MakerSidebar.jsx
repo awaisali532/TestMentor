@@ -25,16 +25,15 @@ const MakerSidebar = ({
   isMenuOpen,
   isCollapsed,
   toggleCollapse,
-  onCancel, // ✅ Receive Cancel Handler
-  onSave, // ✅ Receive Save Handler
+  onCancel,
+  onSave,
+  onPrint, // ✅ Receive Print Handler
 }) => {
   const { user } = useUser();
   const { theme, toggleTheme } = useTheme();
 
   const [activeTab, setActiveTab] = useState("menu");
   const [showExitModal, setShowExitModal] = useState(false);
-
-  const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // Auto-Open Logic
   useEffect(() => {
@@ -50,9 +49,9 @@ const MakerSidebar = ({
     }
   }, [isMenuOpen, activeTab]);
 
-  // ✅ FIXED NAVIGATION HANDLER
+  // ✅ NAVIGATION HANDLER
   const handleNavigation = (tab) => {
-    // 1. Agar Menu khula hai to baqi buttons disable rakho (optional UX preference)
+    // 1. Agar Menu khula hai to baqi buttons disable rakho
     if (isMenuOpen && tab !== "menu") return;
 
     setActiveTab(tab);
@@ -62,9 +61,13 @@ const MakerSidebar = ({
       onOpenMenu();
     }
 
-    // ✅ SAVE BUTTON CLICK FIX
     if (tab === "save") {
-      if (onSave) onSave(); // Call the Parent Function
+      if (onSave) onSave();
+    }
+
+    // ✅ PRINT SINGLE LOGIC ADDED
+    if (tab === "print_single") {
+      if (onPrint) onPrint();
     }
   };
 
@@ -136,10 +139,10 @@ const MakerSidebar = ({
           {!isCollapsed && <span>Manual Editing</span>}
         </button>
 
-        {/* ✅ SAVE BUTTON */}
+        {/* SAVE BUTTON */}
         <button
           className={`pm-item ${activeTab === "save" ? "active" : ""}`}
-          onClick={() => handleNavigation("save")} // Ab ye onSave call karega
+          onClick={() => handleNavigation("save")}
           title="Save Paper"
         >
           <div className="pm-icon-box text-green">
@@ -150,7 +153,7 @@ const MakerSidebar = ({
 
         <div className="pm-spacer"></div>
 
-        {/* Print Buttons (Future) */}
+        {/* ✅ PRINT BUTTON (Linked) */}
         <button
           className={`pm-item ${activeTab === "print_single" ? "active" : ""}`}
           onClick={() => handleNavigation("print_single")}
@@ -160,6 +163,7 @@ const MakerSidebar = ({
           </div>
           {!isCollapsed && <span>Print Single</span>}
         </button>
+
         <button
           className={`pm-item ${activeTab === "print_dv" ? "active" : ""}`}
           onClick={() => handleNavigation("print_dv")}

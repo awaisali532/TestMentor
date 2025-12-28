@@ -3,12 +3,14 @@ import axios from "axios";
 import {
   FaChevronDown,
   FaChevronRight,
-  FaSpinner,
   FaExclamationCircle,
   FaArrowRight,
   FaCheckDouble,
-} from "react-icons/fa";
+} from "react-icons/fa"; // ❌ FaSpinner Removed
 import "./SyllabusSelector.css";
+
+// ✅ Import Custom TM Loader
+import TMLoader from "../../common/TMLoader/TMLoader";
 
 const SyllabusSelector = ({
   selectedClass,
@@ -29,24 +31,30 @@ const SyllabusSelector = ({
   // --- 1. FETCH SYLLABUS ---
   useEffect(() => {
     const fetchSyllabus = async () => {
+      // ✅ 1 Second Delay Logic
+      const minDelay = new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
         setLoading(true);
         setError(null);
+
         const token = localStorage.getItem("token");
         const config = {
           headers: { Authorization: token ? `Bearer ${token}` : "" },
           params: { className: selectedClass, subjectName: selectedSubject },
         };
 
-        const response = await axios.get(
-          `${API_BASE_URL}/api/chapters/filter`,
-          config
-        );
+        // ✅ Run API + Delay Together
+        const [response] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/chapters/filter`, config),
+          minDelay,
+        ]);
+
         setChapters(response.data);
-        setLoading(false);
       } catch (err) {
         console.error("Fetch Error:", err);
         setError("Failed to load syllabus.");
+      } finally {
         setLoading(false);
       }
     };
@@ -54,7 +62,7 @@ const SyllabusSelector = ({
     if (selectedClass && selectedSubject) fetchSyllabus();
   }, [selectedClass, selectedSubject]);
 
-  // --- 2. HELPERS ---
+  // ... (HELPERS & HANDLERS same rahenge) ...
 
   const allTopicIds = useMemo(() => {
     return chapters.flatMap((ch) => ch.topics.map((t) => t._id));
@@ -63,31 +71,22 @@ const SyllabusSelector = ({
   const isAllSelected =
     allTopicIds.length > 0 && allTopicIds.length === selectedTopicIds.length;
 
-  // ✅ NEW: FUNCTION TO GENERATE LABEL AND UPDATE PARENT
   const updateSelection = (newIds) => {
     setSelectedTopicIds(newIds);
-
-    // 1. Generate Label Logic
     let label = "Select Syllabus";
 
     if (newIds.length > 0) {
       if (newIds.length === allTopicIds.length) {
         label = "Full Syllabus";
       } else {
-        // Find which chapters are involved
         const involvedChapters = chapters
           .filter((ch) => ch.topics.some((t) => newIds.includes(t._id)))
           .map((ch) => `CH-${ch.chapterNumber}`);
-
         label = involvedChapters.join(", ");
       }
     }
-
-    // 2. Send both IDs and Label to Parent
     onSelectionChange(newIds, label);
   };
-
-  // --- 3. HANDLERS ---
 
   const toggleChapter = (chapId) => {
     setExpandedChapters((prev) => ({ ...prev, [chapId]: !prev[chapId] }));
@@ -95,7 +94,7 @@ const SyllabusSelector = ({
 
   const handleSelectAll = () => {
     const updated = isAllSelected ? [] : [...allTopicIds];
-    updateSelection(updated); // ✅ Using helper
+    updateSelection(updated);
   };
 
   const handleTopicCheck = (topicId) => {
@@ -105,7 +104,7 @@ const SyllabusSelector = ({
     } else {
       updated = [...selectedTopicIds, topicId];
     }
-    updateSelection(updated); // ✅ Using helper
+    updateSelection(updated);
   };
 
   const handleChapterCheck = (chapter) => {
@@ -123,7 +122,7 @@ const SyllabusSelector = ({
       );
       updated = [...selectedTopicIds, ...newIds];
     }
-    updateSelection(updated); // ✅ Using helper
+    updateSelection(updated);
   };
 
   const getChapterStatus = (chapter) => {
@@ -141,12 +140,12 @@ const SyllabusSelector = ({
   };
 
   // --- RENDER ---
-  if (loading)
-    return (
-      <div className="syl-loading">
-        <FaSpinner className="spin" /> Loading Syllabus...
-      </div>
-    );
+
+  // ✅ NEW LOADER LOGIC
+  if (loading) {
+    return <TMLoader message={`Loading Syllabus for ${selectedSubject}...`} />;
+  }
+
   if (error)
     return (
       <div className="syl-error">
@@ -157,9 +156,10 @@ const SyllabusSelector = ({
     return <div className="syl-empty">No chapters found.</div>;
 
   return (
-    <div className="syl-wrapper">
+    <div className="syl-wrapper fade-in-up">
+      {" "}
+      {/* Added Animation */}
       <h3 className="syl-title">Select Topics from {selectedSubject}</h3>
-
       {/* Select All Bar */}
       <div
         className={`syl-select-all ${isAllSelected ? "active" : ""}`}
@@ -176,7 +176,6 @@ const SyllabusSelector = ({
         </div>
         <FaCheckDouble className="syl-all-icon" />
       </div>
-
       <div className="syl-grid">
         {chapters.map((chapter) => {
           const { checked, indeterminate } = getChapterStatus(chapter);
@@ -236,7 +235,6 @@ const SyllabusSelector = ({
           );
         })}
       </div>
-
       <button
         className={`syl-fab-btn ${
           selectedTopicIds.length === 0 ? "disabled" : ""

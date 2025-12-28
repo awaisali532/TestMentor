@@ -1,18 +1,19 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
-import { FaSpinner } from "react-icons/fa";
+// ❌ FaSpinner Removed
+
+// ✅ Import Custom TM Loader
+// Path check kar lena agar components folder door ho
+import TMLoader from "../../components/common/TMLoader/TMLoader";
 
 const PrivateRoute = () => {
   const { user, authLoading } = useUser();
 
   // 1. Agar abhi check kar raha hai (Refresh case)
   if (authLoading) {
-    return (
-      <div className="d-flex justify-content-center mt-5">
-        <FaSpinner className="icon-spin" size={40} />
-      </div>
-    );
+    // ✅ Replace Old Spinner with TM Loader
+    return <TMLoader message="Verifying User..." />;
   }
 
   // 2. Agar User login hai -> To andar jane do (<Outlet />)

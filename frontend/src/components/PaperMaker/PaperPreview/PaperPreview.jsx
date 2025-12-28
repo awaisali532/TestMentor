@@ -3,7 +3,8 @@ import { FaPlusCircle, FaRegFileAlt } from "react-icons/fa";
 import RenderText from "../../common/RenderText";
 import "./PaperPreview.css";
 
-const PaperPreview = ({ paperData, onOpenMenu }) => {
+// ✅ Added 'isPrintMode' prop to hide buttons when printing/viewing final layout
+const PaperPreview = ({ paperData, onOpenMenu, isPrintMode = false }) => {
   const questions = paperData?.questions || [];
 
   // --- FILTERING ---
@@ -34,10 +35,6 @@ const PaperPreview = ({ paperData, onOpenMenu }) => {
     if (type === "LONG") {
       return sections.find((s) => s.questionType === "LONG");
     }
-    // For Short (index based)
-    // Short sections usually start after MCQ.
-    // Assumption: Sections are ordered. We need to match logic from TypeTabs.
-    // Better Approach: Find section where questionType is SHORT and match index logic
     const shortSections = sections.filter((s) => s.questionType === "SHORT");
     return shortSections[index];
   };
@@ -69,24 +66,19 @@ const PaperPreview = ({ paperData, onOpenMenu }) => {
   const groupedLongQs = getGroupedLongQuestions();
 
   // ==========================================================
-  // ✅ LOGIC FIX: USE 'toBeAttempted' FROM SCHEMA
+  // INSTRUCTIONS LOGIC
   // ==========================================================
   const getLongInstructions = () => {
     const longSec = getSectionConfig("LONG");
-
-    // ✅ FIX: Use 'toBeAttempted' (Schema Field) instead of 'quantity'
     const attemptLimit = parseInt(longSec?.toBeAttempted || 0);
-    const available = groupedLongQs.length; // Total added in paper
+    const available = groupedLongQs.length;
 
-    // Logic:
-    // If user set attempt limit 0 (meaning all) OR limit >= available -> Attempt All
     if (attemptLimit === 0 || attemptLimit >= available) {
       return {
         en: "Note: Attempt all questions.",
         ur: "نوٹ: تمام سوالات حل کریں۔",
       };
     } else {
-      // Choice Available
       const qWord = attemptLimit === 1 ? "question" : "questions";
       return {
         en: `Note: Attempt any ${attemptLimit} ${qWord}.`,
@@ -106,13 +98,17 @@ const PaperPreview = ({ paperData, onOpenMenu }) => {
           </div>
           <h3>Paper Empty</h3>
           <p>Add questions from the menu.</p>
-          <button className="pp-btn-add" onClick={onOpenMenu}>
-            <FaPlusCircle /> Open Menu
-          </button>
+
+          {/* ✅ FIX: Hide Button if in Print Mode */}
+          {!isPrintMode && (
+            <button className="pp-btn-add" onClick={onOpenMenu}>
+              <FaPlusCircle /> Open Menu
+            </button>
+          )}
         </div>
       ) : (
         <div className="pp-sheet">
-          {/* ... MCQ SECTION (SAME AS BEFORE) ... */}
+          {/* ... MCQ SECTION ... */}
           {mcqs.length > 0 && (
             <div className="pp-section">
               <div className="pp-part-header">
@@ -193,18 +189,11 @@ const PaperPreview = ({ paperData, onOpenMenu }) => {
               {Object.keys(shortQuestionsMap).map((secKey, index) => {
                 const sectionQs = shortQuestionsMap[secKey];
                 const qNumber = index + 2;
-
-                // ✅ FIX: Get Config for this Short Section
                 const secConfig = getSectionConfig("SHORT", index);
-
-                // ✅ Use 'toBeAttempted' from Schema
                 const attemptLimit = parseInt(
                   secConfig?.toBeAttempted || sectionQs.length
                 );
                 const marksPerQ = parseInt(secConfig?.marksPerQuestion || 2);
-
-                // Total Marks = (Attempt Limit) * (Marks Per Q)
-                // Note: Usually marks are based on attempt limit, not total added
                 const totalMarks = attemptLimit * marksPerQ;
 
                 return (
@@ -243,17 +232,14 @@ const PaperPreview = ({ paperData, onOpenMenu }) => {
                 );
               })}
 
-              {/* ✅ LONG QUESTIONS */}
+              {/* LONG QUESTIONS */}
               {groupedLongQs.length > 0 && (
                 <div className="pp-sub-section">
                   <div className="pp-q-header">
                     <div className="pp-hd-en">
                       <strong>Section II (Long Questions)</strong>
                     </div>
-
-                    {/* ✅ Correct Instruction showing 'toBeAttempted' */}
                     <div className="pp-hd-marks">{longInstr.en}</div>
-
                     <div className="pp-hd-ur" dir="rtl">
                       <strong>{longInstr.ur}</strong> (حصہ دوم)
                     </div>

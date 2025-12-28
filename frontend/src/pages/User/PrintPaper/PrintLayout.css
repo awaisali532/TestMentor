@@ -1,15 +1,14 @@
 /* =========================================
-   PrintLayout.css - Compact Layout
+   PrintLayout.css - Fixed Watermark in Print
    ========================================= */
 
-/* --- FONT EMBEDDING (Agar Font file public folder me ho) --- */
 @font-face {
   font-family: "Jameel Noori Nastaleeq";
   src: url("/fonts/JameelNooriNastaleeq.ttf") format("truetype");
-  /* Make sure font file is in public/fonts folder */
+  font-display: swap;
 }
 
-/* --- MAIN CONTAINER --- */
+/* --- MAIN CONTAINER (Screen View) --- */
 .pl-container {
   background-color: #525659;
   min-height: 100vh;
@@ -20,76 +19,188 @@
   overflow-x: auto;
 }
 
-/* --- THE PAPER SHEET (Optimized Margins) --- */
+/* --- THE PAPER SHEET (Screen View) --- */
 .pl-paper-sheet {
-  background: white;
+  /* Theme Colors */
+  background-color: var(--u-bg-card, #ffffff);
+  color: var(--u-text-main, #000000);
+
   width: 210mm;
   min-height: 297mm;
 
-  /* ✅ Reduced Padding to fit more content */
-  padding: 10mm 10mm; /* Top/Bottom Left/Right */
+  /* Padding Settings */
+  padding: 5mm 8mm;
 
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   margin-bottom: 20px;
   box-sizing: border-box;
 
-  /* Default tighter settings */
-  line-height: var(--pl-line-h, 1.1); /* Tighter lines */
-  color: var(--pl-color, #000);
+  line-height: var(--pl-line-h, 1.1);
   font-weight: var(--pl-weight, 400);
+
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* --- FONT SIZE OVERRIDES --- */
 .pl-paper-sheet .pp-text-en,
 .pl-paper-sheet .pp-opt-en {
-  font-size: var(--pl-font-en, 12px) !important; /* Smaller default */
+  font-size: var(--pl-font-en, 11px) !important;
 }
 
 .pl-paper-sheet .pp-text-ur,
 .pl-paper-sheet .pp-opt-ur,
 .pl-paper-sheet .pp-hd-ur {
-  font-family: "Jameel Noori Nastaleeq", "Arial", sans-serif; /* Fallback added */
-  font-size: var(--pl-font-ur, 14px) !important; /* Smaller default */
-  line-height: 1.4 !important; /* Urdu needs height */
+  font-family: "Jameel Noori Nastaleeq", "Arial", sans-serif;
+  font-size: var(--pl-font-ur, 13px) !important;
+  line-height: 1.4 !important;
 }
 
 .pl-paper-sheet .math-jax-output,
 .pl-paper-sheet .katex {
   font-size: var(--pl-eq-size, 12px) !important;
+  color: inherit !important;
 }
 
-/* --- BORDER --- */
-.pl-content.with-border .pp-item,
-.pl-content.with-border .pp-item-mcq {
-  border-bottom: 1px solid #000;
-  padding-bottom: 5px; /* Reduced */
-  margin-bottom: 5px; /* Reduced */
+/* --- DEFAULT SEPARATOR (Halki Line) --- */
+.pl-content .pp-item,
+.pl-content .pp-item-mcq {
+  border-bottom: 1px solid var(--u-border, #000);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
 }
 
-/* --- PRINT MEDIA QUERY --- */
+/* =========================================
+   🖨️ PRINT OVERRIDE (FIXED GREY BOX & EXTRA PAGE)
+   ========================================= */
 @media print {
+  /* 1. Page Setup */
   @page {
     size: A4;
-    margin: 5mm; /* Very thin printer margins */
+    margin: 5mm;
   }
 
+  /* 2. Body & HTML Reset */
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* 3. Main Container Reset */
   .pl-container {
-    padding: 0;
-    margin: 0;
-    background: white;
-    display: block;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
 
+  /* 4. Paper Sheet Fixes */
   .pl-paper-sheet {
-    width: 100%;
-    box-shadow: none;
-    margin: 0;
-    padding: 0; /* Let @page handle margin */
-    border: none;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .pl-content .pp-item,
+  .pl-content .pp-item-mcq {
+    border-bottom: 1px solid black !important;
   }
 
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+}
+
+/* =========================================
+   ✅ WATERMARK STYLING (CENTERING FIXED)
+   ========================================= */
+.pl-paper-sheet {
+  position: relative;
+  overflow: hidden;
+}
+
+.pl-watermark-overlay {
+  position: absolute;
+  /* ✅ OLD: top: 50%, left: 50% REMOVED */
+  /* ✅ NEW: Stretch to cover full page */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  /* ✅ Flexbox handles the centering now */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 1. Image Watermark (Logo) */
+.pl-watermark-overlay img {
+  width: 60%; /* Page ka 60% area cover karega */
+  height: auto;
+  opacity: 0.12;
+  filter: grayscale(100%);
+}
+
+/* 2. Text Watermark (Institute Name) */
+.pl-watermark-overlay.text-only h1 {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #ccc;
+  opacity: 0.3;
+  transform: rotate(-45deg);
+
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+  width: 80%; /* Text ko thora spread honay do */
+  word-break: keep-all;
+  text-transform: uppercase;
+}
+
+/* 🖨️ Print Specifics */
+@media print {
+  .pl-watermark-overlay {
+    position: absolute !important;
+    z-index: 0 !important; /* Ensure it is behind text but visible */
+
+    /* ✅ Force Full Coverage in Print */
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding-top: 150px;
+    /* ✅ Force Centering in Print */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .pl-watermark-overlay img {
+    opacity: 0.1 !important;
+    width: 60% !important; /* Size maintain rakhein */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .pl-watermark-overlay.text-only h1 {
+    opacity: 0.15 !important;
+    color: #000 !important;
   }
 }

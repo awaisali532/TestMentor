@@ -1,38 +1,47 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaLayerGroup, FaSpinner, FaGraduationCap } from "react-icons/fa";
+import { FaLayerGroup, FaGraduationCap } from "react-icons/fa";
 import toast from "react-hot-toast";
 import "./ClassSelector.css";
+
+// ✅ Custom TM Loader
+import TMLoader from "../../common/TMLoader/TMLoader";
 
 const ClassSelector = ({ selectedClass, onSelect }) => {
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState([]);
 
-  // --- FETCH CLASSES FROM BACKEND ---
   useEffect(() => {
     const fetchClasses = async () => {
+      // ✅ STEP 1: Minimum Delay Timer (1 Second)
+      // Ye promise 1 second baad resolve hoga
+      const minDelay = new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
         const token = localStorage.getItem("token");
-        // Hum subjects mangwa rahe hain taake unme se classes extract kar sakein
-        const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/subjects`,
-          {
+
+        // ✅ STEP 2: Run API & Timer Together
+        // Promise.all tab tak wait karega jab tak DONO kaam na ho jayen
+        const [response] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/subjects`, {
             headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+          }),
+          minDelay, // Delay ka wait bhi hoga
+        ]);
+
+        const { data } = response;
 
         if (Array.isArray(data)) {
-          // Extract Unique Classes (e.g. ["9th", "10th", "Inter-I"])
           const uniqueClasses = [
             ...new Set(data.map((item) => item.className).filter((c) => c)),
           ].sort();
-
           setClasses(uniqueClasses);
         }
-        setLoading(false);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load classes");
+      } finally {
+        // ✅ 1 Second guzarne ke baad hi ye chalega
         setLoading(false);
       }
     };
@@ -40,15 +49,12 @@ const ClassSelector = ({ selectedClass, onSelect }) => {
     fetchClasses();
   }, []);
 
+  // ✅ LOADER STATE
   if (loading) {
-    return (
-      <div className="cs-loader">
-        <FaSpinner className="icon-spin" />
-        <p>Loading Classes...</p>
-      </div>
-    );
+    return <TMLoader message="Loading Classes" />;
   }
 
+  // ✅ MAIN CONTENT
   return (
     <div className="cs-container fade-in-up">
       <div className="cs-header">
@@ -63,15 +69,13 @@ const ClassSelector = ({ selectedClass, onSelect }) => {
               key={index}
               className={`cs-card ${selectedClass === cls ? "selected" : ""}`}
               onClick={() => onSelect(cls)}
-              style={{ animationDelay: `${index * 0.1}s` }} // Staggered Animation
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="cs-icon-wrapper">
                 <FaGraduationCap />
               </div>
               <h3 className="cs-title">{cls}</h3>
               <div className="cs-status">Tap to select</div>
-
-              {/* Decorative Background Shape */}
               <div className="cs-bg-shape"></div>
             </div>
           ))}

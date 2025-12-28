@@ -1,27 +1,43 @@
-/* ✅ FIX 2: Container ko Screen par fit karein */
+/* ✅ FORCE DESKTOP VIEW ON MOBILE */
 .pm-container {
-  display: flex;
-  height: 100vh; /* Pori Screen Height */
-  width: 100%; /* 100vw ki jagah 100% use karein (scrollbar issue se bachne k liye) */
-  overflow: hidden; /* Koi bhi cheez bahir na nikle */
-  background-color: #334155;
-  position: relative; /* Safety ke liye */
+  /* 1. Force fixed Desktop Width */
+  min-width: 1280px;
+  width: 100%;
+
+  /* 2. Full height */
+  height: 100vh;
+
+  /* 3. Allow scrolling so user can pan around */
+  overflow: auto;
+
+  /* 4. Background & Positioning */
+  background-color: var(--pw-bg);
+  position: relative;
+  display: flex; /* Ensure flex layout is kept */
 }
 
-/* ✅ FIX 3: Workspace ko Flexible aur Scrollable banayein */
+/* Sidebar Styling Fix for Zoom Mode */
+.pm-sidebar {
+  position: sticky; /* Sticky ensures it stays visible while scrolling vertically */
+  top: 0;
+  height: 100vh;
+  z-index: 50;
+  flex-shrink: 0; /* Sidebar shouldn't shrink */
+}
+
+/* ✅ Workspace Layout */
 .pm-workspace {
-  flex: 1; /* Baki bachi hui jagah lega */
-  height: 100%; /* Parent ki full height */
+  flex: 1; /* Takes remaining space */
+  height: 100%;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Content top se shuru ho */
-  overflow-y: auto; /* Sirf Yahan scroll aye ga */
+  align-items: flex-start; /* Content starts from top */
+  overflow-y: auto; /* Scrollable Y */
   overflow-x: hidden;
 
   /* Background styling */
   background-image: radial-gradient(#475569 1px, transparent 1px);
   background-size: 20px 20px;
-  /* padding-bottom: 50px; Thora space neechay taake content chipke na */
 }
 
 /* Custom Scrollbar */
@@ -42,7 +58,7 @@
   background: #94a3b8;
 }
 
-/* ... Modal Styles Wese hi rahenge ... */
+/* ... Modal Styles ... */
 .pm-modal-overlay {
   position: fixed;
   top: 0;
@@ -65,4 +81,13 @@
   overflow-y: auto;
   background: transparent;
   border-radius: 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

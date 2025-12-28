@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // ✅ Added Axios
-import { FaPlus, FaLaptopCode, FaHistory, FaBookmark } from "react-icons/fa";
+import axios from "axios";
+import { Link } from "react-router-dom"; // Link added for navigation
+import {
+  FaPlus,
+  FaLaptopCode,
+  FaHistory,
+  FaBookmark,
+  FaEye,
+} from "react-icons/fa";
 import { useUser } from "../../../context/UserContext";
 import DashboardActionCard from "../../../components/DashboardActionCard/DashboardActionCard";
 import "./UserDashboard.css";
@@ -9,36 +16,42 @@ const UserDashboard = () => {
   const { user } = useUser();
   const currentUser = user || { name: "User", usage: { papersGenerated: 0 } };
 
-  // --- STATE FOR SAVED PAPERS COUNT ---
-  const [savedCount, setSavedCount] = useState(0);
-  const [loadingCount, setLoadingCount] = useState(true);
-
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // --- 1. FETCH SAVED PAPERS COUNT ---
+  // --- STATE ---
+  const [savedCount, setSavedCount] = useState(0);
+  const [recentPapers, setRecentPapers] = useState([]); // ✅ Recent papers store krne k liye
+  const [loading, setLoading] = useState(true);
+
+  // --- 1. FETCH DATA ---
   useEffect(() => {
-    const fetchPaperCount = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        // Hum wahi API use kar rahe hain jo SavedPapers page par ki thi
+        // Fetch Papers
         const res = await axios.get(`${BASE_URL}/api/papers/my-papers`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (res.data.success) {
-          // Papers ki tadaad (length) set karein
-          setSavedCount(res.data.papers.length);
+          const allPapers = res.data.papers;
+
+          // 1. Total Count set kro
+          setSavedCount(allPapers.length);
+
+          // 2. Sirf pehle 5 papers (Recent) nikal kr set kro
+          setRecentPapers(allPapers.slice(0, 5));
         }
       } catch (error) {
-        console.error("Error fetching paper count:", error);
+        console.error("Error fetching dashboard data:", error);
       } finally {
-        setLoadingCount(false);
+        setLoading(false);
       }
     };
 
-    fetchPaperCount();
+    fetchData();
   }, []);
 
   // Limits Logic
@@ -95,13 +108,12 @@ const UserDashboard = () => {
           buttonText="Start Quiz"
         />
 
-        {/* 3. ✅ SAVED PAPERS CARD (Count Updated) */}
+        {/* 3. Saved Papers Card */}
         <DashboardActionCard
           title="Saved Papers"
           description="Access your previously created papers."
           icon={<FaBookmark />}
-          // 👇 YAHAN HUMNE COUNT SHOW KIYA HAI
-          tag={loadingCount ? "Loading..." : `${savedCount} Saved`}
+          tag={loading ? "Loading..." : `${savedCount} Saved`}
           glowClass="yellow-glow"
           btnClass="btn-yellow"
           link="/user/saved-papers"
@@ -143,10 +155,66 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* --- RECENT ACTIVITY SECTION (Example Data) --- */}
+      {/* --- ✅ RECENT ACTIVITY SECTION (Dynamic Data) --- */}
       <div className="ud-section">
-        <h4 className="section-title">Recent Activity</h4>
-        {/* ... Table code same as before ... */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="section-title mb-0">Recent Activity</h4>
+          <Link
+            to="/user/saved-papers"
+            className="btn btn-sm btn-outline-primary"
+          >
+            View All
+          </Link>
+        </div>
+
+        <div className="ud-table-wrapper">
+          {loading ? (
+            <p className="text-muted p-3">Loading recent activity...</p>
+          ) : recentPapers.length === 0 ? (
+            <div className="text-center p-4 text-muted bg-light rounded">
+              No papers generated yet. Start by creating one!
+            </div>
+          ) : (
+            <table className="ud-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Subject</th>
+                  <th>Class</th>
+                  <th>Date</th>
+                  <th className="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentPapers.map((paper) => (
+                  <tr key={paper._id}>
+                    <td className="fw-bold text-main">{paper.title}</td>
+                    <td>
+                      <span className="badge bg-light text-dark border">
+                        {paper.subject}
+                      </span>
+                    </td>
+                    <td>{paper.grade}</td>
+                    <td className="text-muted small">
+                      {new Date(paper.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="text-right">
+                      {/* View Link - Goes to Saved Papers page logic */}
+                      <Link
+                        to="/user/saved-papers"
+                        state={{ highlight: paper._id }} // Optional: Highlight logic agr lgana chaho
+                        className="btn-icon-small"
+                        title="View"
+                      >
+                        <FaEye />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );
