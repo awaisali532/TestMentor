@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const questionSchema = new mongoose.Schema(
   {
     // 1. Hierarchy
-    // 🔄 CHANGED: 'topic' is now 'topics' (Array) to support Many-to-Many
     topics: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -70,6 +69,12 @@ const questionSchema = new mongoose.Schema(
     marks: { type: Number, default: 1 },
     important: { type: Boolean, default: false },
     boardTags: [String],
+
+    // ✅ 6. AI Vector Field (NEW)
+    vector_embedding: {
+      type: [Number], // Array of numbers to store the vector
+      select: false, // Optional: Normal queries me ye heavy data load na ho (Speed k liye)
+    },
   },
   { timestamps: true }
 );
