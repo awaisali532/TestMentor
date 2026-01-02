@@ -6,7 +6,6 @@ import { FaFilter, FaLayerGroup, FaBook, FaBookmark } from "react-icons/fa";
 const FilterBar = ({ onFilterChange }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // ... (State logic remains exactly the same) ...
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [chapters, setChapters] = useState([]);
@@ -41,7 +40,8 @@ const FilterBar = ({ onFilterChange }) => {
     setSelectedSubject("");
     setSelectedChapter("");
     setChapters([]);
-    onFilterChange(null, null, null);
+    // Reset parent filter
+    onFilterChange(null, null, null, "");
   }, [selectedClass]);
 
   useEffect(() => {
@@ -55,13 +55,23 @@ const FilterBar = ({ onFilterChange }) => {
       setChapters([]);
     }
     setSelectedChapter("");
-    onFilterChange(selectedClass, selectedSubject, "");
+
+    // jab subject change ho to chapter reset ho jaye, aur hum subject name bhi bhej sakte hain agar zaroorat ho
+    // Lekin main logic handleChapterChange me hai
+    onFilterChange(selectedClass, selectedSubject, "", "");
   }, [selectedSubject]);
 
   const handleChapterChange = (e) => {
     const chapterId = e.target.value;
     setSelectedChapter(chapterId);
-    onFilterChange(selectedClass, selectedSubject, chapterId);
+
+    // ✅ FIND SUBJECT NAME (New Logic)
+    // Subjects array me se selected ID wala object dhoondo
+    const selectedSubObj = subjects.find((s) => s._id === selectedSubject);
+    const subName = selectedSubObj ? selectedSubObj.subjectName : "";
+
+    // ✅ PASS SUBJECT NAME TO PARENT (4th Argument)
+    onFilterChange(selectedClass, selectedSubject, chapterId, subName);
   };
 
   return (
@@ -73,7 +83,6 @@ const FilterBar = ({ onFilterChange }) => {
             <FaFilter />
           </div>
           <div>
-            {/* ✅ UPDATED TITLE: "Filter" is normal, "Content" is Gradient */}
             <h5 className="m-0 fw-bold text-main">
               <span className="highlight-text"> Filter </span> Content
             </h5>

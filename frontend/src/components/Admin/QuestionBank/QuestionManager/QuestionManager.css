@@ -1,273 +1,348 @@
 /* --- LAYOUT --- */
 .q-list-container {
-    height: calc(100vh - 220px);
-    overflow-y: auto;
-    padding-right: 10px;
+  height: calc(100vh - 220px);
+  overflow-y: auto;
+  padding-right: 10px;
 }
 
 /* --- FILTER & STICKY HEADERS --- */
 .filter-box-q,
 .form-card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px var(--shadow-color);
-    transition: background-color 0.3s ease;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px var(--shadow-color);
+  transition: background-color 0.3s ease;
 }
 
 .filter-box-q {
-    padding: 15px;
-    margin-bottom: 20px;
-    z-index: 10;
+  padding: 15px;
+  margin-bottom: 20px;
+  z-index: 10;
 }
 
 .form-header {
-    padding: 15px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--pill-bg);
-    border-radius: 12px 12px 0 0;
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--pill-bg);
+  border-radius: 12px 12px 0 0;
 }
 
 /* --- QUESTION CARD --- */
 .question-card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-left: 4px solid var(--text-muted);
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-    transition: all 0.2s ease;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--text-muted);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .question-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .question-card.active-edit {
-    border-color: var(--accent-1);
-    background-color: var(--pill-bg);
+  border-color: var(--accent-1);
+  background-color: var(--pill-bg);
 }
 
 .question-card.selected {
-    border-color: #ef4444;
-    background-color: rgba(239, 68, 68, 0.05);
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
 }
 
 /* Border Colors by Type */
 .type-MCQ {
-    border-left-color: #3b82f6;
+  border-left-color: #3b82f6;
 }
-
 .type-SHORT {
-    border-left-color: #10b981;
+  border-left-color: #10b981;
 }
-
 .type-LONG {
-    border-left-color: #f59e0b;
+  border-left-color: #f59e0b;
 }
 
 /* --- BADGES --- */
 .badge-type,
 .badge-cat,
 .badge-marks {
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-weight: 700;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
 }
 
 .badge-type {
-    background-color: var(--pill-bg);
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
+  background-color: var(--pill-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
 }
 
 .badge-cat {
-    background-color: rgba(14, 165, 233, 0.1);
-    color: #0ea5e9;
+  background-color: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
 }
 
 .badge-marks {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
 }
 
-/* --- TYPOGRAPHY --- */
+/* --- TYPOGRAPHY & CONTENT --- */
 .q-text.en {
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 5px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 5px;
 }
 
 .q-text.ur {
-    font-family: 'Jameel Noori Nastaleeq', serif;
-    font-size: 1.1rem;
-    color: var(--text-muted);
-    text-align: right;
-    direction: rtl;
+  font-family: "Jameel Noori Nastaleeq", serif;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: right;
+  direction: rtl;
+  line-height: 1.8;
 }
 
 /* --- MCQ GRID --- */
 .mcq-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .mcq-opt {
-    background-color: var(--bg-body);
-    border: 1px solid var(--border-color);
-    padding: 8px 12px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
+  background-color: var(--bg-body);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
 }
 
 .mcq-opt.correct {
-    border-color: #10b981;
-    background-color: rgba(16, 185, 129, 0.1);
-    font-weight: 700;
-    color: var(--text-main);
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .opt-label {
-    font-weight: 800;
-    color: var(--text-muted);
+  font-weight: 800;
+  color: var(--text-muted);
 }
-
 .opt-content {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
 }
 
 /* --- FORM ELEMENTS --- */
 .multi-select-box {
-    max-height: 120px;
-    overflow-y: auto;
-    background-color: var(--bg-body);
-    border: 1px solid var(--border-color);
-    padding: 10px;
-    border-radius: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+  background-color: var(--bg-body);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  border-radius: 8px;
 }
 
 .mode-switch {
-    display: flex;
-    background-color: var(--bg-body);
-    padding: 4px;
-    border-radius: 8px;
-    margin: 10px 15px 0;
-    border: 1px solid var(--border-color);
+  display: flex;
+  background-color: var(--bg-body);
+  padding: 4px;
+  border-radius: 8px;
+  margin: 10px 15px 0;
+  border: 1px solid var(--border-color);
 }
 
 .mode-switch button {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: 6px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    border-radius: 6px;
-    transition: 0.3s;
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-radius: 6px;
+  transition: 0.3s;
 }
 
 .mode-switch button.active {
-    background-color: var(--card-bg);
-    color: var(--accent-1);
-    font-weight: 700;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background-color: var(--card-bg);
+  color: var(--accent-1);
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* --- BUTTONS & ACTIONS --- */
-.btn-icon {
-    background: none;
-    border: none;
-    font-size: 1rem;
-    padding: 6px;
-    color: var(--text-muted);
-    border-radius: 6px;
-    transition: 0.2s;
-}
-
-.btn-icon:hover {
-    background-color: var(--pill-bg);
-    color: var(--text-main);
-}
-
-.btn-icon.edit:hover {
-    color: #f59e0b;
-}
-
-.btn-icon.delete:hover {
-    color: #ef4444;
-}
-
-.btn-danger-soft {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid transparent;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: 0.2s;
-}
-
-.btn-danger-soft:hover {
-    background-color: #ef4444;
-    color: white;
-}
-
-.bulk-action-bar {
-    background-color: rgba(239, 68, 68, 0.05);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    color: #ef4444;
-    padding: 8px 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* --- DARK/LIGHT UTILS --- */
+/* --- DYNAMIC FIELD STYLING (NEW) --- */
 .bg-light-theme {
-    background-color: var(--bg-body);
+  background-color: var(--bg-body);
+  border: 1px dashed var(--border-color);
 }
 
+.urdu-font {
+  font-family: "Jameel Noori Nastaleeq", serif !important;
+  text-align: right;
+  direction: rtl;
+}
+
+/* Pair of words Display in List */
+.pair-display {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-body);
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+/* --- UTILS --- */
 .text-main {
-    color: var(--text-main) !important;
+  color: var(--text-main) !important;
 }
-
 .text-accent {
-    color: var(--accent-1) !important;
+  color: var(--accent-1) !important;
 }
 
 .custom-input,
 .custom-select {
-    background-color: var(--bg-body) !important;
-    color: var(--text-main) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--bg-body) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
 }
 
 .custom-input:focus,
 .custom-select:focus {
-    border-color: var(--accent-1) !important;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+  border-color: var(--accent-1) !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+}
+
+/* --- BUTTONS --- */
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  padding: 6px;
+  color: var(--text-muted);
+  border-radius: 6px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background-color: var(--pill-bg);
+  color: var(--text-main);
+}
+.btn-icon.edit:hover {
+  color: #f59e0b;
+}
+.btn-icon.delete:hover {
+  color: #ef4444;
+}
+
+.btn-danger-soft {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: 0.2s;
+}
+
+.btn-danger-soft:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.bulk-action-bar {
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  padding: 8px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .empty-state-box {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-muted);
-    border: 1px dashed var(--border-color);
-    border-radius: 12px;
-    background-color: var(--bg-body);
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-body);
+}
+/* --- POETRY GRID LAYOUT (The 50/50 Split) --- */
+.poetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 Equal Columns */
+  gap: 10px; /* Gap between columns */
+  direction: rtl; /* Urdu Right to Left */
+  width: 100%;
+  margin-top: 10px;
+}
+
+.poetry-line {
+  background-color: var(--bg-body);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-family: "Jameel Noori Nastaleeq", serif;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* --- TEXT FORMATTING TOOLBAR (For Underline) --- */
+.text-toolbar {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 5px;
+  background-color: var(--bg-body);
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  width: fit-content;
+}
+
+.toolbar-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: 0.2s;
+}
+
+.toolbar-btn:hover {
+  background-color: var(--accent-1);
+  color: white;
+  border-color: var(--accent-1);
+}
+
+.toolbar-btn.active {
+  background-color: var(--pill-bg);
+  color: var(--accent-1);
 }

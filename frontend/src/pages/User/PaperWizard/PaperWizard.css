@@ -382,3 +382,54 @@
 .pw-dark .pw-input::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+/* --- DATE PICKER STYLING --- */
+.pw-datepicker-container {
+  width: 100%;
+}
+
+.pw-input.date-input {
+  cursor: pointer;
+  background-image: none !important; /* Remove browser default icon */
+}
+
+/* React Datepicker Overrides */
+.react-datepicker {
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  font-family: inherit !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.react-datepicker__header {
+  background-color: var(--nav-bg) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.react-datepicker__day {
+  color: var(--text-main) !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: var(--pill-bg) !important;
+  border-radius: 50%;
+}
+
+.react-datepicker__day--selected {
+  background-color: var(--accent-1) !important;
+  color: white !important;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+.react-datepicker__day--disabled {
+  color: var(--text-muted) !important;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Arrow fix */
+.react-datepicker__navigation-icon::before {
+  border-color: var(--text-muted) !important;
+}

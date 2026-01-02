@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Swal from "sweetalert2";
 import toast, { Toaster } from "react-hot-toast";
-import { useUser } from "../../../context/UserContext"; // ✅ Context
+import { useUser } from "../../../context/UserContext";
 
 // Import CSS
 import "./UserManagement.css";
@@ -13,6 +12,10 @@ import UserFilters from "./UserFilters/UserFilters";
 import UserTable from "./UserTable/UserTable";
 import AddEditUserModal from "./AddEditUserModal/AddEditUserModal";
 
+// ✅ Import TMLoader & ConfirmationModal
+import TMLoader from "../../../components/common/TMLoader/TMLoader";
+import ConfirmationModal from "../../../components/common/ConfirmationModal/ConfirmationModal";
+
 const UserManagement = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -20,16 +23,19 @@ const UserManagement = () => {
   const { authLoading, user: currentUser } = useUser();
 
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Initial Fetch Loading
+  const [actionLoading, setActionLoading] = useState(false); // For Save/Delete/Status actions
+
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  // inside the component
 
-  // Add this line to debug
+  // ✅ State for Delete Confirmation Modal
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    id: null,
+  });
 
   useEffect(() => {
     if (authLoading) return;
@@ -37,6 +43,7 @@ const UserManagement = () => {
   }, [authLoading]);
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(`${BASE_URL}/api/users/all`, {
@@ -61,34 +68,30 @@ const UserManagement = () => {
     teachers: users.filter((u) => u.role === "teacher").length,
   };
 
-  // Delete Logic
-  const handleDelete = (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "This user will be permanently deleted!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-      background: "var(--card-bg)",
-      color: "var(--text-main)",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        setIsDeleting(true);
-        try {
-          await axios.delete(`${BASE_URL}/api/users/${id}`);
-          setUsers(users.filter((u) => u._id !== id));
-          toast.success("User deleted successfully");
-        } catch (error) {
-          toast.error(error.response?.data?.error || "Failed to delete user");
-        } finally {
-          setIsDeleting(false);
-        }
-      }
-    });
+  // --- DELETE LOGIC (Using ConfirmationModal) ---
+  const handleDeleteTrigger = (id) => {
+    setDeleteModal({ isOpen: true, id });
   };
 
+  const handleConfirmDelete = async () => {
+    const id = deleteModal.id;
+    setDeleteModal({ isOpen: false, id: null }); // Close Modal
+    setActionLoading(true); // Show TMLoader
+
+    try {
+      await axios.delete(`${BASE_URL}/api/users/${id}`);
+      setUsers(users.filter((u) => u._id !== id));
+      toast.success("User deleted successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to delete user");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // --- TOGGLE STATUS ---
   const handleToggleStatus = async (id) => {
+    setActionLoading(true); // Show TMLoader (optional, but good for UX)
     try {
       await axios.patch(`${BASE_URL}/api/users/status/${id}`);
       setUsers(
@@ -97,11 +100,14 @@ const UserManagement = () => {
       toast.success("User status updated");
     } catch (error) {
       toast.error("Failed to update status");
+    } finally {
+      setActionLoading(false);
     }
   };
 
+  // --- SAVE USER ---
   const handleSaveUser = async (formData) => {
-    setSaving(true);
+    setActionLoading(true); // Show TMLoader
     try {
       if (editingUser) {
         await axios.put(`${BASE_URL}/api/users/${editingUser._id}`, formData);
@@ -123,7 +129,7 @@ const UserManagement = () => {
     } catch (error) {
       toast.error(error.response?.data?.error || "Operation failed");
     } finally {
-      setSaving(false);
+      setActionLoading(false);
     }
   };
 
@@ -139,22 +145,24 @@ const UserManagement = () => {
     return matchesSearch && matchesRole;
   });
 
-  if (loading || authLoading)
-    return <div className="loading-screen">Loading Users...</div>;
-
   return (
     <div className="user-wrapper">
       <Toaster position="top-right" />
 
-      {/* Full Screen Loader Overlay */}
-      {isDeleting && (
-        <div className="full-screen-loader">
-          <div className="loader-content">
-            <div className="spinner-border text-light mb-3" role="status"></div>
-            <p>Deleting User...</p>
-          </div>
-        </div>
-      )}
+      {/* ✅ 1. Show TMLoader if loading or performing actions */}
+      {(loading || authLoading || actionLoading) && <TMLoader />}
+
+      {/* ✅ 2. Custom Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete User?"
+        message="This user will be permanently deleted! Are you sure?"
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        isDanger={true}
+      />
 
       <h3 className="section-heading">
         User <span className="highlight-text">Management</span>
@@ -173,7 +181,6 @@ const UserManagement = () => {
         }}
       />
 
-      {/* ✅ Pass currentUser to Table */}
       <UserTable
         users={filteredUsers}
         currentUser={currentUser}
@@ -181,7 +188,7 @@ const UserManagement = () => {
           setEditingUser(user);
           setShowModal(true);
         }}
-        onDelete={handleDelete}
+        onDelete={handleDeleteTrigger} // ✅ Trigger Modal
         onToggleStatus={handleToggleStatus}
       />
 
@@ -191,7 +198,7 @@ const UserManagement = () => {
           onClose={() => setShowModal(false)}
           onSave={handleSaveUser}
           editingUser={editingUser}
-          loading={saving}
+          loading={actionLoading} // Pass loading state if modal needs it (e.g. disable buttons)
         />
       )}
     </div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-// ✅ 1. Re-added { Toaster } to imports
 import toast, { Toaster } from "react-hot-toast";
 import {
   FaCamera,
@@ -9,19 +8,22 @@ import {
   FaEyeSlash,
   FaLock,
   FaUser,
-  FaSpinner,
   FaTrash,
   FaFilePdf,
   FaCloudUploadAlt,
   FaExternalLinkAlt,
   FaIdBadge,
-} from "react-icons/fa";
+} from "react-icons/fa"; // ❌ FaSpinner Removed
 import "./ProfileSettings.css";
+
+// ✅ Import TMLoader & ConfirmationModal
+import TMLoader from "../../../components/common/TMLoader/TMLoader";
+import ConfirmationModal from "../../../components/common/ConfirmationModal/ConfirmationModal";
 
 const ProfileSettings = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // --- STATES ---
+  // STATES
   const [user, setUser] = useState({
     name: "",
     email: "",
@@ -31,9 +33,7 @@ const ProfileSettings = () => {
   });
 
   // Loaders
-  const [loading, setLoading] = useState(false);
-  const [imgLoading, setImgLoading] = useState(false);
-  const [resumeLoading, setResumeLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Global Loader
 
   // Modals & Inputs
   const [showNameModal, setShowNameModal] = useState(false);
@@ -42,7 +42,15 @@ const ProfileSettings = () => {
   const [passwords, setPasswords] = useState({ old: "", new: "", confirm: "" });
   const [showPass, setShowPass] = useState(false);
 
-  // --- 1. INITIAL LOAD ---
+  // ✅ Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  // INITIAL LOAD
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
@@ -61,8 +69,7 @@ const ProfileSettings = () => {
 
     const formData = new FormData();
     formData.append("image", file);
-    setImgLoading(true);
-    const toastId = toast.loading("Uploading photo...");
+    setLoading(true); // ✅ Start TMLoader
 
     try {
       const token = localStorage.getItem("token");
@@ -74,35 +81,40 @@ const ProfileSettings = () => {
       });
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
-      toast.success("Photo updated!", { id: toastId });
+      toast.success("Photo updated!");
     } catch (err) {
-      toast.error("Failed to upload", { id: toastId });
+      toast.error("Failed to upload");
     } finally {
-      setImgLoading(false);
+      setLoading(false);
     }
   };
 
-  // --- 3. REMOVE IMAGE ---
-  const handleRemoveImage = async () => {
-    if (!window.confirm("Remove photo?")) return;
-    setImgLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.put(
-        `${BASE_URL}/api/users/profile/remove-image`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
+  // --- 3. REMOVE IMAGE (With Custom Confirm) ---
+  const handleRemoveImageTrigger = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Remove Photo?",
+      message: "Are you sure you want to remove your profile picture?",
+      onConfirm: async () => {
+        setConfirmModal({ ...confirmModal, isOpen: false });
+        setLoading(true);
+        try {
+          const token = localStorage.getItem("token");
+          const res = await axios.put(
+            `${BASE_URL}/api/users/profile/remove-image`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setUser(res.data);
+          localStorage.setItem("user", JSON.stringify(res.data));
+          toast.success("Photo removed");
+        } catch (err) {
+          toast.error("Failed");
+        } finally {
+          setLoading(false);
         }
-      );
-      setUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
-      toast.success("Photo removed");
-    } catch (err) {
-      toast.error("Failed");
-    } finally {
-      setImgLoading(false);
-    }
+      },
+    });
   };
 
   // --- 4. UPDATE NAME ---
@@ -114,9 +126,7 @@ const ProfileSettings = () => {
       const res = await axios.put(
         `${BASE_URL}/api/users/profile`,
         { name: newName },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
@@ -160,8 +170,7 @@ const ProfileSettings = () => {
 
     const formData = new FormData();
     formData.append("resume", file);
-    setResumeLoading(true);
-    const toastId = toast.loading("Uploading Resume...");
+    setLoading(true);
 
     try {
       const token = localStorage.getItem("token");
@@ -178,42 +187,61 @@ const ProfileSettings = () => {
       const updatedUser = { ...user, resume: res.data.resume };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      toast.success("Uploaded successfully!", { id: toastId });
+      toast.success("Uploaded successfully!");
     } catch (err) {
-      toast.error("Upload failed", { id: toastId });
+      toast.error("Upload failed");
     } finally {
-      setResumeLoading(false);
+      setLoading(false);
     }
   };
 
-  // --- 7. DELETE RESUME ---
-  const handleDeleteResume = async () => {
-    if (!window.confirm("Delete resume?")) return;
-    setResumeLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${BASE_URL}/api/users/profile/resume/remove`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
+  // --- 7. DELETE RESUME (With Custom Confirm) ---
+  const handleDeleteResumeTrigger = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Resume?",
+      message: "This will permanently remove your uploaded resume.",
+      onConfirm: async () => {
+        setConfirmModal({ ...confirmModal, isOpen: false });
+        setLoading(true);
+        try {
+          const token = localStorage.getItem("token");
+          await axios.put(
+            `${BASE_URL}/api/users/profile/resume/remove`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const updatedUser = { ...user, resume: "" };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          toast.success("Resume removed");
+        } catch (err) {
+          toast.error("Failed");
+        } finally {
+          setLoading(false);
         }
-      );
-      const updatedUser = { ...user, resume: "" };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      toast.success("Resume removed");
-    } catch (err) {
-      toast.error("Failed");
-    } finally {
-      setResumeLoading(false);
-    }
+      },
+    });
   };
 
   return (
     <div className="profile-wrapper d-flex justify-content-center align-items-center">
-      {/* ✅ 2. Re-added Toaster Component Here */}
       <Toaster position="top-center" reverseOrder={false} />
+
+      {/* ✅ 1. Show TMLoader if Loading */}
+      {loading && <TMLoader />}
+
+      {/* ✅ 2. Custom Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Yes, Proceed"
+        cancelText="Cancel"
+        isDanger={true}
+      />
 
       <div className="card profile-card border-0">
         <div className="card-body text-center p-4 p-md-5">
@@ -221,17 +249,8 @@ const ProfileSettings = () => {
 
           {/* === AVATAR SECTION === */}
           <div className="position-relative d-inline-block mb-4">
-            <div
-              className={`avatar-container ${
-                imgLoading ? "loading-border" : ""
-              }`}
-            >
-              {imgLoading ? (
-                <div className="avatar-loading-overlay">
-                  <FaSpinner className="icon-spin-lg" />
-                  <span className="mt-2 text-xs fw-bold">Updating...</span>
-                </div>
-              ) : user.image ? (
+            <div className="avatar-container">
+              {user.image ? (
                 <img
                   src={user.image}
                   alt="Profile"
@@ -246,35 +265,32 @@ const ProfileSettings = () => {
               )}
             </div>
 
-            {/* AVATAR ACTION BUTTONS (Camera & Trash) */}
-            {!imgLoading && (
-              <div className="avatar-actions">
-                <label
-                  className="avatar-btn btn-camera shadow"
-                  title="Upload Photo"
+            <div className="avatar-actions">
+              <label
+                className="avatar-btn btn-camera shadow"
+                title="Upload Photo"
+              >
+                <FaCamera size={14} />
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+              </label>
+              {user.image && (
+                <button
+                  className="avatar-btn btn-trash shadow"
+                  onClick={handleRemoveImageTrigger} // ✅ Trigger Modal
+                  title="Remove Photo"
                 >
-                  <FaCamera size={14} />
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                </label>
-                {user.image && (
-                  <button
-                    className="avatar-btn btn-trash shadow"
-                    onClick={handleRemoveImage}
-                    title="Remove Photo"
-                  >
-                    <FaTrash size={12} />
-                  </button>
-                )}
-              </div>
-            )}
+                  <FaTrash size={12} />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* === NAME (With Spaced Edit Button) === */}
+          {/* === NAME === */}
           <div className="d-flex justify-content-center align-items-center gap-3 mb-2">
             <h3 className="fw-bold m-0 text-main">{user.name}</h3>
             <button
@@ -294,7 +310,7 @@ const ProfileSettings = () => {
             {user.isSuperAdmin ? "Super Admin" : "Sub-Admin"}
           </span>
 
-          {/* === EMAIL === */}
+          {/* === INFO BOXES === */}
           <div className="info-box mb-3">
             <label className="info-label">Email Address</label>
             <div className="d-flex justify-content-between align-items-center">
@@ -303,7 +319,6 @@ const ProfileSettings = () => {
             </div>
           </div>
 
-          {/* === PASSWORD === */}
           <div className="info-box mb-3">
             <label className="info-label">Security</label>
             <div className="d-flex justify-content-between align-items-center">
@@ -322,7 +337,7 @@ const ProfileSettings = () => {
             </div>
           </div>
 
-          {/* === RESUME SECTION (Super Admin Only) === */}
+          {/* === RESUME === */}
           {user.isSuperAdmin && (
             <div className="info-box">
               <label className="info-label d-flex align-items-center gap-2">
@@ -345,31 +360,20 @@ const ProfileSettings = () => {
                 )}
 
                 <div className="d-flex gap-2">
-                  {/* Modern Upload Button */}
                   <label className="btn-modern-upload cursor-pointer d-flex align-items-center gap-2">
-                    {resumeLoading ? (
-                      <FaSpinner className="icon-spin" />
-                    ) : (
-                      <>
-                        <FaCloudUploadAlt />{" "}
-                        {user.resume ? "Replace" : "Upload"}
-                      </>
-                    )}
+                    <FaCloudUploadAlt /> {user.resume ? "Replace" : "Upload"}
                     <input
                       type="file"
                       hidden
                       accept="application/pdf"
                       onChange={handleResumeUpload}
-                      disabled={resumeLoading}
                     />
                   </label>
 
-                  {/* Modern Delete Button */}
                   {user.resume && (
                     <button
                       className="btn-modern-delete"
-                      onClick={handleDeleteResume}
-                      disabled={resumeLoading}
+                      onClick={handleDeleteResumeTrigger} // ✅ Trigger Modal
                     >
                       <FaTrash size={12} />
                     </button>
@@ -381,7 +385,7 @@ const ProfileSettings = () => {
         </div>
       </div>
 
-      {/* --- MODALS (Name & Pass) --- */}
+      {/* --- NAME MODAL --- */}
       {showNameModal && (
         <div className="modal-overlay-custom">
           <div className="modal-box-custom">
@@ -400,17 +404,15 @@ const ProfileSettings = () => {
               >
                 Cancel
               </button>
-              <button
-                className="btn-modal-save"
-                onClick={handleUpdateName}
-                disabled={loading}
-              >
-                {loading ? <FaSpinner className="icon-spin" /> : "Save Changes"}
+              <button className="btn-modal-save" onClick={handleUpdateName}>
+                Save Changes
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* --- PASSWORD MODAL --- */}
       {showPassModal && (
         <div className="modal-overlay-custom">
           <div className="modal-box-custom">
@@ -468,12 +470,8 @@ const ProfileSettings = () => {
                   }
                 />
               </div>
-              <button
-                className="btn-modal-save w-100"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? "Updating..." : "Update Password"}
+              <button className="btn-modal-save w-100" type="submit">
+                Update Password
               </button>
             </form>
           </div>

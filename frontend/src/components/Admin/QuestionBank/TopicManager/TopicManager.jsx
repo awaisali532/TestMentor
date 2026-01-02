@@ -16,7 +16,8 @@ import {
   FaCloudUploadAlt,
 } from "react-icons/fa";
 
-const TopicManager = ({ chapterId }) => {
+// ✅ Added 'subjectName' prop to detect subject type
+const TopicManager = ({ chapterId, subjectName }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // --- STATES ---
@@ -30,6 +31,13 @@ const TopicManager = ({ chapterId }) => {
     topicNumber: "",
     name: { en: "", ur: "" },
   });
+
+  // ✅ CHECK SUBJECT TYPE (Urdu/Islamiyat/Pak Study/Tarjama)
+  const isUrduSubject =
+    subjectName &&
+    ["Urdu", "Islamiyat", "Pak Study", "Tarjama", "Arabic", "History"].some(
+      (s) => subjectName.includes(s)
+    );
 
   // --- EFFECT: Load Topics ---
   useEffect(() => {
@@ -77,8 +85,17 @@ const TopicManager = ({ chapterId }) => {
 
   const handleSubmitSingle = async (e) => {
     e.preventDefault();
-    if (!formData.topicNumber || !formData.name.en)
-      return toast.error("Required fields missing!");
+
+    // ✅ DYNAMIC VALIDATION LOGIC
+    if (!formData.topicNumber) return toast.error("Topic Number is required!");
+
+    if (isUrduSubject) {
+      if (!formData.name.ur.trim())
+        return toast.error("Urdu Name is required for this subject!");
+    } else {
+      if (!formData.name.en.trim())
+        return toast.error("English Name is required!");
+    }
 
     setLoading(true);
     const toastId = toast.loading(editingId ? "Updating..." : "Saving...");
@@ -185,15 +202,31 @@ const TopicManager = ({ chapterId }) => {
                 <div className="d-flex align-items-center">
                   <span className="topic-badge">{topic.topicNumber}</span>
                   <div>
-                    <span className="fw-bold text-main me-2">
-                      {typeof topic.name === "object"
-                        ? topic.name.en
-                        : topic.name}
-                    </span>
-                    {topic.name?.ur && (
-                      <span className="urdu-font text-muted">
-                        ({topic.name.ur})
-                      </span>
+                    {/* Render Urdu Name prominently if Urdu Subject */}
+                    {isUrduSubject ? (
+                      <>
+                        <span className="fw-bold text-main me-2 urdu-font fs-6">
+                          {topic.name?.ur || "---"}
+                        </span>
+                        {typeof topic.name === "object" && topic.name.en && (
+                          <span className="text-muted ms-2 small">
+                            ({topic.name.en})
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span className="fw-bold text-main me-2">
+                          {typeof topic.name === "object"
+                            ? topic.name.en
+                            : topic.name}
+                        </span>
+                        {topic.name?.ur && (
+                          <span className="urdu-font text-muted small">
+                            ({topic.name.ur})
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -277,11 +310,17 @@ const TopicManager = ({ chapterId }) => {
                     />
                   </div>
                   <div className="col-8">
-                    <label className="form-label">English Name</label>
+                    {/* --- ENGLISH INPUT --- */}
+                    <label className="form-label">
+                      English Name{" "}
+                      {!isUrduSubject && <span className="text-danger">*</span>}
+                    </label>
                     <input
                       type="text"
                       className="form-control custom-input"
-                      placeholder="Intro"
+                      placeholder={
+                        isUrduSubject ? "English (Optional)" : "Intro"
+                      }
                       value={formData.name.en}
                       onChange={(e) => handleLangInput("en", e.target.value)}
                     />
@@ -289,11 +328,17 @@ const TopicManager = ({ chapterId }) => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="form-label">Urdu Name</label>
+                  {/* --- URDU INPUT --- */}
+                  <label className="form-label">
+                    Urdu Name{" "}
+                    {isUrduSubject && <span className="text-danger">*</span>}
+                  </label>
                   <input
                     type="text"
                     className="form-control custom-input urdu-font"
-                    placeholder="تعارف"
+                    placeholder={
+                      isUrduSubject ? "نام (اردو)" : "تعارف (Optional)"
+                    }
                     value={formData.name.ur}
                     onChange={(e) => handleLangInput("ur", e.target.value)}
                     dir="rtl"

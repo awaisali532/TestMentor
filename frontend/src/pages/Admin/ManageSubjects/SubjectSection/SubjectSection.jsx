@@ -11,12 +11,14 @@ import {
   FaTrashAlt,
   FaArrowLeft,
   FaEdit,
-  FaSpinner,
   FaSave,
-} from "react-icons/fa";
+} from "react-icons/fa"; // ❌ FaSpinner Removed
 
 // ✅ Import dedicated CSS
 import "./SubjectSection.css";
+
+// ✅ Import TMLoader
+import TMLoader from "../../../../components/common/TMLoader/TMLoader";
 
 const SubjectSection = ({
   isExpanded,
@@ -30,7 +32,10 @@ const SubjectSection = ({
 
   const [subjects, setSubjects] = useState([]);
   const [showForm, setShowForm] = useState(false);
+
+  // ✅ 1. Loading State
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     subjectName: "",
     year: "2025-2026",
@@ -44,11 +49,15 @@ const SubjectSection = ({
   }, [isExpanded, selectedClass]);
 
   const fetchSubjects = async () => {
+    setLoading(true); // ✅ Start Loader
     try {
       const res = await axios.get(`${BASE_URL}/api/subjects`);
       setSubjects(res.data.filter((s) => s.className === selectedClass.name));
     } catch (err) {
       console.error(err);
+      toast.error("Failed to load subjects");
+    } finally {
+      setLoading(false); // ✅ Stop Loader
     }
   };
 
@@ -90,12 +99,14 @@ const SubjectSection = ({
     });
 
     if (result.isConfirmed) {
+      setLoading(true); // ✅ Start Loader
       try {
         await axios.delete(`${BASE_URL}/api/subjects/${id}`);
         toast.success("Subject Deleted");
-        fetchSubjects();
+        fetchSubjects(); // Will handle loading=false
       } catch (err) {
         toast.error("Failed to delete");
+        setLoading(false);
       }
     }
   };
@@ -103,7 +114,8 @@ const SubjectSection = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.subjectName) return toast.error("Name is required");
-    setLoading(true);
+
+    setLoading(true); // ✅ Start Loader
 
     const data = new FormData();
     data.append("subjectName", formData.subjectName);
@@ -120,11 +132,10 @@ const SubjectSection = ({
         toast.success("Added!");
       }
       resetForm();
-      fetchSubjects();
+      fetchSubjects(); // Will handle loading=false
     } catch (err) {
       const msg = err.response?.data?.error || "Operation Failed";
       toast.error(msg);
-    } finally {
       setLoading(false);
     }
   };
@@ -161,6 +172,9 @@ const SubjectSection = ({
 
   return (
     <div className="section-card expanded">
+      {/* ✅ 2. Show Loader if Loading */}
+      {loading && <TMLoader />}
+
       {/* HEADER */}
       <div className="section-title d-flex justify-content-between align-items-center">
         <span>
@@ -241,41 +255,42 @@ const SubjectSection = ({
                 onClick={handleSubmit}
                 disabled={loading}
               >
-                {loading ? (
-                  <>
-                    <FaSpinner className="icon-spin me-2" /> Processing...
-                  </>
+                {/* Normal button content, Loader is full screen so no spinner here needed */}
+                {editingId ? (
+                  <FaSave className="me-2" />
                 ) : (
-                  <>
-                    {editingId ? (
-                      <FaSave className="me-2" />
-                    ) : (
-                      <FaPlus className="me-2" />
-                    )}
-                    {editingId ? "Update Subject" : "Save Subject"}
-                  </>
+                  <FaPlus className="me-2" />
                 )}
+                {editingId ? "Update Subject" : "Save Subject"}
               </button>
             </div>
           </div>
         </div>
       ) : (
         // --- GRID VIEW ---
-        <div className="row g-4">
+        <div className="row g-4 w-100 m-0">
           {/* Add New Card */}
-          <div className="col-md-3">
-            <div className="add-subject-btn" onClick={() => setShowForm(true)}>
+          <div className="col-xl-3 col-lg-3 col-md-6 col-12">
+            <div
+              className="add-subject-btn h-100"
+              onClick={() => setShowForm(true)}
+            >
               <div className="add-icon-circle">
                 <FaPlus />
               </div>
-              <span className="add-text">Add Subject</span>
+              <span className="add-text mt-3 fw-bold text-accent">
+                Add Subject
+              </span>
             </div>
           </div>
 
           {/* Existing Subjects */}
           {subjects.map((sub) => (
-            <div key={sub._id} className="col-md-3">
-              <div className="subject-sec-card" onClick={() => onSelect(sub)}>
+            <div key={sub._id} className="col-xl-3 col-lg-3 col-md-6 col-12">
+              <div
+                className="subject-sec-card h-100"
+                onClick={() => onSelect(sub)}
+              >
                 {/* Actions */}
                 <div className="subject-actions">
                   <button

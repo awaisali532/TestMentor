@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-import Swal from "sweetalert2"; // Sirf Success/Error alerts ke liye
+import Swal from "sweetalert2";
 import "./QuestionManager.css";
 import {
   FaPlus,
@@ -11,35 +11,118 @@ import {
   FaFilter,
   FaSave,
   FaTimes,
+  FaBold,
+  FaUnderline,
 } from "react-icons/fa";
 
 // Imports
 import RenderText from "../../../../components/common/RenderText";
 import BulkUpload from "../BulkUpload/BulkUpload";
-import TMLoader from "../../../../components/common/TMLoader/TMLoader"; // ✅ Custom Loader
-import ConfirmationModal from "../../../../components/common/ConfirmationModal/ConfirmationModal"; // ✅ Custom Modal
+import TMLoader from "../../../../components/common/TMLoader/TMLoader";
+import ConfirmationModal from "../../../../components/common/ConfirmationModal/ConfirmationModal";
+
+// Config
+import {
+  getCategoriesForSubject,
+  shouldShowStatementBox,
+} from "../../../../config/SubjectConfig";
+
+// ✅ HELPER COMPONENT: Rich Text Editor (For Underline/Bold)
+const TextEditor = ({
+  value,
+  onChange,
+  placeholder,
+  isUrdu = false,
+  rows = 2,
+}) => {
+  // Function to wrap selected text in tags <b> or <u>
+  const insertTag = (tag) => {
+    const inputId = `editor-${placeholder.replace(/\s/g, "")}-${
+      isUrdu ? "ur" : "en"
+    }`;
+    const textarea = document.getElementById(inputId);
+
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    if (start === end) return; // Kuch select nahi kiya to wapis jao
+
+    const selectedText = value.substring(start, end);
+    const before = value.substring(0, start);
+    const after = value.substring(end);
+
+    // Naya text banao tags k sath
+    const newText = `${before}<${tag}>${selectedText}</${tag}>${after}`;
+    onChange(newText);
+  };
+
+  return (
+    <div className="mb-2">
+      {/* Tiny Toolbar */}
+      <div className="text-toolbar">
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => insertTag("b")}
+          title="Bold"
+        >
+          <FaBold size={12} />
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={() => insertTag("u")}
+          title="Underline"
+        >
+          <FaUnderline size={12} />
+        </button>
+      </div>
+
+      <textarea
+        id={`editor-${placeholder.replace(/\s/g, "")}-${isUrdu ? "ur" : "en"}`}
+        className={`form-control custom-input ${isUrdu ? "urdu-font" : ""}`}
+        rows={rows}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        dir={isUrdu ? "rtl" : "ltr"}
+      ></textarea>
+    </div>
+  );
+};
 
 const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // STATES
+  const [subjectName, setSubjectName] = useState("Default");
   const [topics, setTopics] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [filterTopicId, setFilterTopicId] = useState("");
 
-  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ Controls TMLoader
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mode, setMode] = useState("single");
   const [editingId, setEditingId] = useState(null);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
 
-  // ✅ CONFIRMATION MODAL STATE
+  // Modal State
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
-    type: null, // 'SINGLE', 'BULK', 'ALL_TOPIC'
-    id: null, // ID for single delete
-    title: "",
-    message: "",
+    type: null,
+    id: null,
   });
+
+  // CHECK IF SUBJECT IS URDU BASED
+  const isUrduSubject = [
+    "Urdu",
+    "Islamiyat",
+    "Pak Study",
+    "Tarjama",
+    "Arabic",
+    "History",
+  ].some((s) => subjectName.includes(s));
 
   // Form Data
   const initialFormState = {
@@ -51,6 +134,11 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     important: false,
     boardTags: "",
     statement: { en: "", ur: "" },
+    questionData: {
+      poetName: { en: "", ur: "" },
+      itemA: "",
+      itemB: "",
+    },
     options: [
       { en: "", ur: "", isCorrect: true },
       { en: "", ur: "", isCorrect: false },
@@ -64,8 +152,11 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
   // INITIAL LOAD
   useEffect(() => {
-    if (chapterId) fetchTopics();
-  }, [chapterId]);
+    if (chapterId && subjectId) {
+      fetchTopics();
+      fetchSubjectDetails();
+    }
+  }, [chapterId, subjectId]);
 
   useEffect(() => {
     if (filterTopicId) {
@@ -77,6 +168,19 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   }, [filterTopicId]);
 
   // API CALLS
+  const fetchSubjectDetails = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/subjects/${subjectId}`);
+      if (res.data.subjectName) {
+        setSubjectName(res.data.subjectName);
+        const cats = getCategoriesForSubject(res.data.subjectName);
+        setFormData((prev) => ({ ...prev, questionCategory: cats[0].value }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchTopics = async () => {
     try {
       const res = await axios.get(
@@ -89,37 +193,44 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   };
 
   const fetchQuestions = async () => {
-    setIsSubmitting(true); // ✅ Loader ON during fetch
+    setIsSubmitting(true);
     try {
       const res = await axios.get(
         `${BASE_URL}/api/questions/topic/${filterTopicId}`
       );
-      const typePriority = { MCQ: 1, SHORT: 2, LONG: 3 };
-      const sortedQuestions = res.data.sort((a, b) => {
-        const priorityA = typePriority[a.type] || 4;
-        const priorityB = typePriority[b.type] || 4;
-        return priorityA - priorityB;
-      });
-      setQuestions(sortedQuestions);
+      setQuestions(
+        res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      );
     } catch (err) {
       toast.error("Failed to load questions");
     } finally {
-      setIsSubmitting(false); // ✅ Loader OFF
+      setIsSubmitting(false);
     }
   };
 
-  // HANDLERS (Form Inputs) - No changes here
+  // --- HANDLERS ---
   const handleStatementChange = (lang, val) => {
     setFormData({
       ...formData,
       statement: { ...formData.statement, [lang]: val },
     });
   };
+
+  const handleQDataChange = (field, val, lang = null) => {
+    setFormData((prev) => {
+      const newData = { ...prev.questionData };
+      if (lang) newData[field] = { ...newData[field], [lang]: val };
+      else newData[field] = val;
+      return { ...prev, questionData: newData };
+    });
+  };
+
   const handleOptionChange = (idx, lang, val) => {
     const newOpts = [...formData.options];
     newOpts[idx][lang] = val;
     setFormData({ ...formData, options: newOpts });
   };
+
   const setCorrectOption = (idx) => {
     const newOpts = formData.options.map((o, i) => ({
       ...o,
@@ -127,21 +238,19 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     }));
     setFormData({ ...formData, options: newOpts });
   };
+
   const toggleTopicSelection = (topicId) => {
     setFormData((prev) => {
       const current = prev.selectedTopicIds;
-      if (current.includes(topicId)) {
+      if (current.includes(topicId))
         return {
           ...prev,
           selectedTopicIds: current.filter((id) => id !== topicId),
         };
-      } else {
-        return { ...prev, selectedTopicIds: [...current, topicId] };
-      }
+      else return { ...prev, selectedTopicIds: [...current, topicId] };
     });
   };
 
-  // Edit Logic
   const handleEdit = (question) => {
     setEditingId(question._id);
     setMode("single");
@@ -156,8 +265,9 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         en: question.statement.en || "",
         ur: question.statement.ur || "",
       },
+      questionData: question.questionData || initialFormState.questionData,
       options:
-        question.options && question.options.length > 0
+        question.options.length > 0
           ? question.options
           : initialFormState.options,
       boardTags: question.boardTags ? question.boardTags.join(", ") : "",
@@ -177,104 +287,79 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   };
 
   const selectAllQuestions = () => {
-    if (selectedQuestionIds.length === questions.length) {
+    if (selectedQuestionIds.length === questions.length)
       setSelectedQuestionIds([]);
-    } else {
-      setSelectedQuestionIds(questions.map((q) => q._id));
-    }
+    else setSelectedQuestionIds(questions.map((q) => q._id));
   };
 
-  // =========================================================
-  // ✅ DELETE HANDLERS (TRIGGER MODAL)
-  // =========================================================
-
-  // 1. Single Delete
-  const handleDelete = (id) => {
+  // --- DELETE LOGIC ---
+  const handleDelete = (id) =>
     setDeleteModal({
       isOpen: true,
       type: "SINGLE",
       id: id,
-      title: "Delete Question?",
-      message:
-        "Are you sure you want to delete this question? This cannot be undone.",
+      title: "Delete?",
+      message: "Sure?",
     });
-  };
-
-  // 2. Bulk Delete
   const handleDeleteSelected = () => {
-    if (selectedQuestionIds.length === 0) return;
-    setDeleteModal({
-      isOpen: true,
-      type: "BULK",
-      id: null,
-      title: `Delete ${selectedQuestionIds.length} Questions?`,
-      message: "Selected questions will be permanently removed.",
-    });
+    if (selectedQuestionIds.length > 0)
+      setDeleteModal({
+        isOpen: true,
+        type: "BULK",
+        id: null,
+        title: "Delete Selected?",
+        message: "Sure?",
+      });
   };
-
-  // 3. Delete All in Topic
   const handleDeleteAllInTopic = () => {
-    if (!filterTopicId) return;
-    setDeleteModal({
-      isOpen: true,
-      type: "ALL_TOPIC",
-      id: null,
-      title: "Delete ALL Questions?",
-      message:
-        "WARNING: This will delete EVERY question in this topic! Action cannot be undone.",
-    });
+    if (filterTopicId)
+      setDeleteModal({
+        isOpen: true,
+        type: "ALL_TOPIC",
+        id: null,
+        title: "Delete ALL?",
+        message: "Sure?",
+      });
   };
 
-  // ✅ CONFIRM DELETE LOGIC (API CALLS)
   const handleConfirmDelete = async () => {
-    setDeleteModal({ ...deleteModal, isOpen: false }); // Close Modal
-    setIsSubmitting(true); // Show TMLoader
-
+    setDeleteModal({ ...deleteModal, isOpen: false });
+    setIsSubmitting(true);
     const token = localStorage.getItem("token");
     try {
       if (deleteModal.type === "SINGLE") {
         await axios.delete(`${BASE_URL}/api/questions/${deleteModal.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        toast.success("Deleted Successfully");
+        toast.success("Deleted");
       } else if (deleteModal.type === "BULK") {
         await axios.post(
           `${BASE_URL}/api/questions/delete-bulk`,
           { ids: selectedQuestionIds },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("Bulk Delete Successful");
+        toast.success("Deleted");
         setSelectedQuestionIds([]);
       } else if (deleteModal.type === "ALL_TOPIC") {
         await axios.delete(
           `${BASE_URL}/api/questions/topic/${filterTopicId}/delete-all`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("All Topic Questions Deleted");
+        toast.success("Cleared");
         setSelectedQuestionIds([]);
       }
-
-      fetchQuestions(); // Refresh List
+      fetchQuestions();
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to delete questions.",
-        background: "var(--card-bg)",
-        color: "var(--text-main)",
-      });
+      Swal.fire("Error", "Failed to delete", "error");
     } finally {
-      setIsSubmitting(false); // Hide TMLoader
+      setIsSubmitting(false);
     }
   };
 
-  // =========================================================
-  // ✅ SUBMIT HANDLER (ADD / EDIT)
-  // =========================================================
+  // --- SUBMIT HANDLER ---
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true); // Show TMLoader
-
+    setIsSubmitting(true);
     const data = new FormData();
     data.append("topics", JSON.stringify(formData.selectedTopicIds));
     data.append("chapterId", chapterId);
@@ -286,11 +371,10 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     data.append("marks", formData.marks);
     data.append("important", formData.important);
     data.append("statement", JSON.stringify(formData.statement));
-
+    data.append("questionData", JSON.stringify(formData.questionData));
     if (formData.type === "MCQ")
       data.append("options", JSON.stringify(formData.options));
     if (imageFile) data.append("image", imageFile);
-
     const tags = formData.boardTags
       .split(",")
       .map((t) => t.trim())
@@ -303,7 +387,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       };
-
       if (editingId) {
         await axios.put(`${BASE_URL}/api/questions/${editingId}`, data, {
           headers,
@@ -311,9 +394,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         Swal.fire({
           icon: "success",
           title: "Updated!",
-          text: "Question updated successfully.",
-          background: "var(--card-bg)",
-          color: "var(--text-main)",
           timer: 1500,
           showConfirmButton: false,
         });
@@ -324,15 +404,13 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         Swal.fire({
           icon: "success",
           title: "Saved!",
-          text: "Question added with AI Vector.",
-          background: "var(--card-bg)",
-          color: "var(--text-main)",
           timer: 1500,
           showConfirmButton: false,
         });
         setFormData((prev) => ({
           ...prev,
           statement: { en: "", ur: "" },
+          questionData: initialFormState.questionData,
           options: initialFormState.options,
           boardTags: "",
         }));
@@ -340,45 +418,49 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       if (filterTopicId) fetchQuestions();
       setImageFile(null);
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "Failed to save.";
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: errorMsg,
-        background: "var(--card-bg)",
-        color: "var(--text-main)",
-        confirmButtonColor: "#dc3545",
-      });
+      Swal.fire("Error", "Failed", "error");
     } finally {
-      setIsSubmitting(false); // Hide TMLoader
+      setIsSubmitting(false);
     }
   };
 
-  // Validation
+  // Config & Validation
+  const categories = getCategoriesForSubject(subjectName);
+  const showMainStatement = shouldShowStatementBox(formData.questionCategory);
+
   const hasTopic = formData.selectedTopicIds.length > 0;
-  const hasStatement =
-    formData.statement.en.trim() !== "" || formData.statement.ur.trim() !== "";
+  let hasContent = false;
+  if (showMainStatement) {
+    if (isUrduSubject) hasContent = formData.statement.ur.trim() !== "";
+    else
+      hasContent =
+        formData.statement.en.trim() !== "" ||
+        formData.statement.ur.trim() !== "";
+  } else {
+    hasContent = formData.questionData.itemA.trim() !== "";
+  }
+
   const isMcqComplete =
     formData.type === "MCQ"
-      ? formData.options.every(
-          (opt) => opt.en.trim() !== "" || opt.ur.trim() !== ""
+      ? formData.options.every((opt) =>
+          isUrduSubject
+            ? opt.ur.trim() !== ""
+            : opt.en.trim() !== "" || opt.ur.trim() !== ""
         )
       : true;
-  const isFormValid = hasTopic && hasStatement && isMcqComplete;
+
+  const isFormValid = hasTopic && hasContent && isMcqComplete;
 
   return (
     <>
-      {/* ✅ FULL SCREEN LOADER */}
       {isSubmitting && <TMLoader />}
-
-      {/* ✅ CONFIRMATION MODAL */}
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
         onConfirm={handleConfirmDelete}
         title={deleteModal.title}
         message={deleteModal.message}
-        confirmText="Yes, Delete"
+        confirmText="Delete"
         cancelText="Cancel"
         isDanger={true}
       />
@@ -386,11 +468,12 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       <div className="row g-4">
         <Toaster position="top-right" />
 
-        {/* LEFT: LIST */}
+        {/* --- LEFT SIDE: QUESTION LIST --- */}
         <div className="col-md-7">
           <div className="filter-box-q sticky-top">
             <label className="fw-bold small text-muted mb-2 d-flex align-items-center">
-              <FaFilter className="me-2 text-accent" /> Filter Questions
+              <FaFilter className="me-2 text-accent" /> Filter Questions (
+              {subjectName})
             </label>
             <div className="d-flex gap-2">
               <select
@@ -410,7 +493,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                 <button
                   className="btn-danger-soft"
                   onClick={handleDeleteAllInTopic}
-                  title="Delete All"
                 >
                   <FaTrashAlt /> All
                 </button>
@@ -418,47 +500,9 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
             </div>
           </div>
 
-          {selectedQuestionIds.length > 0 && (
-            <div className="bulk-action-bar">
-              <span className="fw-bold">
-                {selectedQuestionIds.length} Selected
-              </span>
-              <button
-                className="btn-danger-soft btn-sm"
-                onClick={handleDeleteSelected}
-              >
-                <FaTrashAlt className="me-1" /> Delete
-              </button>
-            </div>
-          )}
-
-          {questions.length > 0 && (
-            <div className="d-flex align-items-center mb-2 px-2">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="selectAll"
-                  checked={selectedQuestionIds.length === questions.length}
-                  onChange={selectAllQuestions}
-                />
-                <label
-                  className="form-check-label small fw-bold text-muted cursor-pointer"
-                  htmlFor="selectAll"
-                >
-                  Select All
-                </label>
-              </div>
-            </div>
-          )}
-
           <div className="q-list-container custom-scrollbar">
             {questions.length === 0 ? (
-              <div className="empty-state-box">
-                {filterTopicId
-                  ? "No questions found."
-                  : "Select a topic to view questions."}
-              </div>
+              <div className="empty-state-box">Select a topic.</div>
             ) : (
               questions.map((q, index) => (
                 <div
@@ -498,15 +542,51 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </div>
                   </div>
 
-                  {q.statement.en && (
-                    <p className="q-text en">
-                      <RenderText text={q.statement.en} />
-                    </p>
-                  )}
-                  {q.statement.ur && (
-                    <p className="q-text ur">
-                      <RenderText text={q.statement.ur} />
-                    </p>
+                  {/* ✅ SPECIAL RENDER FOR POETRY (50/50 Grid) */}
+                  {q.questionCategory === "POETRY" ? (
+                    <div className="poetry-wrapper">
+                      {q.questionData?.poetName?.ur && (
+                        <div className="text-center text-muted small urdu-font mb-2">
+                          ({q.questionData.poetName.ur})
+                        </div>
+                      )}
+                      <div className="poetry-grid">
+                        {/* Lines ko \n se split karo */}
+                        {q.statement.ur.split("\n").map(
+                          (line, i) =>
+                            line.trim() && (
+                              <div key={i} className="poetry-line">
+                                <RenderText text={line} />
+                              </div>
+                            )
+                        )}
+                      </div>
+                    </div>
+                  ) : ["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].includes(
+                      q.questionCategory
+                    ) ? (
+                    <div className="d-flex gap-2 align-items-center bg-light-theme p-2 rounded">
+                      <strong className="text-main">
+                        {q.questionData?.itemA}
+                      </strong>
+                      <span className="text-muted mx-2">↔</span>
+                      <strong className="text-accent">
+                        {q.questionData?.itemB}
+                      </strong>
+                    </div>
+                  ) : (
+                    <>
+                      {!isUrduSubject && q.statement.en && (
+                        <p className="q-text en">
+                          <RenderText text={q.statement.en} />
+                        </p>
+                      )}
+                      {q.statement.ur && (
+                        <p className="q-text ur">
+                          <RenderText text={q.statement.ur} />
+                        </p>
+                      )}
+                    </>
                   )}
 
                   {q.type === "MCQ" && (
@@ -522,9 +602,11 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                             {String.fromCharCode(65 + i)}
                           </span>
                           <div className="opt-content">
-                            <span className="en">
-                              <RenderText text={opt.en} />
-                            </span>
+                            {!isUrduSubject && (
+                              <span className="en">
+                                <RenderText text={opt.en} />
+                              </span>
+                            )}
                             {opt.ur && (
                               <span className="ur">
                                 <RenderText text={opt.ur} />
@@ -541,33 +623,27 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           </div>
         </div>
 
-        {/* RIGHT: FORM */}
+        {/* --- RIGHT SIDE: FORM --- */}
         <div className="col-md-5">
           <div className="form-card sticky-top">
             <div className="form-header">
               <h6 className="m-0 fw-bold text-accent">
-                {editingId ? "Edit Question" : "Add Question"}
+                {editingId ? "Edit" : "Add"} Question
               </h6>
-              {editingId && (
-                <button className="btn-icon close" onClick={handleCancelEdit}>
-                  <FaTimes />
-                </button>
-              )}
             </div>
-
             {!editingId && (
               <div className="mode-switch">
                 <button
                   className={mode === "single" ? "active" : ""}
                   onClick={() => setMode("single")}
                 >
-                  <FaPen className="me-1" /> Single
+                  <FaPen /> Single
                 </button>
                 <button
                   className={mode === "bulk" ? "active" : ""}
                   onClick={() => setMode("bulk")}
                 >
-                  <FaCode className="me-1" /> Bulk
+                  <FaCode /> Bulk
                 </button>
               </div>
             )}
@@ -575,29 +651,21 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
             <div className="p-3">
               {mode === "single" ? (
                 <form onSubmit={handleSingleSubmit}>
-                  {/* ... FORM FIELDS SAME AS BEFORE ... */}
+                  {/* TOPIC & TYPE Selectors (Keep as is) */}
                   <div className="mb-3">
                     <label className="form-label">
                       Topics <span className="text-danger">*</span>
                     </label>
-                    <div
-                      className={`multi-select-box custom-scrollbar ${
-                        !hasTopic && "border-danger"
-                      }`}
-                    >
+                    <div className="multi-select-box custom-scrollbar">
                       {topics.map((t) => (
                         <div key={t._id} className="form-check">
                           <input
                             className="form-check-input"
                             type="checkbox"
-                            id={`t-${t._id}`}
                             checked={formData.selectedTopicIds.includes(t._id)}
                             onChange={() => toggleTopicSelection(t._id)}
                           />
-                          <label
-                            className="form-check-label small"
-                            htmlFor={`t-${t._id}`}
-                          >
+                          <label className="form-check-label small">
                             {t.topicNumber} -{" "}
                             {typeof t.name === "object" ? t.name.en : t.name}
                           </label>
@@ -633,53 +701,112 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                           })
                         }
                       >
-                        <option value="TEXT">Text</option>
-                        <option value="EXERCISE">Exercise</option>
-                        <option value="CONCEPTUAL">Conceptual</option>
-                        <option value="EXAMPLE">EXAMPLE</option>
-                        <option value="NUMERICAL">NUMERICAL</option>
-                        <option value="REVIEW">REVIEW</option>
+                        {categories.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">
-                      Statement <span className="text-danger">*</span>
-                    </label>
-                    <textarea
-                      className="form-control custom-input mb-2"
-                      rows="2"
-                      placeholder="English..."
-                      value={formData.statement.en}
-                      onChange={(e) =>
-                        handleStatementChange("en", e.target.value)
-                      }
-                    ></textarea>
-                    <textarea
-                      className="form-control custom-input urdu-font"
-                      rows="2"
-                      placeholder="اردو..."
-                      value={formData.statement.ur}
-                      onChange={(e) =>
-                        handleStatementChange("ur", e.target.value)
-                      }
-                      dir="rtl"
-                    ></textarea>
-                  </div>
+                  {/* DYNAMIC FIELDS */}
+                  {/* 1. POETRY */}
+                  {formData.questionCategory === "POETRY" && (
+                    <div className="row g-2 mb-2">
+                      {!isUrduSubject && (
+                        <div className="col-6">
+                          <input
+                            type="text"
+                            className="form-control custom-input"
+                            placeholder="Poet Name (Eng)"
+                            value={formData.questionData.poetName.en}
+                            onChange={(e) =>
+                              handleQDataChange(
+                                "poetName",
+                                e.target.value,
+                                "en"
+                              )
+                            }
+                          />
+                        </div>
+                      )}
+                      <div className={isUrduSubject ? "col-12" : "col-6"}>
+                        <input
+                          type="text"
+                          className="form-control custom-input urdu-font"
+                          placeholder="شاعر کا نام"
+                          dir="rtl"
+                          value={formData.questionData.poetName.ur}
+                          onChange={(e) =>
+                            handleQDataChange("poetName", e.target.value, "ur")
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
 
+                  {/* 2. PAIR OF WORDS */}
+                  {["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].includes(
+                    formData.questionCategory
+                  ) ? (
+                    <div className="mb-3 p-3 bg-light-theme border rounded">
+                      <div className="d-flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          className="form-control custom-input"
+                          placeholder="Item A"
+                          value={formData.questionData.itemA}
+                          onChange={(e) =>
+                            handleQDataChange("itemA", e.target.value)
+                          }
+                        />
+                        <input
+                          type="text"
+                          className="form-control custom-input"
+                          placeholder="Item B"
+                          value={formData.questionData.itemB}
+                          onChange={(e) =>
+                            handleQDataChange("itemB", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    /* 3. STANDARD STATEMENT with TextEditor */
+                    <div className="mb-3">
+                      <label className="form-label">
+                        {formData.questionCategory === "POETRY"
+                          ? "Stanza (Lines)"
+                          : "Statement"}{" "}
+                        <span className="text-danger">*</span>
+                      </label>
+
+                      {!isUrduSubject && (
+                        <TextEditor
+                          value={formData.statement.en}
+                          onChange={(val) => handleStatementChange("en", val)}
+                          placeholder="English Statement..."
+                        />
+                      )}
+
+                      <TextEditor
+                        value={formData.statement.ur}
+                        onChange={(val) => handleStatementChange("ur", val)}
+                        placeholder="اردو..."
+                        isUrdu={true}
+                        rows={formData.questionCategory === "POETRY" ? 4 : 2}
+                      />
+                    </div>
+                  )}
+
+                  {/* 4. MCQ OPTIONS */}
                   {formData.type === "MCQ" && (
-                    <div
-                      className={`mb-3 p-2 border rounded bg-light-theme ${
-                        !isMcqComplete && "border-danger"
-                      }`}
-                    >
+                    <div className="mb-3 p-2 border rounded bg-light-theme">
                       {formData.options.map((opt, i) => (
                         <div
                           key={i}
-                          className={`d-flex align-items-center gap-2 mb-2 ${
-                            opt.isCorrect ? "border-success" : ""
-                          }`}
+                          className="d-flex align-items-center gap-2 mb-2"
                         >
                           <input
                             type="radio"
@@ -687,15 +814,17 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                             checked={opt.isCorrect}
                             onChange={() => setCorrectOption(i)}
                           />
-                          <input
-                            type="text"
-                            className="form-control custom-input form-control-sm"
-                            placeholder="Eng"
-                            value={opt.en}
-                            onChange={(e) =>
-                              handleOptionChange(i, "en", e.target.value)
-                            }
-                          />
+                          {!isUrduSubject && (
+                            <input
+                              type="text"
+                              className="form-control custom-input form-control-sm"
+                              placeholder="Eng"
+                              value={opt.en}
+                              onChange={(e) =>
+                                handleOptionChange(i, "en", e.target.value)
+                              }
+                            />
+                          )}
                           <input
                             type="text"
                             className="form-control custom-input form-control-sm urdu-font"
@@ -711,20 +840,76 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </div>
                   )}
 
+                  {/* Marks Input */}
+                  <div className="col-4">
+                    <label className="form-label">
+                      Marks <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      className="form-control custom-input text-center fw-bold"
+                      value={formData.marks}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          marks: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      min="1"
+                    />
+                  </div>
+                  {/* DIFFICULTY & IMAGE (Keep as is) */}
+                  <div className="mb-2">
+                    <label className="form-label">Difficulty</label>
+                    <div className="btn-group w-100">
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${
+                          formData.difficulty === "Easy"
+                            ? "btn-primary-gradient"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() =>
+                          setFormData({ ...formData, difficulty: "Easy" })
+                        }
+                      >
+                        Easy
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${
+                          formData.difficulty === "Medium"
+                            ? "btn-primary-gradient"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() =>
+                          setFormData({ ...formData, difficulty: "Medium" })
+                        }
+                      >
+                        Medium
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${
+                          formData.difficulty === "Hard"
+                            ? "btn-primary-gradient"
+                            : "btn-outline-secondary"
+                        }`}
+                        onClick={() =>
+                          setFormData({ ...formData, difficulty: "Hard" })
+                        }
+                      >
+                        Hard
+                      </button>
+                    </div>
+                  </div>
+
                   <button
                     type="submit"
                     className="btn-primary-gradient w-100"
                     disabled={isSubmitting || !isFormValid}
                   >
-                    {editingId ? (
-                      <>
-                        <FaSave className="me-2" /> Update
-                      </>
-                    ) : (
-                      <>
-                        <FaPlus className="me-2" /> Save Question
-                      </>
-                    )}
+                    Save
                   </button>
                 </form>
               ) : (
@@ -732,6 +917,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                   chapterId={chapterId}
                   subjectId={subjectId}
                   classLevel={classLevel}
+                  subjectName={subjectName}
                   onSuccess={() => {
                     fetchQuestions();
                     setMode("single");

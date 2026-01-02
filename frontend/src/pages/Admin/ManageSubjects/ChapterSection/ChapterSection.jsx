@@ -30,6 +30,13 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
     name: { en: "", ur: "" },
   });
 
+  // ✅ CHECK SUBJECT TYPE (Urdu/Islamiyat/Pak Study/Tarjama)
+  const isUrduSubject =
+    selectedSubject &&
+    ["Urdu", "Islamiyat", "Pak Study", "Tarjama", "Arabic", "History"].some(
+      (s) => selectedSubject.subjectName.includes(s)
+    );
+
   useEffect(() => {
     if (isExpanded && selectedSubject) fetchChapters();
   }, [isExpanded, selectedSubject]);
@@ -66,7 +73,6 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
         ur: typeof chapter.name === "object" ? chapter.name.ur : "",
       },
     });
-    // Smooth scroll to form
     document
       .querySelector(".chapter-form-card")
       ?.scrollIntoView({ behavior: "smooth" });
@@ -79,9 +85,18 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
 
   const handleSubmitSingle = async (e) => {
     e.preventDefault();
-    if (!newChapter.number || !newChapter.name.en) {
-      return toast.error("Chapter Number and Name required!");
+
+    // ✅ VALIDATION LOGIC BASED ON SUBJECT
+    if (!newChapter.number) return toast.error("Chapter Number is required!");
+
+    if (isUrduSubject) {
+      if (!newChapter.name.ur.trim())
+        return toast.error("Urdu Name is required for this subject!");
+    } else {
+      if (!newChapter.name.en.trim())
+        return toast.error("English Name is required!");
     }
+
     setLoading(true);
     try {
       const payload = {
@@ -156,9 +171,13 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
     }
   };
 
-  // ✅ VALIDATION LOGIC
+  // ✅ DYNAMIC VALIDATION LOGIC
   const isSingleValid =
-    newChapter.number.trim() !== "" && newChapter.name.en.trim() !== "";
+    newChapter.number.trim() !== "" &&
+    (isUrduSubject
+      ? newChapter.name.ur.trim() !== "" // Urdu Required
+      : newChapter.name.en.trim() !== ""); // English Required
+
   const isBulkValid = bulkJson.trim() !== "";
 
   if (!isExpanded) return null;
@@ -190,11 +209,29 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                 <div className="d-flex align-items-center">
                   <span className="chapter-badge">Ch {ch.chapterNumber}</span>
                   <div>
-                    <span className="chapter-name-en">
-                      {typeof ch.name === "object" ? ch.name.en : ch.name}
-                    </span>
-                    {ch.name?.ur && (
-                      <span className="chapter-name-ur">({ch.name.ur})</span>
+                    {/* Render Urdu Name prominently if Urdu Subject */}
+                    {isUrduSubject ? (
+                      <>
+                        <span className="chapter-name-en urdu-font fs-5">
+                          {ch.name?.ur || "---"}
+                        </span>
+                        {typeof ch.name === "object" && ch.name.en && (
+                          <span className="chapter-name-ur ms-2">
+                            ({ch.name.en})
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span className="chapter-name-en">
+                          {typeof ch.name === "object" ? ch.name.en : ch.name}
+                        </span>
+                        {ch.name?.ur && (
+                          <span className="chapter-name-ur">
+                            ({ch.name.ur})
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -284,20 +321,32 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                 </div>
 
                 <div className="mb-4">
+                  {/* --- ENGLISH INPUT --- */}
                   <label className="form-label">
-                    Chapter Name <span className="text-danger">*</span>
+                    Chapter Name (English){" "}
+                    {!isUrduSubject && <span className="text-danger">*</span>}
                   </label>
                   <input
-                    className="form-control custom-input mb-2"
-                    placeholder="English Name"
+                    className="form-control custom-input mb-3"
+                    placeholder={
+                      isUrduSubject ? "English Name (Optional)" : "English Name"
+                    }
                     value={newChapter.name.en}
                     onChange={(e) =>
                       handleLangInput("name", "en", e.target.value)
                     }
                   />
+
+                  {/* --- URDU INPUT --- */}
+                  <label className="form-label">
+                    Chapter Name (Urdu){" "}
+                    {isUrduSubject && <span className="text-danger">*</span>}
+                  </label>
                   <input
                     className="form-control custom-input urdu-font"
-                    placeholder="نام (اردو)"
+                    placeholder={
+                      isUrduSubject ? "نام (اردو)" : "نام (Optional)"
+                    }
                     dir="rtl"
                     value={newChapter.name.ur}
                     onChange={(e) =>

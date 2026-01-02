@@ -8,15 +8,23 @@ import TopicManager from "../../../components/Admin/QuestionBank/TopicManager/To
 import QuestionManager from "../../../components/Admin/QuestionBank/QuestionManager/QuestionManager";
 
 const QuestionBank = () => {
+  // ✅ 1. State me subjectName add karein
   const [filters, setFilters] = useState({
     classLevel: "",
     subjectId: "",
+    subjectName: "", // New Field
     chapterId: "",
   });
   const [activeTab, setActiveTab] = useState("topics");
 
-  const handleFilterChange = (classLevel, subjectId, chapterId) => {
-    setFilters({ classLevel, subjectId, chapterId });
+  // ✅ 2. Handler update karein taake ye Name bhi receive kare
+  const handleFilterChange = (
+    classLevel,
+    subjectId,
+    chapterId,
+    subjectName
+  ) => {
+    setFilters({ classLevel, subjectId, chapterId, subjectName });
     if (chapterId) setActiveTab("topics");
   };
 
@@ -25,7 +33,6 @@ const QuestionBank = () => {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          {/* ✅ UPDATED TITLE STYLE */}
           <h3 className="fw-bold text-main m-0 d-flex align-items-center gap-2">
             📚 Question <span className="highlight-text">Bank</span>
           </h3>
@@ -62,7 +69,10 @@ const QuestionBank = () => {
           {/* Dynamic Components */}
           <div className="p-4">
             {activeTab === "topics" && (
-              <TopicManager chapterId={filters.chapterId} />
+              <TopicManager
+                chapterId={filters.chapterId}
+                subjectName={filters.subjectName} // ✅ Ab ye Sahi variable pass kar raha hai
+              />
             )}
 
             {activeTab === "questions" && (

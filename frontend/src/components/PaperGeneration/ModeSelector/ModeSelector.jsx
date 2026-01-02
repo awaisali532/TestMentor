@@ -28,22 +28,22 @@ const ModeSelector = ({ onSelect, onBack }) => {
 
   const [autoConfig, setAutoConfig] = useState({
     difficulties: ["EASY", "MEDIUM", "HARD"],
-    categories: ALL_SOURCES.map((s) => s.val), // Default Select All
+    categories: ALL_SOURCES.map((s) => s.val),
   });
 
   // --- HANDLERS ---
 
   const handleManualClick = () => {
     setActiveMode("MANUAL");
+    // ✅ Date removed, only passing mode
     onSelect("MANUAL", null);
   };
 
-  // ✅ Toggle Logic Updated
   const handleAutoClick = () => {
     if (activeMode === "AUTO") {
-      setActiveMode(null); // Close if open
+      setActiveMode(null);
     } else {
-      setActiveMode("AUTO"); // Open
+      setActiveMode("AUTO");
     }
   };
 
@@ -72,12 +72,13 @@ const ModeSelector = ({ onSelect, onBack }) => {
       return toast.error("Select at least one difficulty level");
     if (autoConfig.categories.length === 0)
       return toast.error("Select at least one source");
+
+    // ✅ Date removed, only passing config
     onSelect("AUTO", autoConfig);
   };
 
   const handleBack = () => setShowConfirm(true);
 
-  // Helper for Difficulty Color Class
   const getDiffClass = (diff) => {
     if (diff === "EASY") return "diff-easy";
     if (diff === "MEDIUM") return "diff-medium";
@@ -87,8 +88,8 @@ const ModeSelector = ({ onSelect, onBack }) => {
 
   return (
     <div className="ms-container">
-      <h2 className="ms-title">How would you like to create the paper?</h2>
-      <p className="ms-subtitle">Choose a method to proceed with generation.</p>
+      <h2 className="ms-title">Select Generation Method</h2>
+      <p className="ms-subtitle">Choose how you want to create the paper.</p>
 
       <div className="ms-grid">
         {/* MANUAL CARD */}
@@ -102,7 +103,7 @@ const ModeSelector = ({ onSelect, onBack }) => {
             <FaHandPointer className="ms-icon manual-icon" />
           </div>
           <h4>Manual Selection</h4>
-          <p>Pick questions one-by-one. Full control over content.</p>
+          <p>Pick questions one-by-one. Full control.</p>
         </div>
 
         {/* AUTO CARD */}
@@ -116,7 +117,7 @@ const ModeSelector = ({ onSelect, onBack }) => {
             <FaRobot className="ms-icon auto-icon" />
           </div>
           <h4>Auto Generator</h4>
-          <p>Let AI randomly select questions instantly.</p>
+          <p>Let AI select questions instantly.</p>
         </div>
 
         {/* --- AUTO SETTINGS PANEL --- */}
@@ -191,7 +192,7 @@ const ModeSelector = ({ onSelect, onBack }) => {
         onClose={() => setShowConfirm(false)}
         onConfirm={onBack}
         title="Go Back?"
-        message="Your mode selection will be reset."
+        message="Your selections will be reset."
         confirmText="Yes, Go Back"
         cancelText="Cancel"
       />

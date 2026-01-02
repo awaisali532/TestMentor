@@ -139,7 +139,7 @@ const getQuestionsByFilter = async (req, res) => {
 };
 
 // ==========================================
-// 5. ADD QUESTION (SINGLE) - ✅ STRICT CHECK & DUPLICATE CHECK
+// 5. ADD QUESTION (SINGLE) - ✅ UPDATED FOR NEW FIELDS
 // ==========================================
 const addQuestion = async (req, res) => {
   try {
@@ -156,17 +156,29 @@ const addQuestion = async (req, res) => {
       statement,
       options,
       questionCategory,
+      questionData, // ✅ NEW: Flexible Data (Pairs, Poetry, etc.)
     } = req.body;
 
     if (!subjectId || subjectId === "undefined")
       return res.status(400).json({ error: "Subject ID missing." });
 
+    // --- PARSING JSON FIELDS ---
     let parsedStatement = statement
       ? JSON.parse(statement)
       : { en: "", ur: "" };
     let parsedTopics = topics ? JSON.parse(topics) : [];
     let parsedOptions = options ? JSON.parse(options) : [];
     let parsedTags = boardTags ? JSON.parse(boardTags) : [];
+
+    // ✅ Handle New Flexible Data
+    let parsedQData = {};
+    if (questionData) {
+      try {
+        parsedQData = JSON.parse(questionData);
+      } catch (e) {
+        parsedQData = {}; // Agar fail ho to empty object
+      }
+    }
 
     // 🛑 1. DUPLICATE CHECK (TEXT BASED)
     // Check if English statement exists (Case Insensitive)
@@ -178,7 +190,6 @@ const addQuestion = async (req, res) => {
       });
 
       if (existingQuestion) {
-        // Agar duplicate mila to image delete karo (agar upload hui thi) aur error return karo
         if (req.file && fs.existsSync(req.file.path))
           fs.unlinkSync(req.file.path);
         return res
@@ -189,10 +200,18 @@ const addQuestion = async (req, res) => {
       }
     }
 
-    // ✅ 2. SMART VECTOR GENERATION (English First, Then Urdu)
+    // ✅ 2. SMART VECTOR GENERATION
     let vector = null;
-    const textToEmbed =
-      parsedStatement.en?.trim() || parsedStatement.ur?.trim();
+
+    // Agar normal statement hai to wahan se lo,
+    // Agar Pair of Words/Poetry hai to wahan se text banao vector ke liye
+    let textToEmbed = parsedStatement.en?.trim() || parsedStatement.ur?.trim();
+
+    // Fallback for special categories (Agar statement khali hai)
+    if (!textToEmbed && parsedQData) {
+      if (parsedQData.itemA) textToEmbed = parsedQData.itemA; // Pair of Words
+      else if (parsedQData.poetName?.en) textToEmbed = parsedQData.poetName.en; // Poetry
+    }
 
     if (textToEmbed && textToEmbed.length > 0) {
       console.log("Generating vector...");
@@ -203,7 +222,7 @@ const addQuestion = async (req, res) => {
       }
     }
 
-    // ❌ 3. STRICT CHECK: AGAR VECTOR FAIL HUA, TO SAVE MAT KARO
+    // ❌ 3. STRICT CHECK
     if (!vector || vector.length === 0) {
       if (req.file && fs.existsSync(req.file.path))
         fs.unlinkSync(req.file.path);
@@ -212,6 +231,7 @@ const addQuestion = async (req, res) => {
       });
     }
 
+    // Image Upload
     let imageData = null;
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
@@ -221,6 +241,7 @@ const addQuestion = async (req, res) => {
       fs.unlinkSync(req.file.path);
     }
 
+    // Create Object
     const newQuestion = new Question({
       topics: parsedTopics,
       chapter: chapterId,
@@ -234,8 +255,9 @@ const addQuestion = async (req, res) => {
       boardTags: parsedTags,
       statement: parsedStatement,
       options: parsedOptions,
+      questionData: parsedQData, // ✅ Save New Data
       image: imageData,
-      vector_embedding: vector, // ✅ Saved only if valid
+      vector_embedding: vector,
     });
 
     await newQuestion.save();
@@ -247,7 +269,7 @@ const addQuestion = async (req, res) => {
 };
 
 // ==========================================
-// 6. UPDATE QUESTION - ✅ RE-GENERATE VECTOR
+// 6. UPDATE QUESTION - ✅ UPDATED
 // ==========================================
 const updateQuestion = async (req, res) => {
   try {
@@ -262,14 +284,19 @@ const updateQuestion = async (req, res) => {
       statement,
       options,
       questionCategory,
+      questionData, // ✅ NEW
     } = req.body;
 
     const question = await Question.findById(id);
     if (!question) return res.status(404).json({ error: "Not found" });
 
+    // Parse Data
     let parsedStatement = statement
       ? JSON.parse(statement)
       : question.statement;
+    let parsedQData = questionData
+      ? JSON.parse(questionData)
+      : question.questionData; // ✅ Parse New Data
 
     let updateData = {
       topics: topics ? JSON.parse(topics) : question.topics,
@@ -281,18 +308,16 @@ const updateQuestion = async (req, res) => {
       boardTags: boardTags ? JSON.parse(boardTags) : question.boardTags,
       statement: parsedStatement,
       options: options ? JSON.parse(options) : question.options,
+      questionData: parsedQData, // ✅ Update New Data
     };
 
     // ✅ VECTOR UPDATE LOGIC
-    // Agar English text change hua, ya English nahi tha aur ab Urdu change hua
     const oldText = question.statement.en || question.statement.ur;
     const newText = parsedStatement.en || parsedStatement.ur;
 
     if (newText && newText !== oldText) {
       console.log("Statement changed, updating vector...");
       const newVector = await getEmbedding(newText);
-
-      // Agar naya vector fail hua, to purana hi rehne do
       if (newVector && newVector.length > 0) {
         updateData.vector_embedding = newVector;
       } else {
@@ -359,7 +384,7 @@ const getQuestionsByTopic = async (req, res) => {
 };
 
 // ==========================================
-// ✅ ADD BULK QUESTIONS - STRICT CHECK & DUPLICATE CHECK
+// ✅ ADD BULK QUESTIONS - ✅ UPDATED
 // ==========================================
 const addBulkQuestions = async (req, res) => {
   try {
@@ -375,13 +400,11 @@ const addBulkQuestions = async (req, res) => {
     });
 
     const questionsToInsert = [];
-    const failedQuestions = []; // Error reporting ke liye
+    const failedQuestions = [];
 
-    // Loop through questions
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
 
-      // 1. Topic Mapping
       let assignedTopicIds = [];
       if (q.topics && Array.isArray(q.topics)) {
         q.topics.forEach((num) => {
@@ -397,7 +420,7 @@ const addBulkQuestions = async (req, res) => {
         continue;
       }
 
-      // 🛑 2. DUPLICATE CHECK (TEXT BASED)
+      // 🛑 2. DUPLICATE CHECK
       if (q.statement && q.statement.en) {
         const existingQuestion = await Question.findOne({
           "statement.en": {
@@ -411,13 +434,18 @@ const addBulkQuestions = async (req, res) => {
             statement: q.statement.en,
             reason: "Duplicate: Question already exists in DB.",
           });
-          continue; // Skip this question
+          continue;
         }
       }
 
       // ✅ 3. SMART VECTOR GENERATION
       let vector = null;
-      const textToEmbed = q.statement?.en?.trim() || q.statement?.ur?.trim();
+      // Normal text or Fallback to ItemA (Pair)
+      let textToEmbed = q.statement?.en?.trim() || q.statement?.ur?.trim();
+
+      if (!textToEmbed && q.questionData?.itemA) {
+        textToEmbed = q.questionData.itemA;
+      }
 
       if (textToEmbed) {
         try {
@@ -428,7 +456,6 @@ const addBulkQuestions = async (req, res) => {
         }
       }
 
-      // ❌ 4. STRICT CHECK: Agar vector nahi bana, to FAIL list me dalo
       if (!vector || vector.length === 0) {
         failedQuestions.push({
           index: i + 1,
@@ -438,7 +465,6 @@ const addBulkQuestions = async (req, res) => {
         continue;
       }
 
-      // Agar sab theek hai to add list mein dalo
       questionsToInsert.push({
         ...q,
         topics: assignedTopicIds,
@@ -448,25 +474,26 @@ const addBulkQuestions = async (req, res) => {
         difficulty: q.difficulty || "Medium",
         type: q.type || "MCQ",
         questionCategory: q.questionCategory || "TEXT",
-        vector_embedding: vector, // ✅ Saved
+        questionData: q.questionData, // ✅ Include Flexible Data in Bulk
+        vector_embedding: vector,
       });
     }
 
-    // Database Insert (Sirf Successful wale)
     if (questionsToInsert.length > 0) {
       await Question.insertMany(questionsToInsert);
     }
 
-    // Response with Details
     res.status(201).json({
       message: `Processed. Success: ${questionsToInsert.length}, Failed: ${failedQuestions.length}`,
       successCount: questionsToInsert.length,
-      failedQuestions: failedQuestions, // Frontend ko batao kya add nahi hua
+      failedQuestions: failedQuestions,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+// ... Baki Delete Functions Same Rahenge (Unme change ki zaroorat nahi) ...
 
 const deleteQuestionsBulk = async (req, res) => {
   try {

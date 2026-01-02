@@ -6,9 +6,11 @@ import {
   FaBookOpen,
   FaGraduationCap,
   FaUsers,
-  FaSpinner,
-} from "react-icons/fa";
+} from "react-icons/fa"; // ❌ FaSpinner removed
 import "./Dashboard.css";
+
+// ✅ Import TMLoader
+import TMLoader from "../../../components/common/TMLoader/TMLoader";
 
 const Dashboard = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -28,8 +30,6 @@ const Dashboard = () => {
       try {
         const token = localStorage.getItem("token");
 
-        // Ensure you have an endpoint that returns exactly this structure
-        // Or you can map it manually if the API is different
         const { data } = await axios.get(`${BASE_URL}/api/admin/stats`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -45,12 +45,8 @@ const Dashboard = () => {
     fetchStats();
   }, []);
 
-  if (loading)
-    return (
-      <div className="dashboard-loading">
-        <FaSpinner className="icon-spin" />
-      </div>
-    );
+  // ✅ Updated Loader Logic
+  if (loading) return <TMLoader />;
 
   return (
     <div className="dashboard-wrapper p-4">

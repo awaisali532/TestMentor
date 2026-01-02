@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import {
   FaTimes,
-  FaSpinner,
   FaSave,
   FaShieldAlt,
   FaEye,
   FaEyeSlash,
-} from "react-icons/fa";
+} from "react-icons/fa"; // ❌ FaSpinner Removed
 import toast from "react-hot-toast";
 import "./AddEditUserModal.css";
+
+// ✅ Import TMLoader
+import TMLoader from "../../../../components/common/TMLoader/TMLoader";
 
 // Permission List (Only relevant for Admins)
 const PERMISSION_LIST = [
@@ -95,157 +97,157 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
   if (!show) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-container">
-        <div className="modal-header">
-          <h5 className="m-0 fw-bold text-main">
-            {editingUser ? "Edit User / Admin" : "Create New Admin"}
-          </h5>
-          <button className="btn-close-modal" onClick={onClose}>
-            <FaTimes />
-          </button>
-        </div>
+    <>
+      {/* ✅ Show TMLoader if saving */}
+      {loading && <TMLoader />}
 
-        <div className="modal-body custom-scrollbar">
-          {/* Name */}
-          <div className="mb-3">
-            <label>Full Name</label>
-            <input
-              type="text"
-              className="modal-input"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
+      <div className="modal-overlay">
+        <div className="modal-container">
+          <div className="modal-header">
+            <h5 className="m-0 fw-bold text-main">
+              {editingUser ? "Edit User / Admin" : "Create New Admin"}
+            </h5>
+            <button className="btn-close-modal" onClick={onClose}>
+              <FaTimes />
+            </button>
           </div>
 
-          {/* Email */}
-          <div className="mb-3">
-            <label>Email Address</label>
-            <input
-              type="email"
-              className="modal-input"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
-          </div>
-
-          {/* Role Selection */}
-          <div className="mb-3">
-            <label>Role</label>
-            <select
-              className="modal-input"
-              value={formData.role}
-              onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
-              }
-              disabled={!editingUser} // Lock to Admin when creating new
-            >
-              {/* If editing, allow changing role. If creating, force Admin. */}
-              {!editingUser ? (
-                <option value="admin">Admin (Staff)</option>
-              ) : (
-                <>
-                  <option value="user">User (Standard)</option>
-                  <option value="admin">Admin (Staff)</option>
-                </>
-              )}
-            </select>
-            {!editingUser && (
-              <small className="text-muted d-block mt-1">
-                * Only Admins can be created here. Regular users must sign up.
-              </small>
-            )}
-          </div>
-
-          {/* Permissions (Only for Admin Role) */}
-          {formData.role === "admin" && (
-            <div className="mb-4">
-              <label className="d-flex align-items-center gap-2 mb-2 text-accent">
-                <FaShieldAlt /> Assign Permissions
-              </label>
-              <div className="permissions-box">
-                {PERMISSION_LIST.map((perm) => (
-                  <div key={perm.id} className="permission-item">
-                    <input
-                      type="checkbox"
-                      id={perm.id}
-                      className="form-check-input custom-check"
-                      checked={formData.permissions.includes(perm.id)}
-                      onChange={() => togglePermission(perm.id)}
-                    />
-                    <label htmlFor={perm.id} className="perm-label">
-                      {perm.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Password */}
-          <div className="mb-4">
-            <label>
-              {editingUser ? "New Password (Optional)" : "Password"}
-            </label>
-            <div
-              style={{
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
+          <div className="modal-body custom-scrollbar">
+            {/* Name */}
+            <div className="mb-3">
+              <label>Full Name</label>
               <input
-                type={showPassword ? "text" : "password"}
+                type="text"
                 className="modal-input"
-                value={formData.password}
+                placeholder="Full Name"
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
+                  setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder={
-                  editingUser
-                    ? "Leave empty to keep current"
-                    : "Enter strong password"
-                }
-                style={{ paddingRight: "40px" }}
               />
-              <span
-                onClick={() => setShowPassword(!showPassword)}
+            </div>
+
+            {/* Email */}
+            <div className="mb-3">
+              <label>Email Address</label>
+              <input
+                type="email"
+                className="modal-input"
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Role Selection */}
+            <div className="mb-3">
+              <label>Role</label>
+              <select
+                className="modal-input"
+                value={formData.role}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
+                disabled={!editingUser} // Lock to Admin when creating new
+              >
+                {/* If editing, allow changing role. If creating, force Admin. */}
+                {!editingUser ? (
+                  <option value="admin">Admin (Staff)</option>
+                ) : (
+                  <>
+                    <option value="user">User (Standard)</option>
+                    <option value="admin">Admin (Staff)</option>
+                  </>
+                )}
+              </select>
+              {!editingUser && (
+                <small className="text-muted d-block mt-1">
+                  * Only Admins can be created here. Regular users must sign up.
+                </small>
+              )}
+            </div>
+
+            {/* Permissions (Only for Admin Role) */}
+            {formData.role === "admin" && (
+              <div className="mb-4">
+                <label className="d-flex align-items-center gap-2 mb-2 text-accent">
+                  <FaShieldAlt /> Assign Permissions
+                </label>
+                <div className="permissions-box">
+                  {PERMISSION_LIST.map((perm) => (
+                    <div key={perm.id} className="permission-item">
+                      <input
+                        type="checkbox"
+                        id={perm.id}
+                        className="form-check-input custom-check"
+                        checked={formData.permissions.includes(perm.id)}
+                        onChange={() => togglePermission(perm.id)}
+                      />
+                      <label htmlFor={perm.id} className="perm-label">
+                        {perm.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Password */}
+            <div className="mb-4">
+              <label>
+                {editingUser ? "New Password (Optional)" : "Password"}
+              </label>
+              <div
                 style={{
-                  position: "absolute",
-                  right: "10px",
-                  cursor: "pointer",
-                  color: "#6c757d",
-                  fontSize: "1.1rem",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
                 }}
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="modal-input"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  placeholder={
+                    editingUser
+                      ? "Leave empty to keep current"
+                      : "Enter strong password"
+                  }
+                  style={{ paddingRight: "40px" }}
+                />
+                <span
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    cursor: "pointer",
+                    color: "#6c757d",
+                    fontSize: "1.1rem",
+                  }}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <button
-            className="btn-save w-100"
-            onClick={handleSaveClick}
-            disabled={loading}
-          >
-            {loading ? (
-              <FaSpinner className="icon-spin" />
-            ) : (
-              <>
-                <FaSave className="me-2" />{" "}
-                {editingUser ? "Update User" : "Create Admin"}
-              </>
-            )}
-          </button>
+            <button
+              className="btn-save w-100"
+              onClick={handleSaveClick}
+              disabled={loading}
+            >
+              {/* Spinner Removed, Text remains */}
+              <FaSave className="me-2" />{" "}
+              {editingUser ? "Update User" : "Create Admin"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

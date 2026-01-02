@@ -118,7 +118,6 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
       ...formData,
       sections: [
         ...(formData.sections || []),
-        // Default 0 rakha hai, lkin validation submit pr rok degi
         {
           title: "",
           questionType: "SHORT",
@@ -138,7 +137,7 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     setIsDirty(true);
   };
 
-  // ✅ LOGIC UPDATE: Handle Inputs
+  // ✅ LOGIC UPDATE: Handle Inputs & MCQ Restriction
   const handleSectionChange = (index, field, value) => {
     const updated = [...formData.sections];
     let newVal = value;
@@ -152,27 +151,30 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
 
     updated[index][field] = newVal;
 
-    // Check 1: Attempt cannot be > Total
-    if (field === "toBeAttempted") {
-      const total = parseInt(updated[index].totalQuestions) || 0;
-      if (newVal > total) {
-        toast.error("Attempt cannot be more than Total Questions!");
-        updated[index][field] = total;
+    // ✅ MCQ LOGIC: If type is MCQ, Attempt must equal Total
+    if (updated[index].questionType === "MCQ") {
+      if (field === "totalQuestions") {
+        updated[index].toBeAttempted = newVal; // Auto sync
       }
-    }
-
-    // ✅ Check 2: Total Change Logic
-    if (field === "totalQuestions") {
-      const attempt = parseInt(updated[index].toBeAttempted) || 0;
-
-      // Case A: Agar Total kam kr dia Attempt se -> Attempt ko bhi kam kro
-      if (newVal < attempt) {
-        updated[index].toBeAttempted = newVal;
+      if (field === "questionType") {
+        // Jab type change ho kar MCQ bane, tab bhi sync kar do
+        updated[index].toBeAttempted = updated[index].totalQuestions;
+      }
+    } else {
+      // Normal Logic for other types
+      if (field === "toBeAttempted") {
+        const total = parseInt(updated[index].totalQuestions) || 0;
+        if (newVal > total) {
+          toast.error("Attempt cannot be more than Total Questions!");
+          updated[index][field] = total;
+        }
       }
 
-      // Case B: Agar Attempt 0 tha, aur Total barhaya -> Attempt ko Total k barabar kr do (User Ease)
-      if (attempt === 0 && newVal > 0) {
-        updated[index].toBeAttempted = newVal;
+      if (field === "totalQuestions") {
+        const attempt = parseInt(updated[index].toBeAttempted) || 0;
+        if (newVal < attempt) {
+          updated[index].toBeAttempted = newVal;
+        }
       }
     }
 
@@ -192,21 +194,18 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
       const total = parseInt(sec.totalQuestions);
       const attempt = parseInt(sec.toBeAttempted);
 
-      // Check 1: Total cannot be 0
-      if (total === 0) {
+      if (total === 0)
         return toast.error(`Section ${i + 1}: Total Questions cannot be 0!`);
-      }
-
-      // ✅ Check 2: Attempt cannot be 0
-      if (attempt === 0) {
+      if (attempt === 0)
         return toast.error(`Section ${i + 1}: 'To Attempt' cannot be 0!`);
-      }
-
-      // Check 3: Attempt > Total
-      if (attempt > total) {
+      if (attempt > total)
         return toast.error(
           `Section ${i + 1}: Attempt cannot be greater than Total!`
         );
+
+      // Strict Check for MCQ
+      if (sec.questionType === "MCQ" && total !== attempt) {
+        return toast.error(`Section ${i + 1} (MCQ): Attempt must match Total!`);
       }
     }
 
@@ -229,11 +228,9 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
-
       let responseData;
 
       if (initialData && initialData._id) {
-        // UPDATE
         const res = await axios.put(
           `${BASE_URL}/api/patterns/${initialData._id}`,
           payload,
@@ -246,7 +243,6 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
         );
         responseData = res.data;
       } else {
-        // CREATE
         const res = await axios.post(
           `${BASE_URL}/api/patterns`,
           payload,
@@ -260,7 +256,6 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
         responseData = res.data;
       }
 
-      // Fix for Response Structure (DataWrapper)
       if (onSuccess) {
         const cleanData = responseData.data || responseData;
         onSuccess(cleanData);
@@ -427,12 +422,22 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
                 </div>
                 <div className="pp-form-group">
                   <label className="pp-label">To Attempt</label>
+
+                  {/* ✅ DISABLE IF MCQ */}
                   <input
                     type="number"
-                    className="pp-input"
+                    className={`pp-input ${
+                      sec.questionType === "MCQ" ? "pp-disabled-input" : ""
+                    }`}
                     value={sec.toBeAttempted}
                     onChange={(e) =>
                       handleSectionChange(idx, "toBeAttempted", e.target.value)
+                    }
+                    readOnly={sec.questionType === "MCQ"} // ✅ Read Only Logic
+                    title={
+                      sec.questionType === "MCQ"
+                        ? "Auto-synced with Total for MCQs"
+                        : ""
                     }
                   />
                 </div>
@@ -501,7 +506,7 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
         onClose={() => setShowExitConfirm(false)}
         onConfirm={handleCleanupAndClose}
         title="Unsaved Changes"
-        message="You have unsaved changes in your form. Are you sure you want to discard them and exit?"
+        message="You have unsaved changes. Discard?"
         confirmText="Discard & Exit"
         cancelText="Keep Editing"
         isDanger={true}

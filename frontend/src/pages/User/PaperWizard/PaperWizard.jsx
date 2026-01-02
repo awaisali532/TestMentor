@@ -6,6 +6,10 @@ import { useTheme } from "../../../context/ThemeContext";
 // ✅ Custom Loader
 import TMLoader from "../../../components/common/TMLoader/TMLoader";
 
+// ✅ Date Picker Imports
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 // Child Components
 import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb";
 import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector.jsx";
@@ -31,23 +35,13 @@ const PaperWizard = () => {
     mode: null,
     autoSettings: null,
     examLabel: "",
-    examDate: "",
+    // ✅ Date object store karein (String nahi)
+    examDate: new Date(),
   };
 
   const [step, setStep] = useState(1);
   const [paperData, setPaperData] = useState(defaultPaperData);
   const [wizardLoading, setWizardLoading] = useState(false);
-
-  // --- 2. GET TODAY'S DATE (For Validation) ---
-  // Ye function aaj ki date nikalta hai YYYY-MM-DD format mein
-  const getMinDate = () => {
-    const today = new Date();
-    // Local Timezone adjustment taake date accurate rahe
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
 
   // --- 3. RESET LOGIC ---
   useEffect(() => {
@@ -55,7 +49,12 @@ const PaperWizard = () => {
       const savedStep = localStorage.getItem("pw_step");
       const savedData = localStorage.getItem("pw_data");
 
-      if (savedData) setPaperData(JSON.parse(savedData));
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        // Date string ko wapis Date object banayein
+        if (parsed.examDate) parsed.examDate = new Date(parsed.examDate);
+        setPaperData(parsed);
+      }
       if (savedStep) setStep(5);
     } else {
       localStorage.removeItem("pw_step");
@@ -118,6 +117,7 @@ const PaperWizard = () => {
   };
 
   const handleModeSelect = (mode, settings) => {
+    // ✅ Logic: Date yahan se pass ho rahi hai jo user ne upar select ki thi
     const finalData = { ...paperData, mode, autoSettings: settings };
     setPaperData(finalData);
 
@@ -127,7 +127,8 @@ const PaperWizard = () => {
         navigate("/user/manual-maker", { state: finalData });
       }, 1500);
     } else {
-      alert("Auto Gen Coming Soon");
+      // Auto logic baad me
+      alert("Auto Coming Soon");
     }
   };
 
@@ -224,15 +225,15 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* ✅ STEP 5: FINALIZATION */}
+        {/* ✅ STEP 5: FINALIZATION WITH REACT DATEPICKER */}
         {step === 5 && (
           <div className="fade-in">
             <div className="pw-final-card">
               <h4 className="pw-final-title">Final Details</h4>
 
-              <div className="row g-3">
+              <div className="row g-3 align-items-end">
                 {/* 1. Exam Label Input */}
-                <div className="col-md-7">
+                <div className="col-md-8">
                   <label className="pw-label">
                     Exam Title <span>(Optional)</span>
                   </label>
@@ -247,27 +248,33 @@ const PaperWizard = () => {
                   />
                 </div>
 
-                {/* 2. Exam Date Input */}
-                <div className="col-md-5">
+                {/* 2. React DatePicker Input */}
+                <div className="col-md-4">
                   <label className="pw-label">
-                    <FaCalendarAlt className="me-2" /> Exam Date
+                    <FaCalendarAlt className="me-2 text-accent" /> Exam Date
                   </label>
-                  <input
-                    type="date"
-                    className="pw-input"
-                    // ✅ THIS LINE DISABLES PAST DATES
-                    min={getMinDate()}
-                    value={paperData.examDate}
-                    onChange={(e) =>
-                      setPaperData({ ...paperData, examDate: e.target.value })
-                    }
-                  />
+                  <div className="pw-datepicker-container">
+                    <DatePicker
+                      selected={paperData.examDate}
+                      onChange={(date) =>
+                        setPaperData({ ...paperData, examDate: date })
+                      }
+                      minDate={new Date()} // Past dates disabled
+                      dateFormat="dd/MM/yyyy"
+                      className="pw-input date-input"
+                      placeholderText="Select Date"
+                      // Strict Locking
+                      onChangeRaw={(e) => e.preventDefault()}
+                      onKeyDown={(e) => e.preventDefault()}
+                      autoComplete="off"
+                    />
+                  </div>
                 </div>
               </div>
 
               <p className="pw-info-text">
-                Add these details to easily identify this paper later in "Saved
-                Papers".
+                This helps you identify the paper in your history. Date is
+                required.
               </p>
             </div>
 

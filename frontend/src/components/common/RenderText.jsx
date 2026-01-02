@@ -13,7 +13,13 @@ const RenderText = ({ text }) => {
       {parts.map((part, index) => {
         // Even Index = Normal Text (English or Urdu)
         if (index % 2 === 0) {
-          return <span key={index}>{part}</span>;
+          // ✅ UPDATE: dangerouslySetInnerHTML use karein taake <u> aur <b> tags work karein
+          return (
+            <span
+              key={index}
+              dangerouslySetInnerHTML={{ __html: part.replace(/\n/g, "<br/>") }}
+            />
+          );
         }
         // Odd Index = Math (Always Force LTR)
         else {
@@ -26,12 +32,11 @@ const RenderText = ({ text }) => {
               <span
                 key={index}
                 dangerouslySetInnerHTML={{ __html: html }}
-                // 👇 THIS CSS IS THE FIX FOR URDU MATH ISSUES
                 style={{
                   margin: "0 4px",
-                  direction: "ltr", // Force Left-to-Right
-                  unicodeBidi: "isolate", // Isolate it from Urdu text flow
-                  display: "inline-block", // Keeps it stable
+                  direction: "ltr",
+                  unicodeBidi: "isolate",
+                  display: "inline-block",
                 }}
               />
             );

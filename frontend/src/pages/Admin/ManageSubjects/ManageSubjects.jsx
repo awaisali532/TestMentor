@@ -3,7 +3,9 @@ import "./ManageSubjects.css";
 import ClassSection from "./ClassSection/ClassSection";
 import SubjectSection from "./SubjectSection/SubjectSection";
 import ChapterSection from "./ChapterSection/ChapterSection";
-import Swal from "sweetalert2";
+
+// ✅ Import Custom Modal (No Swal anymore)
+import ConfirmationModal from "../../../components/common/ConfirmationModal/ConfirmationModal";
 
 const ManageSubjects = () => {
   // --- MASTER STATE ---
@@ -12,26 +14,42 @@ const ManageSubjects = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  // --- MODAL STATE ---
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+  const [pendingAction, setPendingAction] = useState(null); // Store the action to run after confirm
+
   // --- NAVIGATION CONTROLLER ---
-  const safeNavigation = async (actionCallback) => {
+  const safeNavigation = (actionCallback) => {
     if (isEditing) {
-      const result = await Swal.fire({
+      // Agar editing ho rahi hai, to action ko store karein aur Modal kholien
+      setPendingAction(() => actionCallback);
+      setConfirmModal({
+        isOpen: true,
         title: "Unsaved Changes!",
-        text: "You are editing data. Do you want to discard changes and leave?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        confirmButtonText: "Yes, Leave",
-        cancelButtonText: "No, Stay",
-        background: "var(--card-bg)",
-        color: "var(--text-main)",
+        message:
+          "You are editing data. Do you want to discard changes and leave?",
       });
-      if (!result.isConfirmed) return;
-      setIsEditing(false);
+    } else {
+      // Agar editing nahi ho rahi, direct action chalayen
+      actionCallback();
     }
-    actionCallback();
   };
 
+  // --- HANDLE MODAL CONFIRM ---
+  const handleConfirmNavigation = () => {
+    setIsEditing(false); // Reset editing state
+    setConfirmModal({ ...confirmModal, isOpen: false }); // Close modal
+    if (pendingAction) {
+      pendingAction(); // Run the stored action (e.g., change step)
+    }
+    setPendingAction(null);
+  };
+
+  // --- HANDLERS ---
   const handleClassSelect = (cls) => {
     safeNavigation(() => {
       setSelectedClass(cls);
@@ -62,6 +80,18 @@ const ManageSubjects = () => {
 
   return (
     <div className="admin-wrapper p-4">
+      {/* ✅ Custom Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={handleConfirmNavigation}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Yes, Leave"
+        cancelText="No, Stay"
+        isDanger={true}
+      />
+
       <h3 className="fw-bold text-main mb-4">Subject Management</h3>
 
       <div className="accordion-container">
@@ -71,7 +101,7 @@ const ManageSubjects = () => {
           selectedClass={selectedClass}
           onSelect={handleClassSelect}
           onHeaderClick={() => handleHeaderClick(1)}
-          setIsEditing={setIsEditing}
+          setIsEditing={setIsEditing} // Pass setter to child
         />
 
         {/* --- STEP 2: SUBJECTS --- */}
