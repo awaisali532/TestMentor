@@ -2,7 +2,7 @@ const User = require("../models/user"); // Ensure filename matches your User mod
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
-
+const deleteFromCloudinary = require("../utils/cloudinaryHelper"); // ✅ Import Helper
 // --- HELPER: Convert Buffer to Data URI (For Images) ---
 const bufferToDataURI = (buffer, mimetype) => {
   const b64 = Buffer.from(buffer).toString("base64");
@@ -97,12 +97,35 @@ exports.deleteUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found." });
 
-    // Optional: Delete user's image/resume from Cloudinary before deleting user
-    // ... logic here if needed ...
+    console.log(`⚠️ Deleting User: ${user.email}`);
 
+    // 1. Delete Profile Image
+    if (user.image && user.image.includes("cloudinary")) {
+      await deleteFromCloudinary(user.image);
+    }
+
+    // 2. Delete Institute Logo
+    // Check karein ke institute object exist karta hai
+    if (
+      user.institute &&
+      user.institute.logo &&
+      user.institute.logo.includes("cloudinary")
+    ) {
+      await deleteFromCloudinary(user.institute.logo);
+    }
+
+    // 3. Delete Resume (Agar Admin hai)
+    if (user.resume && user.resume.includes("cloudinary")) {
+      await deleteFromCloudinary(user.resume);
+    }
+
+    // 4. Finally Delete User form DB
     await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted successfully." });
+
+    console.log("✅ User Deleted Successfully");
+    res.json({ message: "User and associated files deleted successfully." });
   } catch (error) {
+    console.error("Delete User Error:", error);
     res.status(500).json({ error: "Failed to delete user." });
   }
 };

@@ -36,6 +36,8 @@ export const SUBJECT_CATEGORIES = {
     { value: "EXERCISE", label: "Book Exercise Question" },
     { value: "NUMERICAL", label: "Numerical / Problem" },
     { value: "DIAGRAM", label: "Diagram Labeling" },
+    { value: "Examples", label: "Examples" },
+    { value: "REVIEW", label: "Review Questions" },
     { value: "CONCEPTUAL", label: "Conceptual / Side Box" },
   ],
 };

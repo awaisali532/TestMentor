@@ -173,11 +173,10 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
 
   // ✅ DYNAMIC VALIDATION LOGIC
   const isSingleValid =
-    newChapter.number.trim() !== "" &&
+    String(newChapter.number).trim() !== "" && // 👈 Fix: String() wrapper lagaya
     (isUrduSubject
-      ? newChapter.name.ur.trim() !== "" // Urdu Required
-      : newChapter.name.en.trim() !== ""); // English Required
-
+      ? newChapter.name.ur.trim() !== ""
+      : newChapter.name.en.trim() !== "");
   const isBulkValid = bulkJson.trim() !== "";
 
   if (!isExpanded) return null;

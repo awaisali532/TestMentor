@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     image: { type: String, default: "" },
-    resume: { type: String, default: "" }, // For Admins/Staff
+    resume: { type: String, default: "" },
 
     // --- Roles & Status ---
     role: {
@@ -26,7 +26,14 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
-    // --- NEW: Freemium Plan Logic ---
+    // --- ✅ NEW: Email Verification Fields ---
+    isVerified: { type: Boolean, default: false }, // Default false (Pending)
+    otp: { type: String }, // OTP store hoga
+    otpExpires: { type: Date }, // OTP ki expiry time
+    // ✅ NEW: Rate Limiting Fields
+    otpAttempts: { type: Number, default: 0 }, // Kitni baar OTP manga
+    blockUntil: { type: Date, default: null }, // Kab tak blocked hai
+    // --- Freemium Plan Logic ---
     planType: {
       type: String,
       enum: ["free", "paid"],
@@ -39,21 +46,21 @@ const userSchema = new mongoose.Schema(
       onlineTestsTaken: { type: Number, default: 0 },
     },
 
-    // Subscription Info (For Paid Users)
+    // Subscription Info
     subscription: {
       status: { type: Boolean, default: false },
       validUntil: { type: Date, default: null },
     },
 
-    // --- NEW: INSTITUTE SETTINGS (For Paper Header) ---
+    // --- INSTITUTE SETTINGS ---
     institute: {
       name: { type: String, default: "" },
       address: { type: String, default: "" },
       phone: { type: String, default: "" },
-      logo: { type: String, default: "" }, // Cloudinary URL
+      logo: { type: String, default: "" },
     },
 
-    // --- Site Settings (For Super Admin Only) ---
+    // --- Site Settings (Super Admin) ---
     businessInfo: {
       phone: { type: String, default: "+92 300 1234567" },
       officeAddress: { type: String, default: "Lahore, Pakistan" },

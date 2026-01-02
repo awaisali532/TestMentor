@@ -2,13 +2,16 @@ const Chapter = require("../models/chapter");
 const Subject = require("../models/subjectModel");
 const Topic = require("../models/topic");
 const Question = require("../models/question");
+const cloudinary = require("../config/cloudinary"); // ✅ Import Cloudinary
 
-// ✅ NEW FUNCTION: Get Chapters WITH Topics (For Paper Wizard)
+// ==========================================
+// 1. GET SYLLABUS (Chapters + Topics) - For Paper Wizard
+// ==========================================
 const getChaptersByFilter = async (req, res) => {
   try {
     const { className, subjectName } = req.query;
 
-    // 1. Find Subject ID first (Kyunke frontend se hum Name bhej rahe hain)
+    // 1. Find Subject ID
     const subject = await Subject.findOne({ className, subjectName });
 
     if (!subject) {
@@ -17,25 +20,19 @@ const getChaptersByFilter = async (req, res) => {
 
     // 2. Aggregate: Chapters + Topics
     const chapters = await Chapter.aggregate([
-      // Step A: Match Chapters for this Subject
       { $match: { subject: subject._id } },
-
-      // Step B: Sort Chapters (1, 2, 3...)
       { $sort: { chapterNumber: 1 } },
-
-      // Step C: Join with Topics Collection
       {
         $lookup: {
-          from: "topics", // DB collection name (plural)
-          localField: "_id", // Chapter ID
-          foreignField: "chapter", // Topic model mein field name
-          as: "topics", // Output array name
+          from: "topics",
+          localField: "_id",
+          foreignField: "chapter",
+          as: "topics",
         },
       },
     ]);
 
-    // 3. Javascript Sort for Topics (1.1, 1.2, 1.10 logic)
-    // MongoDB aggregation mein string numbers ko sort karna mushkil hota hai, isliye yahan kar rahe hain.
+    // 3. Sort Topics Numerically (1.1, 1.2, 1.10)
     chapters.forEach((chap) => {
       if (chap.topics && chap.topics.length > 0) {
         chap.topics.sort((a, b) =>
@@ -53,7 +50,9 @@ const getChaptersByFilter = async (req, res) => {
   }
 };
 
-// 1. ADD SINGLE CHAPTER (Old logic preserved)
+// ==========================================
+// 2. ADD CHAPTER (Single)
+// ==========================================
 const addChapter = async (req, res) => {
   try {
     const { subjectId, chapterNumber, name } = req.body;
@@ -99,7 +98,9 @@ const addChapter = async (req, res) => {
   }
 };
 
-// 2. GET CHAPTERS (Simple List)
+// ==========================================
+// 3. GET CHAPTERS (Simple List)
+// ==========================================
 const getChaptersBySubject = async (req, res) => {
   try {
     const { subjectId } = req.params;
@@ -113,7 +114,9 @@ const getChaptersBySubject = async (req, res) => {
   }
 };
 
-// 3. UPDATE CHAPTER
+// ==========================================
+// 4. UPDATE CHAPTER
+// ==========================================
 const updateChapter = async (req, res) => {
   try {
     const { chapterNumber, name } = req.body;
@@ -145,28 +148,50 @@ const updateChapter = async (req, res) => {
   }
 };
 
-// 4. DELETE CHAPTER
+// ==========================================
+// 5. DELETE CHAPTER (✅ Cascade Delete)
+// ==========================================
 const deleteChapter = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // 1. Check if Chapter exists
     const chapter = await Chapter.findById(id);
     if (!chapter) return res.status(404).json({ error: "Chapter not found" });
 
-    const topics = await Topic.find({ chapter: id });
-    const topicIds = topics.map((t) => t._id);
+    // 2. Find Questions to Clean up Images
+    const questions = await Question.find({ chapter: id });
 
-    await Question.deleteMany({ topic: { $in: topicIds } });
+    // 3. Delete Images from Cloudinary
+    const imageDeletePromises = questions
+      .filter((q) => q.image && q.image.public_id)
+      .map((q) => cloudinary.uploader.destroy(q.image.public_id));
+
+    await Promise.all(imageDeletePromises);
+
+    // 4. Delete Questions from DB
+    await Question.deleteMany({ chapter: id });
+
+    // 5. Delete Topics from DB
     await Topic.deleteMany({ chapter: id });
+
+    // 6. Finally Delete Chapter
     await Chapter.findByIdAndDelete(id);
 
-    res.json({ message: "Chapter and all its data deleted successfully" });
+    console.log(`[Cascade Delete] Chapter ${id} and all related data removed.`);
+
+    res.json({
+      message: "Chapter and all associated data deleted successfully",
+    });
   } catch (err) {
+    console.error("Delete Chapter Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// 5. BULK UPLOAD
+// ==========================================
+// 6. BULK UPLOAD
+// ==========================================
 const addBulkChapters = async (req, res) => {
   try {
     const { chapters } = req.body;
@@ -177,6 +202,7 @@ const addBulkChapters = async (req, res) => {
 
     const result = await Chapter.insertMany(chapters, { ordered: false });
 
+    // Add Default Topic for each new chapter
     if (result.length > 0) {
       const topicsPayload = result.map((ch) => ({
         chapter: ch._id,
@@ -195,11 +221,13 @@ const addBulkChapters = async (req, res) => {
       data: result,
     });
   } catch (error) {
+    // Handle Partial Duplicates
     if (error.writeErrors) {
       const isDuplicate = error.writeErrors.some((e) => e.code === 11000);
 
       if (isDuplicate) {
         const insertedDocs = error.insertedDocs || [];
+        // Add topics for successful ones
         if (insertedDocs.length > 0) {
           const topicsPayload = insertedDocs.map((ch) => ({
             chapter: ch._id,
@@ -234,5 +262,5 @@ module.exports = {
   getChaptersBySubject,
   updateChapter,
   deleteChapter,
-  getChaptersByFilter, // ✅ EXPORTED NEW FUNCTION
+  getChaptersByFilter,
 };

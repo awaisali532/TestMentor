@@ -25,6 +25,7 @@ import Subjects from "./pages/Subjects/Subjects";
 import SubjectDetails from "./pages/Subjects/SubjectDetails/SubjectDetails";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
 
 // Pages - Admin
 import Dashboard from "./pages/Admin/Dashboard/Dashboard";
@@ -87,6 +88,7 @@ const App = () => {
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
             </Route>
 
             {/* ADMIN ROUTES */}

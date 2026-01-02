@@ -9,7 +9,6 @@
   align-items: center;
   min-height: 100vh;
   background-color: var(--bg-body);
-  /* Adapts to theme */
   padding: 20px;
   transition: background-color 0.3s ease;
   padding-top: 100px;
@@ -62,11 +61,9 @@
   0% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(-10px);
   }
-
   100% {
     transform: translateY(0);
   }
@@ -77,7 +74,6 @@
   font-weight: 800;
   margin-bottom: 10px;
 }
-
 .left-panel p {
   font-size: 1rem;
   margin-bottom: 30px;
@@ -102,64 +98,80 @@
   margin-bottom: 30px;
 }
 
-/* --- 5. FORM INPUTS --- */
+/* --- 5. FORM INPUTS (Consolidated & Fixed) --- */
 .form-group {
   margin-bottom: 20px;
 }
 
+.input-group {
+  display: flex;
+  align-items: center;
+}
+
+/* Input Icon Box */
 .input-group-text {
   background-color: var(--pill-bg, #f8f9fa);
   border: 1px solid var(--border-color, #ced4da);
   color: var(--text-muted);
   border-right: none;
+  padding: 12px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
 }
 
+/* Input Field */
 .form-control {
   background-color: var(--pill-bg, #fff);
   border: 1px solid var(--border-color, #ced4da);
   color: var(--text-main);
   border-left: none;
-  padding: 12px;
+  padding: 8px;
+  flex: 1;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  outline: none;
 }
 
 .form-control:focus {
-  background-color: var(--pill-bg, #fff);
-  color: var(--text-main);
   border-color: #0ea5e9;
   box-shadow: none;
 }
 
-/* ✅ CRITICAL DARK MODE FIXES START HERE */
+/* ✅ CRITICAL DARK MODE INPUT FIXES */
 
-/* 1. Dark Mode Input Background & Text */
+/* 1. Dark Mode Backgrounds */
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .input-group-text {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: #fff !important;
 }
 
-/* 2. ✅ Fix Placeholder Color in Dark Mode */
+/* 2. Fix Placeholder */
 [data-theme="dark"] .form-control::placeholder {
   color: rgba(255, 255, 255, 0.4);
-  /* Light Gray */
   opacity: 1;
-  /* Fix for Firefox */
 }
 
-/* 3. ✅ Fix Helper Text (Small Text) in Dark Mode */
-[data-theme="dark"] .text-muted {
-  color: rgba(255, 255, 255, 0.5) !important;
-  /* Override Bootstrap's dark gray */
+/* 3. ✅ AUTOFILL HACK (Browser yellow/white background fix) */
+/* Light Mode Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #333 !important;
 }
 
-/* 4. Fix Radio Button Labels */
-[data-theme="dark"] .form-check-label {
-  color: #f8fafc;
+/* Dark Mode Autofill */
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover,
+[data-theme="dark"] input:-webkit-autofill:focus,
+[data-theme="dark"] input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1e293b inset !important; /* Matches Dark Card BG */
+  -webkit-text-fill-color: white !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
-
-/* ✅ END CRITICAL FIXES */
-
 
 /* --- 6. BUTTONS --- */
 .btn-auth {
@@ -177,6 +189,7 @@
   justify-content: center;
   gap: 10px;
   margin-top: 10px;
+  cursor: pointer;
 }
 
 .btn-auth:hover:not(:disabled) {
@@ -256,7 +269,6 @@
 .icon-spin {
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
   100% {
     transform: rotate(360deg);
@@ -271,42 +283,196 @@
     padding: 100px 15px 20px;
     align-items: flex-start;
   }
-
   .login-register-card {
     flex-direction: column;
     height: auto;
     border-radius: 20px;
   }
-
-  /* Left Panel - Image Moves Up & Shrinks */
   .left-panel {
     width: 100%;
     padding: 30px 20px;
     height: auto;
     border-radius: 20px 20px 0 0;
   }
-
   .left-panel .illustration {
     width: 120px;
-    /* ✅ Small image on mobile */
     margin-bottom: 15px;
   }
-
   .left-panel h2 {
     font-size: 1.5rem;
   }
-
   .left-panel p {
     display: none;
   }
-
   .right-panel {
     width: 100%;
     padding: 30px 20px;
   }
-
   .right-panel h2 {
     font-size: 1.5rem;
     margin-bottom: 20px;
+  }
+}
+
+/* --- MODERN OTP CONTAINER --- */
+.otp-modern-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Icon Styling */
+.otp-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(60, 168, 160, 0.1),
+    rgba(60, 168, 160, 0.2)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 0 20px rgba(60, 168, 160, 0.15);
+}
+
+.otp-main-icon {
+  font-size: 35px;
+  color: var(--primary-color);
+}
+
+/* Text Styling */
+.otp-text-content {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.otp-text-content h3 {
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.otp-text-content p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.highlight-email {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* --- 6 BOXES STYLING --- */
+.otp-inputs-wrapper {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.otp-box {
+  width: 45px;
+  height: 50px;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+}
+
+/* Focus Effect - Glow */
+.otp-box:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(60, 168, 160, 0.15);
+  transform: translateY(-2px);
+}
+
+/* --- FOOTER ACTIONS --- */
+.otp-footer {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.timer-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.btn-resend {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.btn-resend:hover {
+  text-decoration: underline;
+}
+
+.btn-back-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.btn-back-link:hover {
+  color: var(--text-main);
+}
+
+.divider {
+  width: 50%;
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 5px 0;
+}
+
+/* Animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 400px) {
+  .otp-inputs-wrapper {
+    gap: 6px;
+  }
+  .otp-box {
+    width: 40px;
+    height: 45px;
+    font-size: 1.2rem;
   }
 }

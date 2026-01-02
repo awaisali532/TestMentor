@@ -198,16 +198,30 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       const res = await axios.get(
         `${BASE_URL}/api/questions/topic/${filterTopicId}`
       );
-      setQuestions(
-        res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      );
+
+      // ✅ SORTING LOGIC ADDED HERE
+      const typePriority = { MCQ: 1, SHORT: 2, LONG: 3 };
+
+      const sortedData = res.data.sort((a, b) => {
+        // 1. Pehle Type ke hisaab se sort karo
+        const typeDiff =
+          (typePriority[a.type] || 99) - (typePriority[b.type] || 99);
+
+        // 2. Agar Type same hai, to 'createdAt' (Newest first) ke hisaab se sort karo
+        if (typeDiff === 0) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+
+        return typeDiff;
+      });
+
+      setQuestions(sortedData);
     } catch (err) {
       toast.error("Failed to load questions");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   // --- HANDLERS ---
   const handleStatementChange = (lang, val) => {
     setFormData({

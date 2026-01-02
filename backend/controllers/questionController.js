@@ -7,6 +7,12 @@ const fs = require("fs");
 // ✅ IMPORT VECTORIZER
 const { getEmbedding } = require("../utils/vectorizer");
 
+// ✅ HELPER: Special characters ko escape karne ka function (CRITICAL FOR LATEX)
+function escapeRegex(text) {
+  if (!text) return "";
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+
 // ==========================================
 // 1. GET ALL
 // ==========================================
@@ -139,7 +145,7 @@ const getQuestionsByFilter = async (req, res) => {
 };
 
 // ==========================================
-// 5. ADD QUESTION (SINGLE) - ✅ UPDATED FOR NEW FIELDS
+// 5. ADD QUESTION (SINGLE)
 // ==========================================
 const addQuestion = async (req, res) => {
   try {
@@ -156,65 +162,59 @@ const addQuestion = async (req, res) => {
       statement,
       options,
       questionCategory,
-      questionData, // ✅ NEW: Flexible Data (Pairs, Poetry, etc.)
+      questionData,
     } = req.body;
 
     if (!subjectId || subjectId === "undefined")
       return res.status(400).json({ error: "Subject ID missing." });
 
-    // --- PARSING JSON FIELDS ---
+    // --- PARSING JSON FIELDS SAFELY ---
     let parsedStatement = statement
       ? JSON.parse(statement)
       : { en: "", ur: "" };
     let parsedTopics = topics ? JSON.parse(topics) : [];
     let parsedOptions = options ? JSON.parse(options) : [];
     let parsedTags = boardTags ? JSON.parse(boardTags) : [];
-
-    // ✅ Handle New Flexible Data
     let parsedQData = {};
+
     if (questionData) {
       try {
         parsedQData = JSON.parse(questionData);
       } catch (e) {
-        parsedQData = {}; // Agar fail ho to empty object
+        parsedQData = {};
       }
     }
 
-    // 🛑 1. DUPLICATE CHECK (TEXT BASED)
-    // Check if English statement exists (Case Insensitive)
+    // 🛑 1. DUPLICATE CHECK (With Regex Escape)
     if (parsedStatement.en && parsedStatement.en.trim().length > 0) {
+      // ✅ FIXED: Escape special chars before creating RegExp
+      const safeText = escapeRegex(parsedStatement.en.trim());
+
       const existingQuestion = await Question.findOne({
         "statement.en": {
-          $regex: new RegExp(`^${parsedStatement.en.trim()}$`, "i"),
+          $regex: new RegExp(`^${safeText}$`, "i"),
         },
       });
 
       if (existingQuestion) {
         if (req.file && fs.existsSync(req.file.path))
           fs.unlinkSync(req.file.path);
-        return res
-          .status(400)
-          .json({
-            error: "Duplicate Question! This statement already exists.",
-          });
+        return res.status(400).json({
+          error: "Duplicate Question! This statement already exists.",
+        });
       }
     }
 
     // ✅ 2. SMART VECTOR GENERATION
     let vector = null;
-
-    // Agar normal statement hai to wahan se lo,
-    // Agar Pair of Words/Poetry hai to wahan se text banao vector ke liye
     let textToEmbed = parsedStatement.en?.trim() || parsedStatement.ur?.trim();
 
-    // Fallback for special categories (Agar statement khali hai)
     if (!textToEmbed && parsedQData) {
-      if (parsedQData.itemA) textToEmbed = parsedQData.itemA; // Pair of Words
-      else if (parsedQData.poetName?.en) textToEmbed = parsedQData.poetName.en; // Poetry
+      if (parsedQData.itemA) textToEmbed = parsedQData.itemA;
+      else if (parsedQData.poetName?.en) textToEmbed = parsedQData.poetName.en;
     }
 
     if (textToEmbed && textToEmbed.length > 0) {
-      console.log("Generating vector...");
       try {
         vector = await getEmbedding(textToEmbed);
       } catch (vecErr) {
@@ -222,7 +222,7 @@ const addQuestion = async (req, res) => {
       }
     }
 
-    // ❌ 3. STRICT CHECK
+    // ❌ 3. STRICT CHECK FOR VECTOR
     if (!vector || vector.length === 0) {
       if (req.file && fs.existsSync(req.file.path))
         fs.unlinkSync(req.file.path);
@@ -255,7 +255,7 @@ const addQuestion = async (req, res) => {
       boardTags: parsedTags,
       statement: parsedStatement,
       options: parsedOptions,
-      questionData: parsedQData, // ✅ Save New Data
+      questionData: parsedQData,
       image: imageData,
       vector_embedding: vector,
     });
@@ -269,7 +269,7 @@ const addQuestion = async (req, res) => {
 };
 
 // ==========================================
-// 6. UPDATE QUESTION - ✅ UPDATED
+// 6. UPDATE QUESTION
 // ==========================================
 const updateQuestion = async (req, res) => {
   try {
@@ -284,7 +284,7 @@ const updateQuestion = async (req, res) => {
       statement,
       options,
       questionCategory,
-      questionData, // ✅ NEW
+      questionData,
     } = req.body;
 
     const question = await Question.findById(id);
@@ -296,7 +296,7 @@ const updateQuestion = async (req, res) => {
       : question.statement;
     let parsedQData = questionData
       ? JSON.parse(questionData)
-      : question.questionData; // ✅ Parse New Data
+      : question.questionData;
 
     let updateData = {
       topics: topics ? JSON.parse(topics) : question.topics,
@@ -308,7 +308,7 @@ const updateQuestion = async (req, res) => {
       boardTags: boardTags ? JSON.parse(boardTags) : question.boardTags,
       statement: parsedStatement,
       options: options ? JSON.parse(options) : question.options,
-      questionData: parsedQData, // ✅ Update New Data
+      questionData: parsedQData,
     };
 
     // ✅ VECTOR UPDATE LOGIC
@@ -316,14 +316,9 @@ const updateQuestion = async (req, res) => {
     const newText = parsedStatement.en || parsedStatement.ur;
 
     if (newText && newText !== oldText) {
-      console.log("Statement changed, updating vector...");
       const newVector = await getEmbedding(newText);
       if (newVector && newVector.length > 0) {
         updateData.vector_embedding = newVector;
-      } else {
-        console.warn(
-          "New vector generation failed during update. Keeping old vector."
-        );
       }
     }
 
@@ -384,7 +379,7 @@ const getQuestionsByTopic = async (req, res) => {
 };
 
 // ==========================================
-// ✅ ADD BULK QUESTIONS - ✅ UPDATED
+// ✅ ADD BULK QUESTIONS (Fully Fixed)
 // ==========================================
 const addBulkQuestions = async (req, res) => {
   try {
@@ -405,6 +400,7 @@ const addBulkQuestions = async (req, res) => {
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
 
+      // 1. Topic Mapping
       let assignedTopicIds = [];
       if (q.topics && Array.isArray(q.topics)) {
         q.topics.forEach((num) => {
@@ -420,11 +416,14 @@ const addBulkQuestions = async (req, res) => {
         continue;
       }
 
-      // 🛑 2. DUPLICATE CHECK
+      // 🛑 2. DUPLICATE CHECK (Fixed Regex)
       if (q.statement && q.statement.en) {
+        // ✅ CRITICAL FIX: Escape special characters like $, ^, {
+        const safeText = escapeRegex(q.statement.en.trim());
+
         const existingQuestion = await Question.findOne({
           "statement.en": {
-            $regex: new RegExp(`^${q.statement.en.trim()}$`, "i"),
+            $regex: new RegExp(`^${safeText}$`, "i"),
           },
         });
 
@@ -440,7 +439,6 @@ const addBulkQuestions = async (req, res) => {
 
       // ✅ 3. SMART VECTOR GENERATION
       let vector = null;
-      // Normal text or Fallback to ItemA (Pair)
       let textToEmbed = q.statement?.en?.trim() || q.statement?.ur?.trim();
 
       if (!textToEmbed && q.questionData?.itemA) {
@@ -449,7 +447,6 @@ const addBulkQuestions = async (req, res) => {
 
       if (textToEmbed) {
         try {
-          console.log(`Generating vector for item ${i + 1}...`);
           vector = await getEmbedding(textToEmbed);
         } catch (vErr) {
           console.error(`Vector failed for item ${i + 1}:`, vErr);
@@ -465,6 +462,7 @@ const addBulkQuestions = async (req, res) => {
         continue;
       }
 
+      // 4. Push to Insert List
       questionsToInsert.push({
         ...q,
         topics: assignedTopicIds,
@@ -474,7 +472,7 @@ const addBulkQuestions = async (req, res) => {
         difficulty: q.difficulty || "Medium",
         type: q.type || "MCQ",
         questionCategory: q.questionCategory || "TEXT",
-        questionData: q.questionData, // ✅ Include Flexible Data in Bulk
+        questionData: q.questionData || {},
         vector_embedding: vector,
       });
     }
@@ -489,12 +487,14 @@ const addBulkQuestions = async (req, res) => {
       failedQuestions: failedQuestions,
     });
   } catch (err) {
+    console.error("Bulk Upload Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// ... Baki Delete Functions Same Rahenge (Unme change ki zaroorat nahi) ...
-
+// ==========================================
+// DELETE UTILITIES
+// ==========================================
 const deleteQuestionsBulk = async (req, res) => {
   try {
     const { ids } = req.body;
