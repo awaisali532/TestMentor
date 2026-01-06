@@ -1,136 +1,336 @@
+/* Wrapper to handle stacking context */
+.qm-footer-wrapper {
+  position: relative;
+  width: 100%;
+  background: white;
+  z-index: 1000; /* Ensure footer stays on top of content */
+}
+
+/* ✅ MAIN FOOTER BAR */
 .qm-footer {
-  /* Sticky Positioning Logic handled by Parent (QuestionMenu.css) 
-     Lekin yahan hum isay bottom pr fix dikhane k liye styling de rahe hain */
+  height: 70px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background-color: #fff;
+  position: relative;
+  z-index: 1002; /* Button bar sab se upar */
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+}
 
-  position: absolute; /* Parent relative hai, to ye bottom pr chipak jayega */
-  bottom: 0;
+/* ✅ SELECTED DRAWER (FIXED ISSUE) */
+.qm-selected-drawer {
+  position: absolute;
+  bottom: 70px; /* Footer ki height jitna upar */
   left: 0;
-  right: 0;
+  width: 100%;
+  max-height: 350px; /* Zayada height taake nazar aye */
+  background: white;
 
-  height: 80px; /* Thora bara kiya taake comfortable lage */
-  background: var(--pw-card-bg, #ffffff);
-  border-top: 1px solid var(--pw-border, #e2e8f0);
+  /* Styling borders & shadows */
+  border-top: 3px solid var(--u-accent, #2563eb); /* Blue Top Border */
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
 
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.2); /* Strong Shadow upwards */
+
+  display: flex;
+  flex-direction: column;
+
+  /* Animation */
+  transform-origin: bottom;
+  animation: slideUp Drawer 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  z-index: 1001; /* Footer (1002) se neeche, lekin content se upar */
+
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+@keyframes slideUpDrawer {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* --- DRAWER HEADER --- */
+.qm-drawer-header {
+  padding: 12px 20px;
+  background: #f0f9ff; /* Light Blue tint */
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 700;
+  color: #1e40af;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 30px;
-
-  /* Upwards Shadow for depth */
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
-  z-index: 50; /* List ke upar rahe */
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 }
 
-/* LEFT SIDE */
+.qm-close-drawer {
+  background: white;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.qm-close-drawer:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+/* --- DRAWER LIST --- */
+.qm-drawer-list {
+  padding: 10px;
+  overflow-y: auto;
+  max-height: 280px;
+  background-color: #fff;
+}
+
+.qm-drawer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9rem;
+  background: white;
+  transition: background 0.2s;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.qm-drawer-item:hover {
+  background-color: #f9fafb;
+}
+
+.qm-drawer-item:last-child {
+  border-bottom: none;
+}
+
+.qm-drawer-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #374151;
+  flex: 1;
+  overflow: hidden;
+}
+
+.qm-idx {
+  font-weight: 800;
+  color: var(--u-accent);
+  min-width: 25px;
+  background: #eff6ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.qm-text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+}
+
+.qm-remove-btn {
+  background: #fee2e2;
+  border: none;
+  color: #ef4444;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-left: 10px;
+  transition: 0.2s;
+}
+
+.qm-remove-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.qm-empty-msg {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-style: italic;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- FOOTER BUTTONS (Baki Same) --- */
 .qm-footer-left {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.qm-selection-info {
+.qm-counter-box {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
 }
 
-/* Progress Pill (0/5) */
-.progress-pill {
-  background: var(--pw-bg, #f1f5f9);
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-family: monospace;
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--pw-text, #333);
-  border: 1px solid var(--pw-border, #cbd5e1);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.qm-count {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--u-accent, #2563eb);
+  line-height: 1;
 }
 
-.progress-pill.success {
-  background: #d1fae5; /* Light Green */
-  color: #065f46;
-  border-color: #10b981;
+.qm-limit {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 500;
 }
 
-.progress-pill.error {
-  background: #fee2e2; /* Light Red */
-  color: #991b1b;
-  border-color: #ef4444;
-}
-
-.count-text {
-  color: var(--u-text-muted, #64748b);
-  font-size: 0.95rem;
-}
-.count-text strong {
-  color: var(--pw-accent, #3b82f6);
+.qm-label {
+  font-size: 0.7rem;
   font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.5px;
 }
 
-/* BUTTONS */
-.qm-footer-btn {
-  padding: 12px 24px;
+.qm-view-list-btn {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #2563eb;
+  padding: 6px 15px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.qm-view-list-btn:hover,
+.qm-view-list-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.qm-view-list-btn svg {
+  margin-right: 6px;
+}
+
+.qm-badge-mini {
+  background: #fbbf24;
+  color: #000;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 50%;
+  margin-left: 8px;
+  font-weight: 800;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Action Buttons */
+.qm-footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.qm-btn-auto {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  padding: 10px 15px;
   border-radius: 8px;
   font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s;
+}
+
+.qm-btn-auto:hover {
+  background: #e5e7eb;
+}
+
+.qm-btn-add {
+  background: linear-gradient(135deg, var(--u-accent, #2563eb), #1d4ed8);
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: all 0.2s ease;
-  border: none;
-  outline: none;
+  gap: 8px;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* Primary Button (Add) */
-.qm-footer-btn.primary {
-  background: #10b981; /* Success Green */
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-}
-.qm-footer-btn.primary:hover {
-  background: #059669;
+.qm-btn-add:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.5);
-}
-.qm-footer-btn.primary:active {
-  transform: translateY(0);
+  box-shadow: 0 8px 15px -3px rgba(37, 99, 235, 0.3);
 }
 
-/* Disabled Button */
-.qm-footer-btn.disabled {
-  background: var(--pw-bg-hover, #f1f5f9);
-  color: var(--u-text-muted, #94a3b8);
-  border: 1px solid var(--pw-border, #e2e8f0);
+.qm-btn-add:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
   cursor: not-allowed;
+  transform: none;
   box-shadow: none;
 }
 
-/* Outline Button (Auto Pick) */
-.qm-footer-btn.outline {
-  background: transparent;
-  border: 1px solid var(--pw-border, #cbd5e1);
-  color: var(--pw-text, #333);
-}
-.qm-footer-btn.outline:hover {
-  border-color: var(--pw-accent, #3b82f6);
-  color: var(--pw-accent, #3b82f6);
-  background: rgba(59, 130, 246, 0.05);
+.pulse {
+  animation: pulse-animation 2s infinite;
 }
 
-/* Mobile Responsive */
-@media (max-width: 600px) {
-  .qm-footer {
-    padding: 0 15px;
-    height: 70px;
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
   }
-  .hide-mobile {
+  70% {
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .btn-text {
     display: none;
   }
-  .count-text {
-    display: none; /* Mobile pr text chupa do, sirf 4/5 dikhao */
+  .qm-footer {
+    padding: 0 10px;
+  }
+  .qm-label {
+    display: none;
+  }
+
+  .qm-view-list-btn span.ms-2 {
+    display: none; /* Hide 'View Selected' text on mobile, only badge & icon */
   }
 }

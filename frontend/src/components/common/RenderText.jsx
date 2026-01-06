@@ -5,28 +5,38 @@ import "katex/dist/katex.min.css";
 const RenderText = ({ text }) => {
   if (!text) return null;
 
+  // Safety: Ensure text is a string
+  const safeText = String(text);
+
   // Split text by $ to separate English/Urdu from Math
-  const parts = text.split("$");
+  const parts = safeText.split("$");
 
   return (
     <span>
       {parts.map((part, index) => {
-        // Even Index = Normal Text (English or Urdu)
+        // --- Even Index = Normal Text (English or Urdu) ---
         if (index % 2 === 0) {
-          // ✅ UPDATE: dangerouslySetInnerHTML use karein taake <u> aur <b> tags work karein
+          // ✅ Detect Urdu Characters (Unicode Range)
+          const isUrdu = /[\u0600-\u06FF]/.test(part);
+
           return (
             <span
               key={index}
+              // ✅ Agar Urdu hai to RTL lagao, CSS font khud utha legi
+              dir={isUrdu ? "rtl" : "ltr"}
+              className={isUrdu ? "urdu-font" : ""}
               dangerouslySetInnerHTML={{ __html: part.replace(/\n/g, "<br/>") }}
             />
           );
         }
-        // Odd Index = Math (Always Force LTR)
+
+        // --- Odd Index = Math (Always Force LTR) ---
         else {
           try {
             const html = katex.renderToString(part, {
               throwOnError: false,
               displayMode: false,
+              strict: false, // ✅ Warning Suppressed
             });
             return (
               <span

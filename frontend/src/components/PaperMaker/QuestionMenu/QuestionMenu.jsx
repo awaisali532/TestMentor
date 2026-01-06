@@ -301,6 +301,9 @@ const QuestionMenu = ({
             onAdd={handleConfirmAdd}
             onAutoSelect={handleAutoSelect}
             isChanged={isSelectionChanged} // ✅ Ab ye sahi True/False bhejega
+            selectedQuestions={tempSelected} // List bheji
+            onRemove={handleToggleSelect} // Remove karne k liye wahi toggle function
+            activeTab={activeTab} // Sirf current tab k items dikhane k liye
           />
         </div>
       </div>

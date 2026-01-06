@@ -7,7 +7,8 @@
 /* A. Global Constants (Colors that don't change based on theme) */
 :root {
   --font-main: "Inter", sans-serif;
-
+  --font-urdu: "Noto Nastaliq Urdu", serif;
+  --font-english: "Inter", system-ui, sans-serif;
   /* Brand Static Colors */
   --primary-color: #3ca8a0;
   --primary-color-dark: #135f5a;
@@ -15,7 +16,27 @@
   --icon-color: #3076ce;
   --danger-color: #dc3545;
 }
+/* 2. Global Rule: Jahan bhi RTL ho, wahan Urdu Font lagao */
+[dir="rtl"],
+.urdu-font,
+.pp-text-ur,
+.opt-ur,
+.qc-split-right {
+  font-family: var(--font-urdu) !important;
+  line-height: 2 !important; /* Urdu ko thori height chahiye hoti hai */
+  padding-top: 5px;
+}
 
+/* 3. ✅ PRINT FIX: Print karte waqt bhi font force karein */
+@media print {
+  [dir="rtl"],
+  .urdu-font,
+  .pp-text-ur {
+    font-family: var(--font-urdu) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
 /* B. Dark Mode (Default) */
 :root,
 [data-theme="dark"] {
