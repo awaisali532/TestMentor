@@ -1,6 +1,6 @@
 import React from "react";
 // ✅ IMPORT FROM COMMON (Path check kr lena apne folder structure k hisab se)
-import RenderText from "../../../../common/RenderText";
+import RenderText from "../../../../../components/common/RenderText";
 import "./QuestionCard.css";
 
 const QuestionCard = ({ question, index, isSelected, onToggle }) => {
@@ -37,6 +37,17 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
             </div>
           )}
         </div>
+
+        {/* ✅ IMAGE DISPLAY LOGIC ADDED HERE */}
+        {question.image && question.image.url && (
+          <div className="qc-image-container">
+            <img
+              src={question.image.url}
+              alt="Question Diagram"
+              className="qc-image"
+            />
+          </div>
+        )}
 
         {/* --- MCQ OPTIONS GRID --- */}
         {question.type === "MCQ" &&

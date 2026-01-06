@@ -5,10 +5,10 @@ const { protect, hasPermission } = require("../middleware/authMiddleware");
 
 // Import Controllers
 const {
-  getAllQuestions, // Admin List
-  getMenuQuestions, // NEW: User/Frontend Menu
-  getQuestionFilters, // NEW: Metadata
-  getQuestionsByFilter, // Wizard Logic
+  getAllQuestions,
+  getMenuQuestions,
+  getQuestionFilters,
+  getQuestionsByFilter,
   addQuestion,
   updateQuestion,
   deleteQuestion,
@@ -29,7 +29,6 @@ router.use(protect);
 router.get("/filters", getQuestionFilters);
 
 // 2. NEW ROUTE: Fetch Data for User Menu (Flexible/Editable)
-// Use this endpoint in your React "QuestionMenu" component
 router.get("/menu-data", getMenuQuestions);
 
 // 3. Fetch Questions based on Filters (Wizard: ?grade=X&subject=Y)

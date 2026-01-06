@@ -393,3 +393,33 @@
   background-color: #b91c1c;
   color: white;
 }
+
+/* Vertical Wrapper for Short/Long Questions */
+.pp-vertical-block {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 8px; /* Thora gap har sawal ke baad */
+  position: relative;
+}
+.pp-image-container {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.pp-image {
+  max-width: 80%; /* Don't take full width on paper */
+  max-height: 80px;
+  object-fit: contain;
+  border: 1px solid #ddd;
+}
+
+@media print {
+  .pp-image {
+    max-width: 60%; /* Smaller on print to save ink/space */
+    max-height: 80px;
+    border: none;
+  }
+}

@@ -2,16 +2,39 @@ const Question = require("../models/question");
 const Topic = require("../models/topic");
 const Subject = require("../models/subjectModel");
 const cloudinary = require("../config/cloudinary");
-const fs = require("fs");
 
 // ✅ IMPORT VECTORIZER
 const { getEmbedding } = require("../utils/vectorizer");
 
-// ✅ HELPER: Special characters ko escape karne ka function (CRITICAL FOR LATEX)
+// ✅ HELPER: Regex Escape
 function escapeRegex(text) {
   if (!text) return "";
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 }
+
+// ✅ HELPER: Safe JSON Parse
+const safeParse = (data, fallback) => {
+  if (!data) return fallback;
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return fallback;
+  }
+};
+
+// ✅ HELPER: Upload Buffer to Cloudinary
+const uploadToCloudinary = async (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: "questions_images" },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
 
 // ==========================================
 // 1. GET ALL
@@ -51,7 +74,6 @@ const getMenuQuestions = async (req, res) => {
       data: formattedQuestions,
     });
   } catch (err) {
-    console.error("Menu Error:", err);
     res.status(500).json({ error: "Failed to fetch menu questions" });
   }
 };
@@ -63,14 +85,8 @@ const getQuestionFilters = async (req, res) => {
   try {
     const categories = Question.schema.path("questionCategory").enumValues;
     const difficulties = Question.schema.path("difficulty").enumValues;
-
-    res.status(200).json({
-      success: true,
-      categories,
-      difficulties,
-    });
+    res.status(200).json({ success: true, categories, difficulties });
   } catch (error) {
-    console.error("Metadata Error:", error);
     res.status(500).json({ success: false, error: "Failed to fetch filters" });
   }
 };
@@ -81,50 +97,34 @@ const getQuestionFilters = async (req, res) => {
 const getQuestionsByFilter = async (req, res) => {
   try {
     const { grade, subject, type } = req.query;
-
     const rawCategory = req.query.category || req.query["category[]"];
     const rawDifficulty = req.query.difficulty || req.query["difficulty[]"];
     const rawTopics = req.query.topics || req.query["topics[]"];
 
-    if (!grade || !subject) {
+    if (!grade || !subject)
       return res.status(400).json({ error: "Grade and Subject are required" });
-    }
 
     const subjectDoc = await Subject.findOne({
       className: grade,
       subjectName: subject,
     });
-
-    if (!subjectDoc) {
+    if (!subjectDoc)
       return res.status(404).json({ error: "Subject not found" });
-    }
 
     let query = { subject: subjectDoc._id };
+    if (type && type !== "ALL") query.type = type;
 
-    if (type && type !== "ALL") {
-      query.type = type;
-    }
-
-    const normalizeArray = (val) => {
-      if (!val) return [];
-      if (Array.isArray(val)) return val;
-      return [val];
-    };
+    const normalizeArray = (val) =>
+      !val ? [] : Array.isArray(val) ? val : [val];
 
     const catArray = normalizeArray(rawCategory);
-    if (catArray.length > 0) {
-      query.questionCategory = { $in: catArray };
-    }
+    if (catArray.length > 0) query.questionCategory = { $in: catArray };
 
     const diffArray = normalizeArray(rawDifficulty);
-    if (diffArray.length > 0) {
-      query.difficulty = { $in: diffArray };
-    }
+    if (diffArray.length > 0) query.difficulty = { $in: diffArray };
 
     const topicArray = normalizeArray(rawTopics);
-    if (topicArray.length > 0) {
-      query.topics = { $in: topicArray };
-    }
+    if (topicArray.length > 0) query.topics = { $in: topicArray };
 
     const questions = await Question.find(query)
       .populate("topics", "name topicNumber")
@@ -136,10 +136,8 @@ const getQuestionsByFilter = async (req, res) => {
       ...q,
       menuContext: "filter_api",
     }));
-
     res.status(200).json(formattedQuestions);
   } catch (err) {
-    console.error("❌ Filter Error:", err);
     res.status(500).json({ error: "Failed to fetch questions" });
   }
 };
@@ -168,44 +166,28 @@ const addQuestion = async (req, res) => {
     if (!subjectId || subjectId === "undefined")
       return res.status(400).json({ error: "Subject ID missing." });
 
-    // --- PARSING JSON FIELDS SAFELY ---
-    let parsedStatement = statement
-      ? JSON.parse(statement)
-      : { en: "", ur: "" };
-    let parsedTopics = topics ? JSON.parse(topics) : [];
-    let parsedOptions = options ? JSON.parse(options) : [];
-    let parsedTags = boardTags ? JSON.parse(boardTags) : [];
-    let parsedQData = {};
+    // SAFE PARSING
+    let parsedStatement = safeParse(statement, { en: "", ur: "" });
+    let parsedTopics = safeParse(topics, []);
+    let parsedOptions = safeParse(options, []);
+    let parsedTags = safeParse(boardTags, []);
+    let parsedQData = safeParse(questionData, {});
 
-    if (questionData) {
-      try {
-        parsedQData = JSON.parse(questionData);
-      } catch (e) {
-        parsedQData = {};
-      }
-    }
-
-    // 🛑 1. DUPLICATE CHECK (With Regex Escape)
+    // DUPLICATE CHECK
     if (parsedStatement.en && parsedStatement.en.trim().length > 0) {
-      // ✅ FIXED: Escape special chars before creating RegExp
       const safeText = escapeRegex(parsedStatement.en.trim());
-
       const existingQuestion = await Question.findOne({
-        "statement.en": {
-          $regex: new RegExp(`^${safeText}$`, "i"),
-        },
+        "statement.en": { $regex: new RegExp(`^${safeText}$`, "i") },
       });
 
       if (existingQuestion) {
-        if (req.file && fs.existsSync(req.file.path))
-          fs.unlinkSync(req.file.path);
         return res.status(400).json({
           error: "Duplicate Question! This statement already exists.",
         });
       }
     }
 
-    // ✅ 2. SMART VECTOR GENERATION
+    // VECTOR GENERATION
     let vector = null;
     let textToEmbed = parsedStatement.en?.trim() || parsedStatement.ur?.trim();
 
@@ -222,26 +204,24 @@ const addQuestion = async (req, res) => {
       }
     }
 
-    // ❌ 3. STRICT CHECK FOR VECTOR
     if (!vector || vector.length === 0) {
-      if (req.file && fs.existsSync(req.file.path))
-        fs.unlinkSync(req.file.path);
-      return res.status(500).json({
-        error: "Vector generation failed! Question NOT saved. Try again.",
-      });
+      return res
+        .status(500)
+        .json({ error: "Vector generation failed! Question NOT saved." });
     }
 
-    // Image Upload
+    // IMAGE UPLOAD (BUFFER)
     let imageData = null;
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "questions_images",
-      });
-      imageData = { url: result.secure_url, public_id: result.public_id };
-      fs.unlinkSync(req.file.path);
+      try {
+        const result = await uploadToCloudinary(req.file.buffer);
+        imageData = { url: result.secure_url, public_id: result.public_id };
+      } catch (uploadError) {
+        console.error("Image Upload Failed:", uploadError);
+        return res.status(500).json({ error: "Image upload failed" });
+      }
     }
 
-    // Create Object
     const newQuestion = new Question({
       topics: parsedTopics,
       chapter: chapterId,
@@ -263,17 +243,22 @@ const addQuestion = async (req, res) => {
     await newQuestion.save();
     res.status(201).json(newQuestion);
   } catch (err) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    console.error("Add Question Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // ==========================================
-// 6. UPDATE QUESTION
+// 6. UPDATE QUESTION (✅ Updated with Remove Image Logic)
 // ==========================================
 const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const question = await Question.findById(id);
+    if (!question) return res.status(404).json({ error: "Not found" });
+
+    // Destructure body
     const {
       topics,
       type,
@@ -285,55 +270,88 @@ const updateQuestion = async (req, res) => {
       options,
       questionCategory,
       questionData,
+      removeImage, // ✅ Capture this flag from frontend
     } = req.body;
 
-    const question = await Question.findById(id);
-    if (!question) return res.status(404).json({ error: "Not found" });
-
-    // Parse Data
+    // SAFE PARSING
     let parsedStatement = statement
-      ? JSON.parse(statement)
+      ? safeParse(statement, question.statement)
       : question.statement;
     let parsedQData = questionData
-      ? JSON.parse(questionData)
+      ? safeParse(questionData, question.questionData)
       : question.questionData;
+    let parsedTopics = topics
+      ? safeParse(topics, question.topics)
+      : question.topics;
+    let parsedTags = boardTags
+      ? safeParse(boardTags, question.boardTags)
+      : question.boardTags;
+    let parsedOptions = options
+      ? safeParse(options, question.options)
+      : question.options;
 
     let updateData = {
-      topics: topics ? JSON.parse(topics) : question.topics,
+      topics: parsedTopics,
       type,
       difficulty,
       marks,
       questionCategory,
       important: important === "true",
-      boardTags: boardTags ? JSON.parse(boardTags) : question.boardTags,
+      boardTags: parsedTags,
       statement: parsedStatement,
-      options: options ? JSON.parse(options) : question.options,
+      options: parsedOptions,
       questionData: parsedQData,
     };
 
-    // ✅ VECTOR UPDATE LOGIC
+    // VECTOR UPDATE
     const oldText = question.statement.en || question.statement.ur;
     const newText = parsedStatement.en || parsedStatement.ur;
 
     if (newText && newText !== oldText) {
-      const newVector = await getEmbedding(newText);
-      if (newVector && newVector.length > 0) {
-        updateData.vector_embedding = newVector;
+      try {
+        const newVector = await getEmbedding(newText);
+        if (newVector && newVector.length > 0) {
+          updateData.vector_embedding = newVector;
+        }
+      } catch (vectorError) {
+        console.error("Vector Update Failed (Ignored):", vectorError.message);
       }
     }
 
+    // ✅ IMAGE UPDATE LOGIC
     if (req.file) {
+      // Case A: New Image Uploaded
+      // 1. Delete Old Image
       if (question.image && question.image.public_id) {
-        await cloudinary.uploader.destroy(question.image.public_id);
+        try {
+          await cloudinary.uploader.destroy(question.image.public_id);
+        } catch (cloudErr) {
+          console.error("Cloudinary Delete Error:", cloudErr);
+        }
       }
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "questions_images",
-      });
-      updateData.image = {
-        url: result.secure_url,
-        public_id: result.public_id,
-      };
-      fs.unlinkSync(req.file.path);
+
+      // 2. Upload New Image
+      try {
+        const result = await uploadToCloudinary(req.file.buffer);
+        updateData.image = {
+          url: result.secure_url,
+          public_id: result.public_id,
+        };
+      } catch (uploadError) {
+        return res
+          .status(500)
+          .json({ error: "Image upload failed during update" });
+      }
+    } else if (removeImage === "true") {
+      // ✅ Case B: User clicked "X" (Remove Image)
+      if (question.image && question.image.public_id) {
+        try {
+          await cloudinary.uploader.destroy(question.image.public_id);
+        } catch (cloudErr) {
+          console.error("Cloudinary Remove Error:", cloudErr);
+        }
+      }
+      updateData.image = null; // Set to null in DB
     }
 
     const updatedQ = await Question.findByIdAndUpdate(id, updateData, {
@@ -341,8 +359,8 @@ const updateQuestion = async (req, res) => {
     });
     res.json(updatedQ);
   } catch (err) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ error: err.message });
+    console.error("Update Error:", err);
+    res.status(500).json({ error: "Update failed: " + err.message });
   }
 };
 
@@ -379,7 +397,7 @@ const getQuestionsByTopic = async (req, res) => {
 };
 
 // ==========================================
-// ✅ ADD BULK QUESTIONS (Fully Fixed)
+// 8. ADD BULK QUESTIONS
 // ==========================================
 const addBulkQuestions = async (req, res) => {
   try {
@@ -399,8 +417,6 @@ const addBulkQuestions = async (req, res) => {
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-
-      // 1. Topic Mapping
       let assignedTopicIds = [];
       if (q.topics && Array.isArray(q.topics)) {
         q.topics.forEach((num) => {
@@ -416,40 +432,31 @@ const addBulkQuestions = async (req, res) => {
         continue;
       }
 
-      // 🛑 2. DUPLICATE CHECK (Fixed Regex)
       if (q.statement && q.statement.en) {
-        // ✅ CRITICAL FIX: Escape special characters like $, ^, {
         const safeText = escapeRegex(q.statement.en.trim());
-
         const existingQuestion = await Question.findOne({
-          "statement.en": {
-            $regex: new RegExp(`^${safeText}$`, "i"),
-          },
+          "statement.en": { $regex: new RegExp(`^${safeText}$`, "i") },
         });
-
         if (existingQuestion) {
           failedQuestions.push({
             index: i + 1,
             statement: q.statement.en,
-            reason: "Duplicate: Question already exists in DB.",
+            reason: "Duplicate",
           });
           continue;
         }
       }
 
-      // ✅ 3. SMART VECTOR GENERATION
       let vector = null;
       let textToEmbed = q.statement?.en?.trim() || q.statement?.ur?.trim();
-
-      if (!textToEmbed && q.questionData?.itemA) {
+      if (!textToEmbed && q.questionData?.itemA)
         textToEmbed = q.questionData.itemA;
-      }
 
       if (textToEmbed) {
         try {
           vector = await getEmbedding(textToEmbed);
         } catch (vErr) {
-          console.error(`Vector failed for item ${i + 1}:`, vErr);
+          console.error(vErr);
         }
       }
 
@@ -457,18 +464,17 @@ const addBulkQuestions = async (req, res) => {
         failedQuestions.push({
           index: i + 1,
           statement: q.statement?.en,
-          reason: "Vector Generation Failed",
+          reason: "Vector Gen Failed",
         });
         continue;
       }
 
-      // 4. Push to Insert List
       questionsToInsert.push({
         ...q,
         topics: assignedTopicIds,
         chapter: chapterId,
         subject: subjectId,
-        classLevel: classLevel,
+        classLevel,
         difficulty: q.difficulty || "Medium",
         type: q.type || "MCQ",
         questionCategory: q.questionCategory || "TEXT",
@@ -477,9 +483,8 @@ const addBulkQuestions = async (req, res) => {
       });
     }
 
-    if (questionsToInsert.length > 0) {
+    if (questionsToInsert.length > 0)
       await Question.insertMany(questionsToInsert);
-    }
 
     res.status(201).json({
       message: `Processed. Success: ${questionsToInsert.length}, Failed: ${failedQuestions.length}`,
@@ -487,14 +492,10 @@ const addBulkQuestions = async (req, res) => {
       failedQuestions: failedQuestions,
     });
   } catch (err) {
-    console.error("Bulk Upload Error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// ==========================================
-// DELETE UTILITIES
-// ==========================================
 const deleteQuestionsBulk = async (req, res) => {
   try {
     const { ids } = req.body;
@@ -508,7 +509,7 @@ const deleteQuestionsBulk = async (req, res) => {
     }
 
     await Question.deleteMany({ _id: { $in: ids } });
-    res.json({ message: "Selected questions deleted successfully" });
+    res.json({ message: "Deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -13,6 +13,7 @@ import {
   FaTimes,
   FaBold,
   FaUnderline,
+  FaImage,
 } from "react-icons/fa";
 
 // Imports
@@ -27,7 +28,7 @@ import {
   shouldShowStatementBox,
 } from "../../../../config/SubjectConfig";
 
-// ✅ HELPER COMPONENT: Rich Text Editor (For Underline/Bold)
+// HELPER: Rich Text Editor
 const TextEditor = ({
   value,
   onChange,
@@ -35,32 +36,23 @@ const TextEditor = ({
   isUrdu = false,
   rows = 2,
 }) => {
-  // Function to wrap selected text in tags <b> or <u>
   const insertTag = (tag) => {
     const inputId = `editor-${placeholder.replace(/\s/g, "")}-${
       isUrdu ? "ur" : "en"
     }`;
     const textarea = document.getElementById(inputId);
-
     if (!textarea) return;
-
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-
-    if (start === end) return; // Kuch select nahi kiya to wapis jao
-
+    if (start === end) return;
     const selectedText = value.substring(start, end);
     const before = value.substring(0, start);
     const after = value.substring(end);
-
-    // Naya text banao tags k sath
-    const newText = `${before}<${tag}>${selectedText}</${tag}>${after}`;
-    onChange(newText);
+    onChange(`${before}<${tag}>${selectedText}</${tag}>${after}`);
   };
 
   return (
     <div className="mb-2">
-      {/* Tiny Toolbar */}
       <div className="text-toolbar">
         <button
           type="button"
@@ -79,7 +71,6 @@ const TextEditor = ({
           <FaUnderline size={12} />
         </button>
       </div>
-
       <textarea
         id={`editor-${placeholder.replace(/\s/g, "")}-${isUrdu ? "ur" : "en"}`}
         className={`form-control custom-input ${isUrdu ? "urdu-font" : ""}`}
@@ -101,20 +92,19 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const [topics, setTopics] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [filterTopicId, setFilterTopicId] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mode, setMode] = useState("single");
   const [editingId, setEditingId] = useState(null);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
-
-  // Modal State
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     type: null,
     id: null,
   });
 
-  // CHECK IF SUBJECT IS URDU BASED
+  // NEW: Image Logic
+  const [removeImageFlag, setRemoveImageFlag] = useState(false);
+
   const isUrduSubject = [
     "Urdu",
     "Islamiyat",
@@ -134,11 +124,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     important: false,
     boardTags: "",
     statement: { en: "", ur: "" },
-    questionData: {
-      poetName: { en: "", ur: "" },
-      itemA: "",
-      itemB: "",
-    },
+    questionData: { poetName: { en: "", ur: "" }, itemA: "", itemB: "" },
     options: [
       { en: "", ur: "", isCorrect: true },
       { en: "", ur: "", isCorrect: false },
@@ -149,6 +135,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
   const [formData, setFormData] = useState(initialFormState);
   const [imageFile, setImageFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   // INITIAL LOAD
   useEffect(() => {
@@ -198,23 +185,14 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       const res = await axios.get(
         `${BASE_URL}/api/questions/topic/${filterTopicId}`
       );
-
-      // ✅ SORTING LOGIC ADDED HERE
       const typePriority = { MCQ: 1, SHORT: 2, LONG: 3 };
-
       const sortedData = res.data.sort((a, b) => {
-        // 1. Pehle Type ke hisaab se sort karo
         const typeDiff =
           (typePriority[a.type] || 99) - (typePriority[b.type] || 99);
-
-        // 2. Agar Type same hai, to 'createdAt' (Newest first) ke hisaab se sort karo
-        if (typeDiff === 0) {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
-
-        return typeDiff;
+        return typeDiff === 0
+          ? new Date(b.createdAt) - new Date(a.createdAt)
+          : typeDiff;
       });
-
       setQuestions(sortedData);
     } catch (err) {
       toast.error("Failed to load questions");
@@ -222,13 +200,13 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       setIsSubmitting(false);
     }
   };
+
   // --- HANDLERS ---
-  const handleStatementChange = (lang, val) => {
+  const handleStatementChange = (lang, val) =>
     setFormData({
       ...formData,
       statement: { ...formData.statement, [lang]: val },
     });
-  };
 
   const handleQDataChange = (field, val, lang = null) => {
     setFormData((prev) => {
@@ -256,42 +234,68 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const toggleTopicSelection = (topicId) => {
     setFormData((prev) => {
       const current = prev.selectedTopicIds;
-      if (current.includes(topicId))
-        return {
-          ...prev,
-          selectedTopicIds: current.filter((id) => id !== topicId),
-        };
-      else return { ...prev, selectedTopicIds: [...current, topicId] };
+      return current.includes(topicId)
+        ? { ...prev, selectedTopicIds: current.filter((id) => id !== topicId) }
+        : { ...prev, selectedTopicIds: [...current, topicId] };
     });
   };
 
+  // ✅ Image Logic
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewImage(URL.createObjectURL(file));
+      setRemoveImageFlag(false);
+    }
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setPreviewImage(null);
+    setRemoveImageFlag(true); // ✅ Set flag to remove on backend
+  };
+
+  // ✅ Edit Mode
   const handleEdit = (question) => {
     setEditingId(question._id);
     setMode("single");
+    setRemoveImageFlag(false);
+
     setFormData({
       selectedTopicIds: question.topics || [],
       type: question.type,
       questionCategory: question.questionCategory,
       difficulty: question.difficulty,
       marks: question.marks,
-      important: question.important,
+      important: question.important || false,
       statement: {
-        en: question.statement.en || "",
-        ur: question.statement.ur || "",
+        en: question.statement?.en || "",
+        ur: question.statement?.ur || "",
       },
       questionData: question.questionData || initialFormState.questionData,
       options:
         question.options.length > 0
           ? question.options
           : initialFormState.options,
-      boardTags: question.boardTags ? question.boardTags.join(", ") : "",
+      boardTags: Array.isArray(question.boardTags)
+        ? question.boardTags.join(", ")
+        : "",
     });
+
+    if (question.image && question.image.url) {
+      setPreviewImage(question.image.url);
+    } else {
+      setPreviewImage(null);
+    }
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setFormData(initialFormState);
     setImageFile(null);
+    setPreviewImage(null);
+    setRemoveImageFlag(false);
   };
 
   const toggleQuestionSelection = (qId) => {
@@ -300,18 +304,12 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     );
   };
 
-  const selectAllQuestions = () => {
-    if (selectedQuestionIds.length === questions.length)
-      setSelectedQuestionIds([]);
-    else setSelectedQuestionIds(questions.map((q) => q._id));
-  };
-
   // --- DELETE LOGIC ---
   const handleDelete = (id) =>
     setDeleteModal({
       isOpen: true,
       type: "SINGLE",
-      id: id,
+      id,
       title: "Delete?",
       message: "Sure?",
     });
@@ -320,7 +318,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       setDeleteModal({
         isOpen: true,
         type: "BULK",
-        id: null,
         title: "Delete Selected?",
         message: "Sure?",
       });
@@ -330,7 +327,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       setDeleteModal({
         isOpen: true,
         type: "ALL_TOPIC",
-        id: null,
         title: "Delete ALL?",
         message: "Sure?",
       });
@@ -373,8 +369,17 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   // --- SUBMIT HANDLER ---
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.type === "MCQ") {
+      const filled = formData.options.filter((opt) =>
+        isUrduSubject ? opt.ur?.trim() : opt.en?.trim() || opt.ur?.trim()
+      );
+      if (filled.length < 4) return toast.error("MCQ must have 4 options!");
+    }
+
     setIsSubmitting(true);
     const data = new FormData();
+
     data.append("topics", JSON.stringify(formData.selectedTopicIds));
     data.append("chapterId", chapterId);
     data.append("subjectId", subjectId);
@@ -388,7 +393,11 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     data.append("questionData", JSON.stringify(formData.questionData));
     if (formData.type === "MCQ")
       data.append("options", JSON.stringify(formData.options));
+
+    // ✅ Handle Image Logic
     if (imageFile) data.append("image", imageFile);
+    data.append("removeImage", removeImageFlag); // 👈 Backend needs this string "true"/"false"
+
     const tags = formData.boardTags
       .split(",")
       .map((t) => t.trim())
@@ -397,10 +406,8 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const headers = {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      };
+      const headers = { Authorization: `Bearer ${token}` }; // ✅ No 'Content-Type' manually
+
       if (editingId) {
         await axios.put(`${BASE_URL}/api/questions/${editingId}`, data, {
           headers,
@@ -411,8 +418,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           timer: 1500,
           showConfirmButton: false,
         });
-        setEditingId(null);
-        setFormData(initialFormState);
+        handleCancelEdit(); // Reset everything
       } else {
         await axios.post(`${BASE_URL}/api/questions/add`, data, { headers });
         Swal.fire({
@@ -421,49 +427,41 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           timer: 1500,
           showConfirmButton: false,
         });
+
+        // Soft Reset (Keep settings)
         setFormData((prev) => ({
           ...prev,
           statement: { en: "", ur: "" },
           questionData: initialFormState.questionData,
           options: initialFormState.options,
           boardTags: "",
+          important: false,
         }));
+        setPreviewImage(null);
+        setImageFile(null);
+        setRemoveImageFlag(false);
       }
       if (filterTopicId) fetchQuestions();
-      setImageFile(null);
     } catch (err) {
-      Swal.fire("Error", "Failed", "error");
+      console.error("Submit Error:", err);
+      Swal.fire("Error", err.response?.data?.error || "Failed", "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Config & Validation
   const categories = getCategoriesForSubject(subjectName);
   const showMainStatement = shouldShowStatementBox(formData.questionCategory);
-
   const hasTopic = formData.selectedTopicIds.length > 0;
+
   let hasContent = false;
-  if (showMainStatement) {
-    if (isUrduSubject) hasContent = formData.statement.ur.trim() !== "";
-    else
-      hasContent =
-        formData.statement.en.trim() !== "" ||
-        formData.statement.ur.trim() !== "";
-  } else {
-    hasContent = formData.questionData.itemA.trim() !== "";
-  }
+  if (showMainStatement)
+    hasContent = isUrduSubject
+      ? !!formData.statement.ur.trim()
+      : !!formData.statement.en.trim() || !!formData.statement.ur.trim();
+  else hasContent = !!formData.questionData.itemA.trim();
 
-  const isMcqComplete =
-    formData.type === "MCQ"
-      ? formData.options.every((opt) =>
-          isUrduSubject
-            ? opt.ur.trim() !== ""
-            : opt.en.trim() !== "" || opt.ur.trim() !== ""
-        )
-      : true;
-
-  const isFormValid = hasTopic && hasContent && isMcqComplete;
+  const isFormValid = hasTopic && hasContent;
 
   return (
     <>
@@ -482,12 +480,11 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       <div className="row g-4">
         <Toaster position="top-right" />
 
-        {/* --- LEFT SIDE: QUESTION LIST --- */}
+        {/* --- LEFT: LIST --- */}
         <div className="col-md-7">
           <div className="filter-box-q sticky-top">
             <label className="fw-bold small text-muted mb-2 d-flex align-items-center">
-              <FaFilter className="me-2 text-accent" /> Filter Questions (
-              {subjectName})
+              <FaFilter className="me-2 text-accent" /> Filter ({subjectName})
             </label>
             <div className="d-flex gap-2">
               <select
@@ -539,6 +536,39 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                       <span className="badge-type">{q.type}</span>
                       <span className="badge-cat">{q.questionCategory}</span>
                       <span className="badge-marks">{q.marks} Marks</span>
+
+                      {/* ✅ DIFFICULTY BADGE ADDED */}
+                      <span
+                        className={`badge ${
+                          q.difficulty === "Easy"
+                            ? "bg-success"
+                            : q.difficulty === "Medium"
+                            ? "bg-warning text-dark"
+                            : "bg-danger"
+                        }`}
+                        style={{ fontSize: "0.65rem" }}
+                      >
+                        {q.difficulty}
+                      </span>
+
+                      {q.important && (
+                        <span className="badge bg-warning text-dark small">
+                          IMP
+                        </span>
+                      )}
+                      {q.boardTags?.length > 0 && (
+                        <div className="d-flex gap-1">
+                          {q.boardTags.map((tag, tIdx) => (
+                            <span
+                              key={tIdx}
+                              className="badge bg-info text-dark small"
+                              style={{ fontSize: "0.6rem" }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="d-flex gap-2">
                       <button
@@ -556,7 +586,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </div>
                   </div>
 
-                  {/* ✅ SPECIAL RENDER FOR POETRY (50/50 Grid) */}
+                  {/* Render Content Logic (Same as before) */}
                   {q.questionCategory === "POETRY" ? (
                     <div className="poetry-wrapper">
                       {q.questionData?.poetName?.ur && (
@@ -565,7 +595,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                         </div>
                       )}
                       <div className="poetry-grid">
-                        {/* Lines ko \n se split karo */}
                         {q.statement.ur.split("\n").map(
                           (line, i) =>
                             line.trim() && (
@@ -603,6 +632,20 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </>
                   )}
 
+                  {q.image && q.image.url && (
+                    <div className="mt-2 text-center">
+                      <img
+                        src={q.image.url}
+                        alt="Q"
+                        style={{
+                          maxHeight: "100px",
+                          maxWidth: "100%",
+                          borderRadius: "5px",
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {q.type === "MCQ" && (
                     <div className="mcq-grid">
                       {q.options.map((opt, i) => (
@@ -637,14 +680,15 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           </div>
         </div>
 
-        {/* --- RIGHT SIDE: FORM --- */}
+        {/* --- RIGHT: FORM --- */}
         <div className="col-md-5">
           <div className="form-card sticky-top">
-            <div className="form-header">
+            <div className="form-header d-flex justify-content-between align-items-center">
               <h6 className="m-0 fw-bold text-accent">
-                {editingId ? "Edit" : "Add"} Question
+                {editingId ? "Edit Question" : "Add Question"}
               </h6>
             </div>
+
             {!editingId && (
               <div className="mode-switch">
                 <button
@@ -665,7 +709,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
             <div className="p-3">
               {mode === "single" ? (
                 <form onSubmit={handleSingleSubmit}>
-                  {/* TOPIC & TYPE Selectors (Keep as is) */}
+                  {/* Topic Selection */}
                   <div className="mb-3">
                     <label className="form-label">
                       Topics <span className="text-danger">*</span>
@@ -688,6 +732,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </div>
                   </div>
 
+                  {/* Type & Category */}
                   <div className="row g-2 mb-2">
                     <div className="col-6">
                       <label className="form-label">Type</label>
@@ -724,16 +769,15 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </div>
                   </div>
 
-                  {/* DYNAMIC FIELDS */}
-                  {/* 1. POETRY */}
-                  {formData.questionCategory === "POETRY" && (
+                  {/* Dynamic Inputs (Poetry/Pairs/Text) */}
+                  {formData.questionCategory === "POETRY" ? (
                     <div className="row g-2 mb-2">
                       {!isUrduSubject && (
                         <div className="col-6">
                           <input
                             type="text"
                             className="form-control custom-input"
-                            placeholder="Poet Name (Eng)"
+                            placeholder="Poet Name"
                             value={formData.questionData.poetName.en}
                             onChange={(e) =>
                               handleQDataChange(
@@ -758,44 +802,34 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                         />
                       </div>
                     </div>
-                  )}
-
-                  {/* 2. PAIR OF WORDS */}
-                  {["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].includes(
-                    formData.questionCategory
-                  ) ? (
-                    <div className="mb-3 p-3 bg-light-theme border rounded">
-                      <div className="d-flex gap-2 mb-2">
-                        <input
-                          type="text"
-                          className="form-control custom-input"
-                          placeholder="Item A"
-                          value={formData.questionData.itemA}
-                          onChange={(e) =>
-                            handleQDataChange("itemA", e.target.value)
-                          }
-                        />
-                        <input
-                          type="text"
-                          className="form-control custom-input"
-                          placeholder="Item B"
-                          value={formData.questionData.itemB}
-                          onChange={(e) =>
-                            handleQDataChange("itemB", e.target.value)
-                          }
-                        />
-                      </div>
+                  ) : ["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].includes(
+                      formData.questionCategory
+                    ) ? (
+                    <div className="mb-3 p-3 bg-light-theme border rounded d-flex gap-2">
+                      <input
+                        type="text"
+                        className="form-control custom-input"
+                        placeholder="Item A"
+                        value={formData.questionData.itemA}
+                        onChange={(e) =>
+                          handleQDataChange("itemA", e.target.value)
+                        }
+                      />
+                      <input
+                        type="text"
+                        className="form-control custom-input"
+                        placeholder="Item B"
+                        value={formData.questionData.itemB}
+                        onChange={(e) =>
+                          handleQDataChange("itemB", e.target.value)
+                        }
+                      />
                     </div>
                   ) : (
-                    /* 3. STANDARD STATEMENT with TextEditor */
                     <div className="mb-3">
                       <label className="form-label">
-                        {formData.questionCategory === "POETRY"
-                          ? "Stanza (Lines)"
-                          : "Statement"}{" "}
-                        <span className="text-danger">*</span>
+                        Statement <span className="text-danger">*</span>
                       </label>
-
                       {!isUrduSubject && (
                         <TextEditor
                           value={formData.statement.en}
@@ -803,7 +837,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                           placeholder="English Statement..."
                         />
                       )}
-
                       <TextEditor
                         value={formData.statement.ur}
                         onChange={(val) => handleStatementChange("ur", val)}
@@ -814,7 +847,51 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </div>
                   )}
 
-                  {/* 4. MCQ OPTIONS */}
+                  {/* Image Upload */}
+                  <div className="mb-3">
+                    <label className="form-label">Image (Optional)</label>
+                    <div className="d-flex gap-2 align-items-center">
+                      <label
+                        className="btn btn-outline-secondary btn-sm"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <FaImage className="me-2" /> Upload{" "}
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                      {previewImage && (
+                        <div
+                          className="position-relative"
+                          style={{ width: "60px", height: "60px" }}
+                        >
+                          <img
+                            src={previewImage}
+                            alt="Prev"
+                            className="img-thumbnail w-100 h-100 object-fit-cover"
+                          />
+                          {/* ✅ Cross Button Logic Implemented */}
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm position-absolute top-0 end-0 p-0"
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              fontSize: "10px",
+                            }}
+                            onClick={clearImage}
+                          >
+                            X
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* MCQ Options */}
                   {formData.type === "MCQ" && (
                     <div className="mb-3 p-2 border rounded bg-light-theme">
                       {formData.options.map((opt, i) => (
@@ -854,77 +931,102 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
                     </div>
                   )}
 
-                  {/* Marks Input */}
-                  <div className="col-4">
-                    <label className="form-label">
-                      Marks <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control custom-input text-center fw-bold"
-                      value={formData.marks}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          marks: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      min="1"
-                    />
-                  </div>
-                  {/* DIFFICULTY & IMAGE (Keep as is) */}
-                  <div className="mb-2">
-                    <label className="form-label">Difficulty</label>
-                    <div className="btn-group w-100">
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${
-                          formData.difficulty === "Easy"
-                            ? "btn-primary-gradient"
-                            : "btn-outline-secondary"
-                        }`}
-                        onClick={() =>
-                          setFormData({ ...formData, difficulty: "Easy" })
+                  {/* Extra Fields */}
+                  <div className="row g-2 mb-3">
+                    <div className="col-4">
+                      <label className="form-label">
+                        Marks <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control custom-input text-center fw-bold"
+                        value={formData.marks}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            marks: parseInt(e.target.value) || 0,
+                          })
                         }
-                      >
-                        Easy
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${
-                          formData.difficulty === "Medium"
-                            ? "btn-primary-gradient"
-                            : "btn-outline-secondary"
-                        }`}
-                        onClick={() =>
-                          setFormData({ ...formData, difficulty: "Medium" })
+                        min="1"
+                      />
+                    </div>
+                    <div className="col-8">
+                      <label className="form-label">Board Tags</label>
+                      <input
+                        type="text"
+                        className="form-control custom-input"
+                        placeholder="LHR-22, GRW-21"
+                        value={formData.boardTags}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            boardTags: e.target.value,
+                          })
                         }
-                      >
-                        Medium
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn btn-sm ${
-                          formData.difficulty === "Hard"
-                            ? "btn-primary-gradient"
-                            : "btn-outline-secondary"
-                        }`}
-                        onClick={() =>
-                          setFormData({ ...formData, difficulty: "Hard" })
-                        }
-                      >
-                        Hard
-                      </button>
+                      />
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn-primary-gradient w-100"
-                    disabled={isSubmitting || !isFormValid}
-                  >
-                    Save
-                  </button>
+                  {/* Difficulty & Important */}
+                  <div className="mb-3">
+                    <label className="form-label">Difficulty</label>
+                    <div className="btn-group w-100">
+                      {["Easy", "Medium", "Hard"].map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          className={`btn btn-sm ${
+                            formData.difficulty === d
+                              ? "btn-primary-gradient"
+                              : "btn-outline-secondary"
+                          }`}
+                          onClick={() =>
+                            setFormData({ ...formData, difficulty: d })
+                          }
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="impCheck"
+                      checked={formData.important}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          important: e.target.checked,
+                        })
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="impCheck">
+                      Mark as Important?
+                    </label>
+                  </div>
+
+                  {/* Submit & Cancel (Cancel Logic integrated in Header) */}
+                  <div className="d-flex gap-2">
+                    <button
+                      type="submit"
+                      className="btn-primary-gradient w-100"
+                      disabled={isSubmitting || !isFormValid}
+                    >
+                      {editingId ? "Update" : "Save"}
+                    </button>
+                    {editingId && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger w-50"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </form>
               ) : (
                 <BulkUpload

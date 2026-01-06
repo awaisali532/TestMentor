@@ -7,7 +7,6 @@ const PaperPreview = ({
   paperData,
   onOpenMenu,
   isPrintMode = false,
-  // ✅ Manual Mode Props
   isManualMode,
   onManualUpdate,
   onManualDelete,
@@ -87,8 +86,6 @@ const PaperPreview = ({
   };
 
   const longInstr = getLongInstructions();
-
-  // Helper: Get Question ID safely
   const getQId = (q) => q.questionId?._id || q.questionId || q._id;
 
   return (
@@ -108,7 +105,7 @@ const PaperPreview = ({
         </div>
       ) : (
         <div className="pp-sheet">
-          {/* ... MCQ SECTION ... */}
+          {/* ================= MCQ SECTION ================= */}
           {mcqs.length > 0 && (
             <div className="pp-section">
               <div className="pp-part-header">
@@ -129,12 +126,10 @@ const PaperPreview = ({
                 <div className="pp-hd-ur" dir="rtl">
                   <strong>سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔
                 </div>
-                {/* ✅ DELETE SECTION BUTTON */}
                 {isManualMode && (
                   <button
                     className="pp-sec-del-btn"
                     onClick={() => onSectionDelete("MCQ")}
-                    title="Delete All MCQs"
                   >
                     <FaTrash /> Delete Q.1
                   </button>
@@ -144,7 +139,6 @@ const PaperPreview = ({
               <div className="pp-list">
                 {mcqs.map((q, i) => (
                   <div key={getQId(q)} className="pp-item-mcq">
-                    {/* ✅ INDIVIDUAL DELETE BUTTON */}
                     {isManualMode && (
                       <button
                         className="pp-item-del-btn"
@@ -154,6 +148,7 @@ const PaperPreview = ({
                       </button>
                     )}
 
+                    {/* Statement Row */}
                     <div className="pp-stmt">
                       <span className="pp-num">{i + 1}.</span>
                       <div className="pp-text-en">
@@ -195,6 +190,19 @@ const PaperPreview = ({
                         )}
                       </div>
                     </div>
+
+                    {/* ✅ MCQ IMAGE (Between Statement & Options) */}
+                    {q.image && q.image.url && (
+                      <div className="pp-image-container">
+                        <img
+                          src={q.image.url}
+                          alt="Diagram"
+                          className="pp-image"
+                        />
+                      </div>
+                    )}
+
+                    {/* Options Grid */}
                     {q.options && (
                       <div className="pp-opt-grid">
                         {q.options.map((opt, idx) => {
@@ -254,7 +262,7 @@ const PaperPreview = ({
             </div>
           )}
 
-          {/* ... SUBJECTIVE SECTION ... */}
+          {/* ================= SUBJECTIVE SECTION ================= */}
           {hasSubjective && (
             <div className="pp-section">
               <div className="pp-part-header">
@@ -290,12 +298,10 @@ const PaperPreview = ({
                         <strong>سوال نمبر {qNumber}:</strong> کوئی سے{" "}
                         {attemptLimit} سوالات کے مختصر جوابات لکھیں۔
                       </div>
-                      {/* ✅ DELETE SECTION BUTTON */}
                       {isManualMode && (
                         <button
                           className="pp-sec-del-btn"
                           onClick={() => onSectionDelete("SHORT", secKey)}
-                          title="Delete This Short Section"
                         >
                           <FaTrash /> Delete Q.{qNumber}
                         </button>
@@ -304,8 +310,10 @@ const PaperPreview = ({
 
                     <div className="pp-list">
                       {sectionQs.map((q, i) => (
-                        <div key={getQId(q)} className="pp-item">
-                          {/* ✅ INDIVIDUAL DELETE BUTTON */}
+                        <div
+                          key={getQId(q)}
+                          className="pp-vertical-block" // ✅ New Wrapper for Vertical Layout
+                        >
                           {isManualMode && (
                             <button
                               className="pp-item-del-btn"
@@ -315,45 +323,59 @@ const PaperPreview = ({
                             </button>
                           )}
 
-                          <span className="pp-num">({i + 1})</span>
-                          <div className="pp-text-en">
-                            {isManualMode ? (
-                              <textarea
-                                className="pp-edit-input"
-                                value={q.statement?.en || ""}
-                                onChange={(e) =>
-                                  onManualUpdate(
-                                    getQId(q),
-                                    "statement",
-                                    "en",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            ) : (
-                              <RenderText text={q.statement?.en} />
-                            )}
+                          {/* 1. Text Row (Number + En + Ur) */}
+                          <div className="pp-item">
+                            <span className="pp-num">({i + 1})</span>
+                            <div className="pp-text-en">
+                              {isManualMode ? (
+                                <textarea
+                                  className="pp-edit-input"
+                                  value={q.statement?.en || ""}
+                                  onChange={(e) =>
+                                    onManualUpdate(
+                                      getQId(q),
+                                      "statement",
+                                      "en",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              ) : (
+                                <RenderText text={q.statement?.en} />
+                              )}
+                            </div>
+                            <div className="pp-text-ur" dir="rtl">
+                              <span className="pp-ur-num">({i + 1})</span>
+                              {isManualMode ? (
+                                <textarea
+                                  className="pp-edit-input"
+                                  dir="rtl"
+                                  value={q.statement?.ur || ""}
+                                  onChange={(e) =>
+                                    onManualUpdate(
+                                      getQId(q),
+                                      "statement",
+                                      "ur",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              ) : (
+                                <RenderText text={q.statement.ur} />
+                              )}
+                            </div>
                           </div>
-                          <div className="pp-text-ur" dir="rtl">
-                            <span className="pp-ur-num">({i + 1})</span>
-                            {isManualMode ? (
-                              <textarea
-                                className="pp-edit-input"
-                                dir="rtl"
-                                value={q.statement?.ur || ""}
-                                onChange={(e) =>
-                                  onManualUpdate(
-                                    getQId(q),
-                                    "statement",
-                                    "ur",
-                                    e.target.value
-                                  )
-                                }
+
+                          {/* 2. ✅ IMAGE ROW (Full Width Below Text) */}
+                          {q.image && q.image.url && (
+                            <div className="pp-image-container">
+                              <img
+                                src={q.image.url}
+                                alt="Diagram"
+                                className="pp-image"
                               />
-                            ) : (
-                              <RenderText text={q.statement.ur} />
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -372,12 +394,10 @@ const PaperPreview = ({
                     <div className="pp-hd-ur" dir="rtl">
                       <strong>{longInstr.ur}</strong> (حصہ دوم)
                     </div>
-                    {/* ✅ DELETE SECTION BUTTON */}
                     {isManualMode && (
                       <button
                         className="pp-sec-del-btn"
                         onClick={() => onSectionDelete("LONG")}
-                        title="Delete All Long Qs"
                       >
                         <FaTrash /> Delete Section II
                       </button>
@@ -403,8 +423,10 @@ const PaperPreview = ({
                         }
 
                         return (
-                          <div key={getQId(q)} className="pp-item">
-                            {/* ✅ INDIVIDUAL DELETE BUTTON */}
+                          <div
+                            key={getQId(q)}
+                            className="pp-vertical-block" // ✅ New Wrapper
+                          >
                             {isManualMode && (
                               <button
                                 className="pp-item-del-btn"
@@ -414,47 +436,61 @@ const PaperPreview = ({
                               </button>
                             )}
 
-                            <span className="pp-num">{label}</span>
-                            <div className="pp-text-en">
-                              {isManualMode ? (
-                                <textarea
-                                  className="pp-edit-input"
-                                  value={q.statement?.en || ""}
-                                  onChange={(e) =>
-                                    onManualUpdate(
-                                      getQId(q),
-                                      "statement",
-                                      "en",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                              ) : (
-                                <RenderText text={q.statement?.en} />
-                              )}
+                            {/* Text Row */}
+                            <div className="pp-item">
+                              <span className="pp-num">{label}</span>
+                              <div className="pp-text-en">
+                                {isManualMode ? (
+                                  <textarea
+                                    className="pp-edit-input"
+                                    value={q.statement?.en || ""}
+                                    onChange={(e) =>
+                                      onManualUpdate(
+                                        getQId(q),
+                                        "statement",
+                                        "en",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                ) : (
+                                  <RenderText text={q.statement?.en} />
+                                )}
+                              </div>
+
+                              <div className="pp-text-ur" dir="rtl">
+                                <span className="pp-ur-num">{urLabel}</span>
+                                {isManualMode ? (
+                                  <textarea
+                                    className="pp-edit-input"
+                                    dir="rtl"
+                                    value={q.statement?.ur || ""}
+                                    onChange={(e) =>
+                                      onManualUpdate(
+                                        getQId(q),
+                                        "statement",
+                                        "ur",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                ) : (
+                                  <RenderText text={q.statement.ur} />
+                                )}
+                              </div>
+                              <div className="pp-marks-right">[{q.marks}]</div>
                             </div>
 
-                            <div className="pp-text-ur" dir="rtl">
-                              <span className="pp-ur-num">{urLabel}</span>
-                              {isManualMode ? (
-                                <textarea
-                                  className="pp-edit-input"
-                                  dir="rtl"
-                                  value={q.statement?.ur || ""}
-                                  onChange={(e) =>
-                                    onManualUpdate(
-                                      getQId(q),
-                                      "statement",
-                                      "ur",
-                                      e.target.value
-                                    )
-                                  }
+                            {/* ✅ IMAGE ROW (Full Width Below Text) */}
+                            {q.image && q.image.url && (
+                              <div className="pp-image-container">
+                                <img
+                                  src={q.image.url}
+                                  alt="Diagram"
+                                  className="pp-image"
                                 />
-                              ) : (
-                                <RenderText text={q.statement.ur} />
-                              )}
-                            </div>
-                            <div className="pp-marks-right">[{q.marks}]</div>
+                              </div>
+                            )}
                           </div>
                         );
                       });
