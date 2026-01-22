@@ -30,7 +30,7 @@ const uploadToCloudinary = async (fileBuffer) => {
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
-      }
+      },
     );
     uploadStream.end(fileBuffer);
   });
@@ -533,7 +533,40 @@ const deleteAllQuestionsInTopic = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// ✅ NEW: Get All Questions by Chapter (Sorted by Topic Number)
+const getQuestionsByChapter = async (req, res) => {
+  try {
+    const { chapterId } = req.params;
 
+    // 1. Fetch Questions & Populate Topics
+    let questions = await Question.find({ chapter: chapterId })
+      .populate("topics", "name topicNumber") // ✅ Populate Zaroori hai
+      .lean(); // ✅ Convert to Plain JSON for sorting
+
+    // 2. Manual Sort in JavaScript (Kyunke MongoDB populated field pr sort nahi krta)
+    questions.sort((a, b) => {
+      // Topic Number extract karo (Safe check ke sath)
+      const topicA = a.topics?.[0]?.topicNumber || "0";
+      const topicB = b.topics?.[0]?.topicNumber || "0";
+
+      // Numeric Compare (e.g. 1.2 vs 1.10 ko sahi treat karega)
+      const topicCompare = topicA.localeCompare(topicB, undefined, {
+        numeric: true,
+      });
+
+      // Agar Topic same hai, to Newest First rakho
+      if (topicCompare === 0) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+
+      return topicCompare;
+    });
+
+    res.json(questions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 module.exports = {
   getAllQuestions,
   getMenuQuestions,
@@ -546,4 +579,5 @@ module.exports = {
   addBulkQuestions,
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
+  getQuestionsByChapter,
 };

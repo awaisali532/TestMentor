@@ -16,6 +16,7 @@ const {
   addBulkQuestions,
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
+  getQuestionsByChapter,
 } = require("../controllers/questionController");
 
 // Apply Protection (All routes require login)
@@ -40,6 +41,8 @@ router.get("/", getAllQuestions);
 // 5. Fetch Questions by Topic ID
 router.get("/topic/:topicId", getQuestionsByTopic);
 
+router.get("/chapter/:chapterId", getQuestionsByChapter);
+
 // =======================
 // WRITE OPERATIONS (Admin/Manager Only)
 // =======================
@@ -49,7 +52,7 @@ router.post(
   "/add",
   hasPermission("manage_questions"),
   upload.single("image"),
-  addQuestion
+  addQuestion,
 );
 
 // Add Bulk Questions
@@ -59,14 +62,14 @@ router.post("/bulk-add", hasPermission("manage_questions"), addBulkQuestions);
 router.post(
   "/delete-bulk",
   hasPermission("manage_questions"),
-  deleteQuestionsBulk
+  deleteQuestionsBulk,
 );
 
 // Delete All in Topic
 router.delete(
   "/topic/:topicId/delete-all",
   hasPermission("manage_questions"),
-  deleteAllQuestionsInTopic
+  deleteAllQuestionsInTopic,
 );
 
 // Update Question
@@ -74,9 +77,8 @@ router.put(
   "/:id",
   hasPermission("manage_questions"),
   upload.single("image"),
-  updateQuestion
+  updateQuestion,
 );
-
 // Delete Single Question
 router.delete("/:id", hasPermission("manage_questions"), deleteQuestion);
 

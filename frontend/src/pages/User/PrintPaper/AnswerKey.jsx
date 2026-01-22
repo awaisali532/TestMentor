@@ -34,7 +34,7 @@ const AnswerKey = ({ paperData }) => {
   };
 
   return (
-    <div style={{ marginTop: "15px", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ fontFamily: "Arial, sans-serif" }}>
       {/* Title */}
       <h3
         style={{
@@ -42,7 +42,7 @@ const AnswerKey = ({ paperData }) => {
           borderBottom: "2px solid #000",
           paddingBottom: "10px",
           textTransform: "uppercase",
-          fontSize: "0.9rem",
+          fontSize: "0.8rem",
         }}
       >
         Answer Key (MCQs)

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaSpinner, FaInbox } from "react-icons/fa";
+import { FaInbox } from "react-icons/fa";
 import QuestionCard from "../QuestionCard/QuestionCard";
+import TMLoader from "../../../../common/TMLoader/TMLoader";
 import "./QuestionList.css";
 
 const QuestionList = ({
@@ -31,7 +32,17 @@ const QuestionList = ({
             difficulty: filters.difficulty,
           },
         });
-        setQuestions(res.data);
+
+        // Sorting Logic (Topic Number wise)
+        const sortedQuestions = res.data.sort((a, b) => {
+          const topicNumA = a.topics?.[0]?.topicNumber || "0";
+          const topicNumB = b.topics?.[0]?.topicNumber || "0";
+          return topicNumA.localeCompare(topicNumB, undefined, {
+            numeric: true,
+          });
+        });
+
+        setQuestions(sortedQuestions);
       } catch (err) {
         console.error("Error fetching questions:", err);
       } finally {
@@ -42,39 +53,26 @@ const QuestionList = ({
     if (paperData && activeTab) fetchQuestions();
   }, [paperData, activeTab, filters]);
 
-  // ✅ SAME MATCH HELPER (Copy from QuestionMenu)
   const checkMatch = (itemInState, targetId) => {
     if (!itemInState || !targetId) return false;
     const target = String(targetId);
-
-    // 1. Try Direct _id
     if (itemInState._id && String(itemInState._id) === target) return true;
-
-    // 2. Try questionId (String)
     if (
       itemInState.questionId &&
       typeof itemInState.questionId !== "object" &&
       String(itemInState.questionId) === target
     )
       return true;
-
-    // 3. Try questionId._id (Populated)
     if (
       itemInState.questionId &&
       itemInState.questionId._id &&
       String(itemInState.questionId._id) === target
     )
       return true;
-
     return false;
   };
 
-  if (loading)
-    return (
-      <div className="ql-loading">
-        <FaSpinner className="spin" /> Loading Questions...
-      </div>
-    );
+  if (loading) return <TMLoader />;
 
   if (questions.length === 0)
     return (
@@ -88,34 +86,40 @@ const QuestionList = ({
   return (
     <div className="ql-container">
       {questions.map((q, index) => {
-        const topicId = q.topics?.[0]?._id || "unknown";
-        const rawName = q.topics?.[0]?.name;
+        // Data Extraction
+        const topicObj = q.topics?.[0];
+        const topicId = topicObj?._id || "unknown";
+        const rawName = topicObj?.name;
+        const topicNum = topicObj?.topicNumber || ""; // ✅ Topic Number Get Kia
 
+        // Name Generation
         let topicName = "General Questions";
         if (rawName) {
-          if (typeof rawName === "object") {
-            topicName = `${rawName.en} ${rawName.ur ? `(${rawName.ur})` : ""}`;
-          } else {
-            topicName = rawName;
-          }
+          const nameStr =
+            typeof rawName === "object"
+              ? `${rawName.en} ${rawName.ur ? `(${rawName.ur})` : ""}`
+              : rawName;
+
+          // ✅ Number + Name Combine
+          topicName = topicNum ? `${topicNum} - ${nameStr}` : nameStr;
         }
 
         const showHeader = topicId !== lastTopicId;
         lastTopicId = topicId;
 
-        // ✅ USE CHECKMATCH FOR VISUALS
         const isSelected = tempSelected.some((savedQ) =>
-          checkMatch(savedQ, q._id)
+          checkMatch(savedQ, q._id),
         );
 
         return (
           <React.Fragment key={q._id}>
+            {/* Header with Number */}
             {showHeader && <div className="ql-topic-header">{topicName}</div>}
 
             <QuestionCard
               question={q}
               index={index + 1}
-              isSelected={isSelected} // ✅ Green Highlight
+              isSelected={isSelected}
               onToggle={onToggleSelect}
             />
           </React.Fragment>
