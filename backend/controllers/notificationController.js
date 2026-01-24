@@ -17,12 +17,13 @@ exports.getNotifications = async (req, res) => {
 // @route   POST /api/notifications
 // @access  Private (Admin Only)
 exports.createNotification = async (req, res) => {
-  const { title, message, type, targetAudience } = req.body;
+  // Destructure messageEn and messageUr
+  const { messageEn, messageUr, type, targetAudience } = req.body;
 
   try {
     const notification = await Notification.create({
-      title,
-      message,
+      messageEn,
+      messageUr,
       type: type || "info",
       targetAudience: targetAudience || "all",
     });

@@ -18,6 +18,7 @@ import {
   FaMoon,
   FaTimes,
   FaLayerGroup,
+  FaBell,
 } from "react-icons/fa";
 import "./Sidebar.css";
 
@@ -192,6 +193,11 @@ const Sidebar = () => {
             to="/admin/profile-settings"
             icon={FaUserCog}
             label="Profile & Settings"
+          />
+          <SidebarItem
+            to="/admin/notifications"
+            icon={FaBell}
+            label="Notifications"
           />
         </ul>
 

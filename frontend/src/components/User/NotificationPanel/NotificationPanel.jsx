@@ -1,72 +1,60 @@
-import React, { useState } from "react";
-import { FaBell, FaCheck, FaInfoCircle } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { FaCheck, FaInfoCircle, FaExclamationTriangle } from "react-icons/fa";
 import "./NotificationPanel.css";
 
-const NotificationPanel = () => {
-  const [lang, setLang] = useState("ur"); // Default Urdu as per screenshot
+const NotificationPanel = ({ isOpen, onUpdateCount }) => {
+  const [lang, setLang] = useState("ur");
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const prevCountRef = useRef(0);
 
-  // Mock Data with Dual Language Support
-  const [notifications] = useState([
-    {
-      id: 1,
-      type: "success",
-      en: "Click here to download Urdu Font.",
-      ur: "اُردو فونٹ ڈاؤن لوڈ کرنے کے لیے کلک کریں۔",
-      date: "New",
-    },
-    {
-      id: 2,
-      type: "success",
-      en: "New 1st Year data has been uploaded.",
-      ur: "نیو فرسٹ ایئر کا ڈیٹا اپلوڈ ہو چکا ہے۔",
-      date: "Today",
-    },
-    {
-      id: 3,
-      type: "success",
-      en: "New 9th Class data has been uploaded.",
-      ur: "نیو نہم کا ڈیٹا اپلوڈ ہو چکا ہے۔",
-      date: "Yesterday",
-    },
-    {
-      id: 4,
-      type: "info",
-      en: "Added font size option for Equations in Math papers.",
-      ur: "ریاضی کے پیپر میں موجود مساوات (Equations) کا فونٹ سائز بڑھانے کی آپشن شامل کر دی گئی ہے۔",
-      date: "2 days ago",
-    },
-    {
-      id: 5,
-      type: "success",
-      en: "As per new board policy, 9th & 10th Islamiyat is now combined.",
-      ur: "بورڈ کی نئی پالیسی کے مطابق نہم اور دہم اسلامیات لازمی کو کمبائن کر دیا گیا ہے۔",
-      date: "3 days ago",
-    },
-    {
-      id: 6,
-      type: "success",
-      en: "Pak Studies for 9th class removed as per new policy.",
-      ur: "بورڈ کی نئی پالیسی کے مطابق مطالعہ پاکستان کو نہم کلاس میں سے ختم کر دیا گیا ہے۔",
-      date: "Last Week",
-    },
-  ]);
+  const BASE_URL = "http://localhost:5000";
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/notifications`);
+      const newData = res.data;
+      setNotifications(newData);
+      setLoading(false);
+
+      // 🟢 Logic: Agar panel band hai aur naya data aya, to Parent ko count bhejo
+      if (!isOpen && newData.length > prevCountRef.current) {
+        const diff = newData.length - prevCountRef.current;
+        onUpdateCount((prev) => prev + diff);
+      }
+
+      // Update ref
+      prevCountRef.current = newData.length;
+    } catch (err) {
+      console.error("Failed to load alerts");
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000); // Real-time Polling
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="usr-notif-wrapper">
-      {/* HEADER */}
+      {/* Simple Header */}
       <div className="usr-notif-header-solid">
-        <div className="d-flex align-items-center gap-2">
-          <FaBell className="bell-shake" />
-          <h5 className="m-0 fw-bold">New Alerts</h5>
-        </div>
+        <h5 className="m-0 fw-bold">Alerts</h5>
 
         {/* Language Toggle */}
-        <div className="lang-toggle">
+        <div className="lang-toggle-small">
           <button
             className={lang === "en" ? "active" : ""}
             onClick={() => setLang("en")}
           >
-            ENG
+            EN
           </button>
           <button
             className={lang === "ur" ? "active" : ""}
@@ -77,25 +65,38 @@ const NotificationPanel = () => {
         </div>
       </div>
 
-      {/* LIST */}
+      {/* List Body */}
       <div className="usr-notif-body custom-scrollbar">
-        {notifications.map((item) => (
-          <div key={item.id} className="alert-item">
-            {/* Icon */}
-            <div className="alert-icon">
-              {item.type === "success" ? <FaCheck /> : <FaInfoCircle />}
-            </div>
-
-            {/* Content */}
-            <div className={`alert-content ${lang === "ur" ? "rtl-text" : ""}`}>
-              <p>{lang === "ur" ? item.ur : item.en}</p>
-              <span className="alert-date">{item.date}</span>
-            </div>
-          </div>
-        ))}
-
-        {notifications.length === 0 && (
+        {loading ? (
+          <p className="text-center mt-4">Loading...</p>
+        ) : notifications.length === 0 ? (
           <p className="text-center text-muted mt-4">No new alerts.</p>
+        ) : (
+          notifications.map((item) => (
+            <div key={item._id} className="alert-item">
+              <div className="alert-icon">
+                {item.type === "success" && (
+                  <FaCheck style={{ color: "#10b981" }} />
+                )}
+                {item.type === "info" && (
+                  <FaInfoCircle style={{ color: "#3b82f6" }} />
+                )}
+                {item.type === "warning" && (
+                  <FaExclamationTriangle style={{ color: "#f59e0b" }} />
+                )}
+                {item.type === "urgent" && (
+                  <FaExclamationTriangle style={{ color: "#ef4444" }} />
+                )}
+              </div>
+
+              <div
+                className={`alert-content ${lang === "ur" ? "rtl-text" : ""}`}
+              >
+                <p>{lang === "ur" ? item.messageUr : item.messageEn}</p>
+                <span className="alert-date">{formatDate(item.createdAt)}</span>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

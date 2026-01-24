@@ -1,144 +1,283 @@
-/* --- USER SPECIFIC THEME VARIABLES (Scoped) --- */
-/* LIGHT MODE */
+/* --- THEME VARIABLES --- */
 .u-light {
   --u-bg-body: #f3f4f6;
   --u-bg-card: #ffffff;
   --u-text-main: #1f2937;
   --u-text-muted: #6b7280;
   --u-border: #e5e7eb;
-  --u-hover-bg: #f9fafb;
-  --u-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --u-accent: #2563eb;
 }
 
-/* DARK MODE */
 .u-dark {
   --u-bg-body: #0f172a;
   --u-bg-card: #1e293b;
   --u-text-main: #f1f5f9;
   --u-text-muted: #94a3b8;
   --u-border: rgba(255, 255, 255, 0.1);
-  --u-hover-bg: rgba(255, 255, 255, 0.05);
-  --u-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
   --u-accent: #3b82f6;
 }
 
-/* --- GRID LAYOUT (Desktop > 1024px) --- */
+/* =========================================
+   🖥️ DESKTOP LAYOUT (Default)
+   ========================================= */
+
 .usr-layout-wrapper {
   display: grid;
-  /* Default: Sidebar(260px) | Content | Right(300px) */
-  grid-template-columns: 260px 1fr 300px;
   height: 100vh;
   width: 100vw;
   background-color: var(--u-bg-body);
   color: var(--u-text-main);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow: hidden;
 }
 
-/* Collapsed State (Only affects Desktop) */
-.usr-layout-wrapper.usr-collapsed {
-  grid-template-columns: 80px 1fr 300px;
+/* --- DESKTOP GRID LOGIC --- */
+/* Right Closed: 0px width */
+.usr-layout-wrapper.usr-right-closed {
+  grid-template-columns: 260px 1fr 0px;
+}
+.usr-layout-wrapper.usr-right-closed.usr-collapsed {
+  grid-template-columns: 80px 1fr 0px;
 }
 
-/* --- SIDEBAR CONTAINER (Desktop) --- */
+/* Right Open: 320px width */
+.usr-layout-wrapper.usr-right-open {
+  grid-template-columns: 260px 1fr 320px;
+}
+.usr-layout-wrapper.usr-right-open.usr-collapsed {
+  grid-template-columns: 80px 1fr 320px;
+}
+
+/* --- LEFT SIDEBAR (Desktop) --- */
 .usr-layout-sidebar {
   background-color: var(--u-bg-card);
   border-right: 1px solid var(--u-border);
   height: 100%;
-  position: relative;
-  z-index: 50;
-  transition: all 0.3s ease;
+  overflow-y: auto;
+}
+
+/* --- RIGHT PANEL (Desktop Animation) --- */
+.usr-layout-right {
+  border-left: 1px solid var(--u-border);
+  height: 100%;
+  background-color: var(--u-bg-card);
+  overflow: hidden;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+/* Animation: Slide/Fade Effect for Desktop Grid */
+.usr-layout-wrapper.usr-right-closed .usr-layout-right {
+  opacity: 0;
+  transform: translateX(20px);
+}
+.usr-layout-wrapper.usr-right-open .usr-layout-right {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* --- MAIN CONTENT --- */
 .usr-layout-main {
-  padding: 10px;
-  overflow-y: auto;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* --- RIGHT PANEL --- */
-.usr-layout-right {
-  border-left: 1px solid var(--u-border);
-  height: 100%;
-  transition: background-color 0.3s ease;
+/* --- CONTENT SCROLL AREA --- */
+.usr-content-scroll {
+  flex: 1;
   overflow-y: auto;
+  padding: 20px;
 }
 
-/* --- MOBILE HEADER (Visible on Tablet/Mobile) --- */
-.usr-mobile-header {
-  display: none; /* Default hidden */
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--u-border);
-}
-
-.usr-hamburger-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--u-text-main);
-  cursor: pointer;
-  padding: 5px;
+/* --- DESKTOP BELL BUTTON --- */
+.desktop-bell-btn {
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  z-index: 50;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: var(--u-bg-card);
+  border: 1px solid var(--u-border);
+  color: var(--u-text-muted);
   display: flex;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
 }
 
-/* --- SCROLLBAR CUSTOMIZATION --- */
-.usr-layout-main::-webkit-scrollbar {
-  width: 8px;
+.desktop-bell-btn:hover {
+  background-color: var(--u-accent) !important;
+  color: white !important;
+  border-color: var(--u-accent);
+  transform: scale(1.05);
 }
-.usr-layout-main::-webkit-scrollbar-track {
-  background: transparent;
+
+.desktop-bell-btn.active {
+  background-color: #ef4444 !important;
+  color: white !important;
+  border-color: #ef4444;
 }
-.usr-layout-main::-webkit-scrollbar-thumb {
-  background: var(--u-border);
-  border-radius: 4px;
+
+/* Badges */
+.layout-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--u-bg-card);
+}
+
+.layout-badge-mobile {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.6rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Shake Animation */
+.bell-shake {
+  animation: shake 3s infinite;
+}
+@keyframes shake {
+  0% {
+    transform: rotate(0);
+  }
+  10% {
+    transform: rotate(-15deg);
+  }
+  20% {
+    transform: rotate(15deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
+
+/* Default Mobile Header Hidden */
+.usr-mobile-header {
+  display: none;
 }
 
 /* =========================================
-   📱 RESPONSIVE & MOBILE STYLES
+   📱 MOBILE RESPONSIVE (Max-width 1024px)
    ========================================= */
-
-/* ✅ FIX: Change breakpoint to 1024px (Tablets & Small Laptops) */
 @media (max-width: 1024px) {
-  /* 1. Grid becomes Single Column (Sidebar Gayab) */
+  /* 1. RESET GRID TO BLOCK */
   .usr-layout-wrapper,
-  .usr-layout-wrapper.usr-collapsed {
-    grid-template-columns: 1fr;
+  .usr-layout-wrapper.usr-right-closed,
+  .usr-layout-wrapper.usr-right-open,
+  .usr-layout-wrapper.usr-right-closed.usr-collapsed,
+  .usr-layout-wrapper.usr-right-open.usr-collapsed {
+    display: block !important;
+    position: relative;
+    overflow-x: hidden;
   }
 
-  /* 2. Hide Right Panel (Optional, space bachane ke liye) */
-  .usr-layout-right {
-    display: none;
-  }
-
-  /* 3. Show Hamburger Header */
+  /* 2. SHOW MOBILE HEADER */
   .usr-mobile-header {
-    display: flex;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: var(--u-bg-card);
+    border-bottom: 1px solid var(--u-border);
   }
 
-  /* --- DRAWER SIDEBAR LOGIC --- */
+  .usr-hamburger-btn,
+  .mobile-bell-btn {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: var(--u-text-main);
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+  /* 3. HIDE DESKTOP BUTTONS */
+  .desktop-bell-btn {
+    display: none !important;
+  }
+
+  /* 4. CONTENT HEIGHT FIX */
+  .usr-layout-main {
+    height: 100vh;
+  }
+  .usr-content-scroll {
+    padding-bottom: 80px;
+  }
+
+  /* 5. LEFT SIDEBAR (DRAWER) */
   .usr-layout-sidebar {
-    position: fixed;
+    position: fixed !important;
     top: 0;
     left: 0;
-    width: 280px; /* Fixed width drawer */
+    width: 280px;
     height: 100%;
-    transform: translateX(-100%); /* Screen se bahir */
-    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    transform: translateX(-100%); /* Start Hidden Left */
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
     border-right: none;
-    z-index: 1000; /* Top layer */
   }
-
   .usr-layout-sidebar.mobile-open {
     transform: translateX(0); /* Slide In */
   }
+  /* 6. RIGHT NOTIFICATION PANEL (DRAWER) */
+  .usr-layout-right {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100%;
+    z-index: 2000;
 
-  /* --- BACKDROP --- */
+    /* Default hide for generic state */
+    transform: translateX(100%);
+
+    transition: transform 0.3s ease-in-out;
+    opacity: 1 !important;
+    border-left: 1px solid var(--u-border);
+    box-shadow: none;
+  }
+
+  /* 🔴 THE FIX: Force hide when closed (Overrides Desktop Rule) */
+  .usr-layout-wrapper.usr-right-closed .usr-layout-right {
+    transform: translateX(100%) !important;
+  }
+
+  /* 🟢 SLIDE IN STATE */
+  .usr-layout-wrapper.usr-right-open .usr-layout-right {
+    transform: translateX(0) !important;
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+  }
+  /* 7. BACKDROP */
   .usr-mobile-backdrop {
     position: fixed;
     top: 0;
@@ -146,17 +285,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 900;
-    animation: fadeIn 0.3s ease;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+    z-index: 1500;
+    backdrop-filter: blur(3px);
   }
 }

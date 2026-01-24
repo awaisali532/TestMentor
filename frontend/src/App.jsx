@@ -36,6 +36,7 @@ import UserManagement from "./pages/Admin/UserManagement/UserManagement";
 import ProfileSettings from "./pages/Admin/ProfileSettings/ProfileSettings";
 import SiteSettings from "./pages/Admin/SiteSettings/SiteSettings";
 import PaperPatterns from "./pages/Admin/PaperPatterns/PaperPatterns";
+import ManageNotifications from "./components/Admin/Dashboard/ManageNotifications/ManageNotifications";
 
 // Pages - User
 import PaperWizard from "./pages/User/PaperWizard/PaperWizard";
@@ -110,6 +111,10 @@ const App = () => {
                 <Route
                   path="/admin/paper-patterns"
                   element={<PaperPatterns />}
+                />
+                <Route
+                  path="/admin/notifications"
+                  element={<ManageNotifications />}
                 />
               </Route>
             </Route>
