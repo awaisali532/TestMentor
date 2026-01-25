@@ -1,5 +1,12 @@
 import React from "react";
-import { FaEdit, FaTrashAlt, FaShieldAlt } from "react-icons/fa";
+import {
+  FaEdit,
+  FaTrashAlt,
+  FaShieldAlt,
+  FaCog,
+  FaCheckCircle,
+  FaTimesCircle,
+} from "react-icons/fa";
 import "./UserTable.css";
 
 const UserTable = ({
@@ -8,13 +15,11 @@ const UserTable = ({
   onEdit,
   onDelete,
   onToggleStatus,
+  onToggleVerify,
+  onManageAccess,
 }) => {
-  // Helper to check if a user is Super Admin
-  const isSuperAdmin = (u) => {
-    return u?.role === "superadmin" || u?.isSuperAdmin === true;
-  };
-
-  // ✅ Fix: Get the correct ID from currentUser (handles 'id' or '_id')
+  const isSuperAdmin = (u) =>
+    u?.role === "superadmin" || u?.isSuperAdmin === true;
   const currentUserId = currentUser?.id || currentUser?._id;
   const amISuperAdmin = isSuperAdmin(currentUser);
 
@@ -22,10 +27,13 @@ const UserTable = ({
     <div className="user-table-card">
       <div className="table-responsive">
         <table className="custom-table">
+          {/* ✅ FIXED THEAD: Removed comments and spaces between tags */}
           <thead>
             <tr>
               <th>User</th>
               <th>Role</th>
+              <th>Plan</th>
+              <th>Verified</th>
               <th>Status</th>
               <th className="text-end">Actions</th>
             </tr>
@@ -33,25 +41,11 @@ const UserTable = ({
           <tbody>
             {users.length > 0 ? (
               users.map((user) => {
-                // --- STRICT PERMISSION LOGIC ---
-
-                // 1. Is this ME? (Compare normalized IDs)
                 const isSelf = currentUserId === user._id;
-
-                // 2. Is the target row a Super Admin?
                 const targetIsSuper = isSuperAdmin(user);
-
-                // 3. Am I a Sub Admin? (Not a Super Admin)
                 const iAmSubAdmin = !amISuperAdmin;
-
-                // --- DISABLE CONDITIONS ---
-
-                // Disable Delete/Status/Edit if:
-                // A. It is myself (Self-Protection)
-                // B. I am a Sub Admin AND the target is a Super Admin (Hierarchy Protection)
                 const isDisabled = isSelf || (iAmSubAdmin && targetIsSuper);
 
-                // Tooltip text for UX
                 let disabledTitle = "";
                 if (isSelf) disabledTitle = "You cannot delete/edit yourself";
                 else if (iAmSubAdmin && targetIsSuper)
@@ -68,14 +62,12 @@ const UserTable = ({
                         <div>
                           <div className="d-flex align-items-center gap-2">
                             <h6 className="user-name">{user.name}</h6>
-                            {/* Shield for Super Admin */}
                             {targetIsSuper && (
                               <FaShieldAlt
                                 className="text-warning small"
                                 title="Super Admin"
                               />
                             )}
-                            {/* "You" Badge */}
                             {isSelf && (
                               <span className="badge bg-light text-dark border">
                                 You
@@ -86,37 +78,77 @@ const UserTable = ({
                         </div>
                       </div>
                     </td>
+
                     <td>
                       <span className={`badge-role ${user.role}`}>
                         {user.role}
                       </span>
                     </td>
+
+                    <td>
+                      {user.planType === "paid" ? (
+                        <span className="badge-plan paid">PREMIUM</span>
+                      ) : (
+                        <span className="badge-plan free">FREE</span>
+                      )}
+                      <div
+                        className="small text-muted mt-1"
+                        style={{ fontSize: "0.7rem" }}
+                      >
+                        Papers: {user.usage?.papersGenerated || 0}
+                      </div>
+                    </td>
+
                     <td>
                       <button
-                        className={`status-btn ${
-                          user.isActive ? "active" : "inactive"
-                        }`}
-                        onClick={() => !isDisabled && onToggleStatus(user._id)}
+                        className={`verify-toggle ${user.isVerified ? "verified" : "pending"}`}
+                        onClick={() => !isDisabled && onToggleVerify(user._id)}
                         disabled={isDisabled}
-                        title={disabledTitle}
+                        title="Click to Toggle Verification"
                       >
-                        {user.isActive ? "Active" : "Inactive"}
+                        {user.isVerified ? (
+                          <FaCheckCircle />
+                        ) : (
+                          <FaTimesCircle />
+                        )}
+                        <span>{user.isVerified ? "Verified" : "Pending"}</span>
                       </button>
                     </td>
+
+                    <td>
+                      <button
+                        className={`status-btn ${user.isActive ? "active" : "inactive"}`}
+                        onClick={() => !isDisabled && onToggleStatus(user._id)}
+                        disabled={isDisabled}
+                      >
+                        {user.isActive ? "Active" : "Blocked"}
+                      </button>
+                    </td>
+
                     <td className="text-end">
+                      <button
+                        className="action-btn settings"
+                        onClick={() => !isDisabled && onManageAccess(user)}
+                        disabled={isDisabled}
+                        title="Manage Plan & Limits"
+                      >
+                        <FaCog />
+                      </button>
+
                       <button
                         className="action-btn edit"
                         onClick={() => !isDisabled && onEdit(user)}
                         disabled={isDisabled}
-                        title={isDisabled ? disabledTitle : "Edit"}
+                        title="Edit Details"
                       >
                         <FaEdit />
                       </button>
+
                       <button
                         className="action-btn delete"
                         onClick={() => !isDisabled && onDelete(user._id)}
                         disabled={isDisabled}
-                        title={isDisabled ? disabledTitle : "Delete"}
+                        title="Delete User"
                       >
                         <FaTrashAlt />
                       </button>
@@ -126,8 +158,8 @@ const UserTable = ({
               })
             ) : (
               <tr>
-                <td colSpan="4" className="text-center py-5 text-muted">
-                  No users found matching your search.
+                <td colSpan="6" className="text-center py-5 text-muted">
+                  No users found.
                 </td>
               </tr>
             )}

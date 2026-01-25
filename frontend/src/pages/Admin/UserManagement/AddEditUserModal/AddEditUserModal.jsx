@@ -5,14 +5,11 @@ import {
   FaShieldAlt,
   FaEye,
   FaEyeSlash,
-} from "react-icons/fa"; // ❌ FaSpinner Removed
+} from "react-icons/fa";
 import toast from "react-hot-toast";
+import TMLoader from "../../../../components/common/TMLoader/TMLoader";
 import "./AddEditUserModal.css";
 
-// ✅ Import TMLoader
-import TMLoader from "../../../../components/common/TMLoader/TMLoader";
-
-// Permission List (Only relevant for Admins)
 const PERMISSION_LIST = [
   { id: "manage_questions", label: "Question Manager" },
   { id: "manage_subjects", label: "Manage Subjects" },
@@ -24,21 +21,24 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
     name: "",
     email: "",
     password: "",
-    role: "admin", // Default to Admin since we only create admins here
+    role: "user",
     permissions: [],
+    planType: "free",
+    isVerified: true,
   });
 
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setShowPassword(false);
-
     if (editingUser) {
       setFormData({
         name: editingUser.name,
         email: editingUser.email,
-        role: editingUser.role, // Could be 'user' if editing a normal user
+        role: editingUser.role,
         permissions: editingUser.permissions || [],
+        planType: editingUser.planType || "free",
+        isVerified: editingUser.isVerified,
         password: "",
       });
     } else {
@@ -46,8 +46,10 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         name: "",
         email: "",
         password: "",
-        role: "admin", // Force new creations to be Admin
+        role: "user",
         permissions: [],
+        planType: "free",
+        isVerified: true,
       });
     }
   }, [editingUser, show]);
@@ -55,24 +57,29 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
   const togglePermission = (permId) => {
     setFormData((prev) => {
       const currentPerms = prev.permissions;
-      if (currentPerms.includes(permId)) {
-        return {
-          ...prev,
-          permissions: currentPerms.filter((id) => id !== permId),
-        };
-      } else {
-        return { ...prev, permissions: [...currentPerms, permId] };
-      }
+      return currentPerms.includes(permId)
+        ? { ...prev, permissions: currentPerms.filter((id) => id !== permId) }
+        : { ...prev, permissions: [...currentPerms, permId] };
     });
   };
 
+  // ✅ VALIDATION FUNCTION
   const validateForm = () => {
     const { name, email, password } = formData;
+
+    // 1. Basic Empty Checks
     if (!name.trim()) return "Full Name is required.";
     if (!email.trim()) return "Email Address is required.";
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return "Invalid Email Address format.";
 
+    // 2. Strict Gmail Validation (Ends with @gmail.com)
+    // Regex ensures strict matching for @gmail.com
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    if (!emailRegex.test(email)) {
+      return "Only @gmail.com email addresses are allowed.";
+    }
+
+    // 3. Password Validation
+    // Validate ONLY IF: Creating New User OR Editing and user typed a new password
     if (!editingUser || password.trim() !== "") {
       if (password.length < 8) return "Password must be at least 8 characters.";
       if (!/[A-Z]/.test(password))
@@ -82,15 +89,18 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
       if (!/[!@#$%^&*(),.?":{}|<>]/.test(password))
         return "Password must contain at least 1 Special Character (!@#$).";
     }
-    return null;
+
+    return null; // No errors
   };
 
   const handleSaveClick = () => {
+    // Call Validation
     const error = validateForm();
     if (error) {
-      toast.error(error);
-      return;
+      return toast.error(error);
     }
+
+    // If valid, proceed
     onSave(formData);
   };
 
@@ -98,14 +108,12 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
 
   return (
     <>
-      {/* ✅ Show TMLoader if saving */}
       {loading && <TMLoader />}
-
       <div className="modal-overlay">
         <div className="modal-container">
           <div className="modal-header">
             <h5 className="m-0 fw-bold text-main">
-              {editingUser ? "Edit User / Admin" : "Create New Admin"}
+              {editingUser ? "Edit User" : "Create User"}
             </h5>
             <button className="btn-close-modal" onClick={onClose}>
               <FaTimes />
@@ -119,11 +127,11 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               <input
                 type="text"
                 className="modal-input"
-                placeholder="Full Name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
+                placeholder="Enter full name"
               />
             </div>
 
@@ -133,61 +141,84 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               <input
                 type="email"
                 className="modal-input"
-                placeholder="Email"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
+                placeholder="example@gmail.com"
               />
+              <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                * Must be a valid @gmail.com address
+              </small>
             </div>
 
-            {/* Role Selection */}
-            <div className="mb-3">
-              <label>Role</label>
-              <select
-                className="modal-input"
-                value={formData.role}
+            {/* Role & Plan Row */}
+            <div className="row">
+              <div className="col-6 mb-3">
+                <label>Role</label>
+                <select
+                  className="modal-input"
+                  value={formData.role}
+                  onChange={(e) =>
+                    setFormData({ ...formData, role: e.target.value })
+                  }
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div className="col-6 mb-3">
+                <label>Initial Plan</label>
+                <select
+                  className="modal-input"
+                  value={formData.planType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, planType: e.target.value })
+                  }
+                >
+                  <option value="free">Free</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Verified Checkbox */}
+            <div className="mb-3 d-flex align-items-center gap-2 p-2 border rounded bg-light">
+              <input
+                type="checkbox"
+                checked={formData.isVerified}
                 onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
+                  setFormData({ ...formData, isVerified: e.target.checked })
                 }
-                disabled={!editingUser} // Lock to Admin when creating new
+                id="verifyCheck"
+                style={{ width: "18px", height: "18px" }}
+              />
+              <label
+                htmlFor="verifyCheck"
+                className="m-0 text-dark"
+                style={{ cursor: "pointer", textTransform: "none" }}
               >
-                {/* If editing, allow changing role. If creating, force Admin. */}
-                {!editingUser ? (
-                  <option value="admin">Admin (Staff)</option>
-                ) : (
-                  <>
-                    <option value="user">User (Standard)</option>
-                    <option value="admin">Admin (Staff)</option>
-                  </>
-                )}
-              </select>
-              {!editingUser && (
-                <small className="text-muted d-block mt-1">
-                  * Only Admins can be created here. Regular users must sign up.
-                </small>
-              )}
+                Mark as Verified Account
+              </label>
             </div>
 
-            {/* Permissions (Only for Admin Role) */}
+            {/* Permissions (Only visible if Role is Admin) */}
             {formData.role === "admin" && (
               <div className="mb-4">
-                <label className="d-flex align-items-center gap-2 mb-2 text-accent">
-                  <FaShieldAlt /> Assign Permissions
+                <label className="text-accent">
+                  <FaShieldAlt /> Permissions
                 </label>
                 <div className="permissions-box">
                   {PERMISSION_LIST.map((perm) => (
                     <div key={perm.id} className="permission-item">
                       <input
                         type="checkbox"
-                        id={perm.id}
-                        className="form-check-input custom-check"
                         checked={formData.permissions.includes(perm.id)}
                         onChange={() => togglePermission(perm.id)}
+                        className="custom-check"
                       />
-                      <label htmlFor={perm.id} className="perm-label">
-                        {perm.label}
-                      </label>
+                      <span className="ms-2">{perm.label}</span>
                     </div>
                   ))}
                 </div>
@@ -196,16 +227,8 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
 
             {/* Password */}
             <div className="mb-4">
-              <label>
-                {editingUser ? "New Password (Optional)" : "Password"}
-              </label>
-              <div
-                style={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
+              <label>Password</label>
+              <div className="position-relative d-flex align-items-center">
                 <input
                   type={showPassword ? "text" : "password"}
                   className="modal-input"
@@ -216,7 +239,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                   placeholder={
                     editingUser
                       ? "Leave empty to keep current"
-                      : "Enter strong password"
+                      : "Min 8 chars, 1 Upper, 1 Special"
                   }
                   style={{ paddingRight: "40px" }}
                 />
@@ -227,12 +250,14 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                     right: "10px",
                     cursor: "pointer",
                     color: "#6c757d",
-                    fontSize: "1.1rem",
                   }}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
               </div>
+              <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                * 8+ chars, 1 Uppercase, 1 Number, 1 Symbol
+              </small>
             </div>
 
             <button
@@ -240,9 +265,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               onClick={handleSaveClick}
               disabled={loading}
             >
-              {/* Spinner Removed, Text remains */}
-              <FaSave className="me-2" />{" "}
-              {editingUser ? "Update User" : "Create Admin"}
+              <FaSave className="me-2" /> Save
             </button>
           </div>
         </div>

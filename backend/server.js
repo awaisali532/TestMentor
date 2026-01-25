@@ -15,7 +15,7 @@ const contactRoutes = require("./routes/contactRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const paperPatternRoutes = require("./routes/paperPatternRoutes");
 const paperRoutes = require("./routes/paperRoutes"); // ✅ Loaded correctly
-
+const usageRoutes = require("./routes/usageRoutes");
 dotenv.config();
 connectDB();
 
@@ -37,7 +37,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/patterns", paperPatternRoutes);
 app.use("/api/papers", paperRoutes); // ✅ Endpoint Active
-
+app.use("/api/usage", usageRoutes);
 // Base Route
 app.get("/", (req, res) => {
   res.send("🚀 TestMentor Backend is running...");

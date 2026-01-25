@@ -1,14 +1,24 @@
+/* =========================================
+   CONTAINER & TABLE STRUCTURE
+   ========================================= */
 .user-table-card {
   background-color: var(--card-bg);
   border-radius: 16px;
   border: 1px solid var(--border-color);
   box-shadow: 0 4px 15px var(--shadow-color);
   overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
 }
 
 .custom-table {
   width: 100%;
   border-collapse: collapse;
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 .custom-table th {
@@ -19,20 +29,27 @@
   font-size: 0.8rem;
   padding: 15px 20px;
   text-align: left;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .custom-table td {
   padding: 15px 20px;
-  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   color: var(--text-main);
   vertical-align: middle;
 }
 
-.custom-table tr:hover {
-  background-color: var(--pill-bg);
+.custom-table tr:last-child td {
+  border-bottom: none;
 }
 
-/* User Info */
+.custom-table tr:hover {
+  background-color: var(--u-hover-bg, #ecf0f0ba);
+}
+
+/* =========================================
+   USER INFO COLUMN (Avatar + Name)
+   ========================================= */
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -54,96 +71,183 @@
   color: var(--text-main);
   font-size: 0.95rem;
 }
+
 .user-email {
   font-size: 0.85rem;
   color: var(--text-muted);
+  display: block;
 }
 
-/* Role Badges */
+/* =========================================
+   ROLE BADGES
+   ========================================= */
 .badge-role {
   padding: 5px 12px;
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
+  display: inline-block;
 }
+
 .badge-role.admin,
 .badge-role.superadmin {
   background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-.badge-role.teacher {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-.badge-role.student {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: #ef4444; /* Red */
 }
 
-/* Status Button */
+.badge-role.teacher {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6; /* Blue */
+}
+
+.badge-role.student,
+.badge-role.user {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981; /* Green */
+}
+
+/* =========================================
+   ✅ NEW: PLAN BADGES
+   ========================================= */
+.badge-plan {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.badge-plan.free {
+  background-color: var(--bg-body);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.badge-plan.paid {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3);
+}
+
+/* =========================================
+   ✅ NEW: VERIFICATION TOGGLE
+   ========================================= */
+.verify-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.verify-toggle.verified {
+  color: #10b981; /* Green */
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.verify-toggle.pending {
+  color: #f59e0b; /* Orange */
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.verify-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+
+/* =========================================
+   STATUS BUTTON (Active/Blocked)
+   ========================================= */
 .status-btn {
   border: none;
-  padding: 5px 12px;
+  padding: 6px 12px;
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
 }
+
 .status-btn.active {
   background-color: rgba(16, 185, 129, 0.2);
   color: #10b981;
 }
+
 .status-btn.inactive {
   background-color: rgba(107, 114, 128, 0.2);
   color: var(--text-muted);
 }
 
-/* ✅ DISABLED STATUS BUTTON */
-.status-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background-color: var(--bg-body) !important;
-  color: var(--text-muted) !important;
-}
-
-/* Action Buttons */
+/* =========================================
+   ACTION BUTTONS (Settings, Edit, Delete)
+   ========================================= */
 .action-btn {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 8px; /* Slightly squarer than before */
   border: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
   background: transparent;
   margin-left: 5px;
   color: var(--text-muted);
+  font-size: 1rem;
 }
+
 .action-btn:hover {
-  background-color: var(--pill-bg);
-  transform: scale(1.1);
-}
-.action-btn.edit {
-  color: #f59e0b;
-}
-.action-btn.delete {
-  color: #ef4444;
+  background-color: var(--bg-body);
+  transform: translateY(-2px);
 }
 
-/* ✅ DISABLED ACTION BUTTONS (Crucial Fix) */
-.action-btn:disabled {
-  opacity: 0.2; /* Make it very faint */
-  cursor: not-allowed;
-  pointer-events: none; /* Disables clicking entirely */
-  filter: grayscale(100%);
-  transform: none !important;
+/* Specific Colors on Hover/Active */
+.action-btn.edit:hover {
+  color: #f59e0b; /* Orange */
+  background-color: rgba(245, 158, 11, 0.1);
 }
 
-/* Visual cue for row */
+.action-btn.delete:hover {
+  color: #ef4444; /* Red */
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* ✅ Settings (Manage Access) Button */
+.action-btn.settings {
+  color: var(--accent-1);
+}
+
+.action-btn.settings:hover {
+  background-color: var(--accent-1);
+  color: white;
+  box-shadow: 0 2px 5px rgba(14, 165, 233, 0.3);
+}
+
+/* =========================================
+   DISABLED STATE
+   ========================================= */
 .row-disabled {
+  opacity: 0.6;
   background-color: rgba(0, 0, 0, 0.02);
+  pointer-events: none; /* Prevents clicks on the row */
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(100%);
 }

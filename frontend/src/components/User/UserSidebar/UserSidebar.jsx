@@ -14,6 +14,9 @@ import {
 } from "react-icons/fa";
 import "./UserSidebar.css";
 
+// ✅ Import Upgrade Modal
+import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal";
+
 const UserSidebar = ({
   isDarkMode,
   toggleTheme,
@@ -24,12 +27,15 @@ const UserSidebar = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useUser();
+
+  // ✅ State for Modals
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const isActive = (path) => (location.pathname === path ? "usr-active" : "");
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "Lifetime";
     return new Date(dateString).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
@@ -48,6 +54,9 @@ const UserSidebar = ({
   const userName = user?.name || "Guest";
   const userInitial = userName.charAt(0).toUpperCase();
 
+  // ✅ CHECK: Is User Premium? (Backend logic se match)
+  const isPremium = user?.planType === "premium" || user?.planType === "paid";
+  console.log(user);
   return (
     <>
       <div
@@ -90,14 +99,18 @@ const UserSidebar = ({
           {!isCollapsed && (
             <div className="usr-info fade-in">
               <h5 className="usr-name">{userName}</h5>
-              {user?.planType === "paid" ? (
+
+              {/* ✅ DYNAMIC BADGE FROM BACKEND */}
+              {isPremium ? (
                 <>
                   <span className="usr-badge usr-badge-paid">
-                    <FaCrown size={10} /> Premium
+                    <FaCrown size={10} /> Premium Member
                   </span>
-                  <span className="usr-validity">
-                    Exp: {formatDate(user?.subscription?.validUntil)}
-                  </span>
+                  {user?.subscription?.validUntil && (
+                    <span className="usr-validity">
+                      Exp: {formatDate(user.subscription.validUntil)}
+                    </span>
+                  )}
                 </>
               ) : (
                 <span className="usr-badge usr-badge-free">Free Plan</span>
@@ -133,9 +146,13 @@ const UserSidebar = ({
 
         {/* Footer */}
         <div className="usr-sidebar-footer">
-          {user?.planType === "free" && !isCollapsed && (
-            <button className="usr-btn-upgrade fade-in">
-              <FaCrown /> Upgrade
+          {/* ✅ UPGRADE BUTTON (Only if Free & Not Collapsed) */}
+          {!isPremium && !isCollapsed && (
+            <button
+              className="usr-btn-upgrade fade-in"
+              onClick={() => setShowUpgradeModal(true)} // Opens Modal
+            >
+              <FaCrown /> Upgrade to Premium
             </button>
           )}
 
@@ -180,6 +197,16 @@ const UserSidebar = ({
           </div>
         </div>
       )}
+
+      {/* ✅ UPGRADE MODAL */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={() => {
+          setShowUpgradeModal(false);
+          navigate("/pricing"); // Ya jahan bhi aap pricing page rakhenge
+        }}
+      />
     </>
   );
 };

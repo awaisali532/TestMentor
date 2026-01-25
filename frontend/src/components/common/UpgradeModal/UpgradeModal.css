@@ -1,0 +1,57 @@
+/* UPGRADE MODAL STYLES */
+.upgrade-modal {
+  text-align: center;
+  padding: 30px;
+  max-width: 400px;
+  border: 2px solid #f59e0b; /* Golden Border */
+}
+
+.upgrade-icon {
+  background-color: #fef3c7;
+  color: #d97706;
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 15px auto;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+}
+
+.pw-btn-upgrade {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  width: 100%;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
+}
+
+.pw-btn-upgrade:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(217, 119, 6, 0.4);
+}
+
+.pw-btn-link {
+  background: none;
+  border: none;
+  color: #6b7280; /* Muted Text Color */
+  font-size: 0.9rem;
+  margin-top: 10px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.pw-modal-actions.vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}

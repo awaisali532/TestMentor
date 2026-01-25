@@ -7,30 +7,50 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // URL wahi rakha hai jo aapne kaha
+  // ✅ URL Configuration
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // --- 1. INITIAL LOAD ---
+  // --- 1. INITIAL LOAD (Load Fresh Data from Backend) ---
   useEffect(() => {
-    const checkUserLoggedIn = () => {
-      const storedUser = localStorage.getItem("user");
+    const loadUserFromBackend = async () => {
       const storedToken = localStorage.getItem("token");
 
-      if (storedUser && storedToken) {
-        setUser(JSON.parse(storedUser));
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${storedToken}`;
+      if (storedToken) {
+        // 1. Token Header mein set karein
+        axios.defaults.headers.common["Authorization"] =
+          `Bearer ${storedToken}`;
+
+        try {
+          console.log("🔄 Fetching Fresh User Profile...");
+
+          // 2. LocalStorage ki bajaye Server se Data mangwayein
+          // Note: Humne pichle step mein /auth/profile route banaya tha
+          const { data } = await axios.get(`${API_URL}/auth/profile`);
+
+          // 3. Fresh Data State mein set karein
+          setUser(data);
+          console.log(
+            "✅ User Loaded from Backend:",
+            data.email,
+            "| Plan:",
+            data.planType,
+          );
+        } catch (error) {
+          console.error("⚠️ Token Invalid or Session Expired:", error.message);
+          logout(); // Token kharab hai to logout kar do
+        }
       }
       setAuthLoading(false);
     };
 
-    checkUserLoggedIn();
+    loadUserFromBackend();
 
+    // Axios Interceptor (401 Handling)
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response && error.response.status === 401) {
+          // Verify OTP wale errors ko ignore karein
           if (
             error.response.data.message !==
             "Email not verified. Check your inbox for OTP."
@@ -39,53 +59,50 @@ export const UserProvider = ({ children }) => {
           }
         }
         return Promise.reject(error);
-      }
+      },
     );
 
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
-  // --- 2. REGISTER (With Debug Logs) ---
-  const register = async (name, email, password) => {
-    // 👇 LOG 1: Check karein kya data aa rha hai
-    console.log("🚀 Register Function Called");
-    console.log("📤 Sending Data:", { name, email, password });
-    console.log("🔗 Target URL:", `${API_URL}/auth/register`);
+  // --- 2. REFRESH USER (New Feature) ---
+  // Isay hum Dashboard se call karenge agar plan sync na ho
+  const refreshUser = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
+    try {
+      console.log("🔄 Manually Refreshing User Data...");
+      const { data } = await axios.get(`${API_URL}/auth/profile`);
+      setUser(data);
+      // Optional: LocalStorage backup update karein
+      localStorage.setItem("user", JSON.stringify(data));
+      console.log("✅ User Refreshed Successfully.");
+    } catch (error) {
+      console.error("❌ Failed to refresh user data");
+    }
+  };
+
+  // --- 3. REGISTER ---
+  const register = async (name, email, password) => {
+    console.log("🚀 Register Called:", { name, email });
     try {
       const { data } = await axios.post(`${API_URL}/auth/register`, {
         name,
         email,
         password,
       });
-
-      // 👇 LOG 2: Agar success hua to ye dikhega
-      console.log("✅ Registration Success Response:", data);
+      console.log("✅ Register Success:", data);
       return data;
     } catch (error) {
-      // 👇 LOG 3: Agar error aya to ye detail dikhegi
-      console.error("❌ Registration Request Failed!");
-
-      if (error.response) {
-        // Server ne response diya (e.g., 400, 500)
-        console.error("🔴 Status Code:", error.response.status);
-        console.error("🔴 Error Data (Backend Message):", error.response.data);
-      } else if (error.request) {
-        // Request gayi lekin response nahi aya
-        console.error("⚠️ No Response Received:", error.request);
-      } else {
-        // Request set karne me masla
-        console.error("⚠️ Request Setup Error:", error.message);
-      }
-
+      console.error("❌ Register Failed:", error.response?.data);
       throw error.response?.data || { message: "Registration failed!" };
     }
   };
 
-  // --- 3. LOGIN (With Debug Logs) ---
+  // --- 4. LOGIN ---
   const login = async (email, password) => {
-    console.log("🚀 Login Function Called for:", email);
-
+    console.log("🚀 Login Called for:", email);
     try {
       const { data } = await axios.post(`${API_URL}/auth/login`, {
         email,
@@ -94,19 +111,24 @@ export const UserProvider = ({ children }) => {
 
       console.log("✅ Login Success:", data);
 
+      // State Update
       setUser(data.user);
+
+      // Storage Update
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
+
+      // Axios Header Update
       axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
       return data;
     } catch (error) {
-      console.error("❌ Login Failed:", error.response?.data || error.message);
+      console.error("❌ Login Failed:", error.response?.data);
       throw error.response ? error.response.data : { message: "Network Error" };
     }
   };
 
-  // --- 4. LOGIN AFTER VERIFICATION ---
+  // --- 5. LOGIN AFTER VERIFICATION ---
   const loginAfterVerification = (userData, token) => {
     console.log("🔓 Logging in after Verification");
     setUser(userData);
@@ -115,7 +137,7 @@ export const UserProvider = ({ children }) => {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   };
 
-  // --- 5. LOGOUT ---
+  // --- 6. LOGOUT ---
   const logout = () => {
     console.log("👋 Logging Out");
     setUser(null);
@@ -132,11 +154,12 @@ export const UserProvider = ({ children }) => {
       value={{
         user,
         setUser,
+        authLoading,
         register,
         login,
         logout,
-        authLoading,
         loginAfterVerification,
+        refreshUser, // ✅ New Function Exported
       }}
     >
       {children}

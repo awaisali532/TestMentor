@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaExclamationTriangle, FaCalendarAlt } from "react-icons/fa";
 import { useTheme } from "../../../context/ThemeContext";
+import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
-// ✅ Custom Loader
+// Common Components
 import TMLoader from "../../../components/common/TMLoader/TMLoader";
+import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal"; // ✅ Imported
 
-// ✅ Date Picker Imports
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -25,7 +27,9 @@ const PaperWizard = () => {
   const location = useLocation();
   const { theme } = useTheme();
 
-  // --- 1. DEFAULT STATE ---
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+  // --- DEFAULT STATE ---
   const defaultPaperData = {
     grade: "",
     subject: "",
@@ -35,23 +39,21 @@ const PaperWizard = () => {
     mode: null,
     autoSettings: null,
     examLabel: "",
-    // ✅ Date object store karein (String nahi)
     examDate: new Date(),
   };
 
   const [step, setStep] = useState(1);
   const [paperData, setPaperData] = useState(defaultPaperData);
   const [wizardLoading, setWizardLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false); // State remains here
 
-  // --- 3. RESET LOGIC ---
+  // --- RESET & PERSIST LOGIC (Same as before) ---
   useEffect(() => {
     if (location.state?.keepData) {
       const savedStep = localStorage.getItem("pw_step");
       const savedData = localStorage.getItem("pw_data");
-
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        // Date string ko wapis Date object banayein
         if (parsed.examDate) parsed.examDate = new Date(parsed.examDate);
         setPaperData(parsed);
       }
@@ -64,7 +66,6 @@ const PaperWizard = () => {
     }
   }, []);
 
-  // --- 4. PERSIST DATA ---
   useEffect(() => {
     if (paperData.grade) {
       localStorage.setItem("pw_step", step);
@@ -76,83 +77,92 @@ const PaperWizard = () => {
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
-  // --- HANDLERS ---
+  // --- NAVIGATION HANDLERS (Same as before) ---
   useEffect(() => {
     if (step > 1 && !paperData.grade) setStep(1);
     if (step > 2 && !paperData.subject) setStep(2);
   }, [step, paperData]);
 
   const handleExitClick = () => setShowExitModal(true);
-
   const confirmExit = () => {
     localStorage.removeItem("pw_step");
     localStorage.removeItem("pw_data");
     navigate("/user/dashboard");
   };
 
-  const handleClassSelect = (selectedGrade) => {
-    setPaperData({ ...paperData, grade: selectedGrade });
+  // ... (Class, Subject, Syllabus, Pattern Handlers Same as before) ...
+  const handleClassSelect = (grade) => {
+    setPaperData({ ...paperData, grade });
     setStep(2);
   };
-
-  const handleSubjectSelect = (selectedSubject) => {
-    setPaperData({ ...paperData, subject: selectedSubject });
+  const handleSubjectSelect = (subject) => {
+    setPaperData({ ...paperData, subject });
     setStep(3);
   };
-
-  const handleSyllabusSelect = (selectedIds, label) => {
+  const handleSyllabusSelect = (topics, label) =>
     setPaperData({
       ...paperData,
-      topics: selectedIds,
+      topics,
       syllabusLabel: label || "Select Syllabus",
     });
-  };
-
-  const handlePatternSelect = (pattern) => {
+  const handlePatternSelect = (pattern) =>
     setPaperData({ ...paperData, selectedPattern: pattern });
-  };
-
-  const handlePatternConfirm = () => {
-    setStep(5);
-  };
-
-  const handleModeSelect = (mode, settings) => {
-    // ✅ Logic: Date yahan se pass ho rahi hai jo user ne upar select ki thi
-    const finalData = { ...paperData, mode, autoSettings: settings };
-    setPaperData(finalData);
-
-    if (mode === "MANUAL") {
-      setWizardLoading(true);
-      setTimeout(() => {
-        navigate("/user/manual-maker", { state: finalData });
-      }, 1500);
-    } else {
-      // Auto logic baad me
-      alert("Auto Coming Soon");
-    }
-  };
-
+  const handlePatternConfirm = () => setStep(5);
   const handleCreateCustom = () => {
     setEditingPreset(null);
     setShowCustomForm(true);
   };
-
   const handleEditCustom = (pattern) => {
     setEditingPreset(pattern);
     setShowCustomForm(true);
   };
-
-  const handleCustomFormSave = (savedPattern) => {
-    setPaperData({ ...paperData, selectedPattern: savedPattern });
+  const handleCustomFormSave = (pattern) => {
+    setPaperData({ ...paperData, selectedPattern: pattern });
     setShowCustomForm(false);
     setEditingPreset(null);
+  };
+
+  // --- MODE SELECT (With Limit Check) ---
+  const handleModeSelect = async (mode, settings) => {
+    const finalData = { ...paperData, mode, autoSettings: settings };
+    setPaperData(finalData);
+    setWizardLoading(true);
+
+    if (mode === "MANUAL") {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.post(
+          `${BASE_URL}/api/usage/track-paper`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+
+        setTimeout(() => {
+          navigate("/user/manual-maker", { state: finalData });
+        }, 1000);
+      } catch (error) {
+        setWizardLoading(false);
+        if (error.response && error.response.status === 403) {
+          setShowUpgradeModal(true); // ✅ Trigger Modal
+        } else {
+          toast.error("Something went wrong. Please try again.");
+        }
+      }
+    } else {
+      setWizardLoading(false);
+      alert("Auto Coming Soon");
+    }
   };
 
   return (
     <div
       className={`pw-container ${theme === "dark" ? "pw-dark" : "pw-light"}`}
     >
-      {wizardLoading && <TMLoader message="Preparing your workspace..." />}
+      <Toaster position="top-right" />
+
+      {wizardLoading && (
+        <TMLoader message="Verifying limits & preparing workspace..." />
+      )}
 
       <WizardBreadCrumb
         step={step}
@@ -170,7 +180,6 @@ const PaperWizard = () => {
             />
           </div>
         )}
-
         {step === 2 && (
           <div className="fade-in">
             <SubjectSelector
@@ -179,7 +188,6 @@ const PaperWizard = () => {
             />
           </div>
         )}
-
         {step === 3 && (
           <div className="fade-in">
             <SyllabusSelector
@@ -225,14 +233,11 @@ const PaperWizard = () => {
           </div>
         )}
 
-        {/* ✅ STEP 5: FINALIZATION WITH REACT DATEPICKER */}
         {step === 5 && (
           <div className="fade-in">
             <div className="pw-final-card">
               <h4 className="pw-final-title">Final Details</h4>
-
               <div className="row g-3 align-items-end">
-                {/* 1. Exam Label Input */}
                 <div className="col-md-8">
                   <label className="pw-label">
                     Exam Title <span>(Optional)</span>
@@ -247,8 +252,6 @@ const PaperWizard = () => {
                     }
                   />
                 </div>
-
-                {/* 2. React DatePicker Input */}
                 <div className="col-md-4">
                   <label className="pw-label">
                     <FaCalendarAlt className="me-2 text-accent" /> Exam Date
@@ -259,11 +262,10 @@ const PaperWizard = () => {
                       onChange={(date) =>
                         setPaperData({ ...paperData, examDate: date })
                       }
-                      minDate={new Date()} // Past dates disabled
+                      minDate={new Date()}
                       dateFormat="dd/MM/yyyy"
                       className="pw-input date-input"
                       placeholderText="Select Date"
-                      // Strict Locking
                       onChangeRaw={(e) => e.preventDefault()}
                       onKeyDown={(e) => e.preventDefault()}
                       autoComplete="off"
@@ -271,13 +273,7 @@ const PaperWizard = () => {
                   </div>
                 </div>
               </div>
-
-              <p className="pw-info-text">
-                This helps you identify the paper in your history. Date is
-                required.
-              </p>
             </div>
-
             <ModeSelector
               onSelect={handleModeSelect}
               onBack={() => setStep(4)}
@@ -308,6 +304,13 @@ const PaperWizard = () => {
           </div>
         </div>
       )}
+
+      {/* ✅ Clean Usage of UpgradeModal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={() => navigate("/pricing")}
+      />
     </div>
   );
 };

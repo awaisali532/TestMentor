@@ -416,3 +416,51 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(245, 158, 11, 0.5);
 }
+/* SKELETON LOADER ANIMATION */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+.skeleton {
+  background: #e0e0e0;
+  background-image: linear-gradient(
+    to right,
+    #e0e0e0 0%,
+    #f0f0f0 20%,
+    #e0e0e0 40%,
+    #e0e0e0 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 800px 104px;
+  display: inline-block;
+  position: relative;
+  animation-duration: 1.5s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: shimmer;
+  animation-timing-function: linear;
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+/* Specific Sizes */
+.skeleton-text {
+  height: 2rem;
+  width: 60%;
+  margin-bottom: 10px;
+}
+.skeleton-bar {
+  height: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+.skeleton-badge {
+  height: 20px;
+  width: 80px;
+  border-radius: 12px;
+}

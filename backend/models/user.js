@@ -44,6 +44,7 @@ const userSchema = new mongoose.Schema(
     usage: {
       papersGenerated: { type: Number, default: 0 },
       onlineTestsTaken: { type: Number, default: 0 },
+      customPaperLimit: { type: Number, default: null },
     },
 
     // Subscription Info
@@ -67,7 +68,7 @@ const userSchema = new mongoose.Schema(
       supportEmail: { type: String, default: "support@testmentor.com" },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // --- Password Hashing Middleware ---
