@@ -1,418 +1,448 @@
 /* --- ANIMATIONS --- */
 .pp-fade-in {
-    animation: ppFadeIn 0.3s ease-out;
+  animation: ppFadeIn 0.3s ease-out;
 }
 
 @keyframes ppFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --- MAIN CONTAINER --- */
 .pp-container {
-    padding: 20px;
-    width: 100%;
-    max-width: 100%;
+  padding: 20px;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* --- HEADER SECTION --- */
 .pp-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .pp-title {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: var(--text-main);
-    margin: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
 }
 
 /* --- BUTTONS --- */
 .pp-btn-add {
-    background: linear-gradient(135deg, var(--accent-1), #2563eb);
-    color: white;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-    transition: transform 0.2s;
+  background: linear-gradient(135deg, var(--accent-1), #2563eb);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  transition: transform 0.2s;
 }
 
 .pp-btn-add:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
 }
 
 /* --- GRID LAYOUT --- */
 .pp-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 25px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
 }
 
 /* --- CARDS --- */
 .pp-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 20px;
-    transition: all 0.3s ease;
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .pp-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent-1);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+  border-color: var(--accent-1);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15);
 }
 
 .pp-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
 }
 
-/* Actions in Header (Top Right) */
 .pp-card-actions-top {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 /* BADGES */
 .pp-badge {
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 700;
-    text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .badge-full {
-    background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
 }
-
 .badge-custom {
-    background: rgba(59, 130, 246, 0.15);
-    color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
 }
 
 /* CARD CONTENT */
 .pp-card-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
 }
 
 .pp-card-info {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 15px;
-    display: flex;
-    gap: 15px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+  display: flex;
+  gap: 15px;
 }
 
 .pp-card-structure {
-    background: var(--bg-body);
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    margin-top: auto;
+  background: var(--bg-body);
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  margin-top: auto;
 }
 
-/* ACTION BUTTONS (Stylish) */
+/* ACTION BUTTONS */
 .pp-action-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    font-size: 0.9rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+  font-size: 0.9rem;
 }
 
 .btn-edit {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
 }
-
 .btn-edit:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .btn-delete {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
 }
-
 .btn-delete:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 /* =========================================
-   📝 FORM STYLES (UNIQUE & SCOPED)
+   📝 FORM STYLES (Fixed)
    ========================================= */
 
 .pp-form-wrapper {
-    max-width: 900px;
-    margin: 0 auto;
-    padding-bottom: 50px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-bottom: 50px;
 }
 
 .pp-form-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .pp-form-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--text-main);
-    margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
 }
 
-/* Back Button */
 .pp-btn-back {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    padding: 8px 16px;
-    border-radius: 50px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-
 .pp-btn-back:hover {
-    background: var(--bg-body);
-    color: var(--text-main);
-    border-color: var(--text-main);
-    transform: translateX(-3px);
+  background: var(--bg-body);
+  color: var(--text-main);
+  border-color: var(--text-main);
+  transform: translateX(-3px);
 }
 
-/* --- 🔥 CRITICAL DARK MODE INPUT FIX --- */
+/* --- 🔥 CRITICAL INPUT FIX --- */
 .pp-input,
 .pp-select {
-    width: 100%;
-    padding: 12px 15px;
-    /* Use Theme Variables with !important to override defaults */
-    background-color: var(--bg-body) !important;
-    color: var(--text-main) !important;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: border-color 0.2s;
+  width: 100%;
+  padding: 12px 15px;
+  background-color: var(--bg-body) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  appearance: none; /* Remove Native UI */
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .pp-input:focus,
 .pp-select:focus {
-    outline: none;
-    border-color: var(--accent-1);
+  outline: none;
+  border-color: var(--accent-1);
 }
 
-.pp-input::placeholder {
-    color: var(--text-muted);
-    opacity: 0.6;
+/* --- 🔥 DROPDOWN OPTION FIX (Subject List) --- */
+.pp-select option {
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  padding: 10px;
 }
 
-/* Read Only Input Style */
 .pp-disabled-input {
-    background-color: rgba(59, 130, 246, 0.1) !important;
-    /* Blue tint */
-    color: var(--accent-1) !important;
-    font-weight: 800;
-    border-color: var(--accent-1);
-    cursor: not-allowed;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  color: var(--accent-1) !important;
+  font-weight: 800;
+  border-color: var(--accent-1);
+  cursor: not-allowed;
 }
 
 .pp-label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--text-main);
-    font-weight: 600;
-    font-size: 0.9rem;
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .pp-form-group {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
-
-/* Grid Rows */
 .pp-row-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
-
 .pp-row-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
 }
 
-/* Section Cards inside Form */
+/* Section Cards */
 .pp-section-card {
-    background: var(--bg-body);
-    border: 1px dashed var(--border-color);
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    position: relative;
+  background: var(--bg-body);
+  border: 1px dashed var(--border-color);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  position: relative;
 }
 
 .pp-section-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
 }
 
-.pp-sec-badge {
-    background: var(--accent-1);
-    color: white;
-    padding: 9px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: bold;
+/* ✅ NEW SECTION TITLE STYLE */
+.pp-section-title-large {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 40px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .pp-btn-remove {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
 }
-
 .pp-btn-remove:hover {
-    background: #ef4444;
-    color: white;
+  background: #ef4444;
+  color: white;
 }
 
-/* Dashed Add Button */
 .pp-btn-dashed {
-    width: 100%;
-    padding: 15px;
-    border: 2px dashed var(--border-color);
-    background: transparent;
-    color: var(--text-muted);
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    transition: 0.2s;
+  width: 100%;
+  padding: 15px;
+  border: 2px dashed var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s;
 }
-
 .pp-btn-dashed:hover {
-    border-color: var(--accent-1);
-    color: var(--accent-1);
-    background: var(--bg-body);
+  border-color: var(--accent-1);
+  color: var(--accent-1);
+  background: var(--bg-body);
 }
 
-/* Footer */
 .pp-footer-actions {
-    margin-top: 30px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
 }
 
 .pp-btn-cancel {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    padding: 12px 25px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 12px 25px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
 }
-
 .pp-btn-cancel:hover {
-    background: var(--bg-body);
+  background: var(--bg-body);
 }
 
 .pp-btn-submit {
-    background: var(--accent-1);
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  background: var(--accent-1);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-
 .pp-btn-submit:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* Mobile */
 @media (max-width: 768px) {
+  .pp-row-2,
+  .pp-row-3 {
+    grid-template-columns: 1fr;
+  }
+  .pp-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pp-btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+  .pp-form-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .pp-btn-back {
+    width: 100%;
+    justify-content: center;
+  }
+}
 
-    .pp-row-2,
-    .pp-row-3 {
-        grid-template-columns: 1fr;
-    }
+.pp-input-inline {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border-color);
+  color: var(--text-main);
+  padding: 5px;
+  outline: none;
+}
+.pp-input-inline:focus {
+  border-bottom-color: var(--accent-1);
+}
 
-    .pp-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .pp-btn-add {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .pp-form-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .pp-btn-back {
-        width: 100%;
-        justify-content: center;
-    }
+.pp-parts-container {
+  background: var(--bg-body);
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-1);
+}
+.pp-part-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pp-input-sm {
+  padding: 5px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-size: 0.85rem;
+}
+.pp-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.pp-info-bar {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent-1);
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 15px;
+  text-align: center;
 }

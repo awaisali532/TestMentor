@@ -1,115 +1,303 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import { FaArrowLeft, FaPlus, FaTrashAlt, FaSave } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaPlus,
+  FaTrashAlt,
+  FaSave,
+  FaLayerGroup,
+} from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useUI } from "../../../context/UIContext";
-import { useTheme } from "../../../context/ThemeContext";
 import { useUser } from "../../../context/UserContext";
 import ConfirmationModal from "../../../components/common/ConfirmationModal/ConfirmationModal";
+import { getCategoriesForSubject } from "../../../config/SubjectConfig";
+import Select from "react-select";
 import "./PaperPatterns.css";
+
+// Constants
+const selectAllOption = { label: "Select All", value: "ALL" };
+
+// ✅ SMART SEARCH FILTER
+const customFilterOption = (option, inputValue) => {
+  const { label, value } = option;
+  const search = inputValue.toLowerCase();
+  const text = label.toLowerCase();
+
+  // 1. Agar "Select All" hai to hamesha dikhao
+  if (value === "ALL") return true;
+
+  // 2. Number Search
+  const startsWithNumber =
+    text.startsWith(`${search} -`) || text.startsWith(`${search}-`);
+
+  // 3. Name Search
+  const matchesName = text.includes(search);
+
+  return startsWithNumber || matchesName;
+};
+
+const TYPE_LABELS = {
+  MCQ: "Multiple Choice Questions",
+  SHORT: "Short Questions",
+  LONG: "Long Questions",
+  THEORY: "Theory Section",
+  COMPULSORY: "Compulsory Section",
+};
 
 const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const { setIsEditing } = useUI();
-  const { theme } = useTheme();
   const { user } = useUser();
 
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [subjectsList, setSubjectsList] = useState([]);
+  const [chaptersList, setChaptersList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   // --- DEFAULT STATE ---
   const defaultState = {
-    presetName: "",
-    gradeLevel: "",
-    subjects: "",
-    type: "FULL_BOOK",
+    name: "",
+    className: "9th",
+    subject: "",
     totalMarks: 0,
     timeAllowed: "2:00 Hours",
+    isPairingSpecific: false,
+    longQAttemptCount: 2,
     sections: [
       {
-        title: "Q1 - MCQs",
+        questionNo: "Q.1",
+        sectionTitle: "Multiple Choice Questions",
         questionType: "MCQ",
+        questionCategory: "ANY",
         totalQuestions: 12,
-        toBeAttempted: 12,
+        toAttempt: 12,
         marksPerQuestion: 1,
+        linkedChapters: [],
         hasParts: false,
+        isCompulsory: false,
+        subQuestions: [],
       },
     ],
   };
 
   const [formData, setFormData] = useState(defaultState);
-  const [loading, setLoading] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
 
-  // --- 1. LOAD DATA ---
+  // ✅ MEMOIZE OPTIONS
+  const selectOptions = useMemo(() => {
+    return [selectAllOption, ...chaptersList];
+  }, [chaptersList]);
+
+  // ✅ CUSTOM STYLES FOR REACT-SELECT (Fixes Highlight Issue)
+  const customStyles = {
+    menuPortal: (base) => ({ ...base, zIndex: 99999 }),
+    control: (base, state) => ({
+      ...base,
+      backgroundColor: "var(--bg-body)", // Uses CSS Variable
+      borderColor: state.isFocused ? "var(--accent-1)" : "var(--border-color)",
+      color: "var(--text-main)",
+      minHeight: "45px",
+      borderRadius: "10px",
+      boxShadow: "none",
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: "var(--card-bg)",
+      zIndex: 99999,
+      border: "1px solid var(--border-color)",
+    }),
+    option: (base, state) => ({
+      ...base,
+      // Highlight Logic: Selected = Dark Blue, Focused (Keyboard) = Light Blue
+      backgroundColor: state.isSelected
+        ? "var(--accent-1)"
+        : state.isFocused
+          ? "rgba(37, 99, 235, 0.1)"
+          : "transparent",
+      color: state.isSelected ? "white" : "var(--text-main)",
+      cursor: "pointer",
+      ":active": {
+        backgroundColor: "var(--accent-1)",
+        color: "white",
+      },
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: "var(--text-main)",
+    }),
+    input: (base) => ({
+      ...base,
+      color: "var(--text-main)",
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: "rgba(37, 99, 235, 0.1)",
+      borderRadius: "5px",
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: "var(--text-main)",
+    }),
+    multiValueRemove: (base) => ({
+      ...base,
+      color: "#ef4444",
+      cursor: "pointer",
+      ":hover": {
+        backgroundColor: "#ef4444",
+        color: "white",
+      },
+    }),
+  };
+
+  // 1. FETCH SUBJECTS
+  const fetchSubjects = async (clsName) => {
+    if (!clsName) return;
+    try {
+      setSubjectsList([]);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${BASE_URL}/api/subjects?className=${clsName}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSubjectsList(res.data);
+    } catch (err) {
+      console.error("Failed to load subjects", err);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.className) {
+      fetchSubjects(formData.className);
+    }
+  }, [formData.className]);
+
+  // 2. FETCH CHAPTERS
+  const fetchChapters = async (subjectId) => {
+    if (!subjectId) {
+      setChaptersList([]);
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${BASE_URL}/api/chapters/subject/${subjectId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      const sortedData = res.data.sort((a, b) => {
+        return (a.chapterNumber || 0) - (b.chapterNumber || 0);
+      });
+
+      const options = sortedData.map((ch) => {
+        let displayName = "Untitled";
+        if (ch.name) {
+          if (typeof ch.name === "object" && ch.name.en)
+            displayName = ch.name.en;
+          else if (typeof ch.name === "string") displayName = ch.name;
+        }
+
+        return {
+          value: ch._id,
+          label: `${ch.chapterNumber} - ${displayName}`,
+        };
+      });
+
+      setChaptersList(options);
+    } catch (err) {
+      console.error("Failed to load chapters");
+    }
+  };
+
+  // 3. LOAD INITIAL DATA
   useEffect(() => {
     if (initialData) {
       setFormData({
         ...defaultState,
         ...initialData,
-        gradeLevel: Array.isArray(initialData.gradeLevel)
-          ? initialData.gradeLevel.join(", ")
-          : initialData.gradeLevel || "",
-        subjects: Array.isArray(initialData.subjects)
-          ? initialData.subjects.join(", ")
-          : initialData.subjects || "",
-        sections: initialData.sections || defaultState.sections,
+        className: initialData.className || "9th",
+        subject: initialData.subject?._id || initialData.subject || "",
+        sections:
+          initialData.sections?.map((sec) => ({
+            ...sec,
+            toAttempt: sec.toAttempt || sec.toBeAttempted || 0,
+            linkedChapters: sec.linkedChapters || [],
+            subQuestions: sec.subQuestions || [],
+          })) || defaultState.sections,
       });
-    } else {
-      const saved = localStorage.getItem("pp_form_backup");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setFormData({
-          ...defaultState,
-          sections: parsed.sections || defaultState.sections,
-        });
-        setIsDirty(true);
-      }
+
+      const subjId = initialData.subject?._id || initialData.subject;
+      if (subjId) fetchChapters(subjId);
     }
   }, [initialData]);
 
-  // --- 2. AUTO-CALCULATE TOTAL MARKS ---
+  // AUTO-CALCULATE TOTAL MARKS
   useEffect(() => {
     const sections = formData.sections || [];
-    const newTotal = sections.reduce((sum, sec) => {
-      const attempt = parseInt(sec.toBeAttempted) || 0;
+
+    const compulsoryTotal = sections.reduce((sum, sec) => {
+      if (sec.questionType === "LONG") return sum;
+      const attempt = parseInt(sec.toAttempt) || 0;
       const marks = parseInt(sec.marksPerQuestion) || 0;
       return sum + attempt * marks;
     }, 0);
 
-    setFormData((prev) => ({ ...prev, totalMarks: newTotal }));
-  }, [formData.sections]);
+    const longSections = sections.filter((s) => s.questionType === "LONG");
+    let longTotal = 0;
 
-  // --- 3. EDITING MODE ---
-  useEffect(() => {
-    setIsEditing(true);
-    return () => setIsEditing(false);
-  }, [setIsEditing]);
+    if (longSections.length > 0) {
+      const sampleSec = longSections[0];
+      let marksPerLongQ = 0;
 
-  // --- 4. AUTO-SAVE ---
-  useEffect(() => {
-    if (isDirty) {
-      localStorage.setItem("pp_form_backup", JSON.stringify(formData));
+      if (sampleSec.hasParts && sampleSec.subQuestions.length > 0) {
+        marksPerLongQ = sampleSec.subQuestions.reduce(
+          (sum, p) => sum + (parseInt(p.marks) || 0),
+          0,
+        );
+      } else {
+        marksPerLongQ = parseInt(sampleSec.marksPerQuestion) || 0;
+      }
+
+      longTotal = marksPerLongQ * (parseInt(formData.longQAttemptCount) || 0);
     }
-  }, [formData, isDirty]);
 
-  // --- HANDLERS ---
+    setFormData((prev) => ({
+      ...prev,
+      totalMarks: compulsoryTotal + longTotal,
+    }));
+  }, [formData.sections, formData.longQAttemptCount]);
+
+  // HANDLERS
+  const handleSafeBack = () =>
+    isDirty ? setShowExitConfirm(true) : handleCleanupAndClose();
+
   const handleCleanupAndClose = () => {
     localStorage.removeItem("pp_form_backup");
     setIsEditing(false);
     onClose();
   };
 
-  const handleSafeBack = () => {
-    if (isDirty) {
-      setShowExitConfirm(true);
-    } else {
-      handleCleanupAndClose();
-    }
-  };
-
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    const val = type === "checkbox" ? checked : value;
+
+    if (name === "className") {
+      setFormData({
+        ...formData,
+        className: val,
+        subject: "",
+        sections: formData.sections.map((s) => ({ ...s, linkedChapters: [] })),
+      });
+    } else if (name === "subject") {
+      fetchChapters(val);
+      const resetSections = formData.sections.map((s) => ({
+        ...s,
+        linkedChapters: [],
+      }));
+      setFormData({ ...formData, subject: val, sections: resetSections });
+    } else {
+      setFormData({ ...formData, [name]: val });
+    }
     setIsDirty(true);
   };
 
@@ -117,14 +305,19 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     setFormData({
       ...formData,
       sections: [
-        ...(formData.sections || []),
+        ...formData.sections,
         {
-          title: "",
+          questionNo: `Q.${formData.sections.length + 1}`,
+          sectionTitle: "Short Questions",
           questionType: "SHORT",
+          questionCategory: "ANY",
           totalQuestions: 0,
-          toBeAttempted: 0,
+          toAttempt: 0,
           marksPerQuestion: 2,
+          linkedChapters: [],
           hasParts: false,
+          isCompulsory: false, // ✅ NEW FIELD
+          subQuestions: [],
         },
       ],
     });
@@ -137,90 +330,93 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     setIsDirty(true);
   };
 
-  // ✅ LOGIC UPDATE: Handle Inputs & MCQ Restriction
   const handleSectionChange = (index, field, value) => {
     const updated = [...formData.sections];
     let newVal = value;
 
-    if (
-      ["totalQuestions", "toBeAttempted", "marksPerQuestion"].includes(field)
-    ) {
+    if (["totalQuestions", "toAttempt", "marksPerQuestion"].includes(field)) {
       newVal = parseInt(value) || 0;
       if (newVal < 0) newVal = 0;
     }
 
     updated[index][field] = newVal;
 
-    // ✅ MCQ LOGIC: If type is MCQ, Attempt must equal Total
-    if (updated[index].questionType === "MCQ") {
-      if (field === "totalQuestions") {
-        updated[index].toBeAttempted = newVal; // Auto sync
-      }
-      if (field === "questionType") {
-        // Jab type change ho kar MCQ bane, tab bhi sync kar do
-        updated[index].toBeAttempted = updated[index].totalQuestions;
-      }
-    } else {
-      // Normal Logic for other types
-      if (field === "toBeAttempted") {
-        const total = parseInt(updated[index].totalQuestions) || 0;
-        if (newVal > total) {
-          toast.error("Attempt cannot be more than Total Questions!");
-          updated[index][field] = total;
-        }
+    if (field === "questionType") {
+      updated[index].hasParts = false;
+      updated[index].subQuestions = [];
+
+      if (TYPE_LABELS[newVal]) {
+        updated[index].sectionTitle = TYPE_LABELS[newVal];
       }
 
-      if (field === "totalQuestions") {
-        const attempt = parseInt(updated[index].toBeAttempted) || 0;
-        if (newVal < attempt) {
-          updated[index].toBeAttempted = newVal;
-        }
+      if (newVal === "MCQ") {
+        updated[index].toAttempt = updated[index].totalQuestions;
+        updated[index].questionCategory = "MCQ_GENERAL";
+      } else if (newVal === "SHORT") {
+        updated[index].questionCategory = "TEXT";
       }
     }
 
-    if (field === "hasParts") updated[index][field] = value === "true";
+    if (updated[index].questionType === "MCQ") {
+      if (field === "totalQuestions") updated[index].toAttempt = newVal;
+    }
 
     setFormData({ ...formData, sections: updated });
     setIsDirty(true);
   };
 
-  // --- SUBMIT ---
+  const handleChapterSelect = (index, selectedOptions, actionMeta) => {
+    const updated = [...formData.sections];
+
+    if (
+      actionMeta.action === "select-option" &&
+      actionMeta.option.value === "ALL"
+    ) {
+      updated[index].linkedChapters = chaptersList.map((ch) => ch.value);
+    } else if (
+      actionMeta.action === "deselect-option" &&
+      actionMeta.option.value === "ALL"
+    ) {
+      updated[index].linkedChapters = [];
+    } else {
+      updated[index].linkedChapters = selectedOptions
+        ? selectedOptions.map((opt) => opt.value).filter((val) => val !== "ALL")
+        : [];
+    }
+
+    setFormData({ ...formData, sections: updated });
+    setIsDirty(true);
+  };
+
+  const addSubQuestion = (secIndex) => {
+    const updated = [...formData.sections];
+    const parts = updated[secIndex].subQuestions;
+    const nextLabel = String.fromCharCode(97 + parts.length);
+    parts.push({
+      label: `(${nextLabel})`,
+      questionCategory: "THEORY",
+      marks: 4,
+      linkedChapters: [],
+    });
+    setFormData({ ...formData, sections: updated });
+  };
+
+  const handlePartChange = (secIndex, partIndex, field, value) => {
+    const updated = [...formData.sections];
+    updated[secIndex].subQuestions[partIndex][field] = value;
+    setFormData({ ...formData, sections: updated });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.presetName) return toast.error("Preset Name is required");
-
-    for (let i = 0; i < formData.sections.length; i++) {
-      const sec = formData.sections[i];
-      const total = parseInt(sec.totalQuestions);
-      const attempt = parseInt(sec.toBeAttempted);
-
-      if (total === 0)
-        return toast.error(`Section ${i + 1}: Total Questions cannot be 0!`);
-      if (attempt === 0)
-        return toast.error(`Section ${i + 1}: 'To Attempt' cannot be 0!`);
-      if (attempt > total)
-        return toast.error(
-          `Section ${i + 1}: Attempt cannot be greater than Total!`
-        );
-
-      // Strict Check for MCQ
-      if (sec.questionType === "MCQ" && total !== attempt) {
-        return toast.error(`Section ${i + 1} (MCQ): Attempt must match Total!`);
-      }
-    }
+    if (!formData.name) return toast.error("Pattern Name is required");
+    if (!formData.subject) return toast.error("Please select a Subject");
 
     setLoading(true);
 
     const payload = {
       ...formData,
-      gradeLevel:
-        typeof formData.gradeLevel === "string"
-          ? formData.gradeLevel.split(",").map((s) => s.trim())
-          : formData.gradeLevel,
-      subjects:
-        typeof formData.subjects === "string"
-          ? formData.subjects.split(",").map((s) => s.trim())
-          : formData.subjects,
+      gradeLevel: formData.className,
       isSystemPreset: isUserMode ? false : true,
       createdBy: user?._id,
     };
@@ -228,49 +424,32 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      let responseData;
 
       if (initialData && initialData._id) {
-        const res = await axios.put(
+        await axios.put(
           `${BASE_URL}/api/patterns/${initialData._id}`,
           payload,
-          config
+          config,
         );
-        toast.success(
-          isUserMode
-            ? "Custom Pattern Updated!"
-            : "Preset Updated Successfully!"
-        );
-        responseData = res.data;
+        toast.success("Pattern Updated!");
       } else {
-        const res = await axios.post(
-          `${BASE_URL}/api/patterns`,
-          payload,
-          config
-        );
-        toast.success(
-          isUserMode
-            ? "Custom Pattern Created!"
-            : "Preset Created Successfully!"
-        );
-        responseData = res.data;
+        await axios.post(`${BASE_URL}/api/patterns`, payload, config);
+        toast.success("Pattern Created!");
       }
 
-      if (onSuccess) {
-        const cleanData = responseData.data || responseData;
-        onSuccess(cleanData);
-      }
-
-      localStorage.removeItem("pp_form_backup");
-      setIsDirty(false);
-      onClose();
+      onSuccess && onSuccess();
+      handleCleanupAndClose();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.error || "Failed");
+      toast.error(err.response?.data?.error || "Operation Failed");
     } finally {
       setLoading(false);
     }
   };
+
+  const currentSubjectName =
+    subjectsList.find((s) => s._id === formData.subject)?.subjectName || "";
+  const currentCategories = getCategoriesForSubject(currentSubjectName);
 
   return (
     <div className="pp-fade-in">
@@ -279,79 +458,65 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
           <FaArrowLeft /> <span>Back</span>
         </button>
         <h3 className="pp-form-title">
-          {initialData?._id ? "Edit Configuration" : "Create Pattern"}
+          {initialData?._id ? "Edit Pattern" : "Create Pattern"}
         </h3>
         <div style={{ width: "80px" }}></div>
       </div>
 
       <div className="pp-form-wrapper">
         <form onSubmit={handleSubmit}>
+          {/* BASIC INFO */}
           <div className="pp-card pp-mb-4">
-            <h5 className="pp-section-heading">Basic Info</h5>
+            <h5 className="pp-section-heading">Basic Configuration</h5>
             <div className="pp-row-2">
               <div className="pp-form-group">
-                <label className="pp-label">Preset Name</label>
+                <label className="pp-label">Pattern Name</label>
                 <input
                   className="pp-input"
-                  name="presetName"
-                  value={formData.presetName}
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
-                  placeholder="e.g. 9th Physics"
+                  placeholder="e.g. 9th Physics LHR Board"
                   required
                 />
               </div>
               <div className="pp-form-group">
-                <label className="pp-label">Type</label>
+                <label className="pp-label">Class</label>
                 <select
                   className="pp-input pp-select"
-                  name="type"
-                  value={formData.type}
+                  name="className"
+                  value={formData.className}
                   onChange={handleChange}
                 >
-                  <option value="FULL_BOOK">Full Book</option>
-                  <option value="HALF_BOOK">Half Book</option>
-                  <option value="CHAPTER_WISE">Chapter Wise</option>
-                  <option value="CUSTOM">Custom</option>
+                  <option value="9th">9th Class</option>
+                  <option value="10th">10th Class</option>
+                  <option value="11th">11th Class</option>
+                  <option value="12th">12th Class</option>
                 </select>
               </div>
             </div>
 
             <div className="pp-row-2">
               <div className="pp-form-group">
-                <label className="pp-label">Grades (Comma Sep)</label>
-                <input
-                  className="pp-input"
-                  name="gradeLevel"
-                  value={formData.gradeLevel}
+                <label className="pp-label">Subject</label>
+                <select
+                  className="pp-input pp-select"
+                  name="subject"
+                  value={formData.subject}
                   onChange={handleChange}
-                  placeholder="9th, 10th"
-                />
+                  required
+                >
+                  <option value="">-- Select Subject --</option>
+                  {subjectsList.map((sub) => (
+                    <option key={sub._id} value={sub._id}>
+                      {sub.subjectName}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="pp-form-group">
-                <label className="pp-label">Subjects (Comma Sep)</label>
-                <input
-                  className="pp-input"
-                  name="subjects"
-                  value={formData.subjects}
-                  onChange={handleChange}
-                  placeholder="Physics, Chemistry"
-                />
-              </div>
-            </div>
 
-            <div className="pp-row-2">
               <div className="pp-form-group">
-                <label className="pp-label">Total Marks (Auto)</label>
-                <input
-                  type="number"
-                  className="pp-input pp-disabled-input"
-                  name="totalMarks"
-                  value={formData.totalMarks || 0}
-                  readOnly
-                />
-              </div>
-              <div className="pp-form-group">
-                <label className="pp-label">Time</label>
+                <label className="pp-label">Time Allowed</label>
                 <input
                   className="pp-input"
                   name="timeAllowed"
@@ -360,16 +525,69 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
                 />
               </div>
             </div>
+
+            <div className="pp-row-2">
+              <div className="pp-form-group">
+                <label className="pp-label">Long Qs to Attempt</label>
+                <input
+                  type="number"
+                  className="pp-input"
+                  name="longQAttemptCount"
+                  value={formData.longQAttemptCount}
+                  onChange={handleChange}
+                  min="1"
+                  placeholder="e.g. 2"
+                  title="Total Long Questions mein se kitnay karne hain?"
+                />
+                <small className="text-muted" style={{ fontSize: "0.7rem" }}>
+                  Used for Total Marks calculation
+                </small>
+              </div>
+              <div
+                className="pp-form-group"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                <label className="pp-checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="isPairingSpecific"
+                    checked={formData.isPairingSpecific}
+                    onChange={handleChange}
+                  />
+                  <span className="ms-2">Enable Strict Pairing Scheme</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="pp-info-bar">
+              Total Marks: <strong>{formData.totalMarks}</strong>
+            </div>
           </div>
 
-          <h4 className="pp-section-title-large">
-            Sections ({formData.sections?.length || 0})
-          </h4>
+          {/* ✅ STYLED HEADING HERE */}
+          <h4 className="pp-section-title-large">Structure Definition</h4>
 
-          {formData.sections?.map((sec, idx) => (
+          {formData.sections.map((sec, idx) => (
             <div key={idx} className="pp-section-card">
               <div className="pp-section-header">
-                <div className="pp-sec-badge">Section {idx + 1}</div>
+                <div className="d-flex align-items-center gap-2">
+                  <input
+                    className="pp-input-inline fw-bold"
+                    value={sec.questionNo}
+                    onChange={(e) =>
+                      handleSectionChange(idx, "questionNo", e.target.value)
+                    }
+                    style={{ width: "60px" }}
+                  />
+                  <input
+                    className="pp-input-inline"
+                    value={sec.sectionTitle}
+                    onChange={(e) =>
+                      handleSectionChange(idx, "sectionTitle", e.target.value)
+                    }
+                    placeholder="Section Title"
+                  />
+                </div>
                 <button
                   type="button"
                   className="pp-btn-remove"
@@ -378,21 +596,10 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
                   <FaTrashAlt />
                 </button>
               </div>
+
               <div className="pp-row-2">
                 <div className="pp-form-group">
-                  <label className="pp-label">Title</label>
-                  <input
-                    className="pp-input"
-                    value={sec.title}
-                    onChange={(e) =>
-                      handleSectionChange(idx, "title", e.target.value)
-                    }
-                    placeholder="e.g. Short Qs"
-                    required
-                  />
-                </div>
-                <div className="pp-form-group">
-                  <label className="pp-label">Type</label>
+                  <label className="pp-label">Question Type</label>
                   <select
                     className="pp-input pp-select"
                     value={sec.questionType}
@@ -401,13 +608,41 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
                     }
                   >
                     <option value="MCQ">MCQ</option>
-                    <option value="SHORT">Short</option>
-                    <option value="LONG">Long</option>
-                    <option value="THEORY">Theory</option>
-                    <option value="COMPULSORY">Compulsory</option>
+                    <option value="SHORT">Short Answer</option>
+                    <option value="LONG">Long Question</option>
                   </select>
                 </div>
+                <div className="pp-form-group">
+                  <label className="pp-label">Default Category</label>
+                  <select
+                    className={`pp-input pp-select ${sec.hasParts ? "pp-disabled-input" : ""}`}
+                    value={sec.questionCategory}
+                    onChange={(e) =>
+                      handleSectionChange(
+                        idx,
+                        "questionCategory",
+                        e.target.value,
+                      )
+                    }
+                    disabled={sec.hasParts}
+                  >
+                    {currentCategories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                  {sec.hasParts && (
+                    <small
+                      className="text-muted"
+                      style={{ fontSize: "0.7rem" }}
+                    >
+                      Category defined in parts
+                    </small>
+                  )}
+                </div>
               </div>
+
               <div className="pp-row-3">
                 <div className="pp-form-group">
                   <label className="pp-label">Total Qs</label>
@@ -422,62 +657,196 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
                 </div>
                 <div className="pp-form-group">
                   <label className="pp-label">To Attempt</label>
-
-                  {/* ✅ DISABLE IF MCQ */}
                   <input
                     type="number"
-                    className={`pp-input ${
-                      sec.questionType === "MCQ" ? "pp-disabled-input" : ""
-                    }`}
-                    value={sec.toBeAttempted}
+                    className={`pp-input ${sec.questionType === "MCQ" ? "pp-disabled-input" : ""}`}
+                    value={sec.toAttempt}
                     onChange={(e) =>
-                      handleSectionChange(idx, "toBeAttempted", e.target.value)
+                      handleSectionChange(idx, "toAttempt", e.target.value)
                     }
-                    readOnly={sec.questionType === "MCQ"} // ✅ Read Only Logic
-                    title={
-                      sec.questionType === "MCQ"
-                        ? "Auto-synced with Total for MCQs"
-                        : ""
-                    }
+                    readOnly={sec.questionType === "MCQ"}
                   />
                 </div>
                 <div className="pp-form-group">
-                  <label className="pp-label">Marks/Q</label>
+                  <label className="pp-label">Marks Each</label>
                   <input
                     type="number"
-                    className="pp-input"
-                    value={sec.marksPerQuestion}
+                    className={`pp-input ${sec.hasParts ? "pp-disabled-input" : ""}`}
+                    value={sec.hasParts ? 0 : sec.marksPerQuestion}
                     onChange={(e) =>
                       handleSectionChange(
                         idx,
                         "marksPerQuestion",
-                        e.target.value
+                        e.target.value,
                       )
                     }
+                    readOnly={sec.hasParts}
+                    placeholder={sec.hasParts ? "Set in Parts" : "2"}
                   />
+                  {sec.hasParts && (
+                    <small
+                      className="text-muted"
+                      style={{ fontSize: "0.7rem" }}
+                    >
+                      Calculated from parts
+                    </small>
+                  )}
                 </div>
               </div>
 
-              {sec.questionType === "LONG" && (
+              {/* CHAPTER SELECT (Styled with styles prop) */}
+              {formData.isPairingSpecific && (
                 <div className="pp-form-group pp-mt-2">
-                  <label className="pp-label">Has Sub-Parts (A & B)?</label>
-                  <select
-                    className="pp-input pp-select"
-                    value={sec.hasParts ? "true" : "false"}
-                    onChange={(e) =>
-                      handleSectionChange(idx, "hasParts", e.target.value)
+                  <label className="pp-label text-accent">
+                    <FaLayerGroup /> Pairing Scheme (Linked Chapters)
+                  </label>
+                  <Select
+                    isMulti
+                    options={selectOptions}
+                    value={chaptersList.filter((opt) =>
+                      sec.linkedChapters.includes(opt.value),
+                    )}
+                    onChange={(selected, actionMeta) =>
+                      handleChapterSelect(idx, selected, actionMeta)
                     }
-                  >
-                    <option value="false">No (Direct)</option>
-                    <option value="true">Yes (With Parts)</option>
-                  </select>
+                    filterOption={customFilterOption}
+                    tabSelectsValue={true}
+                    closeMenuOnSelect={false}
+                    blurInputOnSelect={false}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                    placeholder="Type Chapter No (e.g. 5)..."
+                    isDisabled={!formData.subject}
+                    menuPortalTarget={document.body}
+                    // ✅ FIXED STYLES HERE
+                    styles={customStyles}
+                    noOptionsMessage={() => "No chapters found"}
+                  />
+                  {!formData.subject && (
+                    <small className="text-danger">
+                      Select a Subject first!
+                    </small>
+                  )}
+                </div>
+              )}
+
+              {/* ... inside sections map ... */}
+
+              {sec.questionType === "LONG" && (
+                <div className="pp-mt-2 border-top pt-2">
+                  {/* ✅ TOGGLES ROW */}
+                  <div className="d-flex gap-4 mb-2">
+                    {/* 1. Sub-Parts Switch */}
+                    <div className="form-check form-switch">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={sec.hasParts}
+                        onChange={(e) =>
+                          handleSectionChange(idx, "hasParts", e.target.checked)
+                        }
+                      />
+                      <label className="form-check-label fw-bold small">
+                        Enable Sub-Parts
+                      </label>
+                    </div>
+
+                    {/* 2. ✅ NEW: Compulsory Switch */}
+                    <div className="form-check form-switch">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={sec.isCompulsory || false}
+                        onChange={(e) =>
+                          handleSectionChange(
+                            idx,
+                            "isCompulsory",
+                            e.target.checked,
+                          )
+                        }
+                        style={{
+                          backgroundColor: sec.isCompulsory ? "#ef4444" : "",
+                          borderColor: sec.isCompulsory ? "#ef4444" : "",
+                        }}
+                      />
+                      <label
+                        className={`form-check-label fw-bold small ${sec.isCompulsory ? "text-danger" : ""}`}
+                      >
+                        Mark as Compulsory (Lazmi)
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Parts Container (Existing Code) */}
+                  {sec.hasParts && (
+                    <div className="pp-parts-container mt-2">
+                      {sec.subQuestions.map((part, pIdx) => (
+                        <div key={pIdx} className="pp-part-row">
+                          {/* ... inner inputs ... */}
+                          <input
+                            className="pp-input-sm"
+                            value={part.label}
+                            onChange={(e) =>
+                              handlePartChange(
+                                idx,
+                                pIdx,
+                                "label",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="(a)"
+                          />
+                          <select
+                            className="pp-input-sm"
+                            value={part.questionCategory}
+                            onChange={(e) =>
+                              handlePartChange(
+                                idx,
+                                pIdx,
+                                "questionCategory",
+                                e.target.value,
+                              )
+                            }
+                          >
+                            {currentCategories.map((c) => (
+                              <option key={c.value} value={c.value}>
+                                {c.label}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            className="pp-input-sm"
+                            value={part.marks}
+                            onChange={(e) =>
+                              handlePartChange(
+                                idx,
+                                pIdx,
+                                "marks",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Marks"
+                            style={{ width: "60px" }}
+                          />
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-link text-decoration-none"
+                        onClick={() => addSubQuestion(idx)}
+                      >
+                        <FaPlus /> Add Part
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           ))}
 
           <button type="button" className="pp-btn-dashed" onClick={addSection}>
-            <FaPlus /> Add Section
+            <FaPlus /> Add New Question Block
           </button>
 
           <div className="pp-footer-actions">
@@ -493,7 +862,7 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
                 "Saving..."
               ) : (
                 <>
-                  <FaSave /> {initialData?._id ? "Update" : "Save"}
+                  <FaSave /> Save Pattern
                 </>
               )}
             </button>
@@ -506,8 +875,8 @@ const PatternForm = ({ onClose, initialData, isUserMode, onSuccess }) => {
         onClose={() => setShowExitConfirm(false)}
         onConfirm={handleCleanupAndClose}
         title="Unsaved Changes"
-        message="You have unsaved changes. Discard?"
-        confirmText="Discard & Exit"
+        message="Discard changes?"
+        confirmText="Discard"
         cancelText="Keep Editing"
         isDanger={true}
       />

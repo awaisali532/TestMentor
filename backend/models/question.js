@@ -35,22 +35,23 @@ const questionSchema = new mongoose.Schema(
     questionCategory: {
       type: String,
       enum: [
-        // Science & General
-        "TEXT", // Normal Statement
-        "EXERCISE", // Book Exercise
-        "EXAMPLE", // Solved Example
-        "NUMERICAL", // Math/Physics Problems
-        "REVIEW", // Review Questions
-        "CONCEPTUAL", // Conceptual/Side Box
-
-        // ✅ NEW: Language Specific Categories
-        "POETRY", // Stanza, Tashreeh
-        "GRAMMAR", // Direct/Indirect, Active/Passive
-        "PAIR_OF_WORDS", // Gate/Gait
-        "IDIOMS", // Phrasal Verbs
-        "WORD_MEANING", // Urdu/English/Arabic Words
-        "PASSAGE", // Comprehension, Translation Paragraphs
-        "TRANSLATION", // Ayah/Hadith Translation
+        "TEXT", // General Textual Question
+        "EXERCISE", // Book Exercise Question
+        "NUMERICAL", // Physics/Chem/Math
+        "THEORY", // Physics/Bio/Chem (Long)
+        "CONCEPTUAL", // Conceptual/Reasoning
+        "SUMMARY", // English (Poem Summary)
+        "ESSAY", // English/Urdu (Mazmoon)
+        "LETTER", // English/Urdu (Khat/Application)
+        "STORY", // English/Urdu (Kahani)
+        "TRANSLATION", // Paragraph Translation
+        "POETRY", // Tashreeh (Nazm/Ghazal)
+        "IDIOMS", // Muhawaray / Phrasal Verbs
+        "PAIR_OF_WORDS", // English
+        "CHANGE_OF_VOICE", // Active/Passive
+        "THEOREM", // Math Compulsory
+        "COMPREHENSION", // Paragraph questions
+        "MCQ_GENERAL", // Standard MCQs
       ],
       default: "TEXT",
     },
@@ -116,7 +117,7 @@ const questionSchema = new mongoose.Schema(
       index: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports =

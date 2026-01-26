@@ -1,51 +1,52 @@
-const ExamBlueprint = require("../models/ExamBlueprint");
+const PaperPattern = require("../models/PaperPattren.js");
 
-// 1. CREATE NEW PRESET
+// 1. CREATE NEW PATTERN
 const createPattern = async (req, res) => {
   try {
     const {
-      presetName,
+      name, // Changed from presetName to name
       gradeLevel,
-      subjects,
-      type,
+      subject, // Changed from subjects[] to single subject ID
       totalMarks,
       timeAllowed,
-      sections,
+      sections, // Iske andar linkedChapters aur subQuestions honge
+      isPairingSpecific, // New Flag
       isSystemPreset,
     } = req.body;
 
-    if (!presetName || !gradeLevel || !subjects || !totalMarks || !sections) {
+    // Basic Validation
+    if (!name || !gradeLevel || !subject || !totalMarks || !sections) {
       return res.status(400).json({ error: "Please fill all required fields" });
     }
 
     // 🔥 SECURITY LOGIC:
-    // Agar user Admin nahi hai, to wo System Preset nahi bana sakta
+    // Sirf Admin hi 'System Preset' bana sakta hai
     let systemFlag = false;
-    if (req.user.role === "admin") {
+    if (req.user && req.user.role === "admin") {
       systemFlag = isSystemPreset || false;
     }
 
-    // Check Duplicate (Apne hi presets mein)
-    const existing = await ExamBlueprint.findOne({
-      presetName,
+    // Check Duplicate (Name + Creator)
+    const existing = await PaperPattern.findOne({
+      name,
       createdBy: req.user._id,
     });
 
     if (existing) {
       return res
         .status(400)
-        .json({ error: "You already have a preset with this name!" });
+        .json({ error: "You already have a pattern with this name!" });
     }
 
-    const newPattern = new ExamBlueprint({
-      presetName,
+    const newPattern = new PaperPattern({
+      name,
       gradeLevel,
-      subjects,
-      type,
+      subject,
       totalMarks,
       timeAllowed,
-      sections,
-      isSystemPreset: systemFlag, // ✅ Logic applied
+      isPairingSpecific: isPairingSpecific || false,
+      sections, // Frontend se pura structured array ayega
+      isSystemPreset: systemFlag,
       createdBy: req.user._id,
     });
 
@@ -58,29 +59,28 @@ const createPattern = async (req, res) => {
   } catch (error) {
     console.error("Create Pattern Error:", error);
     if (error.code === 11000) {
-      return res.status(400).json({ error: "Preset Name must be unique" });
+      return res.status(400).json({ error: "Pattern Name must be unique" });
     }
     res.status(500).json({ error: error.message || "Server Error" });
   }
 };
 
-// 2. GET ALL PATTERNS (Admin + Own)
+// 2. GET ALL PATTERNS (For List View)
 const getAllPatterns = async (req, res) => {
   try {
-    const { grade, subject, type } = req.query;
+    const { grade, subject } = req.query;
     let query = {};
 
-    if (grade) query.gradeLevel = { $in: [grade] };
-    if (subject) query.subjects = { $in: [subject] };
-    if (type) query.type = type;
+    if (grade) query.gradeLevel = grade;
+    if (subject) query.subject = subject; // Exact ID Match
 
-    // 🔥 LOGIC: Show System Presets OR My Own Presets
-    query.$or = [
-      { isSystemPreset: true }, // Admin wale sabko dikhao
-      { createdBy: req.user._id }, // Apne wale khud ko dikhao
-    ];
+    // 🔥 LOGIC: Admin wale (System) + Mere Apne
+    query.$or = [{ isSystemPreset: true }, { createdBy: req.user._id }];
 
-    const patterns = await ExamBlueprint.find(query).sort({ createdAt: -1 });
+    const patterns = await PaperPattern.find(query)
+      .populate("subject", "name") // Subject ka naam dikhane ke liye
+      .sort({ createdAt: -1 });
+
     res.json(patterns);
   } catch (error) {
     console.error("Fetch Error:", error);
@@ -88,13 +88,26 @@ const getAllPatterns = async (req, res) => {
   }
 };
 
-// 3. GET SINGLE
+// 3. GET SINGLE PATTERN (Detailed View for Editing/Generating)
 const getPatternById = async (req, res) => {
   try {
-    const pattern = await ExamBlueprint.findById(req.params.id);
+    const pattern = await PaperPattern.findById(req.params.id)
+      .populate("subject", "name")
+      // ✅ Deep Populate: Sections ke andar Linked Chapters ka naam chahiye
+      .populate({
+        path: "sections.linkedChapters",
+        select: "name chapterNumber", // Sirf naam aur number lao
+      })
+      // ✅ Deep Populate: Agar SubQuestions (Parts) hain to unke chapters bhi lao
+      .populate({
+        path: "sections.subQuestions.linkedChapters",
+        select: "name chapterNumber",
+      });
+
     if (!pattern) return res.status(404).json({ error: "Pattern not found" });
     res.json(pattern);
   } catch (error) {
+    console.error("Get Single Error:", error);
     res.status(500).json({ error: "Server Error" });
   }
 };
@@ -102,17 +115,17 @@ const getPatternById = async (req, res) => {
 // 4. DELETE PATTERN
 const deletePattern = async (req, res) => {
   try {
-    const pattern = await ExamBlueprint.findById(req.params.id);
+    const pattern = await PaperPattern.findById(req.params.id);
     if (!pattern) return res.status(404).json({ error: "Pattern not found" });
 
-    // Permission Check: Owner or Admin
+    // Permission Check
     if (
       pattern.createdBy.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res
         .status(403)
-        .json({ error: "Not authorized to delete this preset" });
+        .json({ error: "Not authorized to delete this pattern" });
     }
 
     await pattern.deleteOne();
@@ -126,7 +139,7 @@ const deletePattern = async (req, res) => {
 const updatePattern = async (req, res) => {
   try {
     const { id } = req.params;
-    const pattern = await ExamBlueprint.findById(id);
+    const pattern = await PaperPattern.findById(id);
 
     if (!pattern) return res.status(404).json({ error: "Pattern not found" });
 
@@ -137,15 +150,15 @@ const updatePattern = async (req, res) => {
     ) {
       return res
         .status(403)
-        .json({ error: "Not authorized to update this preset" });
+        .json({ error: "Not authorized to update this pattern" });
     }
 
-    // Prevent making it system preset if not admin
+    // Security: Only Admin can set System Preset
     if (req.body.isSystemPreset === true && req.user.role !== "admin") {
       req.body.isSystemPreset = false;
     }
 
-    const updatedPattern = await ExamBlueprint.findByIdAndUpdate(id, req.body, {
+    const updatedPattern = await PaperPattern.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });

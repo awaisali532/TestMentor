@@ -4,25 +4,26 @@ const {
   createPattern,
   getAllPatterns,
   getPatternById,
-  deletePattern,
   updatePattern,
+  deletePattern,
 } = require("../controllers/paperPatternController");
 
-// Middleware
+// Middleware to check if user is logged in
 const { protect } = require("../middleware/authMiddleware");
 
-// --- ROUTES ---
+// Base Route: /api/patterns
 
-// 1. Get All & Create
-// ✅ Removed 'hasPermission' from POST. Now any logged-in user can create.
-router.route("/").get(protect, getAllPatterns).post(protect, createPattern);
+// 1. Create & Get All
+router
+  .route("/")
+  .post(protect, createPattern) // Create New
+  .get(protect, getAllPatterns); // List All
 
-// 2. Get Single, Delete, Update
-// ✅ Logic inside controller handles permission (Owner vs Admin)
+// 2. Single Pattern Operations (Get, Update, Delete)
 router
   .route("/:id")
-  .get(protect, getPatternById)
-  .delete(protect, deletePattern)
-  .put(protect, updatePattern);
+  .get(protect, getPatternById) // Fetch details (with pairing info)
+  .put(protect, updatePattern) // Edit
+  .delete(protect, deletePattern); // Delete
 
 module.exports = router;
