@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
+import Select from "react-select";
 import {
   FaPen,
   FaCode,
@@ -8,66 +9,116 @@ import {
   FaUnderline,
 } from "react-icons/fa";
 import BulkUpload from "../BulkUpload/BulkUpload";
-import {
-  getCategoriesForSubject,
-  shouldShowStatementBox,
-} from "../../../../config/SubjectConfig";
+import { getCategoriesForSubject } from "../../../../config/SubjectConfig";
 
-// ✅ Helper Component: TextEditor (Moved here)
-const TextEditor = ({
-  value,
-  onChange,
-  placeholder,
-  isUrdu = false,
-  rows = 2,
-}) => {
-  const insertTag = (tag) => {
-    const inputId = `editor-${placeholder.replace(/\s/g, "")}-${
-      isUrdu ? "ur" : "en"
-    }`;
-    const textarea = document.getElementById(inputId);
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    if (start === end) return;
-    const selectedText = value.substring(start, end);
-    const before = value.substring(0, start);
-    const after = value.substring(end);
-    onChange(`${before}<${tag}>${selectedText}</${tag}>${after}`);
-  };
-
-  return (
-    <div className="mb-2">
-      <div className="text-toolbar">
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => insertTag("b")}
-          title="Bold"
-        >
-          <FaBold size={12} />
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          onClick={() => insertTag("u")}
-          title="Underline"
-        >
-          <FaUnderline size={12} />
-        </button>
-      </div>
-      <textarea
-        id={`editor-${placeholder.replace(/\s/g, "")}-${isUrdu ? "ur" : "en"}`}
-        className={`form-control custom-input ${isUrdu ? "urdu-font" : ""}`}
-        rows={rows}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        dir={isUrdu ? "rtl" : "ltr"}
-      ></textarea>
-    </div>
-  );
+// ✅ OPTIMIZATION 1: Styles Moved Outside Component (Static)
+const customStyles = {
+  menuPortal: (base) => ({ ...base, zIndex: 99999 }),
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: "var(--bg-body)",
+    borderColor: state.isFocused ? "var(--accent-1)" : "var(--border-color)",
+    color: "var(--text-main)",
+    minHeight: "38px",
+    borderRadius: "6px",
+    fontSize: "0.9rem",
+    boxShadow: "none",
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: "var(--card-bg)",
+    zIndex: 99999,
+    border: "1px solid var(--border-color)",
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? "var(--accent-1)"
+      : state.isFocused
+        ? "rgba(37, 99, 235, 0.1)"
+        : "transparent",
+    color: state.isSelected ? "white" : "var(--text-main)",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    padding: "8px 12px",
+    ":active": {
+      backgroundColor: "var(--accent-1)",
+      color: "white",
+    },
+  }),
+  multiValue: (base) => ({
+    ...base,
+    backgroundColor: "rgba(37, 99, 235, 0.1)",
+    borderRadius: "4px",
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    color: "var(--text-main)",
+    fontSize: "0.85rem",
+  }),
+  multiValueRemove: (base) => ({
+    ...base,
+    color: "#ef4444",
+    cursor: "pointer",
+    ":hover": {
+      backgroundColor: "#ef4444",
+      color: "white",
+    },
+  }),
+  input: (base) => ({ ...base, color: "var(--text-main)" }),
 };
+
+// ✅ OPTIMIZATION 2: Memoized TextEditor
+// Ye component ab tab tak re-render nahi hoga jab tak iski props change na hon.
+// Category select karnay par ye "chup" rahega.
+const TextEditor = React.memo(
+  ({ value, onChange, placeholder, isUrdu = false, rows = 2 }) => {
+    const insertTag = (tag) => {
+      const inputId = `editor-${placeholder.replace(/\s/g, "")}-${isUrdu ? "ur" : "en"}`;
+      const textarea = document.getElementById(inputId);
+      if (!textarea) return;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      if (start === end) return;
+      const selectedText = value.substring(start, end);
+      const before = value.substring(0, start);
+      const after = value.substring(end);
+      onChange(`${before}<${tag}>${selectedText}</${tag}>${after}`);
+    };
+
+    return (
+      <div className="mb-2">
+        <div className="text-toolbar">
+          <button
+            type="button"
+            className="toolbar-btn"
+            onClick={() => insertTag("b")}
+            title="Bold"
+          >
+            <FaBold size={12} />
+          </button>
+          <button
+            type="button"
+            className="toolbar-btn"
+            onClick={() => insertTag("u")}
+            title="Underline"
+          >
+            <FaUnderline size={12} />
+          </button>
+        </div>
+        <textarea
+          id={`editor-${placeholder.replace(/\s/g, "")}-${isUrdu ? "ur" : "en"}`}
+          className={`form-control custom-input ${isUrdu ? "urdu-font" : ""}`}
+          rows={rows}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          dir={isUrdu ? "rtl" : "ltr"}
+        ></textarea>
+      </div>
+    );
+  },
+);
 
 const QuestionForm = ({
   mode,
@@ -79,7 +130,7 @@ const QuestionForm = ({
   previewImage,
   handleImageChange,
   clearImage,
-  handleSingleSubmit, // Form Submit Handler
+  handleSingleSubmit,
   handleCancelEdit,
   chapterId,
   subjectId,
@@ -90,20 +141,39 @@ const QuestionForm = ({
   isSubmitting,
   isUrduSubject,
 }) => {
-  const categories = getCategoriesForSubject(subjectName);
-  const showMainStatement = shouldShowStatementBox(formData.questionCategory);
-  const hasTopic = formData.selectedTopicIds.length > 0;
+  // ✅ OPTIMIZATION 3: Memoize Categories List
+  // Ye list bar bar calculate nahi hogi
+  const categories = useMemo(() => {
+    return getCategoriesForSubject(subjectName);
+  }, [subjectName]);
 
+  // Logic: Array Handling
+  const selectedCategories = useMemo(() => {
+    return Array.isArray(formData.questionCategory)
+      ? formData.questionCategory
+      : [formData.questionCategory];
+  }, [formData.questionCategory]);
+
+  // Check conditions
+  const isPoetry = selectedCategories.includes("POETRY");
+  const isPair = selectedCategories.some((c) =>
+    ["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].includes(c),
+  );
+
+  const hasTopic = formData.selectedTopicIds.length > 0;
   let hasContent = false;
-  if (showMainStatement)
+
+  if (isPair) {
+    hasContent = !!formData.questionData.itemA.trim();
+  } else {
     hasContent = isUrduSubject
       ? !!formData.statement.ur.trim()
       : !!formData.statement.en.trim() || !!formData.statement.ur.trim();
-  else hasContent = !!formData.questionData.itemA.trim();
+  }
 
   const isFormValid = hasTopic && hasContent;
 
-  // Handlers Wrapper
+  // Handlers Wrapper (Using useCallback where possible to prevent recreation)
   const handleQDataChange = (field, val, lang = null) => {
     setFormData((prev) => {
       const newData = { ...prev.questionData };
@@ -122,16 +192,33 @@ const QuestionForm = ({
     });
   };
 
-  const handleStatementChange = (lang, val) =>
-    setFormData({
-      ...formData,
-      statement: { ...formData.statement, [lang]: val },
-    });
+  // Stable handlers for TextEditor
+  const handleStatementChangeEn = useCallback(
+    (val) => {
+      setFormData((prev) => ({
+        ...prev,
+        statement: { ...prev.statement, en: val },
+      }));
+    },
+    [setFormData],
+  );
+
+  const handleStatementChangeUr = useCallback(
+    (val) => {
+      setFormData((prev) => ({
+        ...prev,
+        statement: { ...prev.statement, ur: val },
+      }));
+    },
+    [setFormData],
+  );
+
   const handleOptionChange = (idx, lang, val) => {
     const newOpts = [...formData.options];
     newOpts[idx][lang] = val;
     setFormData({ ...formData, options: newOpts });
   };
+
   const setCorrectOption = (idx) => {
     const newOpts = formData.options.map((o, i) => ({
       ...o,
@@ -202,7 +289,7 @@ const QuestionForm = ({
 
             {/* Type & Category */}
             <div className="row g-2 mb-2">
-              <div className="col-6">
+              <div className="col-5">
                 <label className="form-label">Type</label>
                 <select
                   className="form-select custom-select"
@@ -216,29 +303,36 @@ const QuestionForm = ({
                   <option value="LONG">Long</option>
                 </select>
               </div>
-              <div className="col-6">
+
+              <div className="col-7">
                 <label className="form-label">Category</label>
-                <select
-                  className="form-select custom-select"
-                  value={formData.questionCategory}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      questionCategory: e.target.value,
-                    })
-                  }
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  isMulti
+                  name="questionCategory"
+                  options={categories} // Uses Memoized categories
+                  value={categories.filter((opt) =>
+                    selectedCategories.includes(opt.value),
+                  )}
+                  onChange={(selected) => {
+                    const values = selected
+                      ? selected.map((opt) => opt.value)
+                      : [];
+                    setFormData((prev) => ({
+                      ...prev,
+                      questionCategory: values,
+                    }));
+                  }}
+                  className="basic-multi-select"
+                  classNamePrefix="select"
+                  placeholder="Select..."
+                  styles={customStyles} // Static Styles
+                  menuPortalTarget={document.body}
+                />
               </div>
             </div>
 
             {/* Dynamic Inputs (Poetry/Pairs/Text) */}
-            {formData.questionCategory === "POETRY" ? (
+            {isPoetry && (
               <div className="row g-2 mb-2">
                 {!isUrduSubject && (
                   <div className="col-6">
@@ -266,21 +360,21 @@ const QuestionForm = ({
                   />
                 </div>
               </div>
-            ) : ["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].includes(
-                formData.questionCategory
-              ) ? (
+            )}
+
+            {isPair ? (
               <div className="mb-3 p-3 bg-light-theme border rounded d-flex gap-2">
                 <input
                   type="text"
                   className="form-control custom-input"
-                  placeholder="Item A"
+                  placeholder="Item A (Word)"
                   value={formData.questionData.itemA}
                   onChange={(e) => handleQDataChange("itemA", e.target.value)}
                 />
                 <input
                   type="text"
                   className="form-control custom-input"
-                  placeholder="Item B"
+                  placeholder="Item B (Meaning/Pair)"
                   value={formData.questionData.itemB}
                   onChange={(e) => handleQDataChange("itemB", e.target.value)}
                 />
@@ -293,16 +387,16 @@ const QuestionForm = ({
                 {!isUrduSubject && (
                   <TextEditor
                     value={formData.statement.en}
-                    onChange={(val) => handleStatementChange("en", val)}
+                    onChange={handleStatementChangeEn} // Use stable handler
                     placeholder="English Statement..."
                   />
                 )}
                 <TextEditor
                   value={formData.statement.ur}
-                  onChange={(val) => handleStatementChange("ur", val)}
+                  onChange={handleStatementChangeUr} // Use stable handler
                   placeholder="اردو..."
                   isUrdu={true}
-                  rows={formData.questionCategory === "POETRY" ? 4 : 2}
+                  rows={isPoetry ? 4 : 2}
                 />
               </div>
             )}

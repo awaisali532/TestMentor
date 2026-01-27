@@ -8,7 +8,7 @@ const EXAMPLES = {
   {
     "topics": ["1.1"], 
     "type": "SHORT", 
-    "questionCategory": "PAIR_OF_WORDS",
+    "questionCategory": ["PAIR_OF_WORDS"],
     "difficulty": "Medium",
     "marks": 2,
     "important": true,
@@ -21,7 +21,7 @@ const EXAMPLES = {
   {
     "topics": ["1.2"], 
     "type": "SHORT", 
-    "questionCategory": "POETRY",
+    "questionCategory": ["POETRY"],
     "difficulty": "Hard",
     "marks": 2,
     "statement": { "en": "I wandered lonely as a cloud\\nThat floats on high o'er vales and hills..." },
@@ -33,7 +33,7 @@ const EXAMPLES = {
   {
     "topics": ["1.3"], 
     "type": "LONG", 
-    "questionCategory": "PASSAGE",
+    "questionCategory": ["COMPREHENSION"],
     "marks": 5,
     "statement": { "en": "Read the passage and answer the questions given below." },
     "questionData": {
@@ -43,7 +43,7 @@ const EXAMPLES = {
   {
     "topics": ["1.4"], 
     "type": "MCQ", 
-    "questionCategory": "GRAMMAR",
+    "questionCategory": ["GRAMMAR"],
     "difficulty": "Easy",
     "marks": 1,
     "statement": { "en": "Valour is a/an ______ noun." },
@@ -63,7 +63,7 @@ const EXAMPLES = {
   {
     "topics": ["2.1"], 
     "type": "SHORT", 
-    "questionCategory": "WORD_MEANING",
+    "questionCategory": ["PAIR_OF_WORDS"],
     "difficulty": "Easy",
     "marks": 2,
     "boardTags": ["FSD-2021"],
@@ -75,7 +75,7 @@ const EXAMPLES = {
   {
     "topics": ["2.2"], 
     "type": "LONG", 
-    "questionCategory": "POETRY",
+    "questionCategory": ["POETRY"],
     "difficulty": "Hard",
     "marks": 5,
     "important": true,
@@ -88,7 +88,7 @@ const EXAMPLES = {
   {
     "topics": ["2.3"], 
     "type": "MCQ", 
-    "questionCategory": "TEXT",
+    "questionCategory": ["TEXT"],
     "marks": 1,
     "statement": { "ur": "سبق 'ہجرت نبویؐ' کے مصنف کون ہیں؟" },
     "questionData": {
@@ -111,7 +111,7 @@ const EXAMPLES = {
   {
     "topics": ["3.1"], 
     "type": "SHORT", 
-    "questionCategory": "TRANSLATION",
+    "questionCategory": ["TRANSLATION"],
     "difficulty": "Medium",
     "marks": 2,
     "important": true,
@@ -123,7 +123,7 @@ const EXAMPLES = {
   {
     "topics": ["3.2"], 
     "type": "LONG", 
-    "questionCategory": "TEXT",
+    "questionCategory": ["TEXT"],
     "marks": 4,
     "boardTags": ["RWP-2020"],
     "statement": { "ur": "عقیدہ ختم نبوت پر ایک جامع نوٹ لکھیں۔" }
@@ -131,7 +131,7 @@ const EXAMPLES = {
   {
     "topics": ["3.3"], 
     "type": "MCQ", 
-    "questionCategory": "TEXT",
+    "questionCategory": ["TEXT"],
     "marks": 1,
     "statement": { "ur": "کس غزوہ میں مسلمانوں کو فتح مبین حاصل ہوئی؟" },
     "options": [
@@ -149,8 +149,8 @@ const EXAMPLES = {
   Science: `[
   {
     "topics": ["4.1"], 
-    "type": "NUMERICAL", 
-    "questionCategory": "NUMERICAL",
+    "type": "LONG", 
+    "questionCategory": ["NUMERICAL"],
     "difficulty": "Hard",
     "marks": 3,
     "important": true,
@@ -163,7 +163,7 @@ const EXAMPLES = {
   {
     "topics": ["4.2"], 
     "type": "SHORT", 
-    "questionCategory": "CONCEPTUAL",
+    "questionCategory": ["CONCEPTUAL"],
     "difficulty": "Medium",
     "marks": 2,
     "statement": { 
@@ -174,7 +174,7 @@ const EXAMPLES = {
   {
     "topics": ["4.3"], 
     "type": "MCQ", 
-    "questionCategory": "TEXT",
+    "questionCategory": ["TEXT"],
     "marks": 1,
     "statement": { "en": "The value of gravitational acceleration $g$ is:" },
     "options": [
@@ -193,7 +193,7 @@ const EXAMPLES = {
   {
     "topics": ["1.1"], 
     "type": "MCQ", 
-    "questionCategory": "TEXT",
+    "questionCategory": ["MCQ_GENERAL"],
     "difficulty": "Medium",
     "marks": 1,
     "important": false,
@@ -209,7 +209,7 @@ const EXAMPLES = {
   {
     "topics": ["1.2"],
     "type": "SHORT",
-    "questionCategory": "TEXT",
+    "questionCategory": ["TEXT"],
     "marks": 2,
     "statement": { "en": "Define Science.", "ur": "سائنس کی تعریف کریں۔" }
   }

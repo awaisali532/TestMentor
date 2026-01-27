@@ -143,7 +143,7 @@ const getQuestionsByFilter = async (req, res) => {
 };
 
 // ==========================================
-// 5. ADD QUESTION (SINGLE)
+// 5. ADD QUESTION (SINGLE) - ✅ UPDATED
 // ==========================================
 const addQuestion = async (req, res) => {
   try {
@@ -159,21 +159,42 @@ const addQuestion = async (req, res) => {
       boardTags,
       statement,
       options,
-      questionCategory,
+      questionCategory, // Can be String or Array from frontend
       questionData,
     } = req.body;
 
     if (!subjectId || subjectId === "undefined")
       return res.status(400).json({ error: "Subject ID missing." });
 
-    // SAFE PARSING
+    // ✅ SAFE PARSING
     let parsedStatement = safeParse(statement, { en: "", ur: "" });
     let parsedTopics = safeParse(topics, []);
     let parsedOptions = safeParse(options, []);
     let parsedTags = safeParse(boardTags, []);
     let parsedQData = safeParse(questionData, {});
 
-    // DUPLICATE CHECK
+    // ✅ CATEGORY FIX: Ensure it is always an Array
+    let parsedCategory = [];
+    if (questionCategory) {
+      if (Array.isArray(questionCategory)) {
+        parsedCategory = questionCategory;
+      } else if (typeof questionCategory === "string") {
+        try {
+          // Sometimes frontend sends JSON string like '["TEXT"]'
+          const parsed = JSON.parse(questionCategory);
+          parsedCategory = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (e) {
+          // If not JSON, treat as comma-separated or single string
+          parsedCategory = questionCategory.includes(",")
+            ? questionCategory.split(",").map((c) => c.trim())
+            : [questionCategory.trim()];
+        }
+      }
+    } else {
+      parsedCategory = ["TEXT"]; // Default
+    }
+
+    // ✅ DUPLICATE CHECK
     if (parsedStatement.en && parsedStatement.en.trim().length > 0) {
       const safeText = escapeRegex(parsedStatement.en.trim());
       const existingQuestion = await Question.findOne({
@@ -187,13 +208,14 @@ const addQuestion = async (req, res) => {
       }
     }
 
-    // VECTOR GENERATION
+    // ✅ VECTOR GENERATION (Updated Logic)
     let vector = null;
     let textToEmbed = parsedStatement.en?.trim() || parsedStatement.ur?.trim();
 
     if (!textToEmbed && parsedQData) {
-      if (parsedQData.itemA) textToEmbed = parsedQData.itemA;
-      else if (parsedQData.poetName?.en) textToEmbed = parsedQData.poetName.en;
+      if (parsedQData.itemA)
+        textToEmbed = parsedQData.itemA; // Pairs/Idioms
+      else if (parsedQData.poetName?.en) textToEmbed = parsedQData.poetName.en; // Poetry
     }
 
     if (textToEmbed && textToEmbed.length > 0) {
@@ -204,13 +226,13 @@ const addQuestion = async (req, res) => {
       }
     }
 
+    // Fallback Vector (Taake save fail na ho agar API down ho)
     if (!vector || vector.length === 0) {
-      return res
-        .status(500)
-        .json({ error: "Vector generation failed! Question NOT saved." });
+      console.warn("Vector generation skipped (API issue or Empty text).");
+      vector = []; // Save empty vector instead of blocking
     }
 
-    // IMAGE UPLOAD (BUFFER)
+    // ✅ IMAGE UPLOAD (BUFFER)
     let imageData = null;
     if (req.file) {
       try {
@@ -228,7 +250,7 @@ const addQuestion = async (req, res) => {
       subject: subjectId,
       classLevel,
       type,
-      questionCategory: questionCategory || "TEXT",
+      questionCategory: parsedCategory, // ✅ Saved as Array
       difficulty,
       marks,
       important: important === "true",
@@ -247,123 +269,6 @@ const addQuestion = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-// ==========================================
-// 6. UPDATE QUESTION (✅ Updated with Remove Image Logic)
-// ==========================================
-const updateQuestion = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const question = await Question.findById(id);
-    if (!question) return res.status(404).json({ error: "Not found" });
-
-    // Destructure body
-    const {
-      topics,
-      type,
-      difficulty,
-      marks,
-      important,
-      boardTags,
-      statement,
-      options,
-      questionCategory,
-      questionData,
-      removeImage, // ✅ Capture this flag from frontend
-    } = req.body;
-
-    // SAFE PARSING
-    let parsedStatement = statement
-      ? safeParse(statement, question.statement)
-      : question.statement;
-    let parsedQData = questionData
-      ? safeParse(questionData, question.questionData)
-      : question.questionData;
-    let parsedTopics = topics
-      ? safeParse(topics, question.topics)
-      : question.topics;
-    let parsedTags = boardTags
-      ? safeParse(boardTags, question.boardTags)
-      : question.boardTags;
-    let parsedOptions = options
-      ? safeParse(options, question.options)
-      : question.options;
-
-    let updateData = {
-      topics: parsedTopics,
-      type,
-      difficulty,
-      marks,
-      questionCategory,
-      important: important === "true",
-      boardTags: parsedTags,
-      statement: parsedStatement,
-      options: parsedOptions,
-      questionData: parsedQData,
-    };
-
-    // VECTOR UPDATE
-    const oldText = question.statement.en || question.statement.ur;
-    const newText = parsedStatement.en || parsedStatement.ur;
-
-    if (newText && newText !== oldText) {
-      try {
-        const newVector = await getEmbedding(newText);
-        if (newVector && newVector.length > 0) {
-          updateData.vector_embedding = newVector;
-        }
-      } catch (vectorError) {
-        console.error("Vector Update Failed (Ignored):", vectorError.message);
-      }
-    }
-
-    // ✅ IMAGE UPDATE LOGIC
-    if (req.file) {
-      // Case A: New Image Uploaded
-      // 1. Delete Old Image
-      if (question.image && question.image.public_id) {
-        try {
-          await cloudinary.uploader.destroy(question.image.public_id);
-        } catch (cloudErr) {
-          console.error("Cloudinary Delete Error:", cloudErr);
-        }
-      }
-
-      // 2. Upload New Image
-      try {
-        const result = await uploadToCloudinary(req.file.buffer);
-        updateData.image = {
-          url: result.secure_url,
-          public_id: result.public_id,
-        };
-      } catch (uploadError) {
-        return res
-          .status(500)
-          .json({ error: "Image upload failed during update" });
-      }
-    } else if (removeImage === "true") {
-      // ✅ Case B: User clicked "X" (Remove Image)
-      if (question.image && question.image.public_id) {
-        try {
-          await cloudinary.uploader.destroy(question.image.public_id);
-        } catch (cloudErr) {
-          console.error("Cloudinary Remove Error:", cloudErr);
-        }
-      }
-      updateData.image = null; // Set to null in DB
-    }
-
-    const updatedQ = await Question.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
-    res.json(updatedQ);
-  } catch (err) {
-    console.error("Update Error:", err);
-    res.status(500).json({ error: "Update failed: " + err.message });
-  }
-};
-
 // ==========================================
 // 7. DELETE QUESTION
 // ==========================================
@@ -565,6 +470,154 @@ const getQuestionsByChapter = async (req, res) => {
     res.json(questions);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+// ==========================================
+// 6. UPDATE QUESTION (✅ UPDATED)
+// ==========================================
+const updateQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const question = await Question.findById(id);
+    if (!question) return res.status(404).json({ error: "Not found" });
+
+    // Destructure body
+    const {
+      topics,
+      type,
+      difficulty,
+      marks,
+      important,
+      boardTags,
+      statement,
+      options,
+      questionCategory, // Can come as String, Array, or undefined
+      questionData,
+      removeImage,
+    } = req.body;
+
+    // ✅ 1. CATEGORY PARSING (Fix for Array vs String)
+    let parsedCategory = question.questionCategory; // Default: Keep existing
+
+    if (questionCategory) {
+      if (Array.isArray(questionCategory)) {
+        parsedCategory = questionCategory;
+      } else if (typeof questionCategory === "string") {
+        try {
+          // Try parsing JSON string (e.g., '["TEXT", "CONCEPTUAL"]')
+          const parsed = JSON.parse(questionCategory);
+          parsedCategory = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (e) {
+          // Fallback: Comma separated or single string
+          parsedCategory = questionCategory.includes(",")
+            ? questionCategory.split(",").map((c) => c.trim())
+            : [questionCategory.trim()];
+        }
+      }
+    }
+
+    // ✅ 2. SAFE PARSING OTHER FIELDS
+    // Logic: Agar req.body mein naya data hai to parse karo, warna purana rehne do
+    let parsedStatement = statement
+      ? safeParse(statement, question.statement)
+      : question.statement;
+    let parsedQData = questionData
+      ? safeParse(questionData, question.questionData)
+      : question.questionData;
+    let parsedTopics = topics
+      ? safeParse(topics, question.topics)
+      : question.topics;
+    let parsedTags = boardTags
+      ? safeParse(boardTags, question.boardTags)
+      : question.boardTags;
+    let parsedOptions = options
+      ? safeParse(options, question.options)
+      : question.options;
+
+    let updateData = {
+      topics: parsedTopics,
+      type: type || question.type, // Keep old if not provided
+      difficulty: difficulty || question.difficulty,
+      marks: marks || question.marks,
+      questionCategory: parsedCategory, // ✅ Updated Array Logic
+      important: important === "true" || important === true, // Handle boolean/string
+      boardTags: parsedTags,
+      statement: parsedStatement,
+      options: parsedOptions,
+      questionData: parsedQData,
+    };
+
+    // ✅ 3. VECTOR UPDATE (Smart Logic)
+    // Sirf tab update karo agar Text change hua ho
+    const oldText = question.statement?.en || question.statement?.ur || "";
+    const newText = parsedStatement?.en || parsedStatement?.ur || "";
+
+    // Fallback: Agar text empty hai to questionData check karo (Pairs/Poetry k liye)
+    let textToEmbed = newText;
+    if (!textToEmbed && parsedQData) {
+      if (parsedQData.itemA) textToEmbed = parsedQData.itemA;
+      else if (parsedQData.poetName?.en) textToEmbed = parsedQData.poetName.en;
+    }
+
+    const oldEmbedText =
+      oldText ||
+      question.questionData?.itemA ||
+      question.questionData?.poetName?.en ||
+      "";
+
+    if (textToEmbed && textToEmbed !== oldEmbedText) {
+      try {
+        const newVector = await getEmbedding(textToEmbed);
+        if (newVector && newVector.length > 0) {
+          updateData.vector_embedding = newVector;
+        }
+      } catch (vectorError) {
+        console.error("Vector Update Failed (Ignored):", vectorError.message);
+      }
+    }
+
+    // ✅ 4. IMAGE UPDATE LOGIC
+    if (req.file) {
+      // Case A: New Image Uploaded -> Replace Old
+      if (question.image && question.image.public_id) {
+        try {
+          await cloudinary.uploader.destroy(question.image.public_id);
+        } catch (cloudErr) {
+          console.error("Cloudinary Delete Error:", cloudErr);
+        }
+      }
+
+      try {
+        const result = await uploadToCloudinary(req.file.buffer);
+        updateData.image = {
+          url: result.secure_url,
+          public_id: result.public_id,
+        };
+      } catch (uploadError) {
+        return res
+          .status(500)
+          .json({ error: "Image upload failed during update" });
+      }
+    } else if (removeImage === "true") {
+      // ✅ Case B: User clicked "X" -> Remove Image
+      if (question.image && question.image.public_id) {
+        try {
+          await cloudinary.uploader.destroy(question.image.public_id);
+        } catch (cloudErr) {
+          console.error("Cloudinary Remove Error:", cloudErr);
+        }
+      }
+      updateData.image = null; // Set to null in DB
+    }
+
+    const updatedQ = await Question.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+    res.json(updatedQ);
+  } catch (err) {
+    console.error("Update Error:", err);
+    res.status(500).json({ error: "Update failed: " + err.message });
   }
 };
 module.exports = {

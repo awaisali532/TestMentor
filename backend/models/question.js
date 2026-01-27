@@ -1,5 +1,31 @@
 const mongoose = require("mongoose");
 
+// ✅ CONSTANT: Shared Categories List (Consistent with PaperPattern)
+const QUESTION_CATEGORIES = [
+  "ANY", // Mixed / Random
+  "TEXT", // General Short/Text
+  "EXERCISE", // Book Exercise
+  "MCQ_GENERAL", // Standard MCQs
+  "NUMERICAL", // Physics/Chem/Math
+  "THEORY", // Long Questions
+  "CONCEPTUAL", // Reasoning
+  "DIAGRAM", // Drawing/Labeling
+  "THEOREM", // Math Masla
+  "SUMMARY", // English Poem
+  "ESSAY", // Mazmoon
+  "LETTER", // Khat/Application
+  "STORY", // Kahani
+  "TRANSLATION", // Urdu to Eng / Eng to Urdu
+  "POETRY", // Tashreeh
+  "IDIOMS", // Muhawaray
+  "PAIR_OF_WORDS", // Jorey
+  "CHANGE_OF_VOICE", // Active/Passive
+  "GRAMMAR", // Direct/Indirect etc.
+  "COMPREHENSION", // Passage
+  "STANZA", // Poem Stanza
+  "REVIEW", // Review Exercise
+];
+
 const questionSchema = new mongoose.Schema(
   {
     // ==========================================
@@ -25,36 +51,22 @@ const questionSchema = new mongoose.Schema(
     classLevel: { type: String, required: true },
 
     // ==========================================
-    // 2. TYPES & CATEGORIES (Updated for Languages)
+    // 2. TYPES & CATEGORIES (UPDATED ✅)
     // ==========================================
     type: {
       type: String,
       enum: ["MCQ", "SHORT", "LONG"],
       required: true,
     },
+
+    // 🔥 CHANGED: String -> [String] (Array)
     questionCategory: {
-      type: String,
-      enum: [
-        "TEXT", // General Textual Question
-        "EXERCISE", // Book Exercise Question
-        "NUMERICAL", // Physics/Chem/Math
-        "THEORY", // Physics/Bio/Chem (Long)
-        "CONCEPTUAL", // Conceptual/Reasoning
-        "SUMMARY", // English (Poem Summary)
-        "ESSAY", // English/Urdu (Mazmoon)
-        "LETTER", // English/Urdu (Khat/Application)
-        "STORY", // English/Urdu (Kahani)
-        "TRANSLATION", // Paragraph Translation
-        "POETRY", // Tashreeh (Nazm/Ghazal)
-        "IDIOMS", // Muhawaray / Phrasal Verbs
-        "PAIR_OF_WORDS", // English
-        "CHANGE_OF_VOICE", // Active/Passive
-        "THEOREM", // Math Compulsory
-        "COMPREHENSION", // Paragraph questions
-        "MCQ_GENERAL", // Standard MCQs
-      ],
-      default: "TEXT",
+      type: [String],
+      enum: QUESTION_CATEGORIES,
+      default: ["TEXT"], // Default ab array hoga
+      index: true, // Filtering k liye fast hoga
     },
+
     difficulty: {
       type: String,
       enum: ["Easy", "Medium", "Hard"],
@@ -64,29 +76,26 @@ const questionSchema = new mongoose.Schema(
     // ==========================================
     // 3. MAIN CONTENT (Dual Medium)
     // ==========================================
-    // Normal sawalon ke liye yehi use hoga.
-    // Rich Text (Bold/Underline) supported via HTML strings.
     statement: {
       en: { type: String },
       ur: { type: String },
     },
 
     // ✅ 4. FLEXIBLE DATA (For Complex Language Qs)
-    // Ye object tab use hoga jab category TEXT ya NUMERICAL nahi hogi.
     questionData: {
       // Poetry Specific
-      poetName: { en: String, ur: String }, // Shair ka naam
-      poemName: { en: String, ur: String }, // Nazam ka naam
+      poetName: { en: String, ur: String },
+      poemName: { en: String, ur: String },
 
       // Prose/Lesson Specific
-      authorName: { en: String, ur: String }, // Musannif ka naam
-      lessonTitle: { en: String, ur: String }, // Sabq ka Unwan
+      authorName: { en: String, ur: String },
+      lessonTitle: { en: String, ur: String },
 
-      // Comparison / Pairs (Pair of words, Idioms, Word Meanings)
-      itemA: { type: String }, // e.g. "Break" (Word)
-      itemB: { type: String }, // e.g. "Brake" (Meaning or 2nd Word)
+      // Comparison / Pairs
+      itemA: { type: String },
+      itemB: { type: String },
 
-      // Large Text Context (Comprehension Passage / English Paragraph)
+      // Large Text Context
       contextPassage: { en: String, ur: String },
     },
 
@@ -106,14 +115,14 @@ const questionSchema = new mongoose.Schema(
     },
     marks: { type: Number, default: 1 },
     important: { type: Boolean, default: false },
-    boardTags: [String], // e.g. ["LHR-22", "GRW-19"]
+    boardTags: [String],
 
     // ==========================================
     // 7. AI & SEARCH
     // ==========================================
     vector_embedding: {
       type: [Number],
-      select: false, // Performance ke liye default hidden
+      select: false,
       index: true,
     },
   },

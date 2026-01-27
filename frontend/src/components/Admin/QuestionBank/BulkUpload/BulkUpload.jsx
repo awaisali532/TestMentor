@@ -34,14 +34,13 @@ const BulkUpload = ({
   const sanitizeJson = (input) => {
     // 1. Replace single backslashes with double backslashes for LaTeX words
     // Ye regex dhoondta hai '\' jo 't' (times) ya 'm' (mu) jese words se pehle ho
-    // Aur unhe '\\' bana deta hai taake JSON crash na ho.
-
-    // Step A: Fix simple invalid escapes like \m, \c, \p, etc. (Common in LaTeX)
     let fixed = input.replace(/\\([^"\\/bfnrtu])/g, "\\\\$1");
 
-    // Step B: Fix specific LaTeX commands that might overlap with valid escapes
-    // e.g. \times (\t is tab), \nu (\n is newline). We want literal text.
-    fixed = fixed.replace(/\\(times|theta|tau|tan|nu|neq)/g, "\\\\$1");
+    // Fix specific LaTeX commands commonly used in Physics/Math
+    fixed = fixed.replace(
+      /\\(times|theta|tau|tan|nu|neq|mu|pi|alpha|beta|gamma|delta|frac|sqrt|hat|vec)/g,
+      "\\\\$1",
+    );
 
     return fixed;
   };
@@ -63,7 +62,6 @@ const BulkUpload = ({
           parsedQuestions = JSON.parse(fixedJson);
           console.log("Auto-fixed JSON successfully.");
         } catch (e2) {
-          // Agar ab bhi fail ho, to error dikhao
           setLoading(false);
           return Swal.fire({
             title: "Invalid JSON!",
@@ -81,40 +79,58 @@ const BulkUpload = ({
         return toast.error("JSON must be an Array [ ... ]");
       }
 
-      // 🛑 VALIDATION LOOP
-      for (let i = 0; i < parsedQuestions.length; i++) {
-        const q = parsedQuestions[i];
+      // 🛑 NORMALIZATION & VALIDATION LOOP
+      const normalizedQuestions = parsedQuestions.map((q, i) => {
         const index = i + 1;
 
+        // 1. Validate Type
         if (!q.type) {
-          setLoading(false);
-          return toast.error(`Item #${index}: Question Type is missing!`);
+          throw new Error(`Item #${index}: Question Type is missing!`);
         }
 
+        // 2. ✅ AUTO-FIX: Convert String Category to Array
+        // Agar user ne "TEXT" likha hai to usay ["TEXT"] bana do
+        let categories = [];
+        if (q.questionCategory) {
+          if (Array.isArray(q.questionCategory)) {
+            categories = q.questionCategory;
+          } else {
+            categories = [q.questionCategory];
+          }
+        } else {
+          // Default Category based on type
+          categories = q.type === "MCQ" ? ["MCQ_GENERAL"] : ["TEXT"];
+        }
+
+        // 3. Validate MCQs
         if (q.type === "MCQ") {
           if (!Array.isArray(q.options) || q.options.length < 4) {
-            setLoading(false);
-            return toast.error(
-              `Item #${index} (MCQ): Must have exactly 4 options!`
+            throw new Error(
+              `Item #${index} (MCQ): Must have exactly 4 options!`,
             );
           }
           const validOptions = q.options.filter(
             (opt) =>
               (opt.en && opt.en.trim() !== "") ||
-              (opt.ur && opt.ur.trim() !== "")
+              (opt.ur && opt.ur.trim() !== ""),
           );
           if (validOptions.length < 4) {
-            setLoading(false);
-            return toast.error(
-              `Item #${index} (MCQ): All 4 options must be filled!`
+            throw new Error(
+              `Item #${index} (MCQ): All 4 options must be filled!`,
             );
           }
         }
-      }
+
+        // Return normalized object
+        return {
+          ...q,
+          questionCategory: categories, // Updated Array
+        };
+      });
 
       // API Call
       const res = await axios.post(`${BASE_URL}/api/questions/bulk-add`, {
-        questions: parsedQuestions,
+        questions: normalizedQuestions,
         chapterId,
         subjectId,
         classLevel,
@@ -155,9 +171,10 @@ const BulkUpload = ({
       setJsonInput("");
       onSuccess();
     } catch (err) {
+      // Catch validation errors thrown from loop or API errors
       Swal.fire({
         title: "Error!",
-        text: err.response?.data?.error || "Upload Failed",
+        text: err.message || err.response?.data?.error || "Upload Failed",
         icon: "error",
         background: "var(--card-bg)",
         color: "var(--text-main)",
@@ -179,6 +196,14 @@ const BulkUpload = ({
           <button
             className="btn-icon-text"
             onClick={() => setShowExample(!showExample)}
+            style={{
+              background: "transparent",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-main)",
+              padding: "5px 10px",
+              borderRadius: "6px",
+              fontSize: "0.85rem",
+            }}
           >
             {showExample ? <FaEyeSlash /> : <FaEye />} Example
           </button>
@@ -187,7 +212,18 @@ const BulkUpload = ({
         {showExample && (
           <div className="json-example-box mb-3">
             <p className="mb-1 text-accent fw-bold small">Format:</p>
-            <pre>{exampleJson}</pre>
+            <pre
+              style={{
+                background: "var(--bg-body)",
+                color: "var(--text-main)",
+                padding: "10px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-color)",
+                fontSize: "0.8rem",
+              }}
+            >
+              {exampleJson}
+            </pre>
           </div>
         )}
 
@@ -198,14 +234,23 @@ const BulkUpload = ({
             placeholder="Paste JSON here..."
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
+            style={{
+              background: "var(--bg-body)",
+              color: "var(--text-main)",
+              borderColor: "var(--border-color)",
+            }}
           ></textarea>
 
-          {/* Manual Fix Button (Optional) */}
+          {/* Manual Fix Button */}
           {jsonInput && (
             <button
-              className="btn btn-sm btn-dark position-absolute top-0 end-0 m-2"
+              className="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 d-flex align-items-center gap-1"
               onClick={() => setJsonInput(sanitizeJson(jsonInput))}
-              title="Auto-Fix Backslashes"
+              title="Auto-Fix Backslashes for LaTeX"
+              style={{
+                fontSize: "0.75rem",
+                opacity: 0.9,
+              }}
             >
               <FaMagic /> Auto-Fix
             </button>
