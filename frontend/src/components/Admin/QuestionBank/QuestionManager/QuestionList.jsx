@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   FaPen,
   FaTrashAlt,
@@ -9,17 +9,14 @@ import {
 import RenderText from "../../../../components/common/RenderText";
 
 const QuestionList = ({
-  questions,
+  questions, // Make sure Parent sends ALL questions here
   topics,
   filterTopicId,
   setFilterTopicId,
   filterCategory,
   setFilterCategory,
-
-  // ✅ NEW: Array Props receive kiye
   filterTypes,
   setFilterTypes,
-
   categories,
   handleDeleteAllInTopic,
   handleEdit,
@@ -41,6 +38,42 @@ const QuestionList = ({
       setFilterTypes([...filterTypes, type]); // Add
     }
   };
+
+  // ==========================================
+  // 🔥 FIX: CLIENT SIDE FILTERING LOGIC
+  // ==========================================
+  const filteredQuestions = useMemo(() => {
+    if (!questions) return [];
+
+    return questions.filter((q) => {
+      // 1. Topic Filter
+      if (filterTopicId) {
+        const hasTopic = q.topics.some((t) => {
+          const tId = typeof t === "object" ? t._id : t;
+          return tId === filterTopicId;
+        });
+        if (!hasTopic) return false;
+      }
+
+      // 2. Type Filter
+      if (filterTypes.length > 0) {
+        if (!filterTypes.includes(q.type)) return false;
+      }
+
+      // 3. Category Filter (THE MAIN FIX)
+      if (filterCategory) {
+        if (Array.isArray(q.questionCategory)) {
+          // Agar Array hai to .includes check kro
+          if (!q.questionCategory.includes(filterCategory)) return false;
+        } else {
+          // Agar purana String data hai to direct match kro
+          if (q.questionCategory !== filterCategory) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [questions, filterTopicId, filterCategory, filterTypes]);
 
   return (
     <div className="col-md-7">
@@ -89,14 +122,16 @@ const QuestionList = ({
               ))}
           </select>
 
-          {/* 3. ✅ TYPE CHECKBOXES (Buttons Style) */}
+          {/* 3. TYPE CHECKBOXES */}
           <div className="d-flex gap-1 ms-1 bg-light p-1 rounded border">
             {["MCQ", "SHORT", "LONG"].map((type) => {
               const isActive = filterTypes.includes(type);
               return (
                 <button
                   key={type}
-                  className={`btn btn-sm d-flex align-items-center gap-1 ${isActive ? "btn-primary" : "btn-outline-secondary"}`}
+                  className={`btn btn-sm d-flex align-items-center gap-1 ${
+                    isActive ? "btn-primary" : "btn-outline-secondary"
+                  }`}
                   onClick={() => toggleType(type)}
                   style={{ fontSize: "0.7rem", padding: "4px 8px" }}
                   title={`Toggle ${type}`}
@@ -112,7 +147,7 @@ const QuestionList = ({
             })}
           </div>
 
-          {filterTopicId && questions.length > 0 && (
+          {filterTopicId && filteredQuestions.length > 0 && (
             <button
               className="btn-danger-soft ms-auto"
               onClick={handleDeleteAllInTopic}
@@ -125,12 +160,12 @@ const QuestionList = ({
       </div>
 
       <div className="q-list-container custom-scrollbar">
-        {questions.length === 0 ? (
+        {filteredQuestions.length === 0 ? (
           <div className="empty-state-box">
             No questions found matching your filters.
           </div>
         ) : (
-          questions.map((q, index) => {
+          filteredQuestions.map((q, index) => {
             // Header Logic
             const topicObj =
               q.topics && q.topics.length > 0 ? q.topics[0] : null;
@@ -161,6 +196,7 @@ const QuestionList = ({
             }
 
             let showHeader = false;
+            // Show header only if NOT filtering by specific topic (otherwise redundant)
             if (
               !filterTopicId &&
               currentTopicId !== lastTopicId &&
@@ -184,7 +220,9 @@ const QuestionList = ({
                 )}
 
                 <div
-                  className={`question-card type-${q.type} ${editingId === q._id ? "active-edit" : ""} ${selectedQuestionIds.includes(q._id) ? "selected" : ""}`}
+                  className={`question-card type-${q.type} ${
+                    editingId === q._id ? "active-edit" : ""
+                  } ${selectedQuestionIds.includes(q._id) ? "selected" : ""}`}
                 >
                   <div className="d-flex justify-content-between mb-2">
                     <div className="d-flex align-items-center flex-wrap gap-2">
@@ -198,10 +236,27 @@ const QuestionList = ({
                         #{index + 1}
                       </span>
                       <span className="badge-type">{q.type}</span>
-                      <span className="badge-cat">{q.questionCategory}</span>
+
+                      {/* Array Friendly Category Display */}
+                      {Array.isArray(q.questionCategory) ? (
+                        q.questionCategory.map((cat, cIdx) => (
+                          <span key={cIdx} className="badge-cat">
+                            {cat}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="badge-cat">{q.questionCategory}</span>
+                      )}
+
                       <span className="badge-marks">{q.marks} Marks</span>
                       <span
-                        className={`badge ${q.difficulty === "Easy" ? "bg-success" : q.difficulty === "Medium" ? "bg-warning text-dark" : "bg-danger"}`}
+                        className={`badge ${
+                          q.difficulty === "Easy"
+                            ? "bg-success"
+                            : q.difficulty === "Medium"
+                              ? "bg-warning text-dark"
+                              : "bg-danger"
+                        }`}
                         style={{ fontSize: "0.65rem" }}
                       >
                         {q.difficulty}
@@ -241,7 +296,10 @@ const QuestionList = ({
                     </div>
                   </div>
 
-                  {q.questionCategory === "POETRY" ? (
+                  {q.questionCategory &&
+                  (Array.isArray(q.questionCategory)
+                    ? q.questionCategory.includes("POETRY")
+                    : q.questionCategory === "POETRY") ? (
                     <div className="poetry-wrapper">
                       {q.questionData?.poetName?.ur && (
                         <div className="text-center text-muted small urdu-font mb-2">
@@ -259,8 +317,10 @@ const QuestionList = ({
                         )}
                       </div>
                     </div>
-                  ) : ["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].includes(
-                      q.questionCategory,
+                  ) : ["PAIR_OF_WORDS", "IDIOMS", "WORD_MEANING"].some((c) =>
+                      Array.isArray(q.questionCategory)
+                        ? q.questionCategory.includes(c)
+                        : q.questionCategory === c,
                     ) ? (
                     <div className="d-flex gap-2 align-items-center bg-light-theme p-2 rounded">
                       <strong className="text-main">
@@ -305,7 +365,9 @@ const QuestionList = ({
                       {q.options.map((opt, i) => (
                         <div
                           key={i}
-                          className={`mcq-opt ${opt.isCorrect ? "correct" : ""}`}
+                          className={`mcq-opt ${
+                            opt.isCorrect ? "correct" : ""
+                          }`}
                         >
                           <span className="opt-label">
                             {String.fromCharCode(65 + i)}

@@ -10,8 +10,9 @@ import ConfirmationModal from "../../../../components/common/ConfirmationModal/C
 import QuestionList from "./QuestionList";
 import QuestionForm from "./QuestionForm";
 
-// Config
+// Config & Utils
 import { getCategoriesForSubject } from "../../../../config/SubjectConfig";
+import { filterQuestionsLogic } from "../../../../utils/questionFilters"; // ✅ IMPORT NEW UTILITY
 
 const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -24,8 +25,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   // Filters
   const [filterTopicId, setFilterTopicId] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
-
-  // ✅ CHANGE 1: State ab Array hogi (Multi-select ke liye)
   const [filterTypes, setFilterTypes] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,7 +56,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
   const initialFormState = {
     selectedTopicIds: [],
     type: "MCQ",
-    questionCategory: "TEXT",
+    questionCategory: [],
     difficulty: "Medium",
     marks: 1,
     important: false,
@@ -87,28 +86,21 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     if (chapterId) {
       fetchQuestions();
       setSelectedQuestionIds([]);
-      // Reset logic
       setFilterCategory("");
-      setFilterTypes([]); // ✅ Reset Array
+      setFilterTypes([]);
     }
   }, [filterTopicId, chapterId]);
 
-  // ✅ CHANGE 2: Updated Filtering Logic for Multiple Types
+  // ==========================================
+  // ✅ CLEANED UP FILTER LOGIC
+  // ==========================================
   const filteredQuestions = useMemo(() => {
-    return questions.filter((q) => {
-      // 1. Category Check
-      const matchesCategory = filterCategory
-        ? q.questionCategory === filterCategory
-        : true;
-
-      // 2. Type Check (Multi-select)
-      // Agar array empty hai matlab "All Types", warna check karo k array me mojood hai ya nahi
-      const matchesType =
-        filterTypes.length === 0 || filterTypes.includes(q.type);
-
-      return matchesCategory && matchesType;
+    return filterQuestionsLogic(questions, {
+      topicId: filterTopicId,
+      category: filterCategory,
+      types: filterTypes,
     });
-  }, [questions, filterCategory, filterTypes]); // ✅ Dependency Updated
+  }, [questions, filterTopicId, filterCategory, filterTypes]);
 
   // API CALLS
   const fetchSubjectDetails = async () => {
@@ -174,7 +166,9 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     }
   };
 
-  // ... (All Handlers like Image, Edit, Delete remain exactly the same) ...
+  // ... (Baki sare Handlers Same Rahenge - No Change Needed) ...
+  // Image Handlers, Edit Handlers, Delete Handlers, Submit Handlers...
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -188,14 +182,23 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     setPreviewImage(null);
     setRemoveImageFlag(true);
   };
+
   const handleEdit = (question) => {
     setEditingId(question._id);
     setMode("single");
     setRemoveImageFlag(false);
+
+    let catArray = [];
+    if (Array.isArray(question.questionCategory)) {
+      catArray = question.questionCategory;
+    } else if (question.questionCategory) {
+      catArray = [question.questionCategory];
+    }
+
     setFormData({
       selectedTopicIds: question.topics || [],
       type: question.type,
-      questionCategory: question.questionCategory,
+      questionCategory: catArray,
       difficulty: question.difficulty,
       marks: question.marks,
       important: question.important || false,
@@ -218,6 +221,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       setPreviewImage(null);
     }
   };
+
   const handleCancelEdit = () => {
     setEditingId(null);
     setFormData(initialFormState);
@@ -225,11 +229,13 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     setPreviewImage(null);
     setRemoveImageFlag(false);
   };
+
   const toggleQuestionSelection = (qId) => {
     setSelectedQuestionIds((prev) =>
       prev.includes(qId) ? prev.filter((id) => id !== qId) : [...prev, qId],
     );
   };
+
   const handleDelete = (id) =>
     setDeleteModal({
       isOpen: true,
@@ -256,6 +262,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
         message: "Sure?",
       });
   };
+
   const handleConfirmDelete = async () => {
     setDeleteModal({ ...deleteModal, isOpen: false });
     setIsSubmitting(true);
@@ -289,6 +296,7 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
       setIsSubmitting(false);
     }
   };
+
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
     if (formData.type === "MCQ") {
@@ -304,10 +312,13 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
     data.append("subjectId", subjectId);
     data.append("classLevel", classLevel);
     data.append("type", formData.type);
-    data.append("questionCategory", formData.questionCategory);
     data.append("difficulty", formData.difficulty);
     data.append("marks", formData.marks);
     data.append("important", formData.important);
+
+    // JSON Stringify for Category Array
+    data.append("questionCategory", JSON.stringify(formData.questionCategory));
+
     data.append("statement", JSON.stringify(formData.statement));
     data.append("questionData", JSON.stringify(formData.questionData));
     if (formData.type === "MCQ")
@@ -384,7 +395,6 @@ const QuestionManager = ({ chapterId, subjectId, classLevel }) => {
           setFilterTopicId={setFilterTopicId}
           filterCategory={filterCategory}
           setFilterCategory={setFilterCategory}
-          // ✅ CHANGE 3: Props updated for Multi-select
           filterTypes={filterTypes}
           setFilterTypes={setFilterTypes}
           categories={getCategoriesForSubject(subjectName)}
