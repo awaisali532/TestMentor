@@ -56,6 +56,7 @@ export const SUBJECT_CATEGORIES = {
     { value: "NUMERICAL", label: "Numerical / Problem" },
     { value: "DIAGRAM", label: "Diagram / Labeling" },
     { value: "CONCEPTUAL", label: "Conceptual / Side Box" },
+    { value: "EXAMPLE", label: "Example / Numericals" },
   ],
 };
 

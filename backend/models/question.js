@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 // ✅ CONSTANT: Shared Categories List (Consistent with PaperPattern)
 const QUESTION_CATEGORIES = [
   "ANY", // Mixed / Random
+  "EXAMPLE", // Sample Qs
   "TEXT", // General Short/Text
   "EXERCISE", // Book Exercise
   "MCQ_GENERAL", // Standard MCQs
