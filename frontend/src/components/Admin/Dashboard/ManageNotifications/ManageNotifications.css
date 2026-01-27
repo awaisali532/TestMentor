@@ -1,101 +1,184 @@
+/* =========================================
+   VARIABLE MAPPING (Theme Bridge)
+   Ye zaroori hai taake naye variables purane layout
+   k variables se connect ho jayen.
+   ========================================= */
+.admin-notify-container {
+  --bg-body: var(--u-bg-body);
+  --card-bg: var(--u-bg-card);
+  --text-main: var(--u-text-main);
+  --text-muted: var(--u-text-muted);
+  --border-color: var(--u-border);
+  --accent-1: var(--u-accent);
+  /* Pill bg ka fallback create kia hai */
+  --pill-bg: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode override for pill-bg if needed internally */
+[data-theme='dark'] .admin-notify-container,
+.u-dark .admin-notify-container {
+  --pill-bg: rgba(255, 255, 255, 0.05);
+}
+
 .admin-notify-container {
   padding: 20px;
+  color: var(--text-main);
 }
 
 .notify-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  margin-top: 20px;
 }
 
-/* Form Styles */
-.notify-form-card,
-.notify-list-card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+/* --- CARDS (Copied from QuestionForm) --- */
+.form-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease;
 }
 
-.form-group {
-  margin-bottom: 15px;
+/* --- INPUTS & SELECTS (The Fix for Borders & Colors) --- */
+.custom-input,
+.custom-select {
+  background-color: var(--bg-body) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  /* Force Border */
+  border-radius: 6px !important;
 }
 
-.form-group label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
+.custom-input:focus,
+.custom-select:focus {
+  border-color: var(--accent-1) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+  outline: none;
 }
 
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+/* Placeholder color styling */
+.custom-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
-.rtl-input {
+.urdu-font {
+  font-family: "Jameel Noori Nastaleeq", serif !important;
   direction: rtl;
-  font-family: "Jameel Noori Nastaleeq", Arial, sans-serif;
+  text-align: right;
 }
 
-.btn-add {
-  width: 100%;
-  padding: 10px;
-  background: #2563eb;
+/* --- BUTTONS --- */
+.btn-primary-gradient {
+  background-color: var(--accent-1);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
+  padding: 10px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-primary-gradient:hover {
+  opacity: 0.9;
+}
+
+/* Icon Button (Delete) Fix */
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  padding: 8px;
+  color: var(--text-muted);
+  /* Default visible color */
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* List Styles */
-.notify-list-card {
-  max-height: 500px;
-  overflow-y: auto;
+.btn-icon:hover {
+  background-color: var(--pill-bg);
+  color: var(--text-main);
 }
 
+.btn-icon.delete:hover {
+  color: #ef4444;
+  /* Red on hover */
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* --- LIST ITEMS --- */
 .admin-notif-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  align-items: flex-start;
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 10px;
-  border-radius: 5px;
-  background: #f9f9f9;
-  border-left: 5px solid #ccc;
+  border-radius: 8px;
+  background-color: var(--bg-body);
+  /* Distinct from card bg */
+  border-left: 4px solid #ccc;
 }
 
+/* Colors for Notification Types */
 .admin-notif-item.success {
   border-left-color: #10b981;
 }
+
 .admin-notif-item.warning {
   border-left-color: #f59e0b;
 }
+
 .admin-notif-item.urgent {
   border-left-color: #ef4444;
 }
+
 .admin-notif-item.info {
   border-left-color: #3b82f6;
 }
 
-.ur-text {
-  font-family: "Jameel Noori Nastaleeq";
-  direction: rtl;
-  color: #555;
-  font-size: 0.9rem;
+/* Text Typography */
+.en-text {
+  font-weight: 500;
+  color: var(--text-main);
 }
 
-.btn-delete {
-  background: #fee2e2;
-  color: #ef4444;
-  border: none;
-  padding: 8px;
-  border-radius: 5px;
-  cursor: pointer;
+.ur-text {
+  font-family: "Jameel Noori Nastaleeq";
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.text-main {
+  color: var(--text-main) !important;
+}
+
+.text-accent {
+  color: var(--accent-1) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* Empty State */
+.empty-state-box {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-body);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .notify-grid {
+    grid-template-columns: 1fr;
+  }
 }

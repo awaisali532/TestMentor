@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast"; // ✅ Toast Import
+import toast, { Toaster } from "react-hot-toast";
 import { FaTrash } from "react-icons/fa";
 import "./ManageNotifications.css";
 
-// ✅ Import Custom Confirmation Modal (Path adjust karein agar zaroorat ho)
+// Check path according to your project
 import ConfirmationModal from "../../../common/ConfirmationModal/ConfirmationModal";
 
 const ManageNotifications = () => {
@@ -19,13 +19,12 @@ const ManageNotifications = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  // ✅ Modal State
+  // Modal State
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     id: null,
   });
 
-  // Fetch Notifications
   const fetchNotifications = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/notifications`);
@@ -39,12 +38,10 @@ const ManageNotifications = () => {
     fetchNotifications();
   }, []);
 
-  // Handle Input Change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Submit Notification
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -61,92 +58,93 @@ const ManageNotifications = () => {
         type: "info",
         targetAudience: "all",
       });
-      toast.success("Notification Added Successfully!"); // ✅ Success Toast
+      toast.success("Notification Added Successfully!");
     } catch (err) {
-      toast.error("Failed to add notification"); // ✅ Error Toast
+      toast.error("Failed to add notification");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Step 1: Delete Button Click Handler (Sirf Modal kholega)
   const handleDeleteClick = (id) => {
-    setDeleteModal({
-      isOpen: true,
-      id: id,
-    });
+    setDeleteModal({ isOpen: true, id: id });
   };
 
-  // ✅ Step 2: Confirm Delete Handler (Actual API Call)
   const confirmDelete = async () => {
     const token = localStorage.getItem("token");
-
     try {
       await axios.delete(`${BASE_URL}/api/notifications/${deleteModal.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Notification Deleted!"); // ✅ Success Toast
+      toast.success("Notification Deleted!");
       fetchNotifications();
     } catch (err) {
       toast.error("Error deleting notification");
     } finally {
-      // Close Modal
       setDeleteModal({ isOpen: false, id: null });
     }
   };
 
   return (
     <div className="admin-notify-container">
-      {/* ✅ Toaster for Alerts */}
       <Toaster position="top-right" />
 
-      {/* ✅ Custom Confirmation Modal */}
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, id: null })}
         onConfirm={confirmDelete}
         title="Delete Notification?"
-        message="Are you sure you want to verify this deletion? This action cannot be undone."
+        message="Are you sure? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         isDanger={true}
       />
 
-      <h2>Manage Notifications</h2>
+      <h5 className="mb-3 fw-bold text-main">Manage Notifications</h5>
 
       <div className="notify-grid">
-        {/* LEFT: FORM */}
-        <div className="notify-form-card">
-          <h4>Add New Alert</h4>
+        {/* LEFT: FORM (Updated with form-card) */}
+        <div className="form-card p-3">
+          <h6 className="fw-bold text-accent mb-3">Add New Alert</h6>
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Message (English)</label>
+            <div className="mb-3">
+              <label className="form-label text-main small fw-bold">
+                Message (English)
+              </label>
               <textarea
                 name="messageEn"
+                className="form-control custom-input"
                 value={formData.messageEn}
                 onChange={handleChange}
                 required
                 placeholder="e.g. New data uploaded"
+                rows="2"
               />
             </div>
 
-            <div className="form-group">
-              <label>Message (Urdu)</label>
+            <div className="mb-3">
+              <label className="form-label text-main small fw-bold">
+                Message (Urdu)
+              </label>
               <textarea
                 name="messageUr"
+                className="form-control custom-input urdu-font"
                 value={formData.messageUr}
                 onChange={handleChange}
                 required
                 placeholder="مثال: نیا ڈیٹا اپلوڈ ہو گیا ہے"
-                className="rtl-input"
+                rows="2"
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Type</label>
+            <div className="row g-2 mb-3">
+              <div className="col-6">
+                <label className="form-label text-main small fw-bold">
+                  Type
+                </label>
                 <select
                   name="type"
+                  className="form-select custom-select"
                   value={formData.type}
                   onChange={handleChange}
                 >
@@ -156,10 +154,13 @@ const ManageNotifications = () => {
                   <option value="urgent">Urgent (Red)</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label>Audience</label>
+              <div className="col-6">
+                <label className="form-label text-main small fw-bold">
+                  Audience
+                </label>
                 <select
                   name="targetAudience"
+                  className="form-select custom-select"
                   value={formData.targetAudience}
                   onChange={handleChange}
                 >
@@ -170,32 +171,40 @@ const ManageNotifications = () => {
               </div>
             </div>
 
-            <button type="submit" className="btn-add" disabled={loading}>
+            <button
+              type="submit"
+              className="btn-primary-gradient w-100"
+              disabled={loading}
+            >
               {loading ? "Posting..." : "Post Notification"}
             </button>
           </form>
         </div>
 
-        {/* RIGHT: LIST */}
-        <div className="notify-list-card custom-scrollbar">
-          <h4>Active Alerts</h4>
+        {/* RIGHT: LIST (Updated with form-card) */}
+        <div
+          className="form-card p-3 custom-scrollbar"
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+        >
+          <h6 className="fw-bold text-accent mb-3">Active Alerts</h6>
           {notifications.length === 0 ? (
-            <p>No notifications active.</p>
+            <div className="empty-state-box">No notifications active.</div>
           ) : (
             notifications.map((notif) => (
               <div key={notif._id} className={`admin-notif-item ${notif.type}`}>
                 <div className="notif-content">
-                  <p className="en-text">{notif.messageEn}</p>
-                  <p className="ur-text">{notif.messageUr}</p>
-                  <small>
+                  <p className="en-text m-0">{notif.messageEn}</p>
+                  <p className="ur-text m-0 mt-1">{notif.messageUr}</p>
+                  <small className="d-block mt-1 text-muted">
                     {new Date(notif.createdAt).toLocaleDateString()} •{" "}
-                    {notif.targetAudience.toUpperCase()}
+                    <strong>{notif.targetAudience.toUpperCase()}</strong>
                   </small>
                 </div>
+                {/* Updated Delete Button Style */}
                 <button
-                  className="btn-delete"
-                  // ✅ Yahan ab direct delete nahi, balkay modal open hoga
+                  className="btn-icon delete"
                   onClick={() => handleDeleteClick(notif._id)}
+                  title="Delete"
                 >
                   <FaTrash />
                 </button>
