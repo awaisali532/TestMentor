@@ -22,14 +22,19 @@ const RegisterPage = () => {
   const { register } = useUser();
   const navigate = useNavigate();
 
+  // ✅ States
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // ✅ 1. NEW GENDER STATE ADDED
+  const [gender, setGender] = useState("Male");
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
-  // ✅ 1. PAGE LOAD: Check Storage
+  // Page Load Logic
   useEffect(() => {
     const savedSession = localStorage.getItem("otp_persist_reg");
     if (savedSession) {
@@ -51,12 +56,12 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      await register(name, email, password);
+      // ✅ 2. PASS GENDER TO REGISTER FUNCTION
+      await register(name, email, password, gender);
 
       toast.success("OTP Sent to Email!");
       saveAndStep2(email);
     } catch (err) {
-      // ✅ Handle "User Exists" (Maybe unverified)
       if (err.message && err.message.includes("already exists")) {
         toast.error(err.message);
       } else {
@@ -73,7 +78,7 @@ const RegisterPage = () => {
       JSON.stringify({
         email: emailToSave,
         timestamp: Date.now(),
-      })
+      }),
     );
     setStep(2);
   };
@@ -161,6 +166,52 @@ const RegisterPage = () => {
                     * 8+ chars, Uppercase, Lowercase, Number & Symbol.
                   </small>
                 </div>
+
+                {/* ✅ 3. FIXED GENDER SELECTION */}
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Gender</label>
+                  <div className="d-flex gap-4">
+                    {/* Male Option */}
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="gender"
+                        value="Male"
+                        id="genderMale"
+                        // ✅ Fix: Use gender state directly
+                        checked={gender === "Male"}
+                        // ✅ Fix: Use setGender directly
+                        onChange={(e) => setGender(e.target.value)}
+                      />
+                      <label className="form-check-label" htmlFor="genderMale">
+                        Male
+                      </label>
+                    </div>
+
+                    {/* Female Option */}
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="gender"
+                        value="Female"
+                        id="genderFemale"
+                        // ✅ Fix: Use gender state directly
+                        checked={gender === "Female"}
+                        // ✅ Fix: Use setGender directly
+                        onChange={(e) => setGender(e.target.value)}
+                      />
+                      <label
+                        className="form-check-label"
+                        htmlFor="genderFemale"
+                      >
+                        Female
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
                 <button type="submit" className="btn-auth">
                   Register
                 </button>

@@ -1,5 +1,5 @@
 import React from "react";
-// ✅ IMPORT FROM COMMON (Path check kr lena apne folder structure k hisab se)
+// ✅ IMPORT FROM COMMON
 import RenderText from "../../../../../components/common/RenderText";
 import "./QuestionCard.css";
 
@@ -8,10 +8,25 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
   const textEn = question.statement?.en || "";
   const textUr = question.statement?.ur || null;
 
-  // Helper for Category Class (for styling tags)
-  const categoryClass = question.questionCategory
-    ? question.questionCategory.toLowerCase().replace(/\s+/g, "")
+  // =======================================================
+  // 🔥 FIX: HANDLE CATEGORY (ARRAY vs STRING)
+  // =======================================================
+  let rawCategory = question.questionCategory;
+
+  // 1. Agar Array hai (e.g., ["MCQ"]), to pehla item utha lo styling ke liye
+  if (Array.isArray(rawCategory)) {
+    rawCategory = rawCategory.length > 0 ? rawCategory[0] : "General";
+  }
+
+  // 2. Class generate kro (lowercase + no spaces)
+  const categoryClass = rawCategory
+    ? String(rawCategory).toLowerCase().replace(/\s+/g, "")
     : "general";
+
+  // 3. Display Text (Agar array hai to join krke dikhao, warna string)
+  const categoryText = Array.isArray(question.questionCategory)
+    ? question.questionCategory.join(", ")
+    : question.questionCategory || "General";
 
   return (
     <div
@@ -21,24 +36,22 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
       <div className="qc-body">
         {/* --- 50/50 SPLIT LAYOUT --- */}
         <div className="qc-split-container">
-          {/* LEFT: English (With Math & Numbering) */}
+          {/* LEFT: English */}
           <div className="qc-split-left">
             <span className="qc-q-label">Q.{index} </span>
-            {/* ✅ RenderText for Math Equations */}
             <RenderText text={textEn} />
           </div>
 
-          {/* RIGHT: Urdu (With Math & RTL & Numbering) */}
+          {/* RIGHT: Urdu */}
           {textUr && (
             <div className="qc-split-right" dir="rtl">
-              {/* ✅ URDU NUMBERING ADDED */}
               <span className="qc-q-label-ur">{index}.</span>
               <RenderText text={textUr} />
             </div>
           )}
         </div>
 
-        {/* ✅ IMAGE DISPLAY LOGIC ADDED HERE */}
+        {/* ✅ IMAGE DISPLAY */}
         {question.image && question.image.url && (
           <div className="qc-image-container">
             <img
@@ -55,7 +68,7 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
           question.options.length > 0 && (
             <div className="qc-options-grid">
               {question.options.map((opt, i) => {
-                const label = String.fromCharCode(65 + i); // A, B, C, D
+                const label = String.fromCharCode(65 + i); // A, B, C...
                 const optEn = opt.en || "";
                 const optUr = opt.ur || "";
 
@@ -64,7 +77,6 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
                     <div className="opt-left">
                       <span className="opt-label">({label})</span>
                       <span className="opt-text-en">
-                        {/* ✅ Render Option English */}
                         <RenderText text={optEn} />
                       </span>
                     </div>
@@ -72,7 +84,6 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
                     {optUr && (
                       <div className="opt-right" dir="rtl">
                         <span className="opt-text-ur">
-                          {/* ✅ Render Option Urdu */}
                           <RenderText text={optUr} />
                         </span>
                       </div>
@@ -86,9 +97,9 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
         {/* --- METADATA TAGS --- */}
         <div className="qc-meta">
           <div className="qc-tags-group">
-            {/* Category Tag */}
+            {/* ✅ UPDATED CATEGORY TAG */}
             <span className={`qc-tag cat ${categoryClass}`}>
-              {question.questionCategory || "General"}
+              {categoryText}
             </span>
 
             {/* Difficulty Tag */}

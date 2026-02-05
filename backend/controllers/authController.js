@@ -26,7 +26,7 @@ const generateToken = (user) => {
 // 1. REGISTER USER
 // ==================================================
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, gender } = req.body;
 
   try {
     if (email.toLowerCase() === "admin@testmentor.com") {
@@ -56,22 +56,20 @@ exports.register = async (req, res) => {
           .json({ success: false, message: "User already exists" });
       }
 
-      // Increment Attempts
       user.otpAttempts = (user.otpAttempts || 0) + 1;
       if (user.otpAttempts >= 3) {
         user.blockUntil = new Date(Date.now() + 15 * 60 * 1000);
         user.otpAttempts = 0;
         await user.save();
-        return res
-          .status(429)
-          .json({
-            success: false,
-            message: "Too many requests. Blocked for 15 mins.",
-          });
+        return res.status(429).json({
+          success: false,
+          message: "Too many requests. Blocked for 15 mins.",
+        });
       }
 
       user.name = name;
       user.password = password;
+      user.gender = gender; // Update Gender if re-registering
       user.otp = otp;
       user.otpExpires = otpExpires;
       await user.save();
@@ -80,6 +78,7 @@ exports.register = async (req, res) => {
         name,
         email,
         password,
+        gender, // Save Gender
         role: "user",
         planType: "free",
         isVerified: false,
@@ -89,7 +88,6 @@ exports.register = async (req, res) => {
       });
     }
 
-    // ✅ Use Imported Template
     try {
       await sendEmail({
         to: email,
@@ -98,13 +96,11 @@ exports.register = async (req, res) => {
         from: "TestMentor Security",
       });
 
-      res
-        .status(201)
-        .json({
-          success: true,
-          message: "OTP sent to email.",
-          email: user.email,
-        });
+      res.status(201).json({
+        success: true,
+        message: "OTP sent to email.",
+        email: user.email,
+      });
     } catch (emailError) {
       if (!user.isVerified && (!user.otpAttempts || user.otpAttempts <= 1)) {
         await User.findOneAndDelete({ email });
@@ -162,6 +158,8 @@ exports.verifyOTP = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        // 🔥 UPDATE 1: Gender yahan bhi bhejein
+        gender: user.gender || "Not Specified",
         planType: user.planType,
         institute: user.institute,
       },
@@ -224,7 +222,7 @@ exports.resendOTP = async (req, res) => {
 };
 
 // ==================================================
-// 4. LOGIN
+// 4. LOGIN (MOST IMPORTANT FIX HERE)
 // ==================================================
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -275,6 +273,7 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user);
 
+    // ✅ SUCCESS RESPONSE
     res.json({
       success: true,
       message: "Login successful",
@@ -286,6 +285,8 @@ exports.login = async (req, res) => {
         image: user.image || "",
         role: user.role,
         isSuperAdmin: user.isSuperAdmin,
+        // 🔥 UPDATE 2: Gender yahan include kiya hai
+        gender: user.gender || "Not Specified",
         permissions: user.permissions || [],
         planType: user.planType,
         usage: user.usage,
@@ -300,12 +301,15 @@ exports.login = async (req, res) => {
 };
 
 // ==================================================
-// 5. GET PROFILE (✅ NEW - For Context Sync)
+// 5. GET PROFILE
 // ==================================================
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    // 🔥 NOTE: Kyunke hum pura object bhej rahe hain,
+    // Gender automatically ismein shamil hoga.
     res.json(user);
   } catch (error) {
     console.error(error);
@@ -335,7 +339,7 @@ exports.forgotPassword = async (req, res) => {
       await sendEmail({
         to: email,
         subject: "Reset Password - TestMentor",
-        html: generateResetTemplate(user.name, otp), // ✅ Use Red Template
+        html: generateResetTemplate(user.name, otp),
         from: "TestMentor Security",
       });
       res.status(200).json({ success: true, message: "OTP sent to email." });
@@ -393,12 +397,10 @@ exports.resetPassword = async (req, res) => {
 
     const isSamePassword = await user.matchPassword(newPassword);
     if (isSamePassword)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "New password cannot be same as old.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "New password cannot be same as old.",
+      });
 
     user.password = newPassword;
     user.otp = undefined;

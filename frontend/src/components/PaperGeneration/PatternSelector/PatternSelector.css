@@ -1,314 +1,350 @@
 /* Container */
 .ps-container {
-    width: 100%;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding-bottom: 80px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-bottom: 80px;
 }
 
 .ps-title {
-    text-align: center;
-    margin-bottom: 5px;
-    color: var(--pw-text);
-    font-weight: 800;
+  text-align: center;
+  margin-bottom: 5px;
+  color: var(--pw-text);
+  font-weight: 800;
 }
 
 .ps-subtitle {
-    text-align: center;
-    color: var(--u-text-muted);
-    margin-bottom: 30px;
+  text-align: center;
+  color: var(--u-text-muted);
+  margin-bottom: 30px;
 }
 
 /* Grid */
 .ps-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-    align-items: start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: start;
 }
 
 /* --- CARD --- */
 .ps-card {
-    background: var(--pw-card-bg);
-    border: 2px solid var(--pw-border);
-    border-radius: 16px;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-    padding-top: 45px;
-    /* ✅ Added top padding for buttons/badges */
+  background: var(--pw-card-bg);
+  border: 2px solid var(--pw-border);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  padding-top: 45px;
+  /* ✅ Added top padding for buttons/badges */
 }
 
 .ps-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-    border-color: var(--pw-accent);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  border-color: var(--pw-accent);
 }
 
 .ps-card.selected {
-    border-color: var(--pw-accent);
-    background-color: rgba(37, 99, 235, 0.05);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  border-color: var(--pw-accent);
+  background-color: rgba(37, 99, 235, 0.05);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
 /* ✅ Selection Checkmark (Left Top) */
 .ps-check {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    color: var(--pw-accent);
-    font-size: 1.2rem;
-    background: var(--pw-card-bg);
-    border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    z-index: 10;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: var(--pw-accent);
+  font-size: 1.2rem;
+
+  border-radius: 50%;
+
+  z-index: 10;
 }
 
 /* ✅ Card Header (Badge) - Absolute Left (below check or beside) */
 .ps-card-header {
-    position: absolute;
-    top: 12px;
-    left: 12px;
+  position: absolute;
+  top: 12px;
+  left: 12px;
 }
 
 /* Agar select ho jaye to checkmark k liye jagah banao */
 .ps-card.selected .ps-card-header {
-    left: 40px;
+  left: 40px;
 }
 
 .ps-badge {
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 700;
-    text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .badge-full {
-    background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
 }
 
 .badge-half {
-    background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
 }
 
 /* ✅ ACTION BUTTONS CONTAINER (Right Top) */
 .ps-card-actions {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 6px;
-    z-index: 20;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  z-index: 20;
 }
 
 .ps-action-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    border: 1px solid var(--pw-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--pw-card-bg);
-    color: var(--u-text-muted);
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 0.8rem;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--pw-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pw-card-bg);
+  color: var(--u-text-muted);
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 0.8rem;
 }
 
 .ps-action-btn:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .ps-action-btn.edit:hover {
-    color: #3b82f6;
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .ps-action-btn.delete:hover {
-    color: #ef4444;
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* Card Body */
 .ps-card-name {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--pw-text);
-    margin-bottom: 10px;
-    margin-top: 5px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--pw-text);
+  margin-bottom: 10px;
+  margin-top: 5px;
 }
 
 /* ✅ META INFO (Moved Total Marks Here) */
 .ps-card-meta {
-    display: flex;
-    gap: 10px;
-    font-size: 0.85rem;
-    color: var(--u-text-muted);
-    margin-bottom: 15px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--u-text-muted);
+  margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .meta-tag {
-    background: var(--pw-bg);
-    padding: 4px 10px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--pw-border);
+  background: var(--pw-bg);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--pw-border);
 }
 
 /* Details Panel */
 .btn-details {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--pw-border);
-    color: var(--u-text-muted);
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: 0.2s;
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--pw-border);
+  color: var(--u-text-muted);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: 0.2s;
 }
 
 .btn-details:hover {
-    background: var(--pw-bg);
-    color: var(--pw-text);
+  background: var(--pw-bg);
+  color: var(--pw-text);
 }
 
 .ps-details-panel {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px dashed var(--pw-border);
-    animation: slideDown 0.3s ease-out;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed var(--pw-border);
+  animation: slideDown 0.3s ease-out;
 }
 
 .detail-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr 0.8fr 0.8fr;
-    gap: 5px;
-    font-size: 0.8rem;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--pw-border);
-    align-items: center;
-    color: var(--pw-text);
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.8fr 0.8fr;
+  gap: 5px;
+  font-size: 0.8rem;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--pw-border);
+  align-items: center;
+  color: var(--pw-text);
 }
 
 .detail-row:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .detail-row.header {
-    font-weight: 700;
-    color: var(--u-text-muted);
-    text-transform: uppercase;
-    font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--u-text-muted);
+  text-transform: uppercase;
+  font-size: 0.7rem;
 }
 
 .sec-title {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-    font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 .part-badge {
-    font-size: 0.65rem;
-    color: #f59e0b;
-    background: rgba(245, 158, 11, 0.1);
-    padding: 2px 5px;
-    border-radius: 4px;
-    display: inline-block;
-    width: fit-content;
-    margin-top: 2px;
+  font-size: 0.65rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 5px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+  margin-top: 2px;
 }
 
 /* Custom Card */
 .custom-card {
-    border: 2px dashed var(--pw-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    min-height: 200px;
-    padding-top: 20px;
+  border: 2px dashed var(--pw-border);
+  display: flex;
+  flex-direction: column; /* Ensure stack */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 200px;
+  padding-top: 30px;
+  transition: all 0.3s ease;
+  background-color: var(--pw-bg);
 }
 
 .custom-card:hover {
-    border-color: var(--pw-accent);
-    background: var(--pw-bg);
+  border-color: var(--pw-accent);
+  background-color: rgba(37, 99, 235, 0.05); /* Soft Blue Tint */
+  transform: translateY(-5px);
 }
-
 .custom-content {
-    color: var(--u-text-muted);
+  color: var(--u-text-muted);
+}
+/* ✅ Icon Wrapper to ensure visibility */
+.custom-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(37, 99, 235, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  color: var(--pw-accent);
+  font-size: 2rem;
+  transition: 0.3s;
+  margin: auto;
 }
 
+.custom-card:hover .custom-icon-wrapper {
+  background-color: var(--pw-accent);
+  color: white;
+  transform: scale(1.1);
+}
+
+.custom-content h4 {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--pw-text);
+}
+
+.custom-content p {
+  font-size: 0.85rem;
+  color: var(--u-text-muted);
+  max-width: 80%;
+  margin: 0 auto;
+}
 .custom-icon {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    color: var(--pw-accent);
-    opacity: 0.8;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: var(--pw-accent);
+  opacity: 0.8;
 }
 
 .custom-card h4 {
-    font-weight: 700;
-    margin-bottom: 5px;
-    color: var(--pw-text);
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: var(--pw-text);
 }
 
 /* Animation */
 .ps-actions {
-    display: flex;
-    justify-content: center;
-    margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
 }
 
 .fade-in {
-    animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
+  from {
+    transform: rotate(0deg);
+  }
 
-    to {
-        transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
+  }
 }

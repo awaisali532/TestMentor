@@ -46,7 +46,8 @@ exports.getAllUsers = async (req, res) => {
 // 2. ADMIN CREATE USER (Direct Verified)
 // ==========================================
 exports.adminCreateUser = async (req, res) => {
-  const { name, email, password, role, planType } = req.body;
+  // ✅ gender receive ho raha hai yahan
+  const { name, email, password, role, planType, gender } = req.body;
   try {
     const userExists = await User.findOne({ email });
     if (userExists)
@@ -58,9 +59,10 @@ exports.adminCreateUser = async (req, res) => {
       password,
       role: role || "user",
       isActive: true,
-      isVerified: true, // ✅ Direct Verified
+      isVerified: true,
       planType: planType || "free",
-      // Usage default 0 se start hoga (Schema handle karega)
+      // ✅ Gender save ho raha hai
+      gender: gender || "Not Specified",
     });
 
     res.status(201).json({ message: "User created successfully", user });
@@ -576,25 +578,63 @@ exports.deleteProfileImage = async (req, res) => {
   }
 };
 // ==========================================
-// UPDATE USER BASIC INFO (Admin) - Missing Function
+// 17. UPDATE USER BASIC INFO (Admin)
 // ==========================================
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, role, permissions } = req.body;
+    // 1. Destructure ALL fields (Gender, Plan, Verification added)
+    const {
+      name,
+      email,
+      role,
+      permissions,
+      gender, // ✅ Fix: Receive Gender
+      planType, // ✅ Fix: Receive Plan
+      isVerified, // ✅ Fix: Receive Status
+      password, // ✅ Fix: Optional Password change
+    } = req.body;
 
-    // Agar role admin nahi hai to permissions empty honi chahiyen
-    const permissionsToSave = role === "admin" ? permissions : [];
+    // 2. Find User
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found." });
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      { name, email, role, permissions: permissionsToSave },
-      { new: true }, // Return updated doc
-    ).select("-password");
+    // 3. Update Fields
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.role = role || user.role;
 
-    if (!updatedUser) return res.status(404).json({ error: "User not found." });
+    // 🔥 YE LINE MISSING THI, ISLIYE SAVE NHI HO RHA THA
+    user.gender = gender || user.gender;
 
-    res.json(updatedUser);
+    user.planType = planType || user.planType;
+
+    // Handle Boolean Toggle (isVerified)
+    if (isVerified !== undefined) {
+      user.isVerified = isVerified;
+    }
+
+    // 4. Handle Permissions (Only for Admin)
+    if (role === "admin") {
+      user.permissions = permissions || user.permissions;
+    } else {
+      user.permissions = [];
+    }
+
+    // 5. Handle Password (Optional from Admin Panel)
+    if (password && password.trim() !== "") {
+      user.password = password; // Pre-save hook will hash this
+    }
+
+    // 6. Save User
+    const updatedUser = await user.save();
+
+    // Return response without sensitive data
+    const responseData = updatedUser.toObject();
+    delete responseData.password;
+
+    res.json(responseData);
   } catch (error) {
+    console.error("Update User Error:", error);
     res.status(500).json({ error: "Failed to update user details." });
   }
 };

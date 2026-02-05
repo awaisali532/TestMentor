@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "../../../utils/cropUtils";
+
 import {
   FaCamera,
   FaUser,
@@ -8,30 +11,45 @@ import {
   FaCrown,
   FaHistory,
   FaSave,
-  FaSpinner,
   FaEdit,
   FaTrash,
   FaUniversity,
   FaMapMarkerAlt,
   FaPhone,
   FaBuilding,
+  FaTimes,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
-import { useUser } from "../../../context/UserContext"; // Import User Context
+import { useUser } from "../../../context/UserContext";
 import "./UserSettings.css";
 
+// ✅ 1. IMPORT TMLOADER
+import TMLoader from "../../../components/common/TMLoader/TMLoader";
+
+// ✅ 2. IMPORT AVATARS
+import BoyAvatar from "../../../assets/imeages/Avatar/boy.svg";
+import GirlAvatar from "../../../assets/imeages/Avatar/girl.svg";
+
 const UserSettings = () => {
-  // Use Context for User Data
   const { user, setUser } = useUser();
+
+  // ✅ Single Loader Logic for UI
   const [loading, setLoading] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
   const [instLogoLoading, setInstLogoLoading] = useState(false);
 
-  // ✅ Modal State
+  // Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // 'profile' or 'institute'
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Local States for Editing
+  // Cropper States
+  const [imageSrc, setImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+
+  // Form States
   const [name, setName] = useState("");
   const [passwords, setPasswords] = useState({
     current: "",
@@ -39,14 +57,12 @@ const UserSettings = () => {
     confirm: "",
   });
 
-  // ✅ Institute States
   const [institute, setInstitute] = useState({
     name: "",
     address: "",
     phone: "",
   });
 
-  // Initialize Data from User Context
   useEffect(() => {
     if (user) {
       setName(user.name);
@@ -58,22 +74,43 @@ const UserSettings = () => {
     }
   }, [user]);
 
-  // Helper: Format Date
   const formatDate = (date) =>
-    date ? new Date(date).toLocaleDateString() : "Lifetime";
+    date
+      ? new Date(date).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "Lifetime";
 
-  // --- 1. PROFILE IMAGE HANDLERS ---
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // =========================================================
+  // 📸 PROFILE IMAGE LOGIC
+  // =========================================================
+  const onFileChange = async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImageSrc(reader.result.toString());
+        setShowCropModal(true);
+      });
+      reader.readAsDataURL(file);
+    }
+  };
 
-    const formData = new FormData();
-    formData.append("image", file);
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
 
-    setImgLoading(true);
-    const toastId = toast.loading("Uploading photo...");
-
+  const handleCropAndUpload = async () => {
     try {
+      setShowCropModal(false);
+      setImgLoading(true); // Triggers TMLoader
+
+      const croppedImageBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      const formData = new FormData();
+      formData.append("image", croppedImageBlob);
+
       const token = localStorage.getItem("token");
       const res = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
@@ -83,25 +120,46 @@ const UserSettings = () => {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const updatedUser = { ...user, image: res.data.image };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      toast.success("Photo updated!", { id: toastId });
+      toast.success("Profile photo updated!");
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Upload failed", {
-        id: toastId,
-      });
+      toast.error("Upload failed");
     } finally {
       setImgLoading(false);
+      setImageSrc(null);
     }
   };
 
-  // --- 2. INSTITUTE LOGO HANDLERS ---
+  const renderProfileImage = () => {
+    if (user.image) {
+      return <img src={user.image} alt="Profile" className="us-avatar-img" />;
+    }
+
+    const gender = user.gender ? user.gender.trim().toLowerCase() : "unknown";
+
+    if (gender === "male") {
+      return <img src={BoyAvatar} alt="Boy" className="us-avatar-img" />;
+    } else if (gender === "female") {
+      return <img src={GirlAvatar} alt="Girl" className="us-avatar-img" />;
+    }
+
+    return (
+      <div className="us-avatar-placeholder">
+        {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+      </div>
+    );
+  };
+
+  // =========================================================
+  // 🏛️ INSTITUTE LOGO
+  // =========================================================
   const handleInstLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -109,8 +167,7 @@ const UserSettings = () => {
     const formData = new FormData();
     formData.append("logo", file);
 
-    setInstLogoLoading(true);
-    const toastId = toast.loading("Uploading logo...");
+    setInstLogoLoading(true); // Triggers TMLoader
 
     try {
       const token = localStorage.getItem("token");
@@ -122,7 +179,7 @@ const UserSettings = () => {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const updatedUser = {
@@ -132,161 +189,143 @@ const UserSettings = () => {
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      toast.success("Logo updated!", { id: toastId });
+      toast.success("Logo updated!");
     } catch (err) {
       console.error(err);
-      toast.error("Upload failed", { id: toastId });
+      toast.error("Upload failed");
     } finally {
       setInstLogoLoading(false);
     }
   };
 
-  // ✅ Trigger Delete Modal
+  // =========================================================
+  // OTHER ACTIONS
+  // =========================================================
   const handleDeleteClick = (target) => {
     setDeleteTarget(target);
     setShowDeleteModal(true);
   };
 
-  // ✅ Confirm Delete Logic
   const confirmDelete = async () => {
     setShowDeleteModal(false);
+    if (deleteTarget === "profile") setImgLoading(true);
+    else setInstLogoLoading(true);
 
-    if (deleteTarget === "profile") {
-      // ... (Existing Profile Delete Logic)
-      setImgLoading(true);
-      const toastId = toast.loading("Removing photo...");
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(
-          `${import.meta.env.VITE_BACKEND_URL}/api/users/profile/image`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const updatedUser = { ...user, image: "" };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        toast.success("Photo removed!", { id: toastId });
-      } catch (err) {
-        toast.error("Failed to remove", { id: toastId });
-      } finally {
-        setImgLoading(false);
-      }
-    } else if (deleteTarget === "institute") {
-      // ... (New Institute Logo Delete Logic)
-      setInstLogoLoading(true);
-      const toastId = toast.loading("Removing logo...");
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(
-          `${import.meta.env.VITE_BACKEND_URL}/api/users/institute/logo`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const updatedUser = {
-          ...user,
-          institute: { ...user.institute, logo: "" },
-        };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        toast.success("Logo removed!", { id: toastId });
-      } catch (err) {
-        toast.error("Failed to remove", { id: toastId });
-      } finally {
-        setInstLogoLoading(false);
-      }
+    try {
+      const token = localStorage.getItem("token");
+      const endpoint =
+        deleteTarget === "profile" ? "profile/image" : "institute/logo";
+
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/${endpoint}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      let updatedUser = { ...user };
+      if (deleteTarget === "profile") updatedUser.image = "";
+      else updatedUser.institute.logo = "";
+
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast.success(
+        `${deleteTarget === "profile" ? "Photo" : "Logo"} removed!`,
+      );
+    } catch (err) {
+      toast.error("Failed to remove");
+    } finally {
+      setImgLoading(false);
+      setInstLogoLoading(false);
     }
   };
 
-  // 3. Handle Profile Update
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     if (!name.trim()) return toast.error("Name cannot be empty");
-
-    setLoading(true);
+    setLoading(true); // Triggers TMLoader
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/profile`,
         { name },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
       const updatedUser = { ...user, name: res.data.name || name };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-
       toast.success("Profile details updated!");
     } catch (err) {
-      console.error(err);
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);
     }
   };
 
-  // 4. Handle Institute Info Update
   const handleUpdateInstitute = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); // Triggers TMLoader
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/institute/info`,
         institute,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
       const updatedUser = {
         ...user,
         institute: { ...user.institute, ...res.data.institute },
       };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-
       toast.success("Institute details updated!");
     } catch (err) {
-      console.error(err);
       toast.error("Failed to update institute info");
     } finally {
       setLoading(false);
     }
   };
 
-  // 5. Handle Password Change
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (passwords.new !== passwords.confirm) {
+    if (passwords.new !== passwords.confirm)
       return toast.error("New passwords do not match!");
-    }
-    if (passwords.new.length < 6) {
+    if (passwords.new.length < 6)
       return toast.error("Password must be at least 6 characters");
-    }
 
-    setLoading(true);
+    setLoading(true); // Triggers TMLoader
     try {
       const token = localStorage.getItem("token");
       await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/change-password`,
         { oldPassword: passwords.current, newPassword: passwords.new },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
       toast.success("Password changed successfully!");
       setPasswords({ current: "", new: "", confirm: "" });
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.error || "Failed to change password");
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ SUBSCRIPTION CALCULATIONS
+  const isPaid = user?.planType === "paid" || user?.planType === "premium";
+  const papersUsed = user?.usage?.papersGenerated || 0;
+  // If Free: Limit is 1 (or custom), If Paid: Limit is Infinity
+  const paperLimit = isPaid ? Infinity : user?.usage?.customPaperLimit || 1;
+
+  // Calculate Percentage for Bar
+  const progressPercent = isPaid
+    ? 100 // Full Green bar for paid
+    : Math.min((papersUsed / paperLimit) * 100, 100);
+
   if (!user) return <div className="text-center p-5">Loading...</div>;
 
   return (
     <>
+      {/* ✅ 1. TM LOADER (Global for this page) */}
+      {(loading || imgLoading || instLogoLoading) && <TMLoader />}
+
       <div className="us-container">
         <h2 className="us-page-title">Account Settings</h2>
 
@@ -295,21 +334,7 @@ const UserSettings = () => {
           <div className="us-left-col">
             <div className="us-card profile-card">
               <div className="us-avatar-wrapper">
-                {imgLoading ? (
-                  <div className="us-avatar-placeholder">
-                    <FaSpinner className="icon-spin" />
-                  </div>
-                ) : user.image ? (
-                  <img
-                    src={user.image}
-                    alt="Profile"
-                    className="us-avatar-img"
-                  />
-                ) : (
-                  <div className="us-avatar-placeholder">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                {renderProfileImage()}
 
                 <label className="us-camera-btn" title="Upload Photo">
                   <FaCamera />
@@ -317,7 +342,7 @@ const UserSettings = () => {
                     type="file"
                     hidden
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={onFileChange}
                   />
                 </label>
 
@@ -336,11 +361,12 @@ const UserSettings = () => {
               <p className="us-profile-email">{user.email}</p>
 
               <div className={`us-plan-badge ${user.planType}`}>
-                {user.planType === "paid" ? <FaCrown /> : <FaUser />}
-                {user.planType === "paid" ? "Premium Member" : "Free Plan"}
+                {isPaid ? <FaCrown /> : <FaUser />}
+                {isPaid ? "Premium Member" : "Free Plan"}
               </div>
             </div>
 
+            {/* ✅ 2. UPDATED SUBSCRIPTION DETAILS */}
             <div className="us-card sub-card">
               <div className="us-card-header">
                 <FaHistory className="text-accent" />
@@ -351,18 +377,18 @@ const UserSettings = () => {
                   <span>Current Plan:</span>
                   <span
                     className={
-                      user.planType === "paid" ? "text-gold" : "text-muted"
+                      isPaid ? "text-gold fw-bold" : "text-muted fw-bold"
                     }
                   >
-                    {user.planType ? user.planType.toUpperCase() : "FREE"}
+                    {isPaid ? "PREMIUM" : "FREE"}
                   </span>
                 </div>
                 <div className="detail-row">
                   <span>Valid Until:</span>
                   <span>
-                    {user.planType === "paid"
+                    {isPaid
                       ? formatDate(user.subscription?.validUntil)
-                      : "Forever"}
+                      : "Lifetime"}
                   </span>
                 </div>
 
@@ -370,23 +396,17 @@ const UserSettings = () => {
                   <div className="d-flex justify-content-between text-xs mb-1">
                     <span>Paper Limit</span>
                     <span>
-                      {user.usage?.papersGenerated || 0} /{" "}
-                      {user.planType === "free" ? "1" : "∞"}
+                      {papersUsed} / {isPaid ? "∞" : paperLimit}
                     </span>
                   </div>
                   <div className="progress-bg">
                     <div
                       className="progress-fill"
                       style={{
-                        width:
-                          user.planType === "free"
-                            ? `${
-                                ((user.usage?.papersGenerated || 0) / 1) * 100
-                              }%`
-                            : "100%",
-                        background:
-                          (user.usage?.papersGenerated || 0) >= 1 &&
-                          user.planType === "free"
+                        width: `${progressPercent}%`,
+                        background: isPaid
+                          ? "#10b981"
+                          : papersUsed >= paperLimit
                             ? "#ef4444"
                             : "#10b981",
                       }}
@@ -394,7 +414,7 @@ const UserSettings = () => {
                   </div>
                 </div>
 
-                {user.planType === "free" && (
+                {!isPaid && (
                   <button className="btn-us-upgrade">Upgrade to Premium</button>
                 )}
               </div>
@@ -441,32 +461,22 @@ const UserSettings = () => {
                   className="btn-us-save"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <FaSpinner className="icon-spin" />
-                  ) : (
-                    <>
-                      <FaSave /> Save Personal Info
-                    </>
-                  )}
+                  <FaSave /> Save Personal Info
                 </button>
               </form>
             </div>
 
-            {/* 2. ✅ INSTITUTE SETTINGS (NEW) */}
+            {/* 2. INSTITUTE SETTINGS */}
             <div className="us-card form-card">
               <div className="us-card-header">
                 <FaUniversity className="text-accent" />
                 <h5>Institute Settings</h5>
               </div>
 
-              {/* Logo Upload Section */}
               <div className="inst-logo-section">
                 <div className="us-avatar-wrapper inst-logo-wrapper">
-                  {instLogoLoading ? (
-                    <div className="us-avatar-placeholder square">
-                      <FaSpinner className="icon-spin" />
-                    </div>
-                  ) : user.institute?.logo ? (
+                  {/* TMLoader is used instead of internal spinner */}
+                  {user.institute?.logo ? (
                     <img
                       src={user.institute.logo}
                       alt="Logo"
@@ -557,13 +567,7 @@ const UserSettings = () => {
                   className="btn-us-save"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <FaSpinner className="icon-spin" />
-                  ) : (
-                    <>
-                      <FaSave /> Save Institute Info
-                    </>
-                  )}
+                  <FaSave /> Save Institute Info
                 </button>
               </form>
             </div>
@@ -618,13 +622,65 @@ const UserSettings = () => {
                   className="btn-us-outline"
                   disabled={loading}
                 >
-                  {loading ? "Updating..." : "Update Password"}
+                  Update Password
                 </button>
               </form>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ✅ CROPPER MODAL */}
+      {showCropModal && (
+        <div className="crop-modal-overlay">
+          <div className="crop-modal-container">
+            <div className="modal-header">
+              <h5 className="m-0 fw-bold">Adjust Profile Picture</h5>
+              <button
+                className="btn-close-modal"
+                onClick={() => setShowCropModal(false)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="crop-container">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            <div className="crop-controls">
+              <label>Zoom</label>
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(e.target.value)}
+                className="zoom-range"
+              />
+              <div className="crop-actions">
+                <button
+                  className="btn-cancel"
+                  onClick={() => setShowCropModal(false)}
+                >
+                  Cancel
+                </button>
+                <button className="btn-save" onClick={handleCropAndUpload}>
+                  Set Profile Picture
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- DELETE MODAL --- */}
       {showDeleteModal && (

@@ -1,32 +1,32 @@
 const PaperPattern = require("../models/PaperPattren.js");
+const Subject = require("../models/subjectModel");
 
+// =================================================
 // 1. CREATE NEW PATTERN
+// =================================================
 const createPattern = async (req, res) => {
   try {
     const {
-      name, // Changed from presetName to name
+      name,
+      category, // ✅ Receive Category
       gradeLevel,
-      subject, // Changed from subjects[] to single subject ID
+      subject,
       totalMarks,
       timeAllowed,
-      sections, // Iske andar linkedChapters aur subQuestions honge
-      isPairingSpecific, // New Flag
+      sections,
+      isPairingSpecific,
       isSystemPreset,
     } = req.body;
 
-    // Basic Validation
     if (!name || !gradeLevel || !subject || !totalMarks || !sections) {
       return res.status(400).json({ error: "Please fill all required fields" });
     }
 
-    // 🔥 SECURITY LOGIC:
-    // Sirf Admin hi 'System Preset' bana sakta hai
     let systemFlag = false;
     if (req.user && req.user.role === "admin") {
       systemFlag = isSystemPreset || false;
     }
 
-    // Check Duplicate (Name + Creator)
     const existing = await PaperPattern.findOne({
       name,
       createdBy: req.user._id,
@@ -40,12 +40,13 @@ const createPattern = async (req, res) => {
 
     const newPattern = new PaperPattern({
       name,
+      category: category || "GENERAL", // ✅ Set Default if missing
       gradeLevel,
       subject,
       totalMarks,
       timeAllowed,
       isPairingSpecific: isPairingSpecific || false,
-      sections, // Frontend se pura structured array ayega
+      sections,
       isSystemPreset: systemFlag,
       createdBy: req.user._id,
     });
@@ -65,20 +66,42 @@ const createPattern = async (req, res) => {
   }
 };
 
-// 2. GET ALL PATTERNS (For List View)
+// =================================================
+// 2. GET ALL PATTERNS (✅ UPDATED FOR CATEGORY)
+// =================================================
 const getAllPatterns = async (req, res) => {
   try {
-    const { grade, subject } = req.query;
+    const { grade, subject, category } = req.query; // ✅ Receive Category Query
     let query = {};
 
     if (grade) query.gradeLevel = grade;
-    if (subject) query.subject = subject; // Exact ID Match
 
-    // 🔥 LOGIC: Admin wale (System) + Mere Apne
+    // ✅ Filter by Category if provided (e.g. FULL_BOOK)
+    if (category) query.category = category;
+
+    // Check if subject is Name or ID
+    if (subject) {
+      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(subject);
+
+      if (isValidObjectId) {
+        query.subject = subject;
+      } else {
+        const subjectDoc = await Subject.findOne({
+          $or: [{ subjectName: subject }, { name: subject }],
+        });
+
+        if (!subjectDoc) {
+          return res.json([]);
+        }
+        query.subject = subjectDoc._id;
+      }
+    }
+
+    // Admin wale (System) + Mere Apne
     query.$or = [{ isSystemPreset: true }, { createdBy: req.user._id }];
 
     const patterns = await PaperPattern.find(query)
-      .populate("subject", "name") // Subject ka naam dikhane ke liye
+      .populate("subject", "name subjectName")
       .sort({ createdAt: -1 });
 
     res.json(patterns);
@@ -88,17 +111,17 @@ const getAllPatterns = async (req, res) => {
   }
 };
 
-// 3. GET SINGLE PATTERN (Detailed View for Editing/Generating)
+// =================================================
+// 3. GET SINGLE PATTERN
+// =================================================
 const getPatternById = async (req, res) => {
   try {
     const pattern = await PaperPattern.findById(req.params.id)
-      .populate("subject", "name")
-      // ✅ Deep Populate: Sections ke andar Linked Chapters ka naam chahiye
+      .populate("subject", "name subjectName")
       .populate({
         path: "sections.linkedChapters",
-        select: "name chapterNumber", // Sirf naam aur number lao
+        select: "name chapterNumber",
       })
-      // ✅ Deep Populate: Agar SubQuestions (Parts) hain to unke chapters bhi lao
       .populate({
         path: "sections.subQuestions.linkedChapters",
         select: "name chapterNumber",
@@ -112,13 +135,14 @@ const getPatternById = async (req, res) => {
   }
 };
 
+// =================================================
 // 4. DELETE PATTERN
+// =================================================
 const deletePattern = async (req, res) => {
   try {
     const pattern = await PaperPattern.findById(req.params.id);
     if (!pattern) return res.status(404).json({ error: "Pattern not found" });
 
-    // Permission Check
     if (
       pattern.createdBy.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
@@ -135,7 +159,9 @@ const deletePattern = async (req, res) => {
   }
 };
 
+// =================================================
 // 5. UPDATE PATTERN
+// =================================================
 const updatePattern = async (req, res) => {
   try {
     const { id } = req.params;
@@ -143,7 +169,6 @@ const updatePattern = async (req, res) => {
 
     if (!pattern) return res.status(404).json({ error: "Pattern not found" });
 
-    // Permission Check
     if (
       pattern.createdBy.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
@@ -153,14 +178,13 @@ const updatePattern = async (req, res) => {
         .json({ error: "Not authorized to update this pattern" });
     }
 
-    // Security: Only Admin can set System Preset
     if (req.body.isSystemPreset === true && req.user.role !== "admin") {
       req.body.isSystemPreset = false;
     }
 
     const updatedPattern = await PaperPattern.findByIdAndUpdate(id, req.body, {
       new: true,
-      runValidators: true,
+      runValidators: true, // ✅ Ensures ENUM validation works
     });
 
     res.json({ message: "Pattern Updated Successfully", data: updatedPattern });

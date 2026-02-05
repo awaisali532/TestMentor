@@ -17,6 +17,7 @@ const PERMISSION_LIST = [
 ];
 
 const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
+  // ✅ 1. STATE MEIN GENDER ADD KIYA
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,11 +25,13 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
     role: "user",
     permissions: [],
     planType: "free",
+    gender: "Male", // Default
     isVerified: true,
   });
 
   const [showPassword, setShowPassword] = useState(false);
 
+  // ✅ 2. USE EFFECT UPDATE (Load Data)
   useEffect(() => {
     setShowPassword(false);
     if (editingUser) {
@@ -38,6 +41,8 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         role: editingUser.role,
         permissions: editingUser.permissions || [],
         planType: editingUser.planType || "free",
+        // Agar purana user hai aur gender nahi hai to 'Not Specified'
+        gender: editingUser.gender || "Not Specified",
         isVerified: editingUser.isVerified,
         password: "",
       });
@@ -49,6 +54,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         role: "user",
         permissions: [],
         planType: "free",
+        gender: "Male", // New User Default
         isVerified: true,
       });
     }
@@ -63,23 +69,17 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
     });
   };
 
-  // ✅ VALIDATION FUNCTION
   const validateForm = () => {
     const { name, email, password } = formData;
 
-    // 1. Basic Empty Checks
     if (!name.trim()) return "Full Name is required.";
     if (!email.trim()) return "Email Address is required.";
 
-    // 2. Strict Gmail Validation (Ends with @gmail.com)
-    // Regex ensures strict matching for @gmail.com
     const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
     if (!emailRegex.test(email)) {
       return "Only @gmail.com email addresses are allowed.";
     }
 
-    // 3. Password Validation
-    // Validate ONLY IF: Creating New User OR Editing and user typed a new password
     if (!editingUser || password.trim() !== "") {
       if (password.length < 8) return "Password must be at least 8 characters.";
       if (!/[A-Z]/.test(password))
@@ -90,17 +90,14 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         return "Password must contain at least 1 Special Character (!@#$).";
     }
 
-    return null; // No errors
+    return null;
   };
 
   const handleSaveClick = () => {
-    // Call Validation
     const error = validateForm();
     if (error) {
       return toast.error(error);
     }
-
-    // If valid, proceed
     onSave(formData);
   };
 
@@ -152,9 +149,10 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               </small>
             </div>
 
-            {/* Role & Plan Row */}
+            {/* ✅ 3. ROW: Role, Gender, Plan (3 Columns) */}
             <div className="row">
-              <div className="col-6 mb-3">
+              {/* Role */}
+              <div className="col-4 mb-3">
                 <label>Role</label>
                 <select
                   className="modal-input"
@@ -168,8 +166,26 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                 </select>
               </div>
 
-              <div className="col-6 mb-3">
-                <label>Initial Plan</label>
+              {/* ✅ Gender Dropdown Added Here */}
+              <div className="col-4 mb-3">
+                <label>Gender</label>
+                <select
+                  className="modal-input"
+                  value={formData.gender}
+                  onChange={(e) =>
+                    setFormData({ ...formData, gender: e.target.value })
+                  }
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Not Specified">Not Specified</option>
+                </select>
+              </div>
+
+              {/* Plan */}
+              <div className="col-4 mb-3">
+                <label>Plan</label>
                 <select
                   className="modal-input"
                   value={formData.planType}
@@ -203,7 +219,7 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               </label>
             </div>
 
-            {/* Permissions (Only visible if Role is Admin) */}
+            {/* Permissions */}
             {formData.role === "admin" && (
               <div className="mb-4">
                 <label className="text-accent">

@@ -9,7 +9,13 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     image: { type: String, default: "" },
     resume: { type: String, default: "" },
-
+    // ✅ NEW FIELD ADD KAREIN
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other", "Not Specified"], // Sirf ye values allow hongi
+      default: "Not Specified", // Agar koi user gender na bataye to ye save hoga
+      required: true,
+    },
     // --- Roles & Status ---
     role: {
       type: String,

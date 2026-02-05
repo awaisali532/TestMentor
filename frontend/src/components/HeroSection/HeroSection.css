@@ -1,204 +1,200 @@
-/* --- HERO SECTION LAYOUT (Same as before) --- */
+/* =========================================
+   1. HERO SECTION LAYOUT
+   ========================================= */
 .hero-section {
-    padding-top: 140px;
-    padding-bottom: 60px;
-    background-color: var(--bg-body);
-    transition: background-color 0.3s ease;
-    /* min-height: 90vh; */
-    display: flex;
-    align-items: center;
+  padding-top: 140px;
+  padding-bottom: 60px;
+  background-color: var(--bg-body);
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
 }
 
 .hero-section .container {
-    max-width: 1200px;
-    /* Navbar wali width */
-    /* Agar navbar me padding-left: 20px hai to yahan bhi den */
-    padding-left: 25px;
-    padding-right: 25px;
+  max-width: 1200px;
+  padding-left: 25px;
+  padding-right: 25px;
 }
 
 .hero-left {
-    text-align: left;
-    padding-right: 20px;
+  text-align: left;
+  padding-right: 20px;
 }
 
+/* Typography */
 .hero-heading {
-    font-weight: 800;
-    color: var(--text-main);
-    margin-bottom: 20px;
-    line-height: 1.2;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  line-height: 1.2;
 }
 
 .highlight-text {
-    background: var(--gradient, linear-gradient(135deg, #0ea5e9, #2dd4bf));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  background: var(--gradient, linear-gradient(135deg, #0ea5e9, #2dd4bf));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .hero-description {
-    color: var(--text-muted);
-    margin-bottom: 35px;
-    font-size: 1.15rem;
-    line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 35px;
+  font-size: 1.15rem;
+  line-height: 1.6;
 }
 
+/* Image Section */
 .hero-right {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 .hero-image {
-    max-width: 100%;
-    height: auto;
-    animation: floatImage 4s ease-in-out infinite;
+  max-width: 100%;
+  height: auto;
+  animation: floatImage 4s ease-in-out infinite;
 }
 
 @keyframes floatImage {
-    0% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-10px);
-    }
-
-    100% {
-        transform: translateY(0);
-    }
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 /* =========================================
-   🔥 SMART TARKA BUTTON (Shape Shifter)
+   2. SMART TARKA BUTTON (Styles)
    ========================================= */
 
 .hero-btn-smart {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-    /* Gradient Background */
-    background: var(--gradient, linear-gradient(135deg, #0ea5e9, #2dd4bf));
-    background-size: 200% auto;
+  /* Gradient Background */
+  background: var(--gradient, linear-gradient(135deg, #0ea5e9, #2dd4bf));
+  background-size: 200% auto;
 
-    color: #fff !important;
+  color: #fff !important;
+  padding: 10px 28px;
+  font-size: 1rem;
+  font-weight: 600;
 
-    /* ✅ Smaller Size */
-    padding: 10px 28px;
-    font-size: 1rem;
-    font-weight: 600;
+  /* Initial Shape: Pill */
+  border-radius: 50px;
 
-    /* ✅ Initial Shape: Rounded Pill */
-    border-radius: 50px;
+  text-decoration: none;
+  border: none;
+  position: relative;
+  z-index: 1;
+  overflow: hidden; /* Important for clean animation */
 
-    text-decoration: none;
-    border: none;
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
-    /* Important for clean animation */
-
-    /* ✅ Super Smooth Transition for Shape & Color */
-    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  /* Smooth Transition */
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-/* --- ICON HIDDEN INITIALLY --- */
+/* ✅ Fix for Text Visibility */
+.btn-text-hero {
+  white-space: nowrap; /* Text ko tootne se rokta hai */
+  position: relative;
+  z-index: 2; /* Text ko background k ooper rakhta hai */
+}
+
+/* --- Icon Animation (Hidden Initially) --- */
 .icon-wrapper {
-    display: flex;
-    align-items: center;
-
-    /* Hide it nicely */
-    max-width: 0;
-    opacity: 0;
-    transform: translateX(-10px);
-
-    /* Smooth reveal animation */
-    transition: all 0.4s ease-in-out;
+  display: flex;
+  align-items: center;
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.4s ease-in-out;
 }
 
-/* --- HOVER STATE (The Transformation) --- */
+/* --- Hover State --- */
 .hero-btn-smart:hover {
-    /* 1. Shape Change: Pill -> Rectangle (8px looks better than 0px) */
-    border-radius: 8px;
-
-    /* 2. Gradient Shift */
-    background-position: right center;
-
-    /* 3. Lift Up */
-    transform: translateY(-3px);
-
-    /* 4. Glow Effect (Based on Theme) */
-    box-shadow: 0 10px 25px rgba(14, 165, 233, 0.4);
+  border-radius: 8px; /* Shape Change */
+  background-position: right center; /* Gradient Shift */
+  transform: translateY(-3px); /* Lift Up */
+  box-shadow: 0 10px 25px rgba(14, 165, 233, 0.4); /* Glow */
 }
 
-/* --- SHOW ICON ON HOVER --- */
+/* Show Icon on Hover */
 .hero-btn-smart:hover .icon-wrapper {
-    max-width: 20px;
-    /* Give it space */
-    opacity: 1;
-    /* Make visible */
-    transform: translateX(0);
-    /* Slide in */
-    margin-left: 8px;
-    /* Add gap between text and icon */
+  max-width: 20px;
+  opacity: 1;
+  transform: translateX(0);
+  margin-left: 8px;
 }
 
-/* --- 🌗 THEME BASED GLOW --- */
+/* =========================================
+   3. THEME BASED GLOW (Dark/Light)
+   ========================================= */
 [data-theme="dark"] .hero-btn-smart {
-    box-shadow: 0 0 15px rgba(45, 212, 191, 0.2);
+  box-shadow: 0 0 15px rgba(45, 212, 191, 0.2);
 }
 
 [data-theme="dark"] .hero-btn-smart:hover {
-    box-shadow: 0 10px 30px rgba(45, 212, 191, 0.5),
-        0 0 10px rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 10px 30px rgba(45, 212, 191, 0.5),
+    0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 [data-theme="light"] .hero-btn-smart:hover {
-    box-shadow: 0 10px 25px rgba(14, 165, 233, 0.5);
+  box-shadow: 0 10px 25px rgba(14, 165, 233, 0.5);
 }
 
-/* --- RESPONSIVENESS --- */
+/* =========================================
+   4. RESPONSIVENESS (Mobile Fixes)
+   ========================================= */
+
+/* Tablet & Smaller Laptops */
 @media (max-width: 992px) {
-    .hero-section {
-        padding-top: 120px;
-        text-align: center;
-        min-height: auto;
-    }
+  .hero-section {
+    padding-top: 120px;
+    text-align: center;
+    min-height: auto;
+  }
 
-    .hero-left {
-        padding-right: 0;
-        margin-bottom: 50px;
-        padding: 0 15px;
-    }
+  .hero-left {
+    padding-right: 0;
+    margin-bottom: 50px;
+    padding: 0 15px;
+  }
 
-    .hero-heading {
-        font-size: 2.5rem;
-    }
+  .hero-heading {
+    font-size: 2.5rem;
+  }
 
-    .hero-actions {
-        justify-content: center;
-        display: flex;
-    }
+  .hero-actions {
+    justify-content: center;
+    display: flex;
+  }
 }
 
+/* Mobile Phones */
 @media (max-width: 576px) {
-    .hero-section {
-        padding-top: 110px;
-    }
+  .hero-section {
+    padding-top: 110px;
+  }
 
-    .hero-heading {
-        font-size: 2rem;
-    }
+  .hero-heading {
+    font-size: 2rem;
+  }
 
-    .hero-description {
-        font-size: 1rem;
-    }
+  .hero-description {
+    font-size: 1rem;
+  }
 
-    .hero-btn-smart {
-        width: 100%;
-    }
-
-    /* Full width on mobile */
+  /* ✅ Mobile Button Fix */
+  .hero-btn-smart {
+    width: 100%;
+    display: flex; /* Flex ensures center alignment & full width */
+  }
 }

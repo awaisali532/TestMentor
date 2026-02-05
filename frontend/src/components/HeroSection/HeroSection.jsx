@@ -24,7 +24,7 @@ const HeroSection = () => {
               <div className="hero-actions">
                 {/* ✅ New Tarka Button */}
                 <Link to="/register" className="hero-btn-smart">
-                  <span className="btn-text">Get Started</span>
+                  <span className="btn-text-hero">Get Started</span>
                   <span className="icon-wrapper">
                     <FaArrowRight />
                   </span>

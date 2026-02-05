@@ -6,6 +6,7 @@
   --u-text-muted: #6b7280;
   --u-border: #e5e7eb;
   --u-accent: #2563eb;
+  /* --u-hover-bg: #d3d6d9; */
 }
 
 .u-dark {
@@ -15,6 +16,7 @@
   --u-text-muted: #94a3b8;
   --u-border: rgba(255, 255, 255, 0.1);
   --u-accent: #3b82f6;
+  /* --u-hover-bg: #6f7a8a; */
 }
 
 /* =========================================

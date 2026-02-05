@@ -7,7 +7,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 // Common Components
 import TMLoader from "../../../components/common/TMLoader/TMLoader";
-import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal"; // ✅ Imported
+import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -35,6 +35,7 @@ const PaperWizard = () => {
     subject: "",
     topics: [],
     syllabusLabel: "Select Syllabus",
+    syllabusType: "CHAPTERS", // ✅ NEW FIELD: Default is Chapters
     selectedPattern: null,
     mode: null,
     autoSettings: null,
@@ -45,9 +46,18 @@ const PaperWizard = () => {
   const [step, setStep] = useState(1);
   const [paperData, setPaperData] = useState(defaultPaperData);
   const [wizardLoading, setWizardLoading] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false); // State remains here
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // --- RESET & PERSIST LOGIC (Same as before) ---
+  // ============================================================
+  // 🔍 DEBUGGING LOGS
+  // ============================================================
+  useEffect(() => {
+    console.log("🛠️ Paper Data Updated:", paperData);
+    console.log("👉 Syllabus Type:", paperData.syllabusType); // Check this in Console
+  }, [paperData]);
+  // ============================================================
+
+  // --- RESET & PERSIST LOGIC ---
   useEffect(() => {
     if (location.state?.keepData) {
       const savedStep = localStorage.getItem("pw_step");
@@ -77,7 +87,7 @@ const PaperWizard = () => {
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
-  // --- NAVIGATION HANDLERS (Same as before) ---
+  // --- NAVIGATION HANDLERS ---
   useEffect(() => {
     if (step > 1 && !paperData.grade) setStep(1);
     if (step > 2 && !paperData.subject) setStep(2);
@@ -90,7 +100,6 @@ const PaperWizard = () => {
     navigate("/user/dashboard");
   };
 
-  // ... (Class, Subject, Syllabus, Pattern Handlers Same as before) ...
   const handleClassSelect = (grade) => {
     setPaperData({ ...paperData, grade });
     setStep(2);
@@ -99,12 +108,17 @@ const PaperWizard = () => {
     setPaperData({ ...paperData, subject });
     setStep(3);
   };
-  const handleSyllabusSelect = (topics, label) =>
+
+  // ✅ UPDATED HANDLER: Accepts 'type' from SyllabusSelector
+  const handleSyllabusSelect = (topics, label, type) => {
     setPaperData({
       ...paperData,
       topics,
       syllabusLabel: label || "Select Syllabus",
+      syllabusType: type || "CHAPTERS", // ✅ Save Type (FULL_BOOK or CHAPTERS)
     });
+  };
+
   const handlePatternSelect = (pattern) =>
     setPaperData({ ...paperData, selectedPattern: pattern });
   const handlePatternConfirm = () => setStep(5);
@@ -122,7 +136,7 @@ const PaperWizard = () => {
     setEditingPreset(null);
   };
 
-  // --- MODE SELECT (With Limit Check) ---
+  // --- MODE SELECT ---
   const handleModeSelect = async (mode, settings) => {
     const finalData = { ...paperData, mode, autoSettings: settings };
     setPaperData(finalData);
@@ -143,7 +157,7 @@ const PaperWizard = () => {
       } catch (error) {
         setWizardLoading(false);
         if (error.response && error.response.status === 403) {
-          setShowUpgradeModal(true); // ✅ Trigger Modal
+          setShowUpgradeModal(true);
         } else {
           toast.error("Something went wrong. Please try again.");
         }
@@ -224,6 +238,9 @@ const PaperWizard = () => {
               <PatternSelector
                 grade={paperData.grade}
                 subject={paperData.subject}
+                selectedTopics={paperData.topics}
+                // ✅ PASSING SYLLABUS TYPE FOR FILTERING
+                syllabusType={paperData.syllabusType}
                 onSelect={handlePatternSelect}
                 onNext={handlePatternConfirm}
                 onCreateCustom={handleCreateCustom}
@@ -305,7 +322,6 @@ const PaperWizard = () => {
         </div>
       )}
 
-      {/* ✅ Clean Usage of UpgradeModal */}
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}

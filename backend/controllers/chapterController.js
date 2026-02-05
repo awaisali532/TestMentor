@@ -1,8 +1,9 @@
+const mongoose = require("mongoose"); // ✅ Mongoose Import Zaroori hai Aggregation k liye
 const Chapter = require("../models/chapter");
 const Subject = require("../models/subjectModel");
 const Topic = require("../models/topic");
 const Question = require("../models/question");
-const cloudinary = require("../config/cloudinary"); // ✅ Import Cloudinary
+const cloudinary = require("../config/cloudinary");
 
 // ==========================================
 // 1. GET SYLLABUS (Chapters + Topics) - For Paper Wizard
@@ -11,14 +12,12 @@ const getChaptersByFilter = async (req, res) => {
   try {
     const { className, subjectName } = req.query;
 
-    // 1. Find Subject ID
     const subject = await Subject.findOne({ className, subjectName });
 
     if (!subject) {
       return res.status(404).json({ error: "Subject not found" });
     }
 
-    // 2. Aggregate: Chapters + Topics
     const chapters = await Chapter.aggregate([
       { $match: { subject: subject._id } },
       { $sort: { chapterNumber: 1 } },
@@ -32,13 +31,12 @@ const getChaptersByFilter = async (req, res) => {
       },
     ]);
 
-    // 3. Sort Topics Numerically (1.1, 1.2, 1.10)
     chapters.forEach((chap) => {
       if (chap.topics && chap.topics.length > 0) {
         chap.topics.sort((a, b) =>
           a.topicNumber.localeCompare(b.topicNumber, undefined, {
             numeric: true,
-          })
+          }),
         );
       }
     });
@@ -80,7 +78,6 @@ const addChapter = async (req, res) => {
     });
     await newChapter.save();
 
-    // Auto Create General Topic
     const defaultTopic = new Topic({
       chapter: newChapter._id,
       topicNumber: "0.0",
@@ -98,19 +95,53 @@ const addChapter = async (req, res) => {
   }
 };
 
-// ==========================================
-// 3. GET CHAPTERS (Simple List)
-// ==========================================
+// =================================================
+// ✅ GET CHAPTERS BY SUBJECT (UPDATED WITH AGGREGATION)
+// =================================================
 const getChaptersBySubject = async (req, res) => {
   try {
     const { subjectId } = req.params;
-    const chapters = await Chapter.find({ subject: subjectId }).sort({
-      chapterNumber: 1,
-    });
-    res.json(chapters);
-  } catch (err) {
-    console.error("Get Chapter Error:", err);
-    res.status(500).json({ error: err.message });
+    let finalSubjectId = subjectId;
+
+    // 1. Check ID Validity (Handle Subject Name case)
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(subjectId);
+
+    if (!isValidObjectId) {
+      const subjectDoc = await Subject.findOne({
+        $or: [{ subjectName: subjectId }, { name: subjectId }],
+      });
+
+      if (!subjectDoc) {
+        return res.status(200).json([]);
+      }
+      finalSubjectId = subjectDoc._id;
+    }
+
+    // 2. ✅ USE AGGREGATION Instead of Populate
+    // This fetches topics directly from the DB collection, ignoring Schema strictness.
+    const chapters = await Chapter.aggregate([
+      {
+        $match: {
+          subject: new mongoose.Types.ObjectId(finalSubjectId),
+        },
+      },
+      {
+        $lookup: {
+          from: "topics", // DB Collection Name (lowercase)
+          localField: "_id", // Chapter ID
+          foreignField: "chapter", // Topic Model field
+          as: "topics", // Output Array Name
+        },
+      },
+      {
+        $sort: { chapterNumber: 1 },
+      },
+    ]);
+
+    res.status(200).json(chapters);
+  } catch (error) {
+    console.error("Get Chapter Error:", error);
+    res.status(500).json({ error: "Failed to fetch chapters" });
   }
 };
 
@@ -130,7 +161,7 @@ const updateChapter = async (req, res) => {
           ur: name.ur,
         },
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedChapter) {
@@ -149,33 +180,25 @@ const updateChapter = async (req, res) => {
 };
 
 // ==========================================
-// 5. DELETE CHAPTER (✅ Cascade Delete)
+// 5. DELETE CHAPTER (Cascade Delete)
 // ==========================================
 const deleteChapter = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Check if Chapter exists
     const chapter = await Chapter.findById(id);
     if (!chapter) return res.status(404).json({ error: "Chapter not found" });
 
-    // 2. Find Questions to Clean up Images
     const questions = await Question.find({ chapter: id });
 
-    // 3. Delete Images from Cloudinary
     const imageDeletePromises = questions
       .filter((q) => q.image && q.image.public_id)
       .map((q) => cloudinary.uploader.destroy(q.image.public_id));
 
     await Promise.all(imageDeletePromises);
 
-    // 4. Delete Questions from DB
     await Question.deleteMany({ chapter: id });
-
-    // 5. Delete Topics from DB
     await Topic.deleteMany({ chapter: id });
-
-    // 6. Finally Delete Chapter
     await Chapter.findByIdAndDelete(id);
 
     console.log(`[Cascade Delete] Chapter ${id} and all related data removed.`);
@@ -202,7 +225,6 @@ const addBulkChapters = async (req, res) => {
 
     const result = await Chapter.insertMany(chapters, { ordered: false });
 
-    // Add Default Topic for each new chapter
     if (result.length > 0) {
       const topicsPayload = result.map((ch) => ({
         chapter: ch._id,
@@ -221,13 +243,11 @@ const addBulkChapters = async (req, res) => {
       data: result,
     });
   } catch (error) {
-    // Handle Partial Duplicates
     if (error.writeErrors) {
       const isDuplicate = error.writeErrors.some((e) => e.code === 11000);
 
       if (isDuplicate) {
         const insertedDocs = error.insertedDocs || [];
-        // Add topics for successful ones
         if (insertedDocs.length > 0) {
           const topicsPayload = insertedDocs.map((ch) => ({
             chapter: ch._id,
@@ -259,7 +279,7 @@ const addBulkChapters = async (req, res) => {
 module.exports = {
   addChapter,
   addBulkChapters,
-  getChaptersBySubject,
+  getChaptersBySubject, // ✅ Updated Function
   updateChapter,
   deleteChapter,
   getChaptersByFilter,

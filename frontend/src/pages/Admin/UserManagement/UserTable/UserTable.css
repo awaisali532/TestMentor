@@ -42,11 +42,37 @@
 .custom-table tr:last-child td {
   border-bottom: none;
 }
+/* =========================================
+   TABLE ROW HOVER EFFECT (FIXED)
+   ========================================= */
 
-.custom-table tr:hover {
-  background-color: var(--u-hover-bg, #ecf0f0ba);
+.custom-table tr {
+  transition: background-color 0.2s ease;
 }
 
+/* 1. LIGHT MODE HOVER */
+.custom-table tr:hover {
+  /* Light Gray background for Light Mode */
+  background-color: var(--u-hover-bg, #f3f4f6);
+}
+
+/* 2. ✅ DARK MODE HOVER FIX */
+/* Agar body par 'dark-mode' class hai, ya data-theme='dark' hai */
+body.dark-mode .custom-table tr:hover,
+[data-theme="dark"] .custom-table tr:hover {
+  /* Ye color dark background par halka sa light layer add karega.
+     Bjay kisi specific color ke, hum transparency use kar rahe hain
+     taake text hamesha visible rahe.
+  */
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text-main) !important; /* Text color change na ho */
+}
+
+/* Optional: Disabled row hover ko remove karein */
+.custom-table tr.row-disabled:hover {
+  background-color: transparent !important;
+  cursor: not-allowed;
+}
 /* =========================================
    USER INFO COLUMN (Avatar + Name)
    ========================================= */

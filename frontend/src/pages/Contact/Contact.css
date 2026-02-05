@@ -4,7 +4,7 @@
 
 /* --- 1. PAGE LAYOUT --- */
 .contact-wrapper {
-  min-height: 100vh;
+  min-height: calc(100vh - 70px);
   background-color: var(--bg-body); /* Theme Aware */
   padding-top: 140px; /* Navbar Space */
   /* padding-bottom: 80px; */
@@ -17,7 +17,7 @@
 
 /* --- 2. HERO SECTION --- */
 .contact-hero {
-  margin-bottom: 60px;
+  margin-bottom: 40px;
   padding: 0 20px;
 }
 
@@ -111,7 +111,7 @@
 /* --- 4. FORM CARD (RIGHT SIDE) --- */
 .contact-form-card {
   background: var(--card-bg, #fff);
-  padding: 40px;
+  padding: 30px;
   border-radius: 24px;
   border: 1px solid var(--border-color, #e2e8f0);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);

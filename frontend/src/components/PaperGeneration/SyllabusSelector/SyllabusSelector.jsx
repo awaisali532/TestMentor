@@ -6,16 +6,14 @@ import {
   FaExclamationCircle,
   FaArrowRight,
   FaCheckDouble,
-} from "react-icons/fa"; // ❌ FaSpinner Removed
+} from "react-icons/fa";
 import "./SyllabusSelector.css";
-
-// ✅ Import Custom TM Loader
 import TMLoader from "../../common/TMLoader/TMLoader";
 
 const SyllabusSelector = ({
   selectedClass,
   selectedSubject,
-  onSelectionChange,
+  onSelectionChange, // 👈 Parent function called here
   onNext,
 }) => {
   const [chapters, setChapters] = useState([]);
@@ -31,7 +29,6 @@ const SyllabusSelector = ({
   // --- 1. FETCH SYLLABUS ---
   useEffect(() => {
     const fetchSyllabus = async () => {
-      // ✅ 1 Second Delay Logic
       const minDelay = new Promise((resolve) => setTimeout(resolve, 1000));
 
       try {
@@ -44,7 +41,6 @@ const SyllabusSelector = ({
           params: { className: selectedClass, subjectName: selectedSubject },
         };
 
-        // ✅ Run API + Delay Together
         const [response] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/chapters/filter`, config),
           minDelay,
@@ -62,8 +58,7 @@ const SyllabusSelector = ({
     if (selectedClass && selectedSubject) fetchSyllabus();
   }, [selectedClass, selectedSubject]);
 
-  // ... (HELPERS & HANDLERS same rahenge) ...
-
+  // Total Topics Calculation
   const allTopicIds = useMemo(() => {
     return chapters.flatMap((ch) => ch.topics.map((t) => t._id));
   }, [chapters]);
@@ -71,22 +66,54 @@ const SyllabusSelector = ({
   const isAllSelected =
     allTopicIds.length > 0 && allTopicIds.length === selectedTopicIds.length;
 
+  // ============================================================
+  // 🔥 UPDATED LOGIC: DETERMINE TYPE (FULL_BOOK vs CHAPTERS)
+  // ============================================================
+  // ============================================================
+  // 🔥 FINAL LOGIC: ALL CHAPTERS COVERAGE
+  // ============================================================
   const updateSelection = (newIds) => {
     setSelectedTopicIds(newIds);
+
     let label = "Select Syllabus";
+    let type = "CHAPTERS"; // Default
 
     if (newIds.length > 0) {
-      if (newIds.length === allTopicIds.length) {
+      // 1. Check karo k Total Chapters kitne hain
+      const totalChaptersCount = chapters.length;
+
+      // 2. Check karo k User ne kitne Chapters touch kiye hain
+      // (Yani wo chapters jin ka kam az kam 1 topic selected hai)
+      const selectedChaptersCount = chapters.filter((ch) =>
+        ch.topics.some((t) => newIds.includes(t._id)),
+      ).length;
+
+      // 3. Logic: Agar User ne SAARY Chapters touch kiye hain -> FULL_BOOK
+      // (Bhale andar se topics chore hon)
+      if (selectedChaptersCount === totalChaptersCount) {
+        label = "Full Syllabus (Custom)";
+        type = "FULL_BOOK";
+      }
+      // 4. Agar selected IDs total IDs k barabar hain -> Pure Full Book
+      else if (newIds.length === allTopicIds.length) {
         label = "Full Syllabus";
-      } else {
+        type = "FULL_BOOK";
+      }
+      // 5. Warna -> Chapter Wise
+      else {
         const involvedChapters = chapters
           .filter((ch) => ch.topics.some((t) => newIds.includes(t._id)))
           .map((ch) => `CH-${ch.chapterNumber}`);
+
         label = involvedChapters.join(", ");
+        type = "CHAPTERS";
       }
     }
-    onSelectionChange(newIds, label);
+
+    // Pass updated Type
+    onSelectionChange(newIds, label, type);
   };
+  // ============================================================
 
   const toggleChapter = (chapId) => {
     setExpandedChapters((prev) => ({ ...prev, [chapId]: !prev[chapId] }));
@@ -110,7 +137,7 @@ const SyllabusSelector = ({
   const handleChapterCheck = (chapter) => {
     const chapterTopicIds = chapter.topics.map((t) => t._id);
     const allSelected = chapterTopicIds.every((id) =>
-      selectedTopicIds.includes(id)
+      selectedTopicIds.includes(id),
     );
 
     let updated;
@@ -118,7 +145,7 @@ const SyllabusSelector = ({
       updated = selectedTopicIds.filter((id) => !chapterTopicIds.includes(id));
     } else {
       const newIds = chapterTopicIds.filter(
-        (id) => !selectedTopicIds.includes(id)
+        (id) => !selectedTopicIds.includes(id),
       );
       updated = [...selectedTopicIds, ...newIds];
     }
@@ -130,7 +157,7 @@ const SyllabusSelector = ({
       return { checked: false, indeterminate: false };
     const chapterTopicIds = chapter.topics.map((t) => t._id);
     const selectedCount = chapterTopicIds.filter((id) =>
-      selectedTopicIds.includes(id)
+      selectedTopicIds.includes(id),
     ).length;
 
     if (selectedCount === chapter.topics.length)
@@ -139,9 +166,6 @@ const SyllabusSelector = ({
     return { checked: false, indeterminate: false };
   };
 
-  // --- RENDER ---
-
-  // ✅ NEW LOADER LOGIC
   if (loading) {
     return <TMLoader message={`Loading Syllabus for ${selectedSubject}...`} />;
   }
@@ -157,9 +181,8 @@ const SyllabusSelector = ({
 
   return (
     <div className="syl-wrapper fade-in-up">
-      {" "}
-      {/* Added Animation */}
       <h3 className="syl-title">Select Topics from {selectedSubject}</h3>
+
       {/* Select All Bar */}
       <div
         className={`syl-select-all ${isAllSelected ? "active" : ""}`}
@@ -176,6 +199,7 @@ const SyllabusSelector = ({
         </div>
         <FaCheckDouble className="syl-all-icon" />
       </div>
+
       <div className="syl-grid">
         {chapters.map((chapter) => {
           const { checked, indeterminate } = getChapterStatus(chapter);

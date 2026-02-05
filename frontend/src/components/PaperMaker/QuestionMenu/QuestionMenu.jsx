@@ -8,6 +8,8 @@ import QuestionList from "./components/QuestionList/QuestionList";
 import MenuFooter from "./components/MenuFooter/MenuFooter";
 import "./QuestionMenu.css";
 
+import { getCategoriesForSubject } from "../../../config/SubjectConfig";
+
 const CustomAlert = ({ message, onClose }) => {
   if (!message) return null;
   return (
@@ -34,11 +36,9 @@ const QuestionMenu = ({
   selectedQuestions = [],
   onAddQuestionsToPaper,
 }) => {
-  const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-
   const [categoriesList, setCategoriesList] = useState([]);
-  const [difficultiesList, setDifficultiesList] = useState([]);
-  const [loadingFilters, setLoadingFilters] = useState(true);
+  const [difficultiesList] = useState(["Easy", "Medium", "Hard"]);
+  const [loadingFilters, setLoadingFilters] = useState(false);
 
   const [activeTab, setActiveTab] = useState("MCQ");
   const [activeSection, setActiveSection] = useState(null);
@@ -47,18 +47,20 @@ const QuestionMenu = ({
   const [alertMsg, setAlertMsg] = useState(null);
   const [tempSelected, setTempSelected] = useState([]);
 
-  // ✅ MAGIC HELPER (Ye ID ko String banata hai taake Comparison sahi ho)
+  useEffect(() => {
+    if (paperData && paperData.subject) {
+      const cats = getCategoriesForSubject(paperData.subject);
+      setCategoriesList(cats);
+    }
+  }, [paperData]);
+
   const getSafeID = (q) => {
     if (!q) return "";
-
-    // Priority 1: Agar Saved Question hai
     if (q.questionId) {
       return typeof q.questionId === "object"
         ? String(q.questionId._id)
         : String(q.questionId);
     }
-
-    // Priority 2: Agar New Question hai
     return String(q._id);
   };
 
@@ -76,27 +78,108 @@ const QuestionMenu = ({
     setActiveSection(null);
   }, [activeTab]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const fetchFilters = async () => {
-      setLoadingFilters(true);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${BASE_URL}/api/questions/filters`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data.success) {
-          setCategoriesList(res.data.categories);
-          setDifficultiesList(res.data.difficulties);
-        }
-      } catch (err) {
-        console.error("Error fetching filters:", err);
-      } finally {
-        setLoadingFilters(false);
+  // ============================================================
+  // 1. 🔥 PAIRING EXTRACTION (Chapters)
+  // ============================================================
+  const targetChapters = useMemo(() => {
+    const pattern = paperData.selectedPattern || paperData.paperPattern;
+    if (!pattern?.sections) return null;
+
+    let targetSection = null;
+
+    if (activeTab === "MCQ") {
+      targetSection = pattern.sections.find((s) => s.questionType === "MCQ");
+    } else if (activeSection) {
+      const parts = activeSection.split("_");
+      let visualIndex = -1;
+
+      // Extract index based on Tab Type
+      if (activeSection.startsWith("sec_")) {
+        // Shorts
+        visualIndex = parseInt(parts[1]);
+      } else if (activeSection.startsWith("long_")) {
+        // Longs
+        visualIndex = parseInt(parts[1]);
       }
-    };
-    fetchFilters();
-  }, [isOpen]);
+
+      if (visualIndex !== -1 && !isNaN(visualIndex)) {
+        // Filter sections by Active Tab first to match visual order
+        const relevantSections = pattern.sections.filter(
+          (s) => s.questionType === activeTab,
+        );
+        targetSection = relevantSections[visualIndex];
+      }
+    }
+
+    if (
+      targetSection &&
+      targetSection.linkedChapters &&
+      targetSection.linkedChapters.length > 0
+    ) {
+      return targetSection.linkedChapters;
+    }
+    return null;
+  }, [activeTab, activeSection, paperData]);
+
+  // ============================================================
+  // 2. 🔥 CATEGORY EXTRACTION (Universal: Short & Long)
+  // ============================================================
+  const targetCategory = useMemo(() => {
+    if (!activeSection) return null;
+
+    const pattern = paperData.selectedPattern || paperData.paperPattern;
+    if (!pattern?.sections) return null;
+
+    let targetSection = null;
+
+    // 1. Identify Section (Short or Long)
+    if (activeSection.startsWith("sec_")) {
+      // SHORT QUESTIONS Logic
+      const parts = activeSection.split("_");
+      const visualIndex = parseInt(parts[1]);
+      const relevantSections = pattern.sections.filter(
+        (s) => s.questionType === activeTab,
+      );
+      targetSection = relevantSections[visualIndex];
+    } else if (activeSection.startsWith("long_")) {
+      // LONG QUESTIONS Logic
+      const parts = activeSection.split("_");
+      const secIndex = parseInt(parts[1]);
+      const relevantSections = pattern.sections.filter(
+        (s) => s.questionType === "LONG",
+      );
+      targetSection = relevantSections[secIndex];
+
+      // Handle Parts (a/b)
+      const partType = parts[3]; // "a", "b", "full"
+      if (
+        targetSection &&
+        targetSection.hasParts &&
+        (partType === "a" || partType === "b")
+      ) {
+        const subIndex = partType === "a" ? 0 : 1;
+        const subQ = targetSection.subQuestions?.[subIndex];
+        if (subQ && subQ.questionCategory && subQ.questionCategory !== "ANY") {
+          return subQ.questionCategory;
+        }
+      }
+    }
+
+    // 2. Default Check (For Short Sections OR Full Long Questions)
+    if (
+      targetSection &&
+      targetSection.questionCategory &&
+      targetSection.questionCategory !== "ANY"
+    ) {
+      console.log(
+        `🎯 Strict Category found for ${activeTab}:`,
+        targetSection.questionCategory,
+      );
+      return targetSection.questionCategory;
+    }
+
+    return null; // "ANY" means show everything
+  }, [activeTab, activeSection, paperData]);
 
   const getCurrentLimit = () => {
     const pattern = paperData.selectedPattern || paperData.paperPattern;
@@ -111,59 +194,47 @@ const QuestionMenu = ({
     }
 
     if (!activeSection) return 0;
-    const parts = activeSection.split("_");
-    const secIndex = parseInt(parts[1]);
-    const relevantSections = sections.filter(
-      (s) => s.questionType === activeTab
-    );
 
-    if (relevantSections[secIndex]) {
+    // Correct visual index mapping for limit
+    const relevantSections = sections.filter(
+      (s) => s.questionType === activeTab,
+    );
+    const parts = activeSection.split("_");
+    const visualIndex = parseInt(parts[1]); // sec_X or long_X
+
+    if (relevantSections[visualIndex]) {
       if (activeTab === "LONG") return 1;
-      return parseInt(relevantSections[secIndex].totalQuestions || 0);
+      return parseInt(relevantSections[visualIndex].totalQuestions || 0);
     }
     return 0;
   };
 
-  // ============================================================
-  // ✅ FIX: BULLETPROOF CHANGE DETECTION
-  // ============================================================
   const isSelectionChanged = useMemo(() => {
-    // 1. Parent se aaye hue questions ki IDs nikalo (Sirf Active Tab ki)
     const originalIDs = selectedQuestions
       .filter((q) => q.type === activeTab)
       .map((q) => getSafeID(q))
       .sort();
 
-    // 2. Abhi Menu mein jo select kiye hain unki IDs nikalo (Sirf Active Tab ki)
     const currentIDs = tempSelected
       .filter((q) => q.type === activeTab)
       .map((q) => getSafeID(q))
       .sort();
 
-    // 3. Compare karo
-    // Agar length barabar nahi, matlb change hua hai
     if (originalIDs.length !== currentIDs.length) return true;
-
-    // Agar length same hai, to check karo IDs same hain ya nahi
-    // JSON.stringify arrays ko string bana kar compare karega ["1", "2"] vs ["1", "3"]
     return JSON.stringify(originalIDs) !== JSON.stringify(currentIDs);
   }, [tempSelected, selectedQuestions, activeTab]);
 
   const handleToggleSelect = (clickedQuestion) => {
     const targetID = String(clickedQuestion._id);
-
-    // Check karo: Kya ye ID list mein hai? (Using Helper)
     const isAlreadySelected = tempSelected.some(
-      (q) => getSafeID(q) === targetID
+      (q) => getSafeID(q) === targetID,
     );
 
-    // UNSELECT LOGIC
     if (isAlreadySelected) {
       setTempSelected((prev) => prev.filter((q) => getSafeID(q) !== targetID));
       return;
     }
 
-    // SELECT LOGIC
     const limit = getCurrentLimit();
     let currentCount = 0;
     let sectionIdToSave = null;
@@ -177,7 +248,7 @@ const QuestionMenu = ({
         return;
       }
       currentCount = tempSelected.filter(
-        (q) => q.tabId === activeSection
+        (q) => q.tabId === activeSection,
       ).length;
       sectionIdToSave = activeSection;
     }
@@ -187,7 +258,6 @@ const QuestionMenu = ({
       return;
     }
 
-    // Add to list
     setTempSelected((prev) => [
       ...prev,
       { ...clickedQuestion, tabId: sectionIdToSave },
@@ -225,10 +295,10 @@ const QuestionMenu = ({
     if (tempSelected.length > 0) {
       counts.MCQ.current = tempSelected.filter((q) => q.type === "MCQ").length;
       counts.SHORT.current = tempSelected.filter(
-        (q) => q.type === "SHORT"
+        (q) => q.type === "SHORT",
       ).length;
       counts.LONG.current = tempSelected.filter(
-        (q) => q.type === "LONG"
+        (q) => q.type === "LONG",
       ).length;
     }
     return counts;
@@ -285,6 +355,8 @@ const QuestionMenu = ({
               paperData={paperData}
               tempSelected={tempSelected}
               onToggleSelect={handleToggleSelect}
+              requiredChapters={targetChapters}
+              requiredCategory={targetCategory} // ✅ Passing calculated Category
             />
           </div>
 
@@ -295,15 +367,15 @@ const QuestionMenu = ({
               activeSection
                 ? activeSection.replace(/_/g, " ").toUpperCase()
                 : activeTab === "MCQ"
-                ? "MCQ SECTION"
-                : "SECTION"
+                  ? "MCQ SECTION"
+                  : "SECTION"
             }
             onAdd={handleConfirmAdd}
             onAutoSelect={handleAutoSelect}
-            isChanged={isSelectionChanged} // ✅ Ab ye sahi True/False bhejega
-            selectedQuestions={tempSelected} // List bheji
-            onRemove={handleToggleSelect} // Remove karne k liye wahi toggle function
-            activeTab={activeTab} // Sirf current tab k items dikhane k liye
+            isChanged={isSelectionChanged}
+            selectedQuestions={tempSelected}
+            onRemove={handleToggleSelect}
+            activeTab={activeTab}
           />
         </div>
       </div>

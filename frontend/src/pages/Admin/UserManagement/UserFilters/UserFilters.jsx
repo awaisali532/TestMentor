@@ -16,12 +16,21 @@ const UserFilters = ({
         <div className="col-md-6">
           <div className="search-group">
             <FaSearch className="search-icon" />
+
+            {/* ✅ FIXED INPUT FIELD */}
             <input
-              type="text"
+              type="search" // 1. Text ki jagah 'search' use karein
+              name="user_search_unique" // 2. Unique name dein taake browser 'email' na samjhay
+              id="user_filter_search" // 3. Unique ID
               className="search-input"
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              // 🔥 MAGIC ATTRIBUTES TO STOP AUTOFILL
+              autoComplete="off" // Standard autofill off
+              data-lpignore="true" // LastPass (Password Managers) ko ignore karne k liye
+              data-form-type="other" // Browser ko batane k liye k ye form nahi hai
+              spellCheck="false"
             />
           </div>
         </div>
@@ -37,8 +46,7 @@ const UserFilters = ({
             >
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
-              <option value="teacher">Teacher</option>
-              <option value="student">Student</option>
+              <option value="user">User</option>
             </select>
           </div>
         </div>

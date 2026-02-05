@@ -18,7 +18,6 @@ const PaperMaker = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  // --- SESSION MANAGEMENT ---
   const [sessionState, setSessionState] = useState(() => {
     const savedKey = localStorage.getItem("paperSessionKey");
     const currentKey = location.key;
@@ -49,11 +48,7 @@ const PaperMaker = () => {
   const [showPatternEdit, setShowPatternEdit] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  // ✅ MANUAL EDIT MODE STATE
   const [isManualMode, setIsManualMode] = useState(false);
-
-  // ✅ DELETE MODAL STATE
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     type: null,
@@ -96,15 +91,19 @@ const PaperMaker = () => {
     navigate("/user/dashboard");
   };
 
-  // --- PATTERN UPDATE ---
   const handlePatternUpdate = (updatedPattern) => {
+    if (!updatedPattern || !updatedPattern.sections) {
+      toast.error("Failed to update pattern structure.");
+      return;
+    }
+
     setPaperData((prevData) => {
-      let currentQuestions = [...prevData.questions];
+      let currentQuestions = [...(prevData.questions || [])];
       const oldLongSec = prevData.selectedPattern?.sections?.find(
-        (s) => s.questionType === "LONG"
+        (s) => s.questionType === "LONG",
       );
       const newLongSec = updatedPattern.sections?.find(
-        (s) => s.questionType === "LONG"
+        (s) => s.questionType === "LONG",
       );
       const isLongPatternChanged =
         oldLongSec?.hasParts !== newLongSec?.hasParts;
@@ -116,7 +115,7 @@ const PaperMaker = () => {
           const parts = q.tabId.split("_");
           const secIndex = parseInt(parts[parts.length - 1]);
           if (isNaN(secIndex)) return true;
-          const targetSection = updatedPattern.sections[secIndex];
+          const targetSection = updatedPattern.sections?.[secIndex];
           if (!targetSection) return true;
           if (targetSection.questionType !== "SHORT") return true;
           return true;
@@ -124,8 +123,8 @@ const PaperMaker = () => {
         if (q.type === "LONG") {
           if (isLongPatternChanged) return false;
           if (!newLongSec) return false;
-          const isFull = q.tabId.endsWith("_full");
-          const isPart = q.tabId.endsWith("_a") || q.tabId.endsWith("_b");
+          const isFull = q.tabId?.endsWith("_full");
+          const isPart = q.tabId?.endsWith("_a") || q.tabId?.endsWith("_b");
           if (newLongSec.hasParts && isFull) return false;
           if (!newLongSec.hasParts && isPart) return false;
           return true;
@@ -141,6 +140,7 @@ const PaperMaker = () => {
         questions: currentQuestions,
       };
     });
+
     setShowPatternEdit(false);
     toast.success("Pattern Updated Successfully!");
   };
@@ -149,7 +149,7 @@ const PaperMaker = () => {
     setPaperData((prevData) => {
       const existingQuestions = prevData.questions || [];
       const keepQuestions = existingQuestions.filter(
-        (q) => q.type !== typeToUpdate
+        (q) => q.type !== typeToUpdate,
       );
       const newFullList = [...keepQuestions, ...incomingQuestions];
       return { ...prevData, questions: newFullList };
@@ -161,27 +161,19 @@ const PaperMaker = () => {
     }
   };
 
-  // ✅ UPDATED PRINT HANDLER (Accepts Mode)
   const handlePrintPaper = (mode = "SINGLE") => {
-    // Navigate to Print Page with Data AND Mode
     navigate("/user/print-paper", {
       state: {
         ...paperData,
-        printSettings: { mode: mode }, // 👈 Ye naya data ja raha hai
+        printSettings: { mode: mode },
       },
     });
   };
 
-  // =========================================================
-  // ✅ MANUAL EDITING HANDLERS
-  // =========================================================
-
-  // 1. Trigger Delete Modal for Single Question
   const handleManualDelete = (qId) => {
     setDeleteModal({ isOpen: true, type: "SINGLE", id: qId, extra: null });
   };
 
-  // 2. Trigger Delete Modal for Section
   const handleSectionDelete = (type, tabIdPrefix = null) => {
     setDeleteModal({
       isOpen: true,
@@ -191,10 +183,8 @@ const PaperMaker = () => {
     });
   };
 
-  // 3. EXECUTE DELETE
   const handleConfirmDelete = () => {
     const { type, id, extra } = deleteModal;
-
     setPaperData((prev) => {
       if (type === "SINGLE") {
         return {
@@ -205,7 +195,6 @@ const PaperMaker = () => {
           }),
         };
       }
-
       if (type === "SECTION") {
         return {
           ...prev,
@@ -221,12 +210,10 @@ const PaperMaker = () => {
       }
       return prev;
     });
-
     setDeleteModal({ isOpen: false, type: null, id: null, extra: null });
     toast.success("Deleted successfully");
   };
 
-  // 4. Update Question Content
   const handleManualUpdate = (qId, field, lang, value, optIndex = null) => {
     setPaperData((prev) => {
       const updatedQuestions = prev.questions.map((q) => {
@@ -253,20 +240,20 @@ const PaperMaker = () => {
     });
   };
 
-  // =========================================================
-
   const handleSaveToDatabase = async (paperTitle) => {
+    if (!paperData.questions || paperData.questions.length === 0) {
+      toast.error("Paper is empty! Please add questions first.");
+      return;
+    }
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
-
-      // ✅ PREPARE DATA FOR SNAPSHOT SAVE
       const questionsToSave = paperData.questions.map((q) => {
         return {
-          questionId: q.questionId?._id || q.questionId || q._id, // Keep Ref
-          statement: q.statement, // Updated Text
+          questionId: q.questionId?._id || q.questionId || q._id,
+          statement: q.statement,
           type: q.type,
-          options: q.options, // Updated Options (including isCorrect)
+          options: q.options,
           marks: q.marks,
           tabId: q.tabId,
         };

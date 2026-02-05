@@ -22,7 +22,6 @@ const UserDashboard = () => {
   };
 
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-  console.log("user from dashboard:", user);
   const [savedCount, setSavedCount] = useState(0);
   const [recentPapers, setRecentPapers] = useState([]);
 

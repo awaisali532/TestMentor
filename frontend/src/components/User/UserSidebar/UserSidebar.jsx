@@ -17,6 +17,10 @@ import "./UserSidebar.css";
 // ✅ Import Upgrade Modal
 import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal";
 
+// ✅ IMPORT AVATARS (Ensure Path is Correct)
+import BoyAvatar from "../../../assets/imeages/Avatar/boy.svg";
+import GirlAvatar from "../../../assets/imeages/Avatar/girl.svg";
+
 const UserSidebar = ({
   isDarkMode,
   toggleTheme,
@@ -54,9 +58,36 @@ const UserSidebar = ({
   const userName = user?.name || "Guest";
   const userInitial = userName.charAt(0).toUpperCase();
 
-  // ✅ CHECK: Is User Premium? (Backend logic se match)
+  // ✅ CHECK: Is User Premium?
   const isPremium = user?.planType === "premium" || user?.planType === "paid";
-  console.log(user);
+
+  // ✅ AVATAR RENDER LOGIC
+  const renderAvatar = () => {
+    // 1. Agar User ne Image Upload ki hai
+    if (user?.image) {
+      return (
+        <img
+          src={user.image}
+          alt="Profile"
+          className="usr-avatar"
+          style={{ objectFit: "cover" }}
+        />
+      );
+    }
+
+    // 2. Agar Image nahi hai -> Check Gender
+    const gender = user?.gender ? user.gender.trim().toLowerCase() : "";
+
+    if (gender === "male") {
+      return <img src={BoyAvatar} alt="Boy" className="usr-avatar" />;
+    } else if (gender === "female") {
+      return <img src={GirlAvatar} alt="Girl" className="usr-avatar" />;
+    }
+
+    // 3. Fallback: First Letter (Agar Gender bhi nahi hai)
+    return <div className="usr-avatar">{userInitial}</div>;
+  };
+
   return (
     <>
       <div
@@ -83,16 +114,9 @@ const UserSidebar = ({
         {/* Profile Section */}
         <div className="usr-profile-card">
           <div className="usr-avatar-container">
-            {user?.image ? (
-              <img
-                src={user.image}
-                alt="Profile"
-                className="usr-avatar"
-                style={{ objectFit: "cover" }}
-              />
-            ) : (
-              <div className="usr-avatar">{userInitial}</div>
-            )}
+            {/* ✅ CALL RENDER FUNCTION HERE */}
+            {renderAvatar()}
+
             {!isCollapsed && <div className="online-dot"></div>}
           </div>
 
