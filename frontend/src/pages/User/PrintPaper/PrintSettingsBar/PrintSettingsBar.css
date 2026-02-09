@@ -1,106 +1,108 @@
 /* --- SETTINGS BAR CONTAINER --- */
 .ps-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    padding: 10px 20px;
+  position: fixed; /* Header ko top par fix rakhega */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 10px 20px;
+  height: auto; /* Allow content to dictate height */
 
-    /* ✅ Theme Variables for Dark/Light Mode */
-    background-color: var(--u-bg-card, #ffffff);
-    color: var(--u-text-main, #333333);
-    border-bottom: 1px solid var(--u-border, #e2e8f0);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
-    transition: background-color 0.3s, color 0.3s;
+  background-color: #ffffff;
+  color: #333333;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* --- LABELS --- */
 .ps-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-    color: var(--u-text-muted, #64748b);
-    display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #64748b;
+  display: block;
 }
 
-/* --- INPUTS & SELECTS (Dark Mode Compatible) --- */
+/* --- INPUTS & SELECTS --- */
 .ps-input,
 .ps-select {
-    width: 100%;
-    padding: 6px 8px;
-    font-size: 0.85rem;
-    border-radius: 6px;
-    border: 1px solid var(--u-border, #cbd5e1);
-
-    /* Input Background adapt karega */
-    background-color: var(--u-bg-main, #f8fafc);
-    color: var(--u-text-main, #333);
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #333;
 }
 
 .ps-input:focus,
 .ps-select:focus {
-    outline: none;
-    border-color: var(--u-accent, #3b82f6);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 /* Color Picker fix */
 input[type="color"].ps-input {
-    padding: 0;
-    height: 34px;
-    cursor: pointer;
+  padding: 0;
+  height: 34px;
+  cursor: pointer;
 }
 
 /* --- TOGGLES & SWITCHES --- */
 .ps-toggle-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ps-toggle-wrapper input[type="checkbox"] {
+  accent-color: #3b82f6; /* Modern browser blue check color */
+  width: 16px;
+  height: 16px;
 }
 
 .ps-toggle-text {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--u-text-main);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
 }
 
 /* --- BUTTONS --- */
 .ps-btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: opacity 0.2s;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s;
 }
 
 .ps-btn:hover {
-    opacity: 0.9;
+  opacity: 0.9;
 }
 
 .ps-btn-back {
-    background-color: var(--u-bg-main, #e2e8f0);
-    color: var(--u-text-main, #333);
-    border: 1px solid var(--u-border);
+  background-color: #e2e8f0;
+  color: #333;
+  border: 1px solid #cbd5e1;
 }
 
 .ps-btn-print {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
 }
 
-/* HIDE ON PRINT */
+/* --- HIDE ON PRINT --- */
 @media print {
-    .no-print {
-        display: none !important;
-    }
+  .no-print {
+    display: none !important;
+  }
 }

@@ -40,12 +40,13 @@ import PaperPatterns from "./pages/Admin/PaperPatterns/PaperPatterns";
 import ManageNotifications from "./components/Admin/Dashboard/ManageNotifications/ManageNotifications";
 
 // Pages - User
-import PaperWizard from "./pages/User/PaperWizard/PaperWizard";
+import PaperWizard from "./pages/User/PaperGeneration/PaperGeneration";
 import UserDashboard from "./pages/User/UserDashboard/UserDashboard";
 import UserSettings from "./pages/User/UserSettings/UserSettings";
 import PaperMaker from "./pages/User/PaperMaker/PaperMaker";
 import SavedPapers from "./pages/User/SavedPapers/SavedPapers";
 import ViewPaper from "./pages/User/ViewPaper/ViewPaper";
+import AutoPaper from "./pages/User/AutoPaper/AutoPaper";
 
 // Print Layout
 import PrintLayout from "./pages/User/PrintPaper/PrintLayout";
@@ -154,7 +155,7 @@ const AppContent = () => {
           <Route path="/user/generate-paper" element={<PaperWizard />} />
           <Route path="/user/paper-maker" element={<PaperMaker />} />
           <Route path="/user/manual-maker" element={<PaperMaker />} />
-
+          <Route path="/user/auto-paper" element={<AutoPaper />} />
           {/* View Paper */}
           <Route path="/user/view-paper/:id" element={<ViewPaper />} />
 

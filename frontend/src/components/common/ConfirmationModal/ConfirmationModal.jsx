@@ -10,13 +10,13 @@ const ConfirmationModal = ({
   message = "This action cannot be undone.",
   confirmText = "Confirm",
   cancelText = "Cancel",
-  isDanger = false, // True = Red Button (Delete), False = Blue/Green (Save/Exit)
+  isDanger = false,
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="cm-overlay">
-      <div className="cm-box fade-in-up">
+    <div className="cm-overlay" onClick={onClose}>
+      <div className="cm-box fade-in-up" onClick={(e) => e.stopPropagation()}>
         {/* Icon based on type */}
         <div className={`cm-icon-wrapper ${isDanger ? "danger" : "warning"}`}>
           <FaExclamationTriangle />
@@ -26,17 +26,21 @@ const ConfirmationModal = ({
         <p className="cm-message">{message}</p>
 
         <div className="cm-actions">
-          <button className="cm-btn cm-btn-cancel" onClick={onClose}>
+          {/* ✅ FIX: Added type="button" to prevent form submission */}
+          <button
+            type="button"
+            className="cm-btn cm-btn-cancel"
+            onClick={onClose}
+          >
             {cancelText}
           </button>
 
           <button
-            className={`cm-btn ${
-              isDanger ? "cm-btn-danger" : "cm-btn-primary"
-            }`}
+            type="button"
+            className={`cm-btn ${isDanger ? "cm-btn-danger" : "cm-btn-primary"}`}
             onClick={() => {
-              onConfirm();
-              onClose();
+              onConfirm(); // Parent function chalayen
+              onClose(); // Modal band karein
             }}
           >
             {isDanger ? (

@@ -8,7 +8,9 @@ import QuestionList from "./components/QuestionList/QuestionList";
 import MenuFooter from "./components/MenuFooter/MenuFooter";
 import "./QuestionMenu.css";
 
+// Imports
 import { getCategoriesForSubject } from "../../../config/SubjectConfig";
+import { generateAutoSelection } from "../../../utils/AutoPaperGenerator";
 
 const CustomAlert = ({ message, onClose }) => {
   if (!message) return null;
@@ -47,20 +49,23 @@ const QuestionMenu = ({
   const [alertMsg, setAlertMsg] = useState(null);
   const [tempSelected, setTempSelected] = useState([]);
 
+  // Pool Store
+  const [availablePool, setAvailablePool] = useState([]);
+
   useEffect(() => {
     if (paperData && paperData.subject) {
-      const cats = getCategoriesForSubject(paperData.subject);
+      const subjectName = paperData.subject.subjectName || paperData.subject;
+      const cats = getCategoriesForSubject(subjectName);
       setCategoriesList(cats);
     }
   }, [paperData]);
 
   const getSafeID = (q) => {
     if (!q) return "";
-    if (q.questionId) {
+    if (q.questionId)
       return typeof q.questionId === "object"
         ? String(q.questionId._id)
         : String(q.questionId);
-    }
     return String(q._id);
   };
 
@@ -78,39 +83,26 @@ const QuestionMenu = ({
     setActiveSection(null);
   }, [activeTab]);
 
-  // ============================================================
-  // 1. 🔥 PAIRING EXTRACTION (Chapters)
-  // ============================================================
+  // --- CHAPTER & CATEGORY LOGIC ---
   const targetChapters = useMemo(() => {
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     if (!pattern?.sections) return null;
-
     let targetSection = null;
-
     if (activeTab === "MCQ") {
       targetSection = pattern.sections.find((s) => s.questionType === "MCQ");
     } else if (activeSection) {
       const parts = activeSection.split("_");
       let visualIndex = -1;
-
-      // Extract index based on Tab Type
-      if (activeSection.startsWith("sec_")) {
-        // Shorts
+      if (activeSection.startsWith("sec_")) visualIndex = parseInt(parts[1]);
+      else if (activeSection.startsWith("long_"))
         visualIndex = parseInt(parts[1]);
-      } else if (activeSection.startsWith("long_")) {
-        // Longs
-        visualIndex = parseInt(parts[1]);
-      }
-
       if (visualIndex !== -1 && !isNaN(visualIndex)) {
-        // Filter sections by Active Tab first to match visual order
         const relevantSections = pattern.sections.filter(
           (s) => s.questionType === activeTab,
         );
         targetSection = relevantSections[visualIndex];
       }
     }
-
     if (
       targetSection &&
       targetSection.linkedChapters &&
@@ -121,20 +113,12 @@ const QuestionMenu = ({
     return null;
   }, [activeTab, activeSection, paperData]);
 
-  // ============================================================
-  // 2. 🔥 CATEGORY EXTRACTION (Universal: Short & Long)
-  // ============================================================
   const targetCategory = useMemo(() => {
     if (!activeSection) return null;
-
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     if (!pattern?.sections) return null;
-
     let targetSection = null;
-
-    // 1. Identify Section (Short or Long)
     if (activeSection.startsWith("sec_")) {
-      // SHORT QUESTIONS Logic
       const parts = activeSection.split("_");
       const visualIndex = parseInt(parts[1]);
       const relevantSections = pattern.sections.filter(
@@ -142,16 +126,13 @@ const QuestionMenu = ({
       );
       targetSection = relevantSections[visualIndex];
     } else if (activeSection.startsWith("long_")) {
-      // LONG QUESTIONS Logic
       const parts = activeSection.split("_");
       const secIndex = parseInt(parts[1]);
       const relevantSections = pattern.sections.filter(
         (s) => s.questionType === "LONG",
       );
       targetSection = relevantSections[secIndex];
-
-      // Handle Parts (a/b)
-      const partType = parts[3]; // "a", "b", "full"
+      const partType = parts[3];
       if (
         targetSection &&
         targetSection.hasParts &&
@@ -159,49 +140,36 @@ const QuestionMenu = ({
       ) {
         const subIndex = partType === "a" ? 0 : 1;
         const subQ = targetSection.subQuestions?.[subIndex];
-        if (subQ && subQ.questionCategory && subQ.questionCategory !== "ANY") {
+        if (subQ && subQ.questionCategory && subQ.questionCategory !== "ANY")
           return subQ.questionCategory;
-        }
       }
     }
-
-    // 2. Default Check (For Short Sections OR Full Long Questions)
     if (
       targetSection &&
       targetSection.questionCategory &&
       targetSection.questionCategory !== "ANY"
     ) {
-      console.log(
-        `🎯 Strict Category found for ${activeTab}:`,
-        targetSection.questionCategory,
-      );
       return targetSection.questionCategory;
     }
-
-    return null; // "ANY" means show everything
+    return null;
   }, [activeTab, activeSection, paperData]);
 
   const getCurrentLimit = () => {
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     const sections = pattern?.sections || [];
     if (sections.length === 0) return 0;
-
     if (activeTab === "MCQ") {
       const mcqSection = sections.find((s) => s.questionType === "MCQ");
       if (mcqSection)
         return parseInt(mcqSection.totalQuestions || mcqSection.quantity || 0);
       return 0;
     }
-
     if (!activeSection) return 0;
-
-    // Correct visual index mapping for limit
     const relevantSections = sections.filter(
       (s) => s.questionType === activeTab,
     );
     const parts = activeSection.split("_");
-    const visualIndex = parseInt(parts[1]); // sec_X or long_X
-
+    const visualIndex = parseInt(parts[1]);
     if (relevantSections[visualIndex]) {
       if (activeTab === "LONG") return 1;
       return parseInt(relevantSections[visualIndex].totalQuestions || 0);
@@ -209,36 +177,19 @@ const QuestionMenu = ({
     return 0;
   };
 
-  const isSelectionChanged = useMemo(() => {
-    const originalIDs = selectedQuestions
-      .filter((q) => q.type === activeTab)
-      .map((q) => getSafeID(q))
-      .sort();
-
-    const currentIDs = tempSelected
-      .filter((q) => q.type === activeTab)
-      .map((q) => getSafeID(q))
-      .sort();
-
-    if (originalIDs.length !== currentIDs.length) return true;
-    return JSON.stringify(originalIDs) !== JSON.stringify(currentIDs);
-  }, [tempSelected, selectedQuestions, activeTab]);
-
+  // ✅ Toggle Logic (Adds to tempSelected)
   const handleToggleSelect = (clickedQuestion) => {
     const targetID = String(clickedQuestion._id);
     const isAlreadySelected = tempSelected.some(
       (q) => getSafeID(q) === targetID,
     );
-
     if (isAlreadySelected) {
       setTempSelected((prev) => prev.filter((q) => getSafeID(q) !== targetID));
       return;
     }
-
     const limit = getCurrentLimit();
     let currentCount = 0;
     let sectionIdToSave = null;
-
     if (activeTab === "MCQ") {
       currentCount = tempSelected.filter((q) => q.type === "MCQ").length;
       sectionIdToSave = "MCQ";
@@ -252,27 +203,81 @@ const QuestionMenu = ({
       ).length;
       sectionIdToSave = activeSection;
     }
-
     if (limit > 0 && currentCount >= limit) {
       setAlertMsg(`Limit Reached! (${currentCount}/${limit}) selected.`);
       return;
     }
-
     setTempSelected((prev) => [
       ...prev,
       { ...clickedQuestion, tabId: sectionIdToSave },
     ]);
   };
 
-  const handleConfirmAdd = () => {
-    if (onAddQuestionsToPaper) {
-      const questionsToSend = tempSelected.filter((q) => q.type === activeTab);
-      onAddQuestionsToPaper(questionsToSend, activeTab);
+  // ✅ Auto Select Logic
+  const handleAutoSelect = () => {
+    if (availablePool.length === 0) {
+      setAlertMsg("No questions available to auto-select!");
+      return;
     }
+    const limit = getCurrentLimit();
+    const currentCount =
+      activeTab === "MCQ"
+        ? tempSelected.filter((q) => q.type === "MCQ").length
+        : tempSelected.filter((q) => q.tabId === activeSection).length;
+
+    const needed = limit - currentCount;
+    if (needed <= 0) {
+      setAlertMsg("Section is already full!");
+      return;
+    }
+
+    let options = { avoidChapters: [], targetDifficulty: null };
+
+    if (activeTab === "LONG" && activeSection.includes("_")) {
+      const parts = activeSection.split("_");
+      const partType = parts[3];
+      if (partType === "b") {
+        const partA_ID = activeSection.replace("_b", "_a");
+        const questionA = tempSelected.find((q) => q.tabId === partA_ID);
+        if (questionA) {
+          const chapA = questionA.chapter?._id || questionA.chapter;
+          if (chapA) options.avoidChapters.push(chapA);
+          if (questionA.difficulty === "Hard")
+            options.targetDifficulty = "Medium";
+          else if (questionA.difficulty === "Easy")
+            options.targetDifficulty = "Medium";
+          else options.targetDifficulty = "Hard";
+        }
+      }
+    }
+
+    const existingIds = tempSelected.map((q) => q._id);
+    const newSelection = generateAutoSelection(
+      availablePool,
+      needed,
+      existingIds,
+      options,
+    );
+
+    if (newSelection.length === 0) {
+      setAlertMsg("Could not find suitable questions.");
+      return;
+    }
+
+    const formattedSelection = newSelection.map((q) => ({
+      ...q,
+      tabId: activeSection || "MCQ",
+    }));
+
+    setTempSelected((prev) => [...prev, ...formattedSelection]);
   };
 
-  const handleAutoSelect = () => {
-    alert("Auto Select Coming Soon!");
+  // ✅ FIX 1: Send ALL questions, not just activeTab
+  const handleConfirmAdd = () => {
+    if (onAddQuestionsToPaper) {
+      // "REPLACE_ALL" tells parent to use this full list
+      onAddQuestionsToPaper(tempSelected, "REPLACE_ALL");
+    }
   };
 
   const typeCounts = useMemo(() => {
@@ -284,14 +289,12 @@ const QuestionMenu = ({
     if (!paperData) return counts;
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     const sections = pattern?.sections || [];
-
     sections.forEach((sec) => {
       const type = sec.questionType;
       let qty = parseInt(sec.totalQuestions || sec.quantity) || 0;
       if (type === "LONG" && sec.hasParts) qty = qty * 2;
       if (counts[type]) counts[type].total += qty;
     });
-
     if (tempSelected.length > 0) {
       counts.MCQ.current = tempSelected.filter((q) => q.type === "MCQ").length;
       counts.SHORT.current = tempSelected.filter(
@@ -304,30 +307,38 @@ const QuestionMenu = ({
     return counts;
   }, [paperData, tempSelected]);
 
-  const currentSelectionCount = useMemo(() => {
-    if (activeTab === "MCQ")
-      return tempSelected.filter((q) => q.type === "MCQ").length;
-    if (!activeSection) return 0;
-    return tempSelected.filter((q) => q.tabId === activeSection).length;
+  // ✅ FIX 2: Filter Footer Selections based on Active Section
+  const questionsForFooter = useMemo(() => {
+    if (activeTab === "MCQ") {
+      return tempSelected.filter((q) => q.type === "MCQ");
+    }
+    if (activeSection) {
+      return tempSelected.filter((q) => q.tabId === activeSection);
+    }
+    return []; // Don't show entire short section mixed
   }, [tempSelected, activeTab, activeSection]);
+
+  const isSelectionChanged = useMemo(() => {
+    const originalIDs = (selectedQuestions || [])
+      .map((q) => getSafeID(q))
+      .sort();
+    const currentIDs = tempSelected.map((q) => getSafeID(q)).sort();
+    return JSON.stringify(originalIDs) !== JSON.stringify(currentIDs);
+  }, [tempSelected, selectedQuestions]);
 
   if (!show) return null;
 
   return (
     <div
-      className={`qm-overlay ${isOpen ? "open" : ""} ${
-        isSidebarCollapsed ? "sidebar-collapsed" : ""
-      }`}
+      className={`qm-overlay ${isOpen ? "open" : ""} ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}
     >
       <CustomAlert message={alertMsg} onClose={() => setAlertMsg(null)} />
-
       <div className="qm-container">
         <MenuHeader
           paperData={paperData}
           onClose={onClose}
           onEditPreset={onEditPattern}
         />
-
         <div className="qm-body">
           <div className="qm-controls">
             <MenuFilters
@@ -347,7 +358,6 @@ const QuestionMenu = ({
               selectedQuestions={tempSelected}
             />
           </div>
-
           <div className="qm-content">
             <QuestionList
               filters={filters}
@@ -356,12 +366,14 @@ const QuestionMenu = ({
               tempSelected={tempSelected}
               onToggleSelect={handleToggleSelect}
               requiredChapters={targetChapters}
-              requiredCategory={targetCategory} // ✅ Passing calculated Category
+              requiredCategory={targetCategory}
+              onDataLoaded={(data) => setAvailablePool(data)}
             />
           </div>
 
+          {/* ✅ FOOTER SHOWS ONLY ACTIVE SECTION ITEMS */}
           <MenuFooter
-            count={currentSelectionCount}
+            count={questionsForFooter.length}
             limit={getCurrentLimit()}
             sectionLabel={
               activeSection
@@ -373,7 +385,7 @@ const QuestionMenu = ({
             onAdd={handleConfirmAdd}
             onAutoSelect={handleAutoSelect}
             isChanged={isSelectionChanged}
-            selectedQuestions={tempSelected}
+            selectedQuestions={questionsForFooter} // Pass filtered list
             onRemove={handleToggleSelect}
             activeTab={activeTab}
           />

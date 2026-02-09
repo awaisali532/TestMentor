@@ -1,11 +1,16 @@
 import React, { useState, useRef } from "react";
+import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import { useUser } from "../../../context/UserContext";
+import toast, { Toaster } from "react-hot-toast";
+
 import PrintSettingsBar from "./PrintSettingsBar/PrintSettingsBar";
 import ExamHeader from "./ExamHeader/ExamHeader";
 import AnswerKey from "./AnswerKey";
 import PaperPreview from "../../../components/PaperMaker/PaperPreview/PaperPreview";
+import SavePaperModal from "../../../components/common/SavePaperModal/SavePaperModal";
+
 import "./PrintLayout.css";
 
 const PrintLayout = () => {
@@ -13,29 +18,31 @@ const PrintLayout = () => {
   const navigate = useNavigate();
   const componentRef = useRef(null);
   const { user } = useUser();
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  const paperData = location.state;
+  // Paper Data
+  const [paperData, setPaperData] = useState(location.state);
   const printMode = paperData?.printSettings?.mode || "SINGLE";
-
-  // ✅ SMART DEFAULTS LOGIC
-  // Agar Dual Mode hai to Font chota rakho, warna Normal
   const isDual = printMode === "DUAL_H";
 
-  const [settings, setSettings] = useState({
-    // --- Dynamic Sizes based on Mode ---
-    lineHeight: isDual ? 0.7 : 1, // Dual me lines qareeb
-    urduFontSize: isDual ? 9 : 11, // Dual me Urdu choti
-    engFontSize: isDual ? 9 : 12, // Dual me English choti
-    eqFontSize: isDual ? 10 : 12, // Equations choti
-    headerSize: isDual ? 0.8 : 1, // Header Scaling (Optional)
+  // State
+  const [isSaved, setIsSaved] = useState(!!paperData?._id);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
-    // --- Common Settings ---
+  const [settings, setSettings] = useState({
+    lineHeight: isDual ? 0.8 : 1,
+    urduFontSize: isDual ? 10 : 10,
+    engFontSize: isDual ? 10 : 10,
+    eqFontSize: isDual ? 10 : 10,
+    headerSize: isDual ? 0.8 : 1,
     fontColor: "#000000",
     fontWeight: "400",
+    watermark: "logo",
     showBubbleSheet: true,
     showSyllabus: true,
     showAnswerKey: false,
-    watermark: "logo",
+    paperSize: "a4",
   });
 
   const handlePrint = useReactToPrint({
@@ -43,25 +50,113 @@ const PrintLayout = () => {
     documentTitle: paperData?.title || "Exam_Paper",
   });
 
-  if (!paperData)
-    return <div className="p-5 text-center">No Paper Data. Go back.</div>;
+  const handleSaveClick = () => {
+    if (isSaved) {
+      toast.success("Paper is already saved.");
+      return;
+    }
+    setShowSaveModal(true);
+  };
+
+  const handleConfirmSave = async (titleToSave) => {
+    setIsSaving(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const safeSubject = paperData.subject?._id || paperData.subject;
+      const safePattern = paperData.selectedPattern || {};
+
+      const formattedQuestions = paperData.questions.map((q) => ({
+        questionId: q._id || q.questionId,
+        type: q.type,
+        statement: { en: q.statement?.en || "", ur: q.statement?.ur || "" },
+        options:
+          q.options?.map((opt) => ({
+            en: opt.en || "",
+            ur: opt.ur || "",
+            isCorrect: opt.isCorrect || false,
+          })) || [],
+        marks: q.marks || 1,
+        tabId: q.tabId || "",
+      }));
+
+      const payload = {
+        title: titleToSave,
+        grade: paperData.grade,
+        subject: safeSubject,
+        questions: formattedQuestions,
+        totalMarks: paperData.questions.reduce(
+          (sum, q) => sum + (q.marks || 1),
+          0,
+        ),
+        pattern: safePattern,
+        examDate: paperData.examDate,
+        examLabel: paperData.examLabel,
+        syllabusLabel: paperData.syllabusLabel,
+      };
+
+      let apiUrl = `${BASE_URL}/api/papers/save`;
+      let method = "post";
+
+      if (paperData._id && paperData.title === titleToSave) {
+        apiUrl = `${BASE_URL}/api/papers/update/${paperData._id}`;
+        method = "put";
+      }
+
+      const res = await axios[method](apiUrl, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data.success) {
+        toast.success(method === "put" ? "Paper Updated!" : "Paper Saved!");
+
+        setIsSaved(true);
+        // ✅ SUCCESS: Close Modal
+        setShowSaveModal(false);
+
+        const updatedState = {
+          ...paperData,
+          _id: res.data.paperId,
+          title: titleToSave,
+        };
+        setPaperData(updatedState);
+        navigate(location.pathname, { state: updatedState, replace: true });
+      }
+    } catch (err) {
+      console.error("Save Error:", err);
+      const errMsg = err.response?.data?.message || "Failed to save paper.";
+
+      // ✅ ERROR: Show Toast above Modal
+      toast.error(errMsg);
+
+      // ❌ ERROR: Keep Modal OPEN
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleBack = () => {
+    if (paperData?.isAutoGenerated) {
+      navigate("/user/generate-paper", { state: { keepData: true } });
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleEdit = () => navigate("/user/paper-maker", { state: paperData });
+  if (!paperData) return <div className="p-5 text-center">No Paper Data.</div>;
 
   const instituteInfo = {
-    name: user?.institute?.name || "",
+    name: user?.institute?.name || "Institute Name",
     address: user?.institute?.address || "",
     phone: user?.institute?.phone || "",
     logo: user?.institute?.logo || null,
   };
 
-  // ✅ PAGE ORIENTATION LOGIC
   const pageStyle = `
-    @page {
-      size: ${printMode === "DUAL_H" ? "landscape" : "portrait"};
-      margin: 0;
-    }
+    @page { size: ${settings.paperSize} ${isDual ? "landscape" : "portrait"}; margin: 0 !important; }
   `;
 
-  // Content Component
   const PaperContent = () => (
     <div className="pl-paper-content-wrapper">
       {settings.watermark === "logo" && instituteInfo.logo && (
@@ -71,23 +166,35 @@ const PrintLayout = () => {
       )}
       {settings.watermark === "confidential" && (
         <div className="pl-watermark-overlay text-only">
-          <h1>{instituteInfo.name || "INSTITUTE NAME"}</h1>
+          <h1
+            style={{
+              fontSize: "4rem",
+              transform: "rotate(-45deg)",
+              opacity: 0.2,
+            }}
+          >
+            {instituteInfo.name}
+          </h1>
         </div>
       )}
-
-      <div style={{ position: "relative", zIndex: 2 }}>
+      <div className="pl-content-stack">
         <ExamHeader
           paperData={paperData}
           settings={settings}
           institute={instituteInfo}
         />
-        <div className="pl-content">
+        <div className="pl-questions-body">
           <PaperPreview paperData={paperData} isPrintMode={true} />
         </div>
       </div>
-
       {settings.showAnswerKey && (
-        <div className="pl-page-break">
+        <div className="pl-ans-key-section">
+          <div
+            className="text-center my-2"
+            style={{ borderTop: "1px dashed #000" }}
+          >
+            -- Answer Key --
+          </div>
           <AnswerKey paperData={paperData} />
         </div>
       )}
@@ -96,45 +203,63 @@ const PrintLayout = () => {
 
   return (
     <div className="pl-container">
-      {/* ✅ INJECT STYLE */}
+      {/* ✅ Z-INDEX FIX: Toaster Modal ke Uper Aayega */}
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        containerStyle={{ zIndex: 100000 }}
+      />
       <style>{pageStyle}</style>
+
+      {/* ✅ SAVE MODAL */}
+      <SavePaperModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onConfirm={handleConfirmSave}
+        defaultTitle={
+          paperData.title === "Untitled Paper" ? "" : paperData.title
+        }
+        isSaving={isSaving}
+      />
 
       <PrintSettingsBar
         settings={settings}
         setSettings={setSettings}
         onPrint={handlePrint}
-        onBack={() => navigate(-1)}
+        onBack={handleBack}
+        onEdit={handleEdit}
+        onSave={handleSaveClick}
+        isSaved={isSaved}
+        isSaving={isSaving}
       />
 
-      {/* Main Print Viewport */}
-      <div
-        className={`pl-print-viewport mode-${printMode.toLowerCase()}`}
-        ref={componentRef}
-        style={{
-          "--pl-line-h": settings.lineHeight,
-          "--pl-font-ur": `${settings.urduFontSize}px`,
-          "--pl-font-en": `${settings.engFontSize}px`,
-          "--pl-eq-size": `${settings.eqFontSize}px`,
-          "--pl-color": settings.fontColor,
-          "--pl-weight": settings.fontWeight,
-        }}
-      >
-        {/* Copy 1 */}
-        <div className="pl-sheet-copy copy-1">
-          <PaperContent />
+      <div className="pl-preview-area">
+        <div
+          className={`pl-sheet mode-${isDual ? "dual" : "single"} sheet-${settings.paperSize}`}
+          ref={componentRef}
+          style={{
+            "--pl-line-h": settings.lineHeight,
+            "--pl-font-ur": `${settings.urduFontSize}px`,
+            "--pl-font-en": `${settings.engFontSize}px`,
+            "--pl-eq-size": `${settings.eqFontSize}px`,
+            "--pl-color": settings.fontColor,
+            "--pl-weight": settings.fontWeight,
+          }}
+        >
+          <div className="pl-copy copy-1">
+            <PaperContent />
+          </div>
+          {isDual && (
+            <>
+              <div className="pl-separator">
+                <span className="cut-icon">✂</span>
+              </div>
+              <div className="pl-copy copy-2">
+                <PaperContent />
+              </div>
+            </>
+          )}
         </div>
-
-        {/* Copy 2 (Only For Dual Horizontal) */}
-        {printMode === "DUAL_H" && (
-          <>
-            <div className="pl-print-separator">
-              <span className="cut-icon">✂</span>
-            </div>
-            <div className="pl-sheet-copy copy-2">
-              <PaperContent />
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

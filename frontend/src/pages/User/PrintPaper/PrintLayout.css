@@ -1,256 +1,297 @@
+/* ==================================================
+   🔤 FONTS
+   ================================================== */
 @font-face {
   font-family: "Jameel Noori Nastaleeq";
   src: url("/fonts/JameelNooriNastaleeq.ttf") format("truetype");
   font-display: swap;
 }
 
-/* --- MAIN CONTAINER (Screen View) --- */
+/* ==================================================
+   🖥️ SCREEN PREVIEW (UI STYLES)
+   ================================================== */
+
+/* Main Background */
 .pl-container {
   background-color: #525659;
-  min-height: 100vh;
-  padding-top: 100px;
-  padding-bottom: 50px;
+  height: 100vh;
   display: flex;
-  justify-content: center;
-  overflow-x: auto;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* ==================================================
-   📄 VIEWPORT (The Sheet Wrapper)
-   ================================================== */
-.pl-print-viewport {
-  background-color: white; /* Base Sheet White */
+/* Scroll Area */
+.pl-preview-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  margin-top: 120px;
+}
+
+/* THE SHEET (White Paper Representation) */
+.pl-sheet {
+  background-color: white;
   color: #000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 
-  /* Default Dimensions (Portrait A4) */
-  width: 210mm;
-  min-height: 297mm;
-  height: auto;
-
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  margin-bottom: 20px;
+  /* ✅ FIXED: Height & Padding Logic */
+  min-height: 297mm; /* Ensures A4 look even with little content */
+  height: fit-content; /* Grows with content */
+  overflow: visible; /* Prevents content clipping */
+  padding-bottom: 20mm; /* Ensures padding exists at bottom */
   box-sizing: border-box;
 
-  line-height: var(--pl-line-h, 1.2);
+  /* Typography Variables */
+  line-height: var(--pl-line-h, 1.4);
   font-weight: var(--pl-weight, 400);
 
   position: relative;
-  overflow: visible;
-
-  /* Flex for Double Mode */
-  display: flex;
-}
-
-/* ✅ CRITICAL FIX: Make ALL content layers transparent 
-   taake Watermark jo sab se neeche hai wo nazar aye */
-.pl-sheet-copy,
-.pl-paper-content-wrapper,
-.pl-content,
-.pp-container,
-.pp-sheet {
-  background-color: transparent !important;
-  position: relative;
-  z-index: 2; /* Content Watermark k uper rahe */
+  z-index: 1;
 }
 
 /* ==================================================
-   1. SINGLE MODE (Normal Settings)
+   📏 PAPER SIZES
    ================================================== */
-.mode-single {
-  display: block;
-  /* Standard A4 Padding */
+
+/* SINGLE MODE */
+.mode-single.sheet-a4 {
+  width: 210mm;
+  padding: 10mm 12mm;
+}
+.mode-single.sheet-legal {
+  width: 216mm;
+  padding: 10mm 12mm;
+}
+.mode-single.sheet-letter {
+  width: 216mm;
   padding: 10mm 12mm;
 }
 
-.mode-single .pl-sheet-copy {
+/* DUAL MODE */
+.mode-dual.sheet-a4 {
+  width: 297mm;
+  min-height: 210mm;
+}
+.mode-dual.sheet-legal {
+  width: 356mm;
+  min-height: 216mm;
+}
+.mode-dual.sheet-letter {
+  width: 279mm;
+  min-height: 216mm;
+}
+
+/* ==================================================
+   🧩 LAYOUT MODES
+   ================================================== */
+
+.mode-single {
+  display: block;
+}
+.mode-single .pl-copy {
   width: 100%;
 }
 
-/* ==================================================
-   2. DUAL HORIZONTAL (Compact Settings)
-   ================================================== */
-.mode-dual_h {
-  /* Screen Preview k liye Width barha di (Landscape) */
-  width: 297mm !important;
-  min-height: 210mm;
-
-  flex-direction: row;
+.mode-dual {
+  display: flex;
   justify-content: space-between;
-
-  /* ✅ PADDING FIX: Side margins barha diye */
-  padding: 5mm 15mm !important;
-
-  /* Force Smaller Fonts */
-  --pl-font-en: 9px !important;
-  --pl-font-ur: 11px !important;
-  --pl-eq-size: 10px !important;
-  --pl-line-h: 1.1 !important;
+  padding: 0 !important; /* Managed inside copies */
 }
 
-.mode-dual_h .pl-sheet-copy {
-  /* 48% Width taake beech me jagah bache */
+.mode-dual .pl-copy {
   width: 48%;
-  padding: 0 4px;
+  padding: 8mm;
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Context for watermark positioning */
 }
 
-/* ==================================================
-   ✂️ SEPARATOR (Cut Line)
-   ================================================== */
-.pl-print-separator {
-  width: 0;
-  border-right: 1px dashed #999;
+.mode-dual .copy-1 {
+  border-right: 1px dashed #ccc;
+}
+
+/* Separator Icon */
+.pl-separator {
+  width: 4%;
   position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 2;
 }
 
 .cut-icon {
-  background: white;
-  padding: 5px 0;
   position: absolute;
+  top: 50px;
+  background: white;
+  padding: 5px;
   color: #666;
-  font-size: 14px;
-  z-index: 3;
+  font-size: 1.2rem;
+  z-index: 10;
 }
 
 /* ==================================================
-   🔤 INTERNAL FONT SIZES (Dynamic)
+   🔤 TYPOGRAPHY
    ================================================== */
-
-.pl-content .pp-text-en,
-.pl-content .pp-opt-en,
-.pl-content .pp-hd-en {
+.pl-sheet .pp-text-en,
+.pl-sheet .pp-opt-en,
+.pl-sheet .pp-hd-en {
   font-size: var(--pl-font-en) !important;
 }
 
-.pl-content .pp-text-ur,
-.pl-content .pp-opt-ur,
-.pl-content .pp-hd-ur {
+.pl-sheet .pp-text-ur,
+.pl-sheet .pp-opt-ur,
+.pl-sheet .pp-hd-ur {
   font-family: "Jameel Noori Nastaleeq", "Arial", sans-serif;
   font-size: var(--pl-font-ur) !important;
-  line-height: 1.4 !important;
+  line-height: 1.6 !important;
+  padding-bottom: 2px;
 }
 
-.pl-content .math-jax-output,
-.pl-content .katex {
+.pl-sheet .math-jax-output,
+.pl-sheet .katex {
   font-size: var(--pl-eq-size) !important;
 }
 
 /* ==================================================
-   💧 WATERMARK (Fixed Logic)
+   📄 BREAK AVOIDANCE
    ================================================== */
-.pl-watermark-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
+.question-block,
+.mcq-item,
+.short-q-item,
+.long-q-item,
+.question-row {
+  position: relative;
+  margin-bottom: 15px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  display: block;
   width: 100%;
-  height: 100%;
+}
 
-  /* Flex Center */
+.pl-ans-key-section {
+  break-before: page;
+  page-break-before: always;
+  margin-top: 50px;
+}
+
+/* ==================================================
+   💧 WATERMARK STYLES (SCREEN & PRINT FIXED)
+   ================================================== */
+
+.pl-watermark-overlay {
+  /* SCREEN: Absolute relative to the copy container */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  /* ✅ VISIBILITY FIX */
+  z-index: 999; /* On TOP of text */
+  pointer-events: none; /* Click-through enabled */
+  opacity: 0.15; /* Visible but subtle */
+
   display: flex;
   justify-content: center;
   align-items: center;
-
-  /* ✅ Z-INDEX FIX: Watermark 1 pe, Content 2 pe */
-  z-index: 1;
-  pointer-events: none;
-  overflow: hidden;
+  width: 60%;
 }
 
 .pl-watermark-overlay img {
-  width: 50%;
-  opacity: 0.12; /* Halka sa visible */
+  width: 100%;
+  height: auto;
   filter: grayscale(100%);
 }
 
-.pl-watermark-overlay.text-only h1 {
-  font-size: 4rem;
-  color: #ccc;
-  opacity: 0.2;
-  transform: rotate(-45deg);
-  text-align: center;
-  width: 80%;
+.pl-content-stack {
+  position: relative;
+  z-index: 1; /* Content below watermark z-index, but pointer events handle clicks */
 }
 
-/* =========================================
-   🖨️ PRINT MEDIA QUERY (Printer Output)
-   ========================================= */
+/* ==================================================
+   🖨️ PRINT MEDIA QUERY
+   ================================================== */
 @media print {
-  @page {
-    /* Printer Margin */
-    margin: 10mm;
-    size: auto;
-  }
-
-  /* Body Reset */
-  html,
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* Container Reset */
-  .pl-container {
-    display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    background: white !important;
-    height: auto !important;
-  }
-
-  /* Viewport Reset */
-  .pl-print-viewport {
-    box-shadow: none !important;
-    border: none !important;
-    margin: 0 !important;
-    background: white !important;
-
-    /* Default Single Mode Padding */
-    padding: 0 5mm !important;
-
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
-    display: flex !important;
-  }
-
-  /* ✅ DUAL MODE PRINT SETTINGS */
-  .mode-dual_h {
-    width: 100% !important;
-    /* Dual Mode me sides pr padding di hai taake printer cut na kare */
-    padding: 0 10mm !important;
-  }
-
-  .mode-dual_h .pl-sheet-copy {
-    width: 48% !important;
-    border-right: none;
-    /* Print me bhi transparent hona chahiye */
-    background-color: transparent !important;
-  }
-
-  /* Separator Line for Print */
-  .mode-dual_h .pl-print-separator {
-    border-right: 1px dashed #ccc;
-  }
-
   /* Hide UI */
-  .no-print {
+  .no-print,
+  .pl-container > *:not(.pl-preview-area) {
     display: none !important;
   }
 
-  /* Color Exactness */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  /* Reset Defaults */
+  html,
+  body,
+  #root,
+  .App,
+  .pl-container,
+  .pl-preview-area {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
   }
 
-  /* Print Watermark Opacity */
-  .pl-watermark-overlay img {
+  /* Sheet Reset */
+  .pl-sheet {
+    box-shadow: none !important;
+    width: 100% !important;
+    height: auto !important;
+    border: none !important;
+    background-color: transparent !important; /* Prevents white bg hiding fixed watermark */
+    display: block !important;
+    padding: 10mm !important; /* Safe Print Margin */
+  }
+
+  /* 🔥 WATERMARK PRINT FIX (Repeats on every page) */
+  .pl-watermark-overlay {
+    position: fixed !important; /* This makes it repeat */
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 999 !important;
     opacity: 0.1 !important;
+    width: 50% !important;
+    display: flex !important;
+    visibility: visible !important;
+  }
+
+  /* --- DUAL MODE ALIGNMENT --- */
+  .mode-dual {
+    display: flex !important;
+    padding: 0 !important;
+  }
+
+  .mode-dual .pl-copy {
+    width: 48% !important;
+    padding: 5mm !important;
+    border-right: 1px dashed #999 !important;
+  }
+  .mode-dual .copy-2 {
+    border-right: none !important;
+  }
+  .pl-separator {
+    display: none !important;
+  }
+
+  /* Left Column Watermark Position */
+  .mode-dual .copy-1 .pl-watermark-overlay {
+    left: 25% !important;
+  }
+
+  /* Right Column Watermark Position */
+  .mode-dual .copy-2 .pl-watermark-overlay {
+    left: 75% !important;
+  }
+
+  /* Single Mode Watermark Position */
+  .mode-single .pl-watermark-overlay {
+    left: 50% !important;
+  }
+
+  @page {
+    margin: 0 !important;
+    size: auto;
   }
 }

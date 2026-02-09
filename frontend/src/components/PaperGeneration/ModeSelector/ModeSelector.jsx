@@ -4,7 +4,6 @@ import {
   FaRobot,
   FaArrowLeft,
   FaBolt,
-  FaLayerGroup,
   FaTachometerAlt,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -15,27 +14,13 @@ const ModeSelector = ({ onSelect, onBack }) => {
   const [activeMode, setActiveMode] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Expanded Sources List
-  const ALL_SOURCES = [
-    { val: "TEXT", label: "Text Book Content" },
-    { val: "EXERCISE", label: "Exercise Questions" },
-    { val: "EXAMPLE", label: "Examples" },
-    { val: "NUMERICAL", label: "Numericals" },
-    { val: "REVIEW", label: "Review Questions" },
-    { val: "CONCEPTUAL", label: "Conceptual" },
-    { val: "PAST_PAPERS", label: "Past Papers" },
-  ];
-
+  // ✅ Sirf Difficulty Config Rakhi Hai
   const [autoConfig, setAutoConfig] = useState({
     difficulties: ["EASY", "MEDIUM", "HARD"],
-    categories: ALL_SOURCES.map((s) => s.val),
   });
-
-  // --- HANDLERS ---
 
   const handleManualClick = () => {
     setActiveMode("MANUAL");
-    // ✅ Date removed, only passing mode
     onSelect("MANUAL", null);
   };
 
@@ -50,6 +35,7 @@ const ModeSelector = ({ onSelect, onBack }) => {
   const toggleDifficulty = (diff) => {
     setAutoConfig((prev) => {
       const exists = prev.difficulties.includes(diff);
+      // Ensure at least one remains selected logic can be added if needed
       const updated = exists
         ? prev.difficulties.filter((d) => d !== diff)
         : [...prev.difficulties, diff];
@@ -57,23 +43,11 @@ const ModeSelector = ({ onSelect, onBack }) => {
     });
   };
 
-  const toggleCategory = (cat) => {
-    setAutoConfig((prev) => {
-      const exists = prev.categories.includes(cat);
-      const updated = exists
-        ? prev.categories.filter((c) => c !== cat)
-        : [...prev.categories, cat];
-      return { ...prev, categories: updated };
-    });
-  };
-
   const handleGenerate = () => {
     if (autoConfig.difficulties.length === 0)
       return toast.error("Select at least one difficulty level");
-    if (autoConfig.categories.length === 0)
-      return toast.error("Select at least one source");
 
-    // ✅ Date removed, only passing config
+    // ✅ Sending Config (Difficulties) to Parent
     onSelect("AUTO", autoConfig);
   };
 
@@ -147,32 +121,8 @@ const ModeSelector = ({ onSelect, onBack }) => {
               ))}
             </div>
 
-            {/* Source Selection */}
-            <div className="ms-section-title">
-              <FaLayerGroup className="text-accent" /> Select Question Sources
-            </div>
-            <div className="ms-options-grid sources-grid">
-              {ALL_SOURCES.map((src) => (
-                <div
-                  key={src.val}
-                  className={`ms-checkbox-tile source-tile ${
-                    autoConfig.categories.includes(src.val) ? "checked" : ""
-                  }`}
-                  onClick={() => toggleCategory(src.val)}
-                >
-                  <input
-                    type="checkbox"
-                    checked={autoConfig.categories.includes(src.val)}
-                    readOnly
-                    className="ms-cb"
-                  />
-                  <span>{src.label}</span>
-                </div>
-              ))}
-            </div>
-
             <button
-              className="btn-generate w-100 justify-content-center"
+              className="btn-generate w-100 justify-content-center mt-3"
               onClick={handleGenerate}
             >
               <FaBolt /> Generate Paper Now

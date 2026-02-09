@@ -8,7 +8,7 @@ const {
   getAllQuestions,
   getMenuQuestions,
   getQuestionFilters,
-  getQuestionsByFilter,
+  getQuestionsByFilter, // ✅ Yeh wohi function hai
   addQuestion,
   updateQuestion,
   deleteQuestion,
@@ -23,63 +23,45 @@ const {
 router.use(protect);
 
 // =======================
-// READ OPERATIONS (GET)
+// READ OPERATIONS
 // =======================
 
-// 1. Fetch Categories & Difficulties (For Dropdowns)
 router.get("/filters", getQuestionFilters);
-
-// 2. NEW ROUTE: Fetch Data for User Menu (Flexible/Editable)
 router.get("/menu-data", getMenuQuestions);
 
-// 3. Fetch Questions based on Filters (Wizard: ?grade=X&subject=Y)
-router.get("/filter", getQuestionsByFilter);
+// 🔥 CHANGE: GET -> POST (To handle large syllabus arrays)
+router.post("/filter", getQuestionsByFilter);
 
-// 4. Fetch All Questions (For Admin Panel Table)
 router.get("/", getAllQuestions);
-
-// 5. Fetch Questions by Topic ID
 router.get("/topic/:topicId", getQuestionsByTopic);
-
 router.get("/chapter/:chapterId", getQuestionsByChapter);
 
 // =======================
-// WRITE OPERATIONS (Admin/Manager Only)
+// WRITE OPERATIONS
 // =======================
-
-// Add Single Question
 router.post(
   "/add",
   hasPermission("manage_questions"),
   upload.single("image"),
   addQuestion,
 );
-
-// Add Bulk Questions
 router.post("/bulk-add", hasPermission("manage_questions"), addBulkQuestions);
-
-// Delete Bulk Questions
 router.post(
   "/delete-bulk",
   hasPermission("manage_questions"),
   deleteQuestionsBulk,
 );
-
-// Delete All in Topic
 router.delete(
   "/topic/:topicId/delete-all",
   hasPermission("manage_questions"),
   deleteAllQuestionsInTopic,
 );
-
-// Update Question
 router.put(
   "/:id",
   hasPermission("manage_questions"),
   upload.single("image"),
   updateQuestion,
 );
-// Delete Single Question
 router.delete("/:id", hasPermission("manage_questions"), deleteQuestion);
 
 module.exports = router;

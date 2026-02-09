@@ -245,11 +245,6 @@ const PatternSelector = ({
               ? p.category.replace("_", " ")
               : "GENERAL";
 
-            // 🔥 DEBUG LOG: Check this in Console (F12)
-            console.log(
-              `🧐 Pattern: ${p.name} | Category: ${p.category} | Long Count: ${p.longQAttemptCount}`,
-            );
-
             return (
               <div
                 key={p._id}

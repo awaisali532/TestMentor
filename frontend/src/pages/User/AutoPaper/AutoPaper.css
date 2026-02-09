@@ -1,0 +1,124 @@
+/* --- Container --- */
+.ap-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Light Mode Defaults */
+.ap-light {
+  background-color: #f8fafc; /* Very light slate */
+  --ap-text-primary: #1e293b;
+  --ap-text-secondary: #64748b;
+  --ap-status-color: #2563eb; /* Blue */
+  --ap-track-bg: #e2e8f0;
+}
+
+/* Dark Mode Overrides */
+.ap-dark {
+  background-color: #0f172a; /* Dark Slate */
+  --ap-text-primary: #f1f5f9;
+  --ap-text-secondary: #94a3b8;
+  --ap-status-color: #60a5fa; /* Light Blue */
+  --ap-track-bg: #334155;
+}
+
+/* --- Typography --- */
+.ap-title {
+  margin-bottom: 30px;
+  color: var(--ap-text-primary);
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  animation: ap-fadeUp 0.6s ease-out;
+}
+
+.ap-status {
+  margin-top: 25px;
+  color: var(--ap-status-color);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  min-height: 30px; /* Prevents jumping */
+  transition: color 0.3s ease;
+}
+
+.ap-subtext {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--ap-text-secondary);
+  opacity: 0.8;
+}
+
+/* --- Progress Bar Track --- */
+.ap-progress-track {
+  width: 100%;
+  max-width: 450px;
+  height: 14px;
+  background: var(--ap-track-bg);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Progress Bar Fill --- */
+.ap-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+  border-radius: 99px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth Physics */
+  position: relative;
+  min-width: 5%; /* Always visible start */
+}
+
+/* --- Shine Animation --- */
+.ap-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.2) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 20px 20px;
+  animation: ap-stripes 1s linear infinite;
+}
+
+/* Animations */
+@keyframes ap-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 20px;
+  }
+}
+
+@keyframes ap-fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

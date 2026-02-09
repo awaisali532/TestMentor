@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaExclamationTriangle, FaCalendarAlt } from "react-icons/fa";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../context/ThemeContext.jsx";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 // Common Components
-import TMLoader from "../../../components/common/TMLoader/TMLoader";
-import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal";
+import TMLoader from "../../../components/common/TMLoader/TMLoader.jsx";
+import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal.jsx";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 // Child Components
-import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb";
+import WizardBreadCrumb from "../../../components/PaperGeneration/WizardBreadcrumb/WizardBreadcrumb.jsx";
 import ClassSelector from "../../../components/PaperGeneration/ClassSelector/ClassSelector.jsx";
-import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector";
-import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector";
-import PatternSelector from "../../../components/PaperGeneration/PatternSelector/PatternSelector";
-import PatternForm from "../../Admin/PaperPatterns/PatternForm";
-import ModeSelector from "../../../components/PaperGeneration/ModeSelector/ModeSelector";
-import "./PaperWizard.css";
+import SubjectSelector from "../../../components/PaperGeneration/SubjectSelector/SubjectSelector.jsx";
+import SyllabusSelector from "../../../components/PaperGeneration/SyllabusSelector/SyllabusSelector.jsx";
+import PatternSelector from "../../../components/PaperGeneration/PatternSelector/PatternSelector.jsx";
+import PatternForm from "../../Admin/PaperPatterns/PatternForm.jsx";
+import ModeSelector from "../../../components/PaperGeneration/ModeSelector/ModeSelector.jsx";
+import "./PaperGeneration.css";
 
 const PaperWizard = () => {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ const PaperWizard = () => {
     subject: "",
     topics: [],
     syllabusLabel: "Select Syllabus",
-    syllabusType: "CHAPTERS", // ✅ NEW FIELD: Default is Chapters
+    syllabusType: "CHAPTERS",
     selectedPattern: null,
     mode: null,
     autoSettings: null,
@@ -47,15 +47,6 @@ const PaperWizard = () => {
   const [paperData, setPaperData] = useState(defaultPaperData);
   const [wizardLoading, setWizardLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-
-  // ============================================================
-  // 🔍 DEBUGGING LOGS
-  // ============================================================
-  useEffect(() => {
-    console.log("🛠️ Paper Data Updated:", paperData);
-    console.log("👉 Syllabus Type:", paperData.syllabusType); // Check this in Console
-  }, [paperData]);
-  // ============================================================
 
   // --- RESET & PERSIST LOGIC ---
   useEffect(() => {
@@ -109,13 +100,12 @@ const PaperWizard = () => {
     setStep(3);
   };
 
-  // ✅ UPDATED HANDLER: Accepts 'type' from SyllabusSelector
   const handleSyllabusSelect = (topics, label, type) => {
     setPaperData({
       ...paperData,
       topics,
       syllabusLabel: label || "Select Syllabus",
-      syllabusType: type || "CHAPTERS", // ✅ Save Type (FULL_BOOK or CHAPTERS)
+      syllabusType: type || "CHAPTERS",
     });
   };
 
@@ -136,35 +126,57 @@ const PaperWizard = () => {
     setEditingPreset(null);
   };
 
-  // --- MODE SELECT ---
+  // ============================================================
+  // 🔥 UPDATED MODE SELECTION (Connects to AutoPaper)
+  // ============================================================
   const handleModeSelect = async (mode, settings) => {
     const finalData = { ...paperData, mode, autoSettings: settings };
     setPaperData(finalData);
     setWizardLoading(true);
 
-    if (mode === "MANUAL") {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.post(
-          `${BASE_URL}/api/usage/track-paper`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+    try {
+      const token = localStorage.getItem("token");
 
+      // 1. TRACK USAGE (Check Limits for both modes)
+      await axios.post(
+        `${BASE_URL}/api/usage/track-paper`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      // 2. NAVIGATE BASED ON MODE
+      if (mode === "MANUAL") {
         setTimeout(() => {
           navigate("/user/manual-maker", { state: finalData });
-        }, 1000);
-      } catch (error) {
-        setWizardLoading(false);
-        if (error.response && error.response.status === 403) {
-          setShowUpgradeModal(true);
-        } else {
-          toast.error("Something went wrong. Please try again.");
-        }
+        }, 800);
+      } else if (mode === "AUTO") {
+        // ✅ Prepare Payload for AutoPaper Engine
+        const paperPayload = {
+          grade: paperData.grade,
+          subject: paperData.subject,
+          topics: paperData.topics,
+          selectedPattern: paperData.selectedPattern,
+          title: paperData.examLabel || "Untitled Paper",
+          examDate: paperData.examDate,
+          examLabel: paperData.examLabel,
+          syllabusLabel: paperData.syllabusLabel,
+          autoConfig: settings, // Contains { difficulties: [...] }
+        };
+
+        console.log("🚀 Launching Auto Engine with:", paperPayload);
+
+        setTimeout(() => {
+          navigate("/user/auto-paper", { state: paperPayload });
+        }, 800);
       }
-    } else {
+    } catch (error) {
       setWizardLoading(false);
-      alert("Auto Coming Soon");
+      console.error("Tracking Error:", error);
+      if (error.response && error.response.status === 403) {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error("Limit reached or network error. Please check your plan.");
+      }
     }
   };
 
@@ -239,7 +251,6 @@ const PaperWizard = () => {
                 grade={paperData.grade}
                 subject={paperData.subject}
                 selectedTopics={paperData.topics}
-                // ✅ PASSING SYLLABUS TYPE FOR FILTERING
                 syllabusType={paperData.syllabusType}
                 onSelect={handlePatternSelect}
                 onNext={handlePatternConfirm}

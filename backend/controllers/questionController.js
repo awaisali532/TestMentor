@@ -2,7 +2,7 @@ const Question = require("../models/question");
 const Topic = require("../models/topic");
 const Subject = require("../models/subjectModel");
 const cloudinary = require("../config/cloudinary");
-
+const mongoose = require("mongoose");
 // ✅ IMPORT VECTORIZER
 const { getEmbedding } = require("../utils/vectorizer");
 
@@ -90,55 +90,137 @@ const getQuestionFilters = async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to fetch filters" });
   }
 };
-
+// Helper: Case Insensitive Formatting
+const toTitleCase = (str) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
 // ==========================================
-// 4. GET QUESTIONS BY FILTER
+// 4. GET QUESTIONS BY FILTER (DEBUG VERSION 🕵️‍♂️)
 // ==========================================
 const getQuestionsByFilter = async (req, res) => {
+  console.log("\n🔥 --- API HIT: FILTER REQUEST START ---");
   try {
-    const { grade, subject, type } = req.query;
-    const rawCategory = req.query.category || req.query["category[]"];
-    const rawDifficulty = req.query.difficulty || req.query["difficulty[]"];
-    const rawTopics = req.query.topics || req.query["topics[]"];
+    const { grade, subject, type, category, difficulty, topics, chapters } =
+      req.body;
+
+    // 1. Log Incoming Data
+    console.log("📥 Payload Received:", {
+      grade,
+      subjectId: subject,
+      type,
+      chaptersCount: chapters?.length,
+      topicsCount: topics?.length,
+    });
 
     if (!grade || !subject)
-      return res.status(400).json({ error: "Grade and Subject are required" });
+      return res.status(400).json({ error: "Grade/Subject missing" });
 
-    const subjectDoc = await Subject.findOne({
-      className: grade,
-      subjectName: subject,
-    });
-    if (!subjectDoc)
+    // 2. Subject Check
+    let subjectDoc;
+    if (mongoose.Types.ObjectId.isValid(subject)) {
+      subjectDoc = await Subject.findById(subject);
+    } else {
+      subjectDoc = await Subject.findOne({
+        className: grade,
+        subjectName: subject,
+      });
+    }
+
+    if (!subjectDoc) {
+      console.error("❌ Subject Not Found in DB!");
       return res.status(404).json({ error: "Subject not found" });
+    }
+    console.log(
+      "✅ Subject Found:",
+      subjectDoc.subjectName,
+      "(ID:",
+      subjectDoc._id.toString(),
+      ")",
+    );
 
+    // 3. Query Construction
     let query = { subject: subjectDoc._id };
+
+    // Type
     if (type && type !== "ALL") query.type = type;
 
+    // Helper
     const normalizeArray = (val) =>
       !val ? [] : Array.isArray(val) ? val : [val];
 
-    const catArray = normalizeArray(rawCategory);
-    if (catArray.length > 0) query.questionCategory = { $in: catArray };
+    // Categories
+    const catArray = normalizeArray(category);
+    if (catArray.length > 0 && !catArray.includes("ANY")) {
+      query.questionCategory = { $in: catArray };
+    }
 
-    const diffArray = normalizeArray(rawDifficulty);
-    if (diffArray.length > 0) query.difficulty = { $in: diffArray };
+    // Difficulty (Fix Case Sensitivity)
+    const diffArray = normalizeArray(difficulty);
+    if (diffArray.length > 0) {
+      query.difficulty = { $in: diffArray.map((d) => toTitleCase(d)) };
+    }
 
-    const topicArray = normalizeArray(rawTopics);
-    if (topicArray.length > 0) query.topics = { $in: topicArray };
+    // 🔥 ID FILTERING (The Critical Part)
+    const topicArray = normalizeArray(topics);
+    const chapterArray = normalizeArray(chapters);
 
+    // Agar Chapters hain to unhein ObjectIds mein convert karo
+    if (chapterArray.length > 0) {
+      const chapterObjectIds = chapterArray.map(
+        (id) => new mongoose.Types.ObjectId(id),
+      );
+      query.chapter = { $in: chapterObjectIds };
+      console.log(`🔎 Searching by ${chapterObjectIds.length} CHAPTER IDs`);
+    }
+    // Agar Topics hain to unhein convert karo
+    else if (topicArray.length > 0) {
+      const topicObjectIds = topicArray.map(
+        (id) => new mongoose.Types.ObjectId(id),
+      );
+      query.topics = { $in: topicObjectIds };
+      console.log(`🔎 Searching by ${topicObjectIds.length} TOPIC IDs`);
+    }
+
+    console.log("🛠️ FINAL MONGO QUERY:", JSON.stringify(query, null, 2));
+
+    // 4. Execution
     const questions = await Question.find(query)
       .populate("topics", "name topicNumber")
       .populate("chapter", "name chapterNumber")
-      .sort({ createdAt: -1 })
       .lean();
 
-    const formattedQuestions = questions.map((q) => ({
-      ...q,
-      menuContext: "filter_api",
-    }));
-    res.status(200).json(formattedQuestions);
+    console.log(`📤 Result: Found ${questions.length} Questions`);
+
+    // 5. AUTO-FALLBACK (Agar Chapter se 0 milein, to Topic check karo - Just in case IDs swapped hain)
+    if (questions.length === 0 && chapterArray.length > 0) {
+      console.log(
+        "⚠️ 0 Results with Chapter. Trying these IDs as TOPICS (Fallback Check)...",
+      );
+
+      delete query.chapter;
+      query.topics = {
+        $in: chapterArray.map((id) => new mongoose.Types.ObjectId(id)),
+      };
+
+      const fallbackQuestions = await Question.find(query).lean();
+      console.log(
+        `🔄 Fallback Result: Found ${fallbackQuestions.length} Questions`,
+      );
+
+      if (fallbackQuestions.length > 0) {
+        console.log(
+          "✅ FIXED! IDs were actually Topics, sending fallback data.",
+        );
+        return res.status(200).json(fallbackQuestions);
+      }
+    }
+
+    res.status(200).json(questions);
+    console.log("🔥 --- REQUEST END ---\n");
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch questions" });
+    console.error("❌ SERVER ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
