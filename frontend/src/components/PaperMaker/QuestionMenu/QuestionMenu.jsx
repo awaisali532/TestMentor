@@ -69,21 +69,45 @@ const QuestionMenu = ({
     return String(q._id);
   };
 
+  // ✅ FIX 1: SYNC STATE WITH PARENT
+  // Jab bhi Parent (PaperMaker) update ho (e.g. Pattern edit ke baad),
+  // QuestionMenu ko apna data refresh karna chahiye.
+  useEffect(() => {
+    if (paperData && paperData.questions) {
+      setTempSelected(paperData.questions);
+    }
+  }, [paperData]);
+
+  // ✅ FIX 2: RESET TABS ON PATTERN CHANGE
+  // Agar Pattern badal jaye, to check kro ke Active Tab abhi bhi valid hai ya nahi
+  useEffect(() => {
+    if (!paperData || !paperData.selectedPattern) return;
+
+    // Agar active section delete ho chuka hai, to null kar do
+    if (activeSection) {
+      // Check logic (Simple: agar tab ID ab pattern mein nahi, to reset)
+      // Filhal safety ke liye hum Active Section ko null kar dete hain
+      // jab bhi pattern update hota hai taake user fresh start kare.
+      setActiveSection(null);
+    }
+  }, [paperData.selectedPattern]);
+
   useEffect(() => {
     if (isOpen) {
-      setTempSelected(selectedQuestions || []);
+      // Jab menu khule, to parent se fresh data lo
+      setTempSelected(paperData.questions || []);
       setShow(true);
     } else {
       const timer = setTimeout(() => setShow(false), 300);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, selectedQuestions]);
+  }, [isOpen, paperData]); // Added paperData dependency
 
   useEffect(() => {
     setActiveSection(null);
   }, [activeTab]);
 
-  // --- CHAPTER & CATEGORY LOGIC ---
+  // --- LOGIC ---
   const targetChapters = useMemo(() => {
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     if (!pattern?.sections) return null;
@@ -177,7 +201,6 @@ const QuestionMenu = ({
     return 0;
   };
 
-  // ✅ Toggle Logic (Adds to tempSelected)
   const handleToggleSelect = (clickedQuestion) => {
     const targetID = String(clickedQuestion._id);
     const isAlreadySelected = tempSelected.some(
@@ -213,7 +236,6 @@ const QuestionMenu = ({
     ]);
   };
 
-  // ✅ Auto Select Logic
   const handleAutoSelect = () => {
     if (availablePool.length === 0) {
       setAlertMsg("No questions available to auto-select!");
@@ -272,14 +294,13 @@ const QuestionMenu = ({
     setTempSelected((prev) => [...prev, ...formattedSelection]);
   };
 
-  // ✅ FIX 1: Send ALL questions, not just activeTab
   const handleConfirmAdd = () => {
     if (onAddQuestionsToPaper) {
-      // "REPLACE_ALL" tells parent to use this full list
       onAddQuestionsToPaper(tempSelected, "REPLACE_ALL");
     }
   };
 
+  // ✅ TYPE COUNTS (Ab ye real-time update honge)
   const typeCounts = useMemo(() => {
     const counts = {
       MCQ: { total: 0, current: 0 },
@@ -295,7 +316,9 @@ const QuestionMenu = ({
       if (type === "LONG" && sec.hasParts) qty = qty * 2;
       if (counts[type]) counts[type].total += qty;
     });
-    if (tempSelected.length > 0) {
+
+    // 🔥 Uses fresh tempSelected
+    if (tempSelected.length >= 0) {
       counts.MCQ.current = tempSelected.filter((q) => q.type === "MCQ").length;
       counts.SHORT.current = tempSelected.filter(
         (q) => q.type === "SHORT",
@@ -307,7 +330,6 @@ const QuestionMenu = ({
     return counts;
   }, [paperData, tempSelected]);
 
-  // ✅ FIX 2: Filter Footer Selections based on Active Section
   const questionsForFooter = useMemo(() => {
     if (activeTab === "MCQ") {
       return tempSelected.filter((q) => q.type === "MCQ");
@@ -315,7 +337,7 @@ const QuestionMenu = ({
     if (activeSection) {
       return tempSelected.filter((q) => q.tabId === activeSection);
     }
-    return []; // Don't show entire short section mixed
+    return [];
   }, [tempSelected, activeTab, activeSection]);
 
   const isSelectionChanged = useMemo(() => {
@@ -348,6 +370,7 @@ const QuestionMenu = ({
               difficultiesList={difficultiesList}
               loading={loadingFilters}
             />
+            {/* ✅ TABS AB REAL-TIME UPDATE HONGE */}
             <TypeTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -371,7 +394,6 @@ const QuestionMenu = ({
             />
           </div>
 
-          {/* ✅ FOOTER SHOWS ONLY ACTIVE SECTION ITEMS */}
           <MenuFooter
             count={questionsForFooter.length}
             limit={getCurrentLimit()}
@@ -385,7 +407,7 @@ const QuestionMenu = ({
             onAdd={handleConfirmAdd}
             onAutoSelect={handleAutoSelect}
             isChanged={isSelectionChanged}
-            selectedQuestions={questionsForFooter} // Pass filtered list
+            selectedQuestions={questionsForFooter}
             onRemove={handleToggleSelect}
             activeTab={activeTab}
           />
