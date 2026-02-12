@@ -59,30 +59,53 @@ const PaperPreview = ({
       .sort()
       .map((key) => {
         return grouped[key].sort((a, b) =>
-          (a.tabId || "").localeCompare(b.tabId || "")
+          (a.tabId || "").localeCompare(b.tabId || ""),
         );
       });
   };
 
   const groupedLongQs = getGroupedLongQuestions();
 
+  // ✅ UPDATED INSTRUCTION LOGIC (Compulsory + Attempt Count)
   const getLongInstructions = () => {
-    const longSec = getSectionConfig("LONG");
-    const attemptLimit = parseInt(longSec?.toBeAttempted || 0);
+    const pattern = paperData?.selectedPattern || paperData?.paperPattern;
+    const sections = pattern?.sections || [];
+
+    // 1. Get Total to Attempt
+    const attemptLimit = parseInt(pattern?.longQAttemptCount || 0);
     const available = groupedLongQs.length;
 
+    // 2. Find if any Long Section is Compulsory
+    // We check the sections array to see which Question No is marked isCompulsory
+    const longSections = sections.filter((s) => s.questionType === "LONG");
+    const compulsorySec = longSections.find((s) => s.isCompulsory === true);
+    const compulsoryQNo = compulsorySec ? compulsorySec.questionNo : null; // e.g. "Q.5"
+
+    let enText = "";
+    let urText = "";
+
+    // CASE A: Attempt ALL (If limit is 0 or >= available)
     if (attemptLimit === 0 || attemptLimit >= available) {
-      return {
-        en: "Note: Attempt all questions.",
-        ur: "نوٹ: تمام سوالات حل کریں۔",
-      };
-    } else {
-      const qWord = attemptLimit === 1 ? "question" : "questions";
-      return {
-        en: `Note: Attempt any ${attemptLimit} ${qWord}.`,
-        ur: `نوٹ: کوئی سے ${attemptLimit} سوالات حل کریں۔`,
-      };
+      enText = "Note: Attempt all questions.";
+      urText = "نوٹ: تمام سوالات حل کریں۔";
     }
+    // CASE B: Attempt Specific Count
+    else {
+      const qWord = attemptLimit === 1 ? "question" : "questions";
+      enText = `Note: Attempt any ${attemptLimit} ${qWord}`;
+      urText = `نوٹ: کوئی سے ${attemptLimit} سوالات حل کریں`;
+
+      // Append Compulsory Note if exists
+      if (compulsoryQNo) {
+        enText += ` (${compulsoryQNo} is compulsory).`;
+        urText += ` (${compulsoryQNo} لازمی ہے)۔`;
+      } else {
+        enText += ".";
+        urText += "۔";
+      }
+    }
+
+    return { en: enText, ur: urText };
   };
 
   const longInstr = getLongInstructions();
@@ -161,7 +184,7 @@ const PaperPreview = ({
                                 getQId(q),
                                 "statement",
                                 "en",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -181,7 +204,7 @@ const PaperPreview = ({
                                 getQId(q),
                                 "statement",
                                 "ur",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -191,7 +214,7 @@ const PaperPreview = ({
                       </div>
                     </div>
 
-                    {/* ✅ MCQ IMAGE (Between Statement & Options) */}
+                    {/* MCQ IMAGE */}
                     {q.image && q.image.url && (
                       <div className="pp-image-container">
                         <img
@@ -222,7 +245,7 @@ const PaperPreview = ({
                                           "options",
                                           "en",
                                           e.target.value,
-                                          idx
+                                          idx,
                                         )
                                       }
                                     />
@@ -242,7 +265,7 @@ const PaperPreview = ({
                                           "options",
                                           "ur",
                                           e.target.value,
-                                          idx
+                                          idx,
                                         )
                                       }
                                     />
@@ -279,7 +302,7 @@ const PaperPreview = ({
                 const qNumber = index + 2;
                 const secConfig = getSectionConfig("SHORT", index);
                 const attemptLimit = parseInt(
-                  secConfig?.toBeAttempted || sectionQs.length
+                  secConfig?.toBeAttempted || sectionQs.length,
                 );
                 const marksPerQ = parseInt(secConfig?.marksPerQuestion || 2);
                 const totalMarks = attemptLimit * marksPerQ;
@@ -310,10 +333,7 @@ const PaperPreview = ({
 
                     <div className="pp-list">
                       {sectionQs.map((q, i) => (
-                        <div
-                          key={getQId(q)}
-                          className="pp-vertical-block" // ✅ New Wrapper for Vertical Layout
-                        >
+                        <div key={getQId(q)} className="pp-vertical-block">
                           {isManualMode && (
                             <button
                               className="pp-item-del-btn"
@@ -323,7 +343,7 @@ const PaperPreview = ({
                             </button>
                           )}
 
-                          {/* 1. Text Row (Number + En + Ur) */}
+                          {/* 1. Text Row */}
                           <div className="pp-item">
                             <span className="pp-num">({i + 1})</span>
                             <div className="pp-text-en">
@@ -336,7 +356,7 @@ const PaperPreview = ({
                                       getQId(q),
                                       "statement",
                                       "en",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -356,7 +376,7 @@ const PaperPreview = ({
                                       getQId(q),
                                       "statement",
                                       "ur",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -366,7 +386,7 @@ const PaperPreview = ({
                             </div>
                           </div>
 
-                          {/* 2. ✅ IMAGE ROW (Full Width Below Text) */}
+                          {/* 2. IMAGE ROW */}
                           {q.image && q.image.url && (
                             <div className="pp-image-container">
                               <img
@@ -390,6 +410,7 @@ const PaperPreview = ({
                     <div className="pp-hd-en">
                       <strong>Section II (Long Questions)</strong>
                     </div>
+                    {/* ✅ DYNAMIC INSTRUCTIONS */}
                     <div className="pp-hd-marks">{longInstr.en}</div>
                     <div className="pp-hd-ur" dir="rtl">
                       <strong>{longInstr.ur}</strong> (حصہ دوم)
@@ -423,10 +444,7 @@ const PaperPreview = ({
                         }
 
                         return (
-                          <div
-                            key={getQId(q)}
-                            className="pp-vertical-block" // ✅ New Wrapper
-                          >
+                          <div key={getQId(q)} className="pp-vertical-block">
                             {isManualMode && (
                               <button
                                 className="pp-item-del-btn"
@@ -449,7 +467,7 @@ const PaperPreview = ({
                                         getQId(q),
                                         "statement",
                                         "en",
-                                        e.target.value
+                                        e.target.value,
                                       )
                                     }
                                   />
@@ -470,7 +488,7 @@ const PaperPreview = ({
                                         getQId(q),
                                         "statement",
                                         "ur",
-                                        e.target.value
+                                        e.target.value,
                                       )
                                     }
                                   />
@@ -481,7 +499,7 @@ const PaperPreview = ({
                               <div className="pp-marks-right">[{q.marks}]</div>
                             </div>
 
-                            {/* ✅ IMAGE ROW (Full Width Below Text) */}
+                            {/* IMAGE ROW */}
                             {q.image && q.image.url && (
                               <div className="pp-image-container">
                                 <img

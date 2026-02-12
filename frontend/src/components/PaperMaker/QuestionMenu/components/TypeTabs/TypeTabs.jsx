@@ -16,9 +16,20 @@ const TypeTabs = ({
     { id: "LONG", label: "Long Questions" },
   ];
 
-  // Helper count
+  // ✅ ROBUST COUNTING HELPER
   const getSectionCount = (sectionId) => {
-    return selectedQuestions.filter((q) => q.tabId === sectionId).length;
+    // Standard Match
+    let count = selectedQuestions.filter((q) => q.tabId === sectionId).length;
+
+    // If 0, try "Loose" Match (e.g. if tabId is just "0" instead of "sec_0")
+    if (count === 0 && sectionId.startsWith("sec_")) {
+      const justIndex = sectionId.replace("sec_", "");
+      count = selectedQuestions.filter(
+        (q) => String(q.tabId) === justIndex,
+      ).length;
+    }
+
+    return count;
   };
 
   const getSubTabs = () => {
@@ -33,7 +44,7 @@ const TypeTabs = ({
 
     const subTabs = [];
     const relevantSections = sections.filter(
-      (s) => s.questionType === activeTab
+      (s) => s.questionType === activeTab,
     );
 
     if (activeTab === "MCQ") return [];
@@ -41,10 +52,19 @@ const TypeTabs = ({
     // --- SHORT QUESTIONS ---
     if (activeTab === "SHORT") {
       relevantSections.forEach((sec, index) => {
-        const secId = `sec_${index}`;
+        // 🔥 CRITICAL: Match logic with PaperMaker
+        // We need to find the REAL index of this section in the full list
+        const realIndex = sections.indexOf(sec);
+
+        const secId = `sec_${realIndex}`; // Use Real Index, not filtered index
         const total = parseInt(sec.totalQuestions || sec.quantity) || 0;
         const current = getSectionCount(secId);
-        const qNum = index + 2; // Q.2, Q.3...
+
+        // Label logic (Q.2, Q.3, etc) depends on filtered index
+        // Typically Q.2 starts after MCQ. Assuming MCQ is Q.1 (or implicit)
+        // Usually: MCQ=Q1, Short1=Q2...
+        // Let's rely on the visual index for Label, but Real Index for ID
+        const qNum = index + 2;
 
         subTabs.push({
           id: secId,
@@ -55,57 +75,51 @@ const TypeTabs = ({
       });
     }
 
-    // --- LONG QUESTIONS (Numbering Fix) ---
+    // --- LONG QUESTIONS ---
     if (activeTab === "LONG") {
       const shortSectionsCount = sections.filter(
-        (s) => s.questionType === "SHORT"
+        (s) => s.questionType === "SHORT",
       ).length;
-      let startQNum = shortSectionsCount + 2; // Start after Short Qs (e.g., Q.5)
+      let startQNum = shortSectionsCount + 2;
 
       relevantSections.forEach((sec, index) => {
+        const realIndex = sections.indexOf(sec);
         const totalQs = parseInt(sec.totalQuestions || sec.quantity) || 0;
 
-        // Loop through slots (Each slot is ONE Question Number, e.g. Q5)
         for (let i = 0; i < totalQs; i++) {
-          // Current Number for this entire Block
           const currentQLabel = startQNum;
 
           if (sec.hasParts) {
-            // Part A
-            const idA = `long_${index}_${i}_a`;
+            const idA = `long_${realIndex}_${i}_a`;
             const currA = getSectionCount(idA);
             subTabs.push({
               id: idA,
-              label: `Q.${currentQLabel} (a)`, // ✅ Q3 (a)
+              label: `Q.${currentQLabel} (a)`,
               countLabel: currA > 0 ? "1/1" : "0/1",
               isFull: currA > 0,
               isPart: true,
             });
 
-            // Part B
-            const idB = `long_${index}_${i}_b`;
+            const idB = `long_${realIndex}_${i}_b`;
             const currB = getSectionCount(idB);
             subTabs.push({
               id: idB,
-              label: `Q.${currentQLabel} (b)`, // ✅ Q3 (b)
+              label: `Q.${currentQLabel} (b)`,
               countLabel: currB > 0 ? "1/1" : "0/1",
               isFull: currB > 0,
               isPart: true,
             });
           } else {
-            // Full Question
-            const idFull = `long_${index}_${i}_full`;
+            const idFull = `long_${realIndex}_${i}_full`;
             const currFull = getSectionCount(idFull);
             subTabs.push({
               id: idFull,
-              label: `Q.${currentQLabel}`, // ✅ Q3
+              label: `Q.${currentQLabel}`,
               countLabel: currFull > 0 ? "1/1" : "0/1",
               isFull: currFull > 0,
               isPart: false,
             });
           }
-
-          // Increment Question Number ONLY after creating slots for this question
           startQNum++;
         }
       });
@@ -116,20 +130,17 @@ const TypeTabs = ({
 
   const subTabsList = getSubTabs();
 
-  // ✅ FIX ISSUE 3: Auto-select first Sub-tab when Main Tab changes
+  // Auto-select logic
   useEffect(() => {
     if (subTabsList.length > 0) {
-      // Check if current activeSection is valid for this new list
       const isValid = subTabsList.some((tab) => tab.id === activeSection);
-
-      // If no section selected OR selected section is not in current list -> Select First
       if (!activeSection || !isValid) {
         setActiveSection(subTabsList[0].id);
       }
     } else {
       setActiveSection(null);
     }
-  }, [activeTab, paperData]); // Removed subTabsList dependency to avoid loops, rely on activeTab
+  }, [activeTab, paperData]);
 
   return (
     <div className="qm-tabs-container">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { FaExclamationCircle } from "react-icons/fa";
 import MenuHeader from "./components/MenuHeader/MenuHeader";
@@ -60,73 +60,68 @@ const QuestionMenu = ({
     }
   }, [paperData]);
 
-  const getSafeID = (q) => {
+  const getSafeID = useCallback((q) => {
     if (!q) return "";
     if (q.questionId)
       return typeof q.questionId === "object"
         ? String(q.questionId._id)
         : String(q.questionId);
     return String(q._id);
-  };
+  }, []);
 
-  // ✅ FIX 1: SYNC STATE WITH PARENT
-  // Jab bhi Parent (PaperMaker) update ho (e.g. Pattern edit ke baad),
-  // QuestionMenu ko apna data refresh karna chahiye.
+  // ✅ 1. LOAD SAVED DATA ON OPEN
+  useEffect(() => {
+    if (isOpen && paperData && paperData.questions) {
+      setTempSelected(paperData.questions);
+    }
+  }, [isOpen]);
+
+  // ✅ 2. SYNC ON PATTERN CHANGE
   useEffect(() => {
     if (paperData && paperData.questions) {
       setTempSelected(paperData.questions);
     }
-  }, [paperData]);
+  }, [paperData.selectedPattern]);
 
-  // ✅ FIX 2: RESET TABS ON PATTERN CHANGE
-  // Agar Pattern badal jaye, to check kro ke Active Tab abhi bhi valid hai ya nahi
+  // ✅ 3. RESET ACTIVE SECTION
   useEffect(() => {
     if (!paperData || !paperData.selectedPattern) return;
-
-    // Agar active section delete ho chuka hai, to null kar do
     if (activeSection) {
-      // Check logic (Simple: agar tab ID ab pattern mein nahi, to reset)
-      // Filhal safety ke liye hum Active Section ko null kar dete hain
-      // jab bhi pattern update hota hai taake user fresh start kare.
       setActiveSection(null);
     }
   }, [paperData.selectedPattern]);
 
   useEffect(() => {
     if (isOpen) {
-      // Jab menu khule, to parent se fresh data lo
-      setTempSelected(paperData.questions || []);
       setShow(true);
     } else {
       const timer = setTimeout(() => setShow(false), 300);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, paperData]); // Added paperData dependency
+  }, [isOpen]);
 
   useEffect(() => {
     setActiveSection(null);
   }, [activeTab]);
 
   // --- LOGIC ---
+
   const targetChapters = useMemo(() => {
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     if (!pattern?.sections) return null;
     let targetSection = null;
+
     if (activeTab === "MCQ") {
       targetSection = pattern.sections.find((s) => s.questionType === "MCQ");
     } else if (activeSection) {
       const parts = activeSection.split("_");
-      let visualIndex = -1;
-      if (activeSection.startsWith("sec_")) visualIndex = parseInt(parts[1]);
-      else if (activeSection.startsWith("long_"))
-        visualIndex = parseInt(parts[1]);
-      if (visualIndex !== -1 && !isNaN(visualIndex)) {
-        const relevantSections = pattern.sections.filter(
-          (s) => s.questionType === activeTab,
-        );
-        targetSection = relevantSections[visualIndex];
+      const realIndex = parseInt(parts[1]);
+
+      if (!isNaN(realIndex) && pattern.sections[realIndex]) {
+        targetSection = pattern.sections[realIndex];
       }
     }
+
     if (
       targetSection &&
       targetSection.linkedChapters &&
@@ -141,33 +136,37 @@ const QuestionMenu = ({
     if (!activeSection) return null;
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     if (!pattern?.sections) return null;
+
     let targetSection = null;
+
     if (activeSection.startsWith("sec_")) {
       const parts = activeSection.split("_");
-      const visualIndex = parseInt(parts[1]);
-      const relevantSections = pattern.sections.filter(
-        (s) => s.questionType === activeTab,
-      );
-      targetSection = relevantSections[visualIndex];
+      const realIndex = parseInt(parts[1]);
+
+      if (!isNaN(realIndex) && pattern.sections[realIndex]) {
+        targetSection = pattern.sections[realIndex];
+      }
     } else if (activeSection.startsWith("long_")) {
       const parts = activeSection.split("_");
       const secIndex = parseInt(parts[1]);
-      const relevantSections = pattern.sections.filter(
-        (s) => s.questionType === "LONG",
-      );
-      targetSection = relevantSections[secIndex];
-      const partType = parts[3];
-      if (
-        targetSection &&
-        targetSection.hasParts &&
-        (partType === "a" || partType === "b")
-      ) {
-        const subIndex = partType === "a" ? 0 : 1;
-        const subQ = targetSection.subQuestions?.[subIndex];
-        if (subQ && subQ.questionCategory && subQ.questionCategory !== "ANY")
-          return subQ.questionCategory;
+
+      if (!isNaN(secIndex) && pattern.sections[secIndex]) {
+        targetSection = pattern.sections[secIndex];
+
+        const partType = parts[3];
+        if (
+          targetSection &&
+          targetSection.hasParts &&
+          (partType === "a" || partType === "b")
+        ) {
+          const subIndex = partType === "a" ? 0 : 1;
+          const subQ = targetSection.subQuestions?.[subIndex];
+          if (subQ && subQ.questionCategory && subQ.questionCategory !== "ANY")
+            return subQ.questionCategory;
+        }
       }
     }
+
     if (
       targetSection &&
       targetSection.questionCategory &&
@@ -178,70 +177,99 @@ const QuestionMenu = ({
     return null;
   }, [activeTab, activeSection, paperData]);
 
-  const getCurrentLimit = () => {
+  const getCurrentLimit = useCallback(() => {
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     const sections = pattern?.sections || [];
     if (sections.length === 0) return 0;
+
     if (activeTab === "MCQ") {
       const mcqSection = sections.find((s) => s.questionType === "MCQ");
       if (mcqSection)
         return parseInt(mcqSection.totalQuestions || mcqSection.quantity || 0);
       return 0;
     }
+
     if (!activeSection) return 0;
-    const relevantSections = sections.filter(
-      (s) => s.questionType === activeTab,
-    );
+
     const parts = activeSection.split("_");
-    const visualIndex = parseInt(parts[1]);
-    if (relevantSections[visualIndex]) {
+    const realIndex = parseInt(parts[1]);
+
+    if (!isNaN(realIndex) && sections[realIndex]) {
       if (activeTab === "LONG") return 1;
-      return parseInt(relevantSections[visualIndex].totalQuestions || 0);
+      return parseInt(sections[realIndex].totalQuestions || 0);
     }
+
     return 0;
-  };
+  }, [paperData, activeTab, activeSection]);
 
-  const handleToggleSelect = (clickedQuestion) => {
-    const targetID = String(clickedQuestion._id);
-    const isAlreadySelected = tempSelected.some(
-      (q) => getSafeID(q) === targetID,
-    );
-    if (isAlreadySelected) {
-      setTempSelected((prev) => prev.filter((q) => getSafeID(q) !== targetID));
-      return;
-    }
-    const limit = getCurrentLimit();
-    let currentCount = 0;
-    let sectionIdToSave = null;
-    if (activeTab === "MCQ") {
-      currentCount = tempSelected.filter((q) => q.type === "MCQ").length;
-      sectionIdToSave = "MCQ";
-    } else {
-      if (!activeSection) {
-        setAlertMsg("Please select a Question Number (Q.2, Q.3) first!");
-        return;
-      }
-      currentCount = tempSelected.filter(
-        (q) => q.tabId === activeSection,
-      ).length;
-      sectionIdToSave = activeSection;
-    }
-    if (limit > 0 && currentCount >= limit) {
-      setAlertMsg(`Limit Reached! (${currentCount}/${limit}) selected.`);
-      return;
-    }
-    setTempSelected((prev) => [
-      ...prev,
-      { ...clickedQuestion, tabId: sectionIdToSave },
-    ]);
-  };
+  // ✅ USE CALLBACK (Prevents child re-renders)
+  const handleToggleSelect = useCallback(
+    (clickedQuestion) => {
+      const targetID = String(clickedQuestion._id);
 
-  const handleAutoSelect = () => {
+      setTempSelected((prev) => {
+        const isAlreadySelected = prev.some((q) => getSafeID(q) === targetID);
+
+        if (isAlreadySelected) {
+          return prev.filter((q) => getSafeID(q) !== targetID);
+        }
+
+        // We need to calculate limit inside setState or using current state logic
+        // But getCurrentLimit depends on Props.
+        // NOTE: For best performance, simpler logic here is better.
+        const limit = getCurrentLimit();
+
+        let currentCount = 0;
+        let sectionIdToSave = null;
+
+        if (activeTab === "MCQ") {
+          currentCount = prev.filter((q) => q.type === "MCQ").length;
+          sectionIdToSave = "MCQ";
+        } else {
+          if (!activeSection) {
+            // This alert triggers inside render flow, ideally should be a UI flag
+            // Using a small timeout to avoid setstate clash if needed
+            setTimeout(
+              () =>
+                setAlertMsg(
+                  "Please select a Question Number (Q.2, Q.3) first!",
+                ),
+              0,
+            );
+            return prev;
+          }
+          currentCount = prev.filter((q) => q.tabId === activeSection).length;
+          sectionIdToSave = activeSection;
+        }
+
+        if (limit > 0 && currentCount >= limit) {
+          setTimeout(
+            () =>
+              setAlertMsg(
+                `Limit Reached! (${currentCount}/${limit}) selected.`,
+              ),
+            0,
+          );
+          return prev;
+        }
+
+        return [...prev, { ...clickedQuestion, tabId: sectionIdToSave }];
+      });
+    },
+    [activeTab, activeSection, getCurrentLimit, getSafeID],
+  ); // Dependencies
+
+  const handleAutoSelect = useCallback(() => {
     if (availablePool.length === 0) {
       setAlertMsg("No questions available to auto-select!");
       return;
     }
     const limit = getCurrentLimit();
+
+    // Logic needs tempSelected access.
+    // Since we are in callback, we should trust the current state during execution
+    // But generating auto selection needs the WHOLE array.
+    // So we use tempSelected as dependency.
     const currentCount =
       activeTab === "MCQ"
         ? tempSelected.filter((q) => q.type === "MCQ").length
@@ -255,7 +283,7 @@ const QuestionMenu = ({
 
     let options = { avoidChapters: [], targetDifficulty: null };
 
-    if (activeTab === "LONG" && activeSection.includes("_")) {
+    if (activeTab === "LONG" && activeSection && activeSection.includes("_")) {
       const parts = activeSection.split("_");
       const partType = parts[3];
       if (partType === "b") {
@@ -292,7 +320,7 @@ const QuestionMenu = ({
     }));
 
     setTempSelected((prev) => [...prev, ...formattedSelection]);
-  };
+  }, [availablePool, activeTab, activeSection, tempSelected, getCurrentLimit]);
 
   const handleConfirmAdd = () => {
     if (onAddQuestionsToPaper) {
@@ -300,7 +328,7 @@ const QuestionMenu = ({
     }
   };
 
-  // ✅ TYPE COUNTS (Ab ye real-time update honge)
+  // ✅ TYPE COUNTS
   const typeCounts = useMemo(() => {
     const counts = {
       MCQ: { total: 0, current: 0 },
@@ -310,15 +338,16 @@ const QuestionMenu = ({
     if (!paperData) return counts;
     const pattern = paperData.selectedPattern || paperData.paperPattern;
     const sections = pattern?.sections || [];
+
     sections.forEach((sec) => {
       const type = sec.questionType;
       let qty = parseInt(sec.totalQuestions || sec.quantity) || 0;
       if (type === "LONG" && sec.hasParts) qty = qty * 2;
+
       if (counts[type]) counts[type].total += qty;
     });
 
-    // 🔥 Uses fresh tempSelected
-    if (tempSelected.length >= 0) {
+    if (tempSelected && tempSelected.length >= 0) {
       counts.MCQ.current = tempSelected.filter((q) => q.type === "MCQ").length;
       counts.SHORT.current = tempSelected.filter(
         (q) => q.type === "SHORT",
@@ -346,7 +375,7 @@ const QuestionMenu = ({
       .sort();
     const currentIDs = tempSelected.map((q) => getSafeID(q)).sort();
     return JSON.stringify(originalIDs) !== JSON.stringify(currentIDs);
-  }, [tempSelected, selectedQuestions]);
+  }, [tempSelected, selectedQuestions, getSafeID]);
 
   if (!show) return null;
 
@@ -370,7 +399,6 @@ const QuestionMenu = ({
               difficultiesList={difficultiesList}
               loading={loadingFilters}
             />
-            {/* ✅ TABS AB REAL-TIME UPDATE HONGE */}
             <TypeTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -417,4 +445,4 @@ const QuestionMenu = ({
   );
 };
 
-export default QuestionMenu;
+export default React.memo(QuestionMenu);

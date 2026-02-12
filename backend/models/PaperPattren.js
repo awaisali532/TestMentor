@@ -98,7 +98,7 @@ const PaperPatternSchema = new mongoose.Schema(
     totalMarks: { type: Number, required: true },
     timeAllowed: { type: String, default: "2:00 Hours" },
     isPairingSpecific: { type: Boolean, default: false },
-    longQAttemptCount: { type: Number, default: 2 },
+    longQAttemptCount: { type: Number, default: 0 },
     sections: [SectionSchema],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

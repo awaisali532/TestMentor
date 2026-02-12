@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { FaInbox } from "react-icons/fa";
 import QuestionCard from "../QuestionCard/QuestionCard";
@@ -10,6 +10,9 @@ import {
   SUBJECT_RULES,
   DEFAULT_RULE,
 } from "../../../../../config/SubjectFilterRules";
+
+// 🔥 GLOBAL CACHE (Component ke bahar, taake re-render par reset na ho)
+const GLOBAL_QUESTIONS_CACHE = {};
 
 const QuestionList = ({
   filters,
@@ -25,54 +28,74 @@ const QuestionList = ({
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Payload create karo (Memoized)
+  const fetchPayload = useMemo(() => {
+    const subjectId = paperData.subject?._id || paperData.subject;
+    const categoryFilter = Array.isArray(filters.category)
+      ? filters.category[0]
+      : filters.category;
+
+    const payload = {
+      grade: paperData.grade,
+      subject: subjectId,
+      type: activeTab,
+      difficulty: filters.difficulty,
+      chapters: [],
+      topics: paperData.topics || [],
+    };
+
+    if (requiredChapters && requiredChapters.length > 0) {
+      payload.chapters = requiredChapters;
+    }
+
+    if (requiredCategory && requiredCategory !== "ANY") {
+      payload.category = requiredCategory;
+    } else if (categoryFilter) {
+      payload.category = categoryFilter;
+    }
+
+    return payload;
+  }, [
+    paperData.grade,
+    paperData.subject,
+    paperData.topics,
+    activeTab,
+    filters.difficulty,
+    filters.category,
+    requiredChapters,
+    requiredCategory,
+  ]);
+
   useEffect(() => {
     const fetchQuestions = async () => {
+      // 1. Generate Unique Key for this Request
+      const cacheKey = JSON.stringify(fetchPayload);
+
+      // 🚀 2. CHECK GLOBAL CACHE FIRST
+      if (GLOBAL_QUESTIONS_CACHE[cacheKey]) {
+        // console.log("🚀 Serving from Cache (No API Call)");
+        const cachedData = GLOBAL_QUESTIONS_CACHE[cacheKey];
+        setQuestions(cachedData);
+        if (onDataLoaded) onDataLoaded(cachedData);
+        return; // EXIT FUNCTION, DO NOT SHOW LOADING
+      }
+
+      // 3. Agar Cache mein nahi hai, tabhi Loading dikhao aur API call karo
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const categoryFilter = Array.isArray(filters.category)
-          ? filters.category[0]
-          : filters.category;
 
-        // Identify Subject & Rule
+        // Identify Subject & Rule Logic...
         const subjectName = paperData.subject?.subjectName || "Physics";
         const subjectConfig = SUBJECT_RULES[subjectName] || {};
         const activeRule = requiredCategory
           ? subjectConfig[requiredCategory] || DEFAULT_RULE
           : null;
 
-        // Prepare ID for Subject
-        const subjectId = paperData.subject?._id || paperData.subject;
-
-        // 🔥 CHANGE: Switching to POST request for Filter
-        const payload = {
-          grade: paperData.grade,
-          subject: subjectId,
-          type: activeTab,
-          difficulty: filters.difficulty,
-          chapters: [],
-          topics: [],
-        };
-
-        // 🔥 LOGIC FIX: Check if Pairing is active
-        if (requiredChapters && requiredChapters.length > 0) {
-          payload.chapters = requiredChapters; // Pairing chapters send kro
-        } else {
-          payload.topics = paperData.topics; // Full Syllabus topics send kro
-        }
-
-        // Add category only if it exists (Manual Filter OR Pattern Rule)
-        if (requiredCategory && requiredCategory !== "ANY") {
-          payload.category = requiredCategory;
-        } else if (categoryFilter) {
-          payload.category = categoryFilter;
-        }
-
-        console.log("📡 Manual List Fetch (POST):", payload);
-
+        // console.log("📡 Fetching Data from Backend...");
         const res = await axios.post(
           `${BASE_URL}/api/questions/filter`,
-          payload,
+          fetchPayload,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -131,8 +154,10 @@ const QuestionList = ({
           });
         });
 
-        setQuestions(sortedQuestions);
+        // 🔥 SAVE TO GLOBAL CACHE
+        GLOBAL_QUESTIONS_CACHE[cacheKey] = sortedQuestions;
 
+        setQuestions(sortedQuestions);
         if (onDataLoaded) onDataLoaded(sortedQuestions);
       } catch (err) {
         console.error("Error fetching questions:", err);
@@ -141,9 +166,10 @@ const QuestionList = ({
       }
     };
 
-    if (paperData && activeTab) fetchQuestions();
-  }, [paperData, activeTab, filters, requiredChapters, requiredCategory]);
+    if (fetchPayload) fetchQuestions();
+  }, [fetchPayload]); // Only runs if Payload actually changes (Tabs/Filters)
 
+  // Memoized Match Check
   const checkMatch = (itemInState, targetId) => {
     if (!itemInState || !targetId) return false;
     const target = String(targetId);
@@ -220,4 +246,5 @@ const QuestionList = ({
   );
 };
 
-export default QuestionList;
+// React.memo to prevent render if props are exactly the same
+export default React.memo(QuestionList);
