@@ -27,7 +27,7 @@ import "./UserSettings.css";
 import TMLoader from "../../../components/common/TMLoader/TMLoader";
 
 // ✅ 2. IMPORT AVATARS
-import BoyAvatar from "../../../assets/imeages/Avatar/boy.svg";
+import BoyAvatar from "../../../assets/imeages/Avatar/boy.jpg";
 import GirlAvatar from "../../../assets/imeages/Avatar/girl.svg";
 
 const UserSettings = () => {

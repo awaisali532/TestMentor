@@ -18,7 +18,7 @@ import "./UserSidebar.css";
 import UpgradeModal from "../../../components/common/UpgradeModal/UpgradeModal";
 
 // ✅ IMPORT AVATARS (Ensure Path is Correct)
-import BoyAvatar from "../../../assets/imeages/Avatar/boy.svg";
+import BoyAvatar from "../../../assets/imeages/Avatar/boy.jpg";
 import GirlAvatar from "../../../assets/imeages/Avatar/girl.svg";
 
 const UserSidebar = ({
