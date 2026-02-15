@@ -117,15 +117,6 @@ const questionSchema = new mongoose.Schema(
     marks: { type: Number, default: 1 },
     important: { type: Boolean, default: false },
     boardTags: [String],
-
-    // ==========================================
-    // 7. AI & SEARCH
-    // ==========================================
-    vector_embedding: {
-      type: [Number],
-      select: false,
-      index: true,
-    },
   },
   { timestamps: true },
 );

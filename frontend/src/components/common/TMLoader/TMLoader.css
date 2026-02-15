@@ -11,8 +11,8 @@
   background-color: var(--nav-bg); /* Ye light/dark dono me adjust ho jayega */
 
   /* Blur effect */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
 
   z-index: 9999999 !important;
   display: flex;
