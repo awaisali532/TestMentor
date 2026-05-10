@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-import Swal from "sweetalert2";
 import {
   FaFolderOpen,
   FaTrashAlt,
   FaPen,
   FaSave,
-  FaSpinner,
   FaCode,
   FaTimes,
   FaPlus,
 } from "react-icons/fa";
 
-// ✅ Import the new CSS
+// ✅ Import Custom Components
+import TMLoader from "../../../../components/common/TMLoader/TMLoader"; // Path check kr lena
+import ConfirmationModal from "../../../../components/common/ConfirmationModal/ConfirmationModal"; // Path check kr lena
+
+// ✅ Import CSS
 import "./ChapterSection.css";
 
 const ChapterSection = ({ isExpanded, selectedSubject }) => {
@@ -25,16 +27,21 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
   const [bulkJson, setBulkJson] = useState("");
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  // ✅ States for Custom Confirmation Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [chapterToDelete, setChapterToDelete] = useState(null);
+
   const [newChapter, setNewChapter] = useState({
     number: "",
     name: { en: "", ur: "" },
   });
 
-  // ✅ CHECK SUBJECT TYPE (Urdu/Islamiyat/Pak Study/Tarjama)
+  // ✅ CHECK SUBJECT TYPE
   const isUrduSubject =
     selectedSubject &&
     ["Urdu", "Islamiyat", "Pak Study", "Tarjama", "Arabic", "History"].some(
-      (s) => selectedSubject.subjectName.includes(s)
+      (s) => selectedSubject.subjectName.includes(s),
     );
 
   useEffect(() => {
@@ -44,7 +51,7 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
   const fetchChapters = async () => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/chapters/subject/${selectedSubject._id}`
+        `${BASE_URL}/api/chapters/subject/${selectedSubject._id}`,
       );
       setChapters(res.data);
     } catch (err) {
@@ -83,10 +90,12 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
     setNewChapter({ number: "", name: { en: "", ur: "" } });
   };
 
+  // ==========================================
+  // 1. HANDLE SUBMIT (SINGLE)
+  // ==========================================
   const handleSubmitSingle = async (e) => {
     e.preventDefault();
 
-    // ✅ VALIDATION LOGIC BASED ON SUBJECT
     if (!newChapter.number) return toast.error("Chapter Number is required!");
 
     if (isUrduSubject) {
@@ -97,7 +106,7 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
         return toast.error("English Name is required!");
     }
 
-    setLoading(true);
+    setLoading(true); // 👈 TMLoader show hoga
     try {
       const payload = {
         subjectId: selectedSubject._id,
@@ -117,16 +126,20 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
     } catch (err) {
       toast.error("Failed");
     } finally {
-      setLoading(false);
+      setLoading(false); // 👈 TMLoader hide hoga
     }
   };
 
+  // ==========================================
+  // 2. HANDLE BULK UPLOAD
+  // ==========================================
   const handleBulkUpload = async () => {
     if (!bulkJson) return toast.error("Paste JSON first.");
-    setLoading(true);
+
+    let bulkPayload;
     try {
       const parsedData = JSON.parse(bulkJson);
-      const bulkPayload = parsedData.map((item) => ({
+      bulkPayload = parsedData.map((item) => ({
         subject: selectedSubject._id,
         chapterNumber: item.chapterNumber,
         name: {
@@ -134,46 +147,78 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
           ur: item.nameUr || "",
         },
       }));
-      await axios.post(`${BASE_URL}/api/chapters/add-bulk`, {
+    } catch (jsonError) {
+      return toast.error("Invalid JSON Format! Please check your syntax.");
+    }
+
+    setLoading(true); // 👈 TMLoader show hoga
+
+    try {
+      const res = await axios.post(`${BASE_URL}/api/chapters/add-bulk`, {
         chapters: bulkPayload,
       });
-      toast.success("Bulk Upload Complete");
+
+      if (res.data.status === "warning") {
+        toast(res.data.message, {
+          icon: "⚠️",
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        });
+      } else {
+        toast.success(res.data.message || "Bulk Upload Complete");
+      }
+
       setBulkJson("");
       setMode("single");
       fetchChapters();
     } catch (err) {
-      toast.error("Upload Failed");
+      const serverMessage =
+        err.response?.data?.error || err.response?.data?.message;
+
+      if (serverMessage) {
+        toast.error(serverMessage);
+      } else {
+        toast.error("Upload Failed (Check Console)");
+        console.error(err);
+      }
     } finally {
-      setLoading(false);
+      setLoading(false); // 👈 TMLoader hide hoga
     }
   };
 
-  const handleDelete = async (id) => {
-    const res = await Swal.fire({
-      title: "Delete Chapter?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      background: "var(--card-bg)",
-      color: "var(--text-main)",
-    });
-    if (res.isConfirmed) {
-      setLoading(true);
-      try {
-        await axios.delete(`${BASE_URL}/api/chapters/${id}`);
-        toast.success("Deleted");
-        fetchChapters();
-      } catch (err) {
-        toast.error("Failed");
-      } finally {
-        setLoading(false);
-      }
+  // ==========================================
+  // 3. HANDLE DELETE (CUSTOM MODAL)
+  // ==========================================
+
+  // Step 1: Open Modal
+  const requestDelete = (id) => {
+    setChapterToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Step 2: Execute Delete (Called by Modal onConfirm)
+  const confirmDelete = async () => {
+    if (!chapterToDelete) return;
+
+    setLoading(true); // 👈 TMLoader show hoga
+    try {
+      await axios.delete(`${BASE_URL}/api/chapters/${chapterToDelete}`);
+      toast.success("Deleted");
+      fetchChapters();
+    } catch (err) {
+      toast.error("Failed to delete");
+    } finally {
+      setLoading(false); // 👈 TMLoader hide hoga
+      setChapterToDelete(null);
     }
   };
 
   // ✅ DYNAMIC VALIDATION LOGIC
   const isSingleValid =
-    String(newChapter.number).trim() !== "" && // 👈 Fix: String() wrapper lagaya
+    String(newChapter.number).trim() !== "" &&
     (isUrduSubject
       ? newChapter.name.ur.trim() !== ""
       : newChapter.name.en.trim() !== "");
@@ -182,8 +227,23 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
   if (!isExpanded) return null;
 
   return (
-    <div className={`section-card expanded ${loading ? "opacity-75" : ""}`}>
-      <Toaster position="top-right" />
+    <div className={`section-card expanded`}>
+      <Toaster />
+
+      {/* ✅ GLOBAL LOADER (Shows when loading is true) */}
+      {loading && <TMLoader message="Processing Request..." />}
+
+      {/* ✅ CONFIRMATION MODAL */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Chapter?"
+        message="Are you sure you want to delete this chapter? This action cannot be undone."
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        isDanger={true}
+      />
 
       <div className="section-title text-main">
         <FaFolderOpen className="text-accent me-2" /> Chapters for{" "}
@@ -208,7 +268,6 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                 <div className="d-flex align-items-center">
                   <span className="chapter-badge">Ch {ch.chapterNumber}</span>
                   <div>
-                    {/* Render Urdu Name prominently if Urdu Subject */}
                     {isUrduSubject ? (
                       <>
                         <span className="chapter-name-en urdu-font fs-5">
@@ -240,13 +299,15 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                     className="action-icon-btn edit"
                     onClick={() => handleEditClick(ch)}
                     title="Edit"
+                    disabled={loading} // Prevent clicks during loading
                   >
                     <FaPen />
                   </button>
                   <button
                     className="action-icon-btn delete"
-                    onClick={() => handleDelete(ch._id)}
+                    onClick={() => requestDelete(ch._id)} // 👈 Opens Modal
                     title="Delete"
+                    disabled={loading} // Prevent clicks during loading
                   >
                     <FaTrashAlt />
                   </button>
@@ -320,7 +381,6 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                 </div>
 
                 <div className="mb-4">
-                  {/* --- ENGLISH INPUT --- */}
                   <label className="form-label">
                     Chapter Name (English){" "}
                     {!isUrduSubject && <span className="text-danger">*</span>}
@@ -336,7 +396,6 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                     }
                   />
 
-                  {/* --- URDU INPUT --- */}
                   <label className="form-label">
                     Chapter Name (Urdu){" "}
                     {isUrduSubject && <span className="text-danger">*</span>}
@@ -358,11 +417,8 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                   className="btn-primary-gradient w-100 d-flex justify-content-center align-items-center"
                   disabled={loading || !isSingleValid}
                 >
-                  {loading ? (
-                    <>
-                      <FaSpinner className="icon-spin me-2" /> Processing...
-                    </>
-                  ) : editingId ? (
+                  {/* Text Change based on State */}
+                  {editingId ? (
                     <>
                       <FaSave className="me-2" /> Update Chapter
                     </>
@@ -399,15 +455,7 @@ const ChapterSection = ({ isExpanded, selectedSubject }) => {
                   onClick={handleBulkUpload}
                   disabled={loading || !isBulkValid}
                 >
-                  {loading ? (
-                    <>
-                      <FaSpinner className="icon-spin me-2" /> Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <FaCode className="me-2" /> Upload Bulk
-                    </>
-                  )}
+                  <FaCode className="me-2" /> Upload Bulk
                 </button>
 
                 {!isBulkValid && bulkJson.trim() === "" && (

@@ -51,6 +51,9 @@ const getChaptersByFilter = async (req, res) => {
 // ==========================================
 // 2. ADD CHAPTER (Single)
 // ==========================================
+// ==========================================
+// 2. ADD CHAPTER (Single) - UPDATED
+// ==========================================
 const addChapter = async (req, res) => {
   try {
     const { subjectId, chapterNumber, name } = req.body;
@@ -78,12 +81,13 @@ const addChapter = async (req, res) => {
     });
     await newChapter.save();
 
+    // ✅ CHANGED HERE: Used dynamic chapterNumber instead of fixed "0.0"
     const defaultTopic = new Topic({
       chapter: newChapter._id,
-      topicNumber: "0.0",
+      topicNumber: `${chapterNumber}.0`, // e.g., if Chapter is 5, this becomes "5.0"
       name: {
         en: "General / Exercise Questions",
-        ur: "General / Mashqi Sawalaat",
+        ur: "جنرل / مشقی سوالات",
       },
     });
     await defaultTopic.save();
@@ -213,7 +217,7 @@ const deleteChapter = async (req, res) => {
 };
 
 // ==========================================
-// 6. BULK UPLOAD
+// 6. BULK UPLOAD (ROBUST & FIXED)
 // ==========================================
 const addBulkChapters = async (req, res) => {
   try {
@@ -223,56 +227,77 @@ const addBulkChapters = async (req, res) => {
       return res.status(400).json({ error: "No chapters provided" });
     }
 
+    // 1. Attempt to insert chapters
+    // ordered: false means "Keep going even if one fails"
     const result = await Chapter.insertMany(chapters, { ordered: false });
 
+    // --- SCENARIO 1: ALL SUCCESSFUL (No Duplicates) ---
     if (result.length > 0) {
       const topicsPayload = result.map((ch) => ({
         chapter: ch._id,
-        topicNumber: "0.0",
+        topicNumber: `${ch.chapterNumber}.0`,
         name: {
           en: "General / Exercise Questions",
-          ur: "General / Mashqi Sawalaat",
+          ur: "جنرل / مشقی سوالات",
         },
       }));
       await Topic.insertMany(topicsPayload);
     }
 
-    res.status(201).json({
-      message: "Bulk upload successful",
-      count: result.length,
-      data: result,
+    return res.status(201).json({
+      message: "All chapters uploaded successfully!",
+      addedCount: result.length,
+      status: "success",
     });
   } catch (error) {
-    if (error.writeErrors) {
-      const isDuplicate = error.writeErrors.some((e) => e.code === 11000);
+    // --- SCENARIO 2 & 3: PARTIAL SUCCESS or DUPLICATES ---
 
-      if (isDuplicate) {
-        const insertedDocs = error.insertedDocs || [];
-        if (insertedDocs.length > 0) {
+    // Check if this is a BulkWriteError (Standard Mongoose error for bulk inserts)
+    if (error.writeErrors || error.code === 11000) {
+      // Get the documents that WERE successfully inserted
+      const insertedDocs = error.insertedDocs || [];
+      const duplicateCount = error.writeErrors ? error.writeErrors.length : 0;
+
+      // If some documents were actually saved, we must add their Topics
+      if (insertedDocs.length > 0) {
+        try {
           const topicsPayload = insertedDocs.map((ch) => ({
             chapter: ch._id,
-            topicNumber: "0.0",
+            topicNumber: `${ch.chapterNumber}.0`,
             name: {
               en: "General / Exercise Questions",
-              ur: "General / Mashqi Sawalaat",
+              ur: "جنرل / مشقی سوالات",
             },
           }));
           await Topic.insertMany(topicsPayload);
+        } catch (topicError) {
+          console.error(
+            "Error adding topics for partial chapters:",
+            topicError,
+          );
+          // We don't stop the response here, because chapters are already saved
         }
+
         return res.status(201).json({
-          message: `Partial Success: ${insertedDocs.length} added. Others were duplicates.`,
-          count: insertedDocs.length,
+          message: `Partial Success: ${insertedDocs.length} added. ${duplicateCount} were duplicates/skipped.`,
+          addedCount: insertedDocs.length,
+          skippedCount: duplicateCount,
+          status: "warning", // Frontend can show a Yellow/Orange toast
         });
       } else {
+        // If insertedDocs is empty, it means ALL failed (likely all duplicates)
         return res.status(400).json({
-          error: `Validation Failed: ${
-            error.writeErrors[0].err.errmsg || "Check Data Fields"
-          }`,
+          error: "All provided chapters already exist (Duplicate Data).",
+          status: "error",
         });
       }
     }
-    console.error("Bulk Error:", error);
-    res.status(500).json({ error: "Bulk upload failed" });
+
+    // --- SCENARIO 4: REAL SERVER ERROR ---
+    console.error("Critical Bulk Error:", error);
+    return res
+      .status(500)
+      .json({ error: "Internal Server Error during upload." });
   }
 };
 
