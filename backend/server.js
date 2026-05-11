@@ -22,7 +22,14 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://test-mentor-2u38.vercel.app",
+    methods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 
 // Routes Mounting

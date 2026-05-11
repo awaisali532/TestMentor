@@ -117,7 +117,34 @@ const UserManagement = () => {
     }
   };
 
-  // 4. Update Plan
+  // ✅ 4. NEW: Toggle Practice Mode Directly
+  const handleTogglePracticeMode = async (user) => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const newStatus = !user.canAccessPracticeMode;
+
+      // Using the existing updateUser API endpoint
+      await axios.put(
+        `${BASE_URL}/api/users/${user._id}`,
+        { canAccessPracticeMode: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      setUsers(
+        users.map((u) =>
+          u._id === user._id ? { ...u, canAccessPracticeMode: newStatus } : u,
+        ),
+      );
+      toast.success(`Practice Mode ${newStatus ? "Allowed" : "Denied"}`);
+    } catch (error) {
+      toast.error("Failed to update Practice Mode status");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 5. Update Plan
   const handleSavePlan = async (id, planData) => {
     setActionLoading(true);
     try {
@@ -146,7 +173,7 @@ const UserManagement = () => {
     }
   };
 
-  // 5. Reset Limits
+  // 6. Reset Limits
   const handleResetLimits = async (id, limitData) => {
     setActionLoading(true);
     try {
@@ -171,7 +198,7 @@ const UserManagement = () => {
     }
   };
 
-  // 6. Save User (Create/Edit)
+  // 7. Save User (Create/Edit)
   const handleSaveUser = async (formData) => {
     setActionLoading(true);
     try {
@@ -284,6 +311,7 @@ const UserManagement = () => {
         onDelete={(id) => setDeleteModal({ isOpen: true, id })}
         onToggleStatus={handleToggleStatus}
         onToggleVerify={handleToggleVerify}
+        onTogglePracticeMode={handleTogglePracticeMode} // ✅ PASSING FUNCTION TO TABLE
         onManageAccess={(user) => {
           setAccessUser(user);
           setShowAccessModal(true);

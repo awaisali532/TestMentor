@@ -47,6 +47,7 @@ import PaperMaker from "./pages/User/PaperMaker/PaperMaker";
 import SavedPapers from "./pages/User/SavedPapers/SavedPapers";
 import ViewPaper from "./pages/User/ViewPaper/ViewPaper";
 import AutoPaper from "./pages/User/AutoPaper/AutoPaper";
+import PracticeMode from "./pages/User/PracticeMode/PracticeMode";
 
 // Print Layout
 import PrintLayout from "./pages/User/PrintPaper/PrintLayout";
@@ -147,6 +148,14 @@ const AppContent = () => {
             element={
               <UserLayout>
                 <UserSettings />
+              </UserLayout>
+            }
+          />
+          <Route
+            path="/user/practice"
+            element={
+              <UserLayout>
+                <PracticeMode />
               </UserLayout>
             }
           />

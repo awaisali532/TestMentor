@@ -17,7 +17,6 @@ const PERMISSION_LIST = [
 ];
 
 const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
-  // ✅ 1. STATE MEIN GENDER ADD KIYA
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,13 +24,13 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
     role: "user",
     permissions: [],
     planType: "free",
-    gender: "Male", // Default
+    gender: "Male",
     isVerified: true,
+    canAccessPracticeMode: false, // ✅ Default false
   });
 
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ 2. USE EFFECT UPDATE (Load Data)
   useEffect(() => {
     setShowPassword(false);
     if (editingUser) {
@@ -41,9 +40,9 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         role: editingUser.role,
         permissions: editingUser.permissions || [],
         planType: editingUser.planType || "free",
-        // Agar purana user hai aur gender nahi hai to 'Not Specified'
         gender: editingUser.gender || "Not Specified",
         isVerified: editingUser.isVerified,
+        canAccessPracticeMode: editingUser.canAccessPracticeMode || false, // ✅ Set from DB
         password: "",
       });
     } else {
@@ -54,8 +53,9 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
         role: "user",
         permissions: [],
         planType: "free",
-        gender: "Male", // New User Default
+        gender: "Male",
         isVerified: true,
+        canAccessPracticeMode: false, // ✅ New User
       });
     }
   }, [editingUser, show]);
@@ -71,14 +71,11 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
 
   const validateForm = () => {
     const { name, email, password } = formData;
-
     if (!name.trim()) return "Full Name is required.";
     if (!email.trim()) return "Email Address is required.";
-
     const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(email))
       return "Only @gmail.com email addresses are allowed.";
-    }
 
     if (!editingUser || password.trim() !== "") {
       if (password.length < 8) return "Password must be at least 8 characters.";
@@ -89,15 +86,12 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
       if (!/[!@#$%^&*(),.?":{}|<>]/.test(password))
         return "Password must contain at least 1 Special Character (!@#$).";
     }
-
     return null;
   };
 
   const handleSaveClick = () => {
     const error = validateForm();
-    if (error) {
-      return toast.error(error);
-    }
+    if (error) return toast.error(error);
     onSave(formData);
   };
 
@@ -118,7 +112,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
           </div>
 
           <div className="modal-body custom-scrollbar">
-            {/* Name */}
             <div className="mb-3">
               <label>Full Name</label>
               <input
@@ -132,7 +125,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               />
             </div>
 
-            {/* Email */}
             <div className="mb-3">
               <label>Email Address</label>
               <input
@@ -144,14 +136,9 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                 }
                 placeholder="example@gmail.com"
               />
-              <small className="text-muted" style={{ fontSize: "0.75rem" }}>
-                * Must be a valid @gmail.com address
-              </small>
             </div>
 
-            {/* ✅ 3. ROW: Role, Gender, Plan (3 Columns) */}
             <div className="row">
-              {/* Role */}
               <div className="col-4 mb-3">
                 <label>Role</label>
                 <select
@@ -166,7 +153,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                 </select>
               </div>
 
-              {/* ✅ Gender Dropdown Added Here */}
               <div className="col-4 mb-3">
                 <label>Gender</label>
                 <select
@@ -183,7 +169,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                 </select>
               </div>
 
-              {/* Plan */}
               <div className="col-4 mb-3">
                 <label>Plan</label>
                 <select
@@ -199,27 +184,52 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               </div>
             </div>
 
-            {/* Verified Checkbox */}
-            <div className="mb-3 d-flex align-items-center gap-2 p-2 border rounded bg-light">
-              <input
-                type="checkbox"
-                checked={formData.isVerified}
-                onChange={(e) =>
-                  setFormData({ ...formData, isVerified: e.target.checked })
-                }
-                id="verifyCheck"
-                style={{ width: "18px", height: "18px" }}
-              />
-              <label
-                htmlFor="verifyCheck"
-                className="m-0 text-dark"
-                style={{ cursor: "pointer", textTransform: "none" }}
-              >
-                Mark as Verified Account
-              </label>
+            {/* ✅ ROW FOR CHECKBOXES */}
+            <div className="d-flex gap-3 mb-3">
+              {/* Verified Checkbox */}
+              <div className="d-flex align-items-center gap-2 p-2 border rounded bg-light w-50">
+                <input
+                  type="checkbox"
+                  checked={formData.isVerified}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isVerified: e.target.checked })
+                  }
+                  id="verifyCheck"
+                  style={{ width: "18px", height: "18px" }}
+                />
+                <label
+                  htmlFor="verifyCheck"
+                  className="m-0 text-dark"
+                  style={{ cursor: "pointer", textTransform: "none" }}
+                >
+                  Verified Account
+                </label>
+              </div>
+
+              {/* ✅ Practice Mode Checkbox */}
+              <div className="d-flex align-items-center gap-2 p-2 border rounded bg-light w-50">
+                <input
+                  type="checkbox"
+                  checked={formData.canAccessPracticeMode}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      canAccessPracticeMode: e.target.checked,
+                    })
+                  }
+                  id="practiceCheck"
+                  style={{ width: "18px", height: "18px" }}
+                />
+                <label
+                  htmlFor="practiceCheck"
+                  className="m-0 text-dark"
+                  style={{ cursor: "pointer", textTransform: "none" }}
+                >
+                  Allow Practice Mode
+                </label>
+              </div>
             </div>
 
-            {/* Permissions */}
             {formData.role === "admin" && (
               <div className="mb-4">
                 <label className="text-accent">
@@ -241,7 +251,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
               </div>
             )}
 
-            {/* Password */}
             <div className="mb-4">
               <label>Password</label>
               <div className="position-relative d-flex align-items-center">
@@ -271,9 +280,6 @@ const AddEditUserModal = ({ show, onClose, onSave, editingUser, loading }) => {
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
               </div>
-              <small className="text-muted" style={{ fontSize: "0.75rem" }}>
-                * 8+ chars, 1 Uppercase, 1 Number, 1 Symbol
-              </small>
             </div>
 
             <button

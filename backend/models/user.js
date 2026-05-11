@@ -3,20 +3,19 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    // --- Basic Info ---
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     image: { type: String, default: "" },
     resume: { type: String, default: "" },
-    // ✅ NEW FIELD ADD KAREIN
+
     gender: {
       type: String,
       enum: ["Male", "Female", "Other", "Not Specified"], // Sirf ye values allow hongi
       default: "Not Specified", // Agar koi user gender na bataye to ye save hoga
       required: true,
     },
-    // --- Roles & Status ---
+
     role: {
       type: String,
       enum: ["user", "admin"],
@@ -31,35 +30,35 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    canAccessPracticeMode: {
+      type: Boolean,
+      default: false,
+    },
 
-    // --- ✅ NEW: Email Verification Fields ---
-    isVerified: { type: Boolean, default: false }, // Default false (Pending)
-    otp: { type: String }, // OTP store hoga
-    otpExpires: { type: Date }, // OTP ki expiry time
-    // ✅ NEW: Rate Limiting Fields
-    otpAttempts: { type: Number, default: 0 }, // Kitni baar OTP manga
-    blockUntil: { type: Date, default: null }, // Kab tak blocked hai
-    // --- Freemium Plan Logic ---
+    isVerified: { type: Boolean, default: false },
+    otp: { type: String },
+    otpExpires: { type: Date },
+
+    otpAttempts: { type: Number, default: 0 },
+    blockUntil: { type: Date, default: null },
+
     planType: {
       type: String,
       enum: ["free", "paid"],
       default: "free",
     },
 
-    // Limits for Free Users
     usage: {
       papersGenerated: { type: Number, default: 0 },
       onlineTestsTaken: { type: Number, default: 0 },
       customPaperLimit: { type: Number, default: null },
     },
 
-    // Subscription Info
     subscription: {
       status: { type: Boolean, default: false },
       validUntil: { type: Date, default: null },
     },
 
-    // --- INSTITUTE SETTINGS ---
     institute: {
       name: { type: String, default: "" },
       address: { type: String, default: "" },
@@ -67,7 +66,6 @@ const userSchema = new mongoose.Schema(
       logo: { type: String, default: "" },
     },
 
-    // --- Site Settings (Super Admin) ---
     businessInfo: {
       phone: { type: String, default: "+92 300 1234567" },
       officeAddress: { type: String, default: "Lahore, Pakistan" },
@@ -77,7 +75,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// --- Password Hashing Middleware ---
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
@@ -85,7 +82,6 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// --- Method to Verify Password ---
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

@@ -16,6 +16,7 @@ const UserTable = ({
   onDelete,
   onToggleStatus,
   onToggleVerify,
+  onTogglePracticeMode, // ✅ NEW PROP
   onManageAccess,
 }) => {
   const isSuperAdmin = (u) =>
@@ -27,13 +28,13 @@ const UserTable = ({
     <div className="user-table-card">
       <div className="table-responsive">
         <table className="custom-table">
-          {/* ✅ FIXED THEAD: Removed comments and spaces between tags */}
           <thead>
             <tr>
               <th>User</th>
               <th>Role</th>
               <th>Plan</th>
               <th>Verified</th>
+              <th>Practice Mode</th>
               <th>Status</th>
               <th className="text-end">Actions</th>
             </tr>
@@ -45,11 +46,6 @@ const UserTable = ({
                 const targetIsSuper = isSuperAdmin(user);
                 const iAmSubAdmin = !amISuperAdmin;
                 const isDisabled = isSelf || (iAmSubAdmin && targetIsSuper);
-
-                let disabledTitle = "";
-                if (isSelf) disabledTitle = "You cannot delete/edit yourself";
-                else if (iAmSubAdmin && targetIsSuper)
-                  disabledTitle = "You cannot remove a Super Admin";
 
                 return (
                   <tr
@@ -104,7 +100,6 @@ const UserTable = ({
                         className={`verify-toggle ${user.isVerified ? "verified" : "pending"}`}
                         onClick={() => !isDisabled && onToggleVerify(user._id)}
                         disabled={isDisabled}
-                        title="Click to Toggle Verification"
                       >
                         {user.isVerified ? (
                           <FaCheckCircle />
@@ -112,6 +107,26 @@ const UserTable = ({
                           <FaTimesCircle />
                         )}
                         <span>{user.isVerified ? "Verified" : "Pending"}</span>
+                      </button>
+                    </td>
+
+                    {/* ✅ PRACTICE MODE TOGGLE */}
+                    <td>
+                      <button
+                        className={`verify-toggle ${user.canAccessPracticeMode ? "verified" : "pending"}`}
+                        onClick={() =>
+                          !isDisabled && onTogglePracticeMode(user)
+                        }
+                        disabled={isDisabled}
+                      >
+                        {user.canAccessPracticeMode ? (
+                          <FaCheckCircle />
+                        ) : (
+                          <FaTimesCircle />
+                        )}
+                        <span>
+                          {user.canAccessPracticeMode ? "Allowed" : "Denied"}
+                        </span>
                       </button>
                     </td>
 
@@ -130,25 +145,20 @@ const UserTable = ({
                         className="action-btn settings"
                         onClick={() => !isDisabled && onManageAccess(user)}
                         disabled={isDisabled}
-                        title="Manage Plan & Limits"
                       >
                         <FaCog />
                       </button>
-
                       <button
                         className="action-btn edit"
                         onClick={() => !isDisabled && onEdit(user)}
                         disabled={isDisabled}
-                        title="Edit Details"
                       >
                         <FaEdit />
                       </button>
-
                       <button
                         className="action-btn delete"
                         onClick={() => !isDisabled && onDelete(user._id)}
                         disabled={isDisabled}
-                        title="Delete User"
                       >
                         <FaTrashAlt />
                       </button>
@@ -158,7 +168,7 @@ const UserTable = ({
               })
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-5 text-muted">
+                <td colSpan="7" className="text-center py-5 text-muted">
                   No users found.
                 </td>
               </tr>

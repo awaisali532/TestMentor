@@ -4,13 +4,11 @@ const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 const deleteFromCloudinary = require("../utils/cloudinaryHelper");
 
-// --- HELPER: Convert Buffer to Data URI ---
 const bufferToDataURI = (buffer, mimetype) => {
   const b64 = Buffer.from(buffer).toString("base64");
   return "data:" + mimetype + ";base64," + b64;
 };
 
-// --- HELPER: Extract Public ID ---
 const getPublicIdFromUrl = (url) => {
   try {
     const parts = url.split("/upload/");
@@ -26,12 +24,8 @@ const getPublicIdFromUrl = (url) => {
   }
 };
 
-// ==========================================
-// 1. GET ALL USERS (Admin - Enhanced)
-// ==========================================
 exports.getAllUsers = async (req, res) => {
   try {
-    // Password hata kar baki sab data bhejo (Usage, Plan, Verification status)
     const users = await User.find()
       .select("-password -otp -otpExpires -otpAttempts")
       .sort({ createdAt: -1 });
@@ -42,12 +36,16 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// ==========================================
-// 2. ADMIN CREATE USER (Direct Verified)
-// ==========================================
 exports.adminCreateUser = async (req, res) => {
-  // ✅ gender receive ho raha hai yahan
-  const { name, email, password, role, planType, gender } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    planType,
+    gender,
+    canAccessPracticeMode,
+  } = req.body;
   try {
     const userExists = await User.findOne({ email });
     if (userExists)
@@ -61,8 +59,9 @@ exports.adminCreateUser = async (req, res) => {
       isActive: true,
       isVerified: true,
       planType: planType || "free",
-      // ✅ Gender save ho raha hai
       gender: gender || "Not Specified",
+
+      canAccessPracticeMode: canAccessPracticeMode || false,
     });
 
     res.status(201).json({ message: "User created successfully", user });
@@ -71,18 +70,13 @@ exports.adminCreateUser = async (req, res) => {
   }
 };
 
-// ==========================================
-// 3. TOGGLE VERIFICATION (Manual Approve)
-// ==========================================
 exports.toggleVerification = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found." });
 
-    // Toggle Verification Status
     user.isVerified = !user.isVerified;
 
-    // Agar verify kar rahe hain to OTP/Block clear kar do
     if (user.isVerified) {
       user.otp = undefined;
       user.otpExpires = undefined;
@@ -100,11 +94,8 @@ exports.toggleVerification = async (req, res) => {
   }
 };
 
-// ==========================================
-// 4. MANAGE PLAN (Upgrade/Downgrade + Expiry)
-// ==========================================
 exports.updateUserPlan = async (req, res) => {
-  const { planType, validUntil } = req.body; // e.g. "paid", "2025-12-31"
+  const { planType, validUntil } = req.body;
 
   try {
     const user = await User.findById(req.params.id);
@@ -112,7 +103,6 @@ exports.updateUserPlan = async (req, res) => {
 
     user.planType = planType;
 
-    // Subscription Logic
     if (planType === "paid") {
       user.subscription.status = true;
       user.subscription.validUntil = validUntil ? new Date(validUntil) : null;
@@ -132,25 +122,18 @@ exports.updateUserPlan = async (req, res) => {
   }
 };
 
-// ==========================================
-// 5. RESET/UPDATE LIMITS (Enhanced)
-// ==========================================
 exports.resetUserLimits = async (req, res) => {
-  // ✅ customPaperLimit receive kar rahe hain
   const { papersGenerated, onlineTestsTaken, customPaperLimit } = req.body;
 
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found." });
 
-    // Update Counts
     if (papersGenerated !== undefined)
       user.usage.papersGenerated = papersGenerated;
     if (onlineTestsTaken !== undefined)
       user.usage.onlineTestsTaken = onlineTestsTaken;
 
-    // ✅ Update Custom Limit (Problem 2 Solved)
-    // Agar frontend se null ya value aayi hai to update karo
     if (customPaperLimit !== undefined) {
       user.usage.customPaperLimit = customPaperLimit;
     }
@@ -165,9 +148,7 @@ exports.resetUserLimits = async (req, res) => {
     res.status(500).json({ error: "Failed to update limits." });
   }
 };
-// ==========================================
-// 6. TOGGLE STATUS (Block/Unblock)
-// ==========================================
+
 exports.toggleUserStatus = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -175,7 +156,6 @@ exports.toggleUserStatus = async (req, res) => {
 
     user.isActive = !user.isActive;
 
-    // Agar unblock kar rahe hain to 'blockUntil' bhi clear karo
     if (user.isActive) {
       user.blockUntil = null;
       user.otpAttempts = 0;
@@ -191,15 +171,11 @@ exports.toggleUserStatus = async (req, res) => {
   }
 };
 
-// ==========================================
-// 7. DELETE USER (Complete Cleanup)
-// ==========================================
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found." });
 
-    // 1. Delete Images/Resumes from Cloudinary
     if (user.image?.includes("cloudinary"))
       await deleteFromCloudinary(user.image);
     if (user.resume?.includes("cloudinary"))
@@ -207,7 +183,6 @@ exports.deleteUser = async (req, res) => {
     if (user.institute?.logo?.includes("cloudinary"))
       await deleteFromCloudinary(user.institute.logo);
 
-    // 2. Delete User
     await User.findByIdAndDelete(req.params.id);
 
     res.json({ message: "User deleted successfully." });
@@ -216,17 +191,6 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// ==========================================================
-//  EXISTING FUNCTIONS (UNCHANGED - RESUME, LOGO, PROFILE)
-// ==========================================================
-
-// ... (Baaki saare purane functions neeche paste karo: updateProfile, updateInstituteLogo, uploadResume etc.)
-// Main unhein yahan repeat nahi kar raha taake response lamba na ho.
-// Bas make sure karna ke upar wale naye functions add ho jayein.
-
-// ==========================================
-// UPDATE PROFILE (Self) - Optimized Response
-// ==========================================
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -234,7 +198,6 @@ exports.updateProfile = async (req, res) => {
 
     if (req.body.name) user.name = req.body.name;
 
-    // Image Upload Logic
     if (req.file) {
       try {
         if (user.image && user.image.includes("cloudinary")) {
@@ -261,11 +224,13 @@ exports.updateProfile = async (req, res) => {
       role: updatedUser.role,
       image: updatedUser.image,
       resume: updatedUser.resume,
-      isVerified: updatedUser.isVerified, // ✅ Added
-      planType: updatedUser.planType, // ✅ Added
-      usage: updatedUser.usage, // ✅ Added
-      subscription: updatedUser.subscription, // ✅ Added
+      isVerified: updatedUser.isVerified,
+      planType: updatedUser.planType,
+      usage: updatedUser.usage,
+      subscription: updatedUser.subscription,
       institute: updatedUser.institute || {},
+
+      canAccessPracticeMode: updatedUser.canAccessPracticeMode,
       token: req.headers.authorization.split(" ")[1],
     });
   } catch (error) {
@@ -273,23 +238,21 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// ... (Baaki saare Resume, Institute Logo, Password Change wese hi rahenge)
 exports.changePassword = async (req, res) => {
-  // ... Existing Code ...
   try {
     const { oldPassword, newPassword } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) return res.status(404).json({ error: "User not found." });
 
-    const isMatch = await user.matchPassword(oldPassword); // Use model method
+    const isMatch = await user.matchPassword(oldPassword);
     if (!isMatch)
       return res.status(400).json({ error: "Incorrect current password." });
 
     if (newPassword.length < 6)
       return res.status(400).json({ error: "New password too short." });
 
-    user.password = newPassword; // Pre-save hook handles hashing
+    user.password = newPassword;
     await user.save();
 
     res.json({ message: "Password updated successfully." });
@@ -298,9 +261,7 @@ exports.changePassword = async (req, res) => {
   }
 };
 exports.uploadResume = async (req, res) => {
-  // ... Existing Code ...
   try {
-    // 1. Validation
     if (!req.file) return res.status(400).json({ message: "No PDF uploaded" });
     if (req.file.mimetype !== "application/pdf")
       return res.status(400).json({ message: "Only PDF files allowed" });
@@ -308,12 +269,10 @@ exports.uploadResume = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // 2. Delete old file logic
     if (user.resume) {
       await deleteFromCloudinary(user.resume);
     }
 
-    // 3. Upload Stream (RAW Mode)
     const uploadToCloudinary = (buffer) => {
       return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -337,7 +296,6 @@ exports.uploadResume = async (req, res) => {
 
     const result = await uploadToCloudinary(req.file.buffer);
 
-    // 4. Save Link to DB
     user.resume = result.secure_url;
     await user.save();
 
@@ -351,7 +309,6 @@ exports.uploadResume = async (req, res) => {
   }
 };
 exports.deleteResume = async (req, res) => {
-  // ... Existing Code ...
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: "User not found." });
@@ -372,7 +329,6 @@ exports.deleteResume = async (req, res) => {
   }
 };
 exports.updateInstituteLogo = async (req, res) => {
-  // ... Existing Code ...
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No logo file provided" });
@@ -380,12 +336,10 @@ exports.updateInstituteLogo = async (req, res) => {
 
     const user = await User.findById(req.user._id);
 
-    // Delete Old Logo if exists
     if (user.institute?.logo) {
       await deleteFromCloudinary(user.institute.logo);
     }
 
-    // Upload New Logo
     const dataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: "questbank/institute_logos",
@@ -393,7 +347,6 @@ exports.updateInstituteLogo = async (req, res) => {
       crop: "scale",
     });
 
-    // Update DB
     user.institute.logo = result.secure_url;
     const updatedUser = await user.save();
 
@@ -408,10 +361,9 @@ exports.updateInstituteLogo = async (req, res) => {
       .json({ message: "Logo upload failed", error: error.message });
   }
 };
-// Add other existing functions (updateBusinessInfo, updateInstituteInfo, etc.) here...
+
 exports.getAdminProfile = async (req, res) => {
   try {
-    // Finds the first Super Admin
     const admin = await User.findOne({ isSuperAdmin: true }).select(
       "name email image resume role businessInfo",
     );
@@ -426,9 +378,6 @@ exports.getAdminProfile = async (req, res) => {
   }
 };
 
-// ==========================================
-// 13. UPDATE BUSINESS INFO (Super Admin)
-// ==========================================
 exports.updateBusinessInfo = async (req, res) => {
   try {
     if (!req.user.isSuperAdmin) {
@@ -458,9 +407,6 @@ exports.updateBusinessInfo = async (req, res) => {
   }
 };
 
-// ==========================================
-// 14. UPDATE INSTITUTE INFO (Text Only)
-// ==========================================
 exports.updateInstituteInfo = async (req, res) => {
   try {
     const { name, address, phone } = req.body;
@@ -468,9 +414,8 @@ exports.updateInstituteInfo = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Preserve existing logo, update text fields
     user.institute = {
-      ...user.institute, // Keep existing logo
+      ...user.institute,
       name: name || "",
       address: address || "",
       phone: phone || "",
@@ -488,9 +433,6 @@ exports.updateInstituteInfo = async (req, res) => {
   }
 };
 
-// ==========================================
-// 16. DELETE INSTITUTE LOGO
-// ==========================================
 exports.deleteInstituteLogo = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -521,16 +463,10 @@ exports.updateProfileImage = async (req, res) => {
 
     const user = await User.findById(req.user._id);
 
-    // Delete Old Image
     if (user.image) {
       await deleteFromCloudinary(user.image);
     }
 
-    // Multer Cloudinary Storage automatically uploads, so req.file.path is the URL
-    // IF you are using 'multer-storage-cloudinary'.
-    // IF you are using memory storage (buffer), use streamifier like below:
-
-    // Assuming Memory Storage for consistency with Resume logic:
     const dataURI = bufferToDataURI(req.file.buffer, req.file.mimetype);
     const result = await cloudinary.uploader.upload(dataURI, {
       folder: "questbank/avatars",
@@ -552,9 +488,6 @@ exports.updateProfileImage = async (req, res) => {
   }
 };
 
-// ==========================================
-// 8. DELETE PROFILE IMAGE (Remove)
-// ==========================================
 exports.deleteProfileImage = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -577,58 +510,50 @@ exports.deleteProfileImage = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-// ==========================================
-// 17. UPDATE USER BASIC INFO (Admin)
-// ==========================================
+
 exports.updateUser = async (req, res) => {
   try {
-    // 1. Destructure ALL fields (Gender, Plan, Verification added)
     const {
       name,
       email,
       role,
       permissions,
-      gender, // ✅ Fix: Receive Gender
-      planType, // ✅ Fix: Receive Plan
-      isVerified, // ✅ Fix: Receive Status
-      password, // ✅ Fix: Optional Password change
+      gender,
+      planType,
+      isVerified,
+      password,
+      canAccessPracticeMode,
     } = req.body;
 
-    // 2. Find User
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found." });
 
-    // 3. Update Fields
     user.name = name || user.name;
     user.email = email || user.email;
     user.role = role || user.role;
-
-    // 🔥 YE LINE MISSING THI, ISLIYE SAVE NHI HO RHA THA
     user.gender = gender || user.gender;
-
     user.planType = planType || user.planType;
 
-    // Handle Boolean Toggle (isVerified)
     if (isVerified !== undefined) {
       user.isVerified = isVerified;
     }
 
-    // 4. Handle Permissions (Only for Admin)
+    if (canAccessPracticeMode !== undefined) {
+      user.canAccessPracticeMode = canAccessPracticeMode;
+    }
+
     if (role === "admin") {
       user.permissions = permissions || user.permissions;
     } else {
       user.permissions = [];
     }
 
-    // 5. Handle Password (Optional from Admin Panel)
     if (password && password.trim() !== "") {
-      user.password = password; // Pre-save hook will hash this
+      user.password = password;
     }
 
-    // 6. Save User
     const updatedUser = await user.save();
 
-    // Return response without sensitive data
     const responseData = updatedUser.toObject();
     delete responseData.password;
 

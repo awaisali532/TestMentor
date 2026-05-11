@@ -11,6 +11,7 @@ import {
   FaSun,
   FaChevronLeft,
   FaChevronRight,
+  FaBookOpen, // ✅ NEW: Icon for Practice Mode
 } from "react-icons/fa";
 import "./UserSidebar.css";
 
@@ -159,6 +160,18 @@ const UserSidebar = ({
           >
             <FaFileAlt size={20} /> {!isCollapsed && <span>Past Papers</span>}
           </Link>
+
+          {/* ✅ NEW: PRACTICE MODE LINK (Conditional Render) */}
+          {user?.canAccessPracticeMode && (
+            <Link
+              to="/user/practice"
+              className={`usr-nav-link ${isActive("/user/practice")}`}
+              onClick={closeMobileMenu}
+            >
+              <FaBookOpen size={20} /> {!isCollapsed && <span>Study Mode</span>}
+            </Link>
+          )}
+
           <Link
             to="/user/settings"
             className={`usr-nav-link ${isActive("/user/settings")}`}
@@ -228,7 +241,7 @@ const UserSidebar = ({
         onClose={() => setShowUpgradeModal(false)}
         onUpgrade={() => {
           setShowUpgradeModal(false);
-          navigate("/pricing"); // Ya jahan bhi aap pricing page rakhenge
+          navigate("/pricing");
         }}
       />
     </>
