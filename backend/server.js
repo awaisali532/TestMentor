@@ -24,7 +24,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: "https://test-mentor-2u38.vercel.app",
+    origin: ["https://test-mentor-2u38.vercel.app", "http://localhost:5173"],
     methods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],

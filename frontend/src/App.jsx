@@ -1,7 +1,6 @@
 import React from "react";
 import "./App.css";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
+
 import { Routes, Route, useLocation } from "react-router-dom";
 import { UserProvider, useUser } from "./context/UserContext"; // ✅ useUser Import kiya
 import { ThemeProvider } from "./context/ThemeContext";
