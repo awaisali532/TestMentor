@@ -1,0 +1,240 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* =========================================
+   1. CSS VARIABLES & THEMING
+   ========================================= */
+
+/* A. Global Constants (Colors that don't change based on theme) */
+:root {
+  --font-main: "Inter", sans-serif;
+  --font-urdu: "Jameel Noori", "Noto Nastaliq Urdu", serif;
+  --font-english: "Inter", system-ui, sans-serif;
+  /* Brand Static Colors */
+  --primary-color: #3ca8a0;
+  --primary-color-dark: #135f5a;
+  --secondary-color: #0046b2;
+  --icon-color: #3076ce;
+  --danger-color: #dc3545;
+}
+@font-face {
+  font-family: "Jameel Noori";
+  /* Make sure ye path sahi ho jahan aapne file rakhi hai */
+  src: url("../fonts/JameelNooriNastaleeq.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+/* 2. Global Rule: Jahan bhi RTL ho, wahan Urdu Font lagao */
+[dir="rtl"],
+.urdu-font,
+.pp-text-ur,
+.opt-ur,
+.qc-split-right {
+  font-family: var(--font-urdu) !important;
+  line-height: 2 !important; /* Urdu ko thori height chahiye hoti hai */
+  padding-top: 5px;
+}
+
+/* 3. ✅ PRINT FIX: Print karte waqt bhi font force karein */
+@media print {
+  [dir="rtl"],
+  .urdu-font,
+  .pp-text-ur {
+    font-family: var(--font-urdu) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+/* B. Dark Mode (Default) */
+:root,
+[data-theme="dark"] {
+  --bg-body: #020617; /* Very Dark Blue/Black */
+  --nav-bg: rgba(15, 23, 42, 0.9); /* Glassy Dark */
+
+  /* ✅ Admin Specific Variables (Dark) */
+  --sidebar-bg: #0f172a; /* Dark Slate Sidebar */
+  --card-bg: #1e293b; /* Slightly Lighter Card for Admin */
+
+  --text-main: #f8fafc; /* White Text */
+  --text-muted: #94a3b8; /* Gray Text */
+
+  --pill-bg: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+
+  /* Theme Accents */
+  --accent-1: #0ea5e9;
+  --accent-2: #2dd4bf;
+}
+
+/* C. Light Mode Override */
+[data-theme="light"] {
+  --bg-body: #f8fafc; /* Light Grey/White */
+  --nav-bg: rgba(255, 255, 255, 0.9); /* Glassy White */
+
+  /* ✅ Admin Specific Variables (Light) */
+  --sidebar-bg: #ffffff; /* Pure White Sidebar */
+  --card-bg: #ffffff; /* Pure White Card */
+
+  --text-main: #1e293b; /* Dark Slate Text */
+  --text-muted: #64748b; /* Muted Text */
+
+  --pill-bg: rgba(0, 0, 0, 0.05);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================
+   2. GLOBAL RESET & BASE STYLES
+   ========================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+  /* overflow: hidden; */
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-body) !important; /* Theme Aware Background */
+  color: var(--text-main) !important; /* Theme Aware Text */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* =========================================
+   3. TYPOGRAPHY
+   ========================================= */
+
+h1 {
+  font-size: 3rem;
+}
+h2 {
+  font-size: 2.5rem;
+}
+h3 {
+  font-size: 2rem;
+}
+h4 {
+  font-size: 1.5rem;
+}
+h5 {
+  font-size: 1.25rem;
+}
+h6 {
+  font-size: 1rem;
+}
+p {
+  font-size: 1.125rem;
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+  h2 {
+    font-size: 2rem;
+  }
+  h3 {
+    font-size: 1.75rem;
+  }
+  h4 {
+    font-size: 1.25rem;
+  }
+  h5 {
+    font-size: 1rem;
+  }
+  h6 {
+    font-size: 0.875rem;
+  }
+  p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  h1 {
+    font-size: 2rem;
+  }
+  h2 {
+    font-size: 1.75rem;
+  }
+  h3 {
+    font-size: 1.5rem;
+  }
+  h4 {
+    font-size: 1.125rem;
+  }
+  h5 {
+    font-size: 1rem;
+  }
+  h6 {
+    font-size: 0.875rem;
+  }
+  p {
+    font-size: 0.875rem;
+  }
+}
+
+/* =========================================
+   4. COMPONENTS & UTILITIES
+   ========================================= */
+
+/* Primary Button */
+.button-primary {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.button-primary:hover {
+  background-color: var(--primary-color-dark);
+  transform: scale(1.05);
+  color: white;
+}
+
+/* Required Field Asterisk (*) */
+.required-mark {
+  color: var(--danger-color);
+  font-size: 1.4rem;
+  font-weight: bold;
+  line-height: 0;
+  vertical-align: middle;
+  margin-left: 4px;
+  position: relative;
+  top: 3px;
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera (WebKit browsers) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
