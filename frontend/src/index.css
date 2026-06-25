@@ -1,1 +1,108 @@
 @import "tailwindcss";
+
+/* 1. TAILWIND v4 THEME CONFIGURATION */
+@theme {
+  /* Fonts */
+  --font-main: "Inter", sans-serif;
+  --font-urdu: "Jameel Noori", "Noto Nastaliq Urdu", serif;
+
+  /* Static Brand Colors */
+  --color-primary: #3ca8a0;
+  --color-primary-dark: #135f5a;
+  --color-secondary: #0046b2;
+  --color-icon: #3076ce;
+  --color-danger: #dc3545;
+
+  /* Theme-Aware Colors (Mapped to standard variables) */
+  --color-bg-body: var(--bg-body);
+  --color-nav: var(--nav-bg);
+  --color-sidebar: var(--sidebar-bg);
+  --color-card: var(--card-bg);
+  --color-main: var(--text-main);
+  --color-muted: var(--text-muted);
+  --color-pill: var(--pill-bg);
+  --color-border: var(--border-color);
+  --color-shadow: var(--shadow-color);
+  --color-accent-1: #0ea5e9;
+  --color-accent-2: #2dd4bf;
+}
+
+/* 2. CUSTOM FONT FACES */
+@layer base {
+  @font-face {
+    font-family: "Jameel Noori";
+    src: url("../fonts/JameelNooriNastaleeq.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* Body Base Settings */
+  body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: var(--font-main);
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+}
+
+/* 3. CSS VARIABLES FOR DARK/LIGHT MODE */
+@layer base {
+  :root,
+  [data-theme="dark"] {
+    --bg-body: #020617;
+    --nav-bg: rgba(15, 23, 42, 0.9);
+    --sidebar-bg: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --pill-bg: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow-color: rgba(0, 0, 0, 0.5);
+  }
+
+  [data-theme="light"] {
+    --bg-body: #f8fafc;
+    --nav-bg: rgba(255, 255, 255, 0.9);
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --pill-bg: rgba(0, 0, 0, 0.05);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 4. TAILWIND v4 UTILITIES */
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 5. SPECIFIC BEHAVIORS (RTL & PRINT) */
+@layer utilities {
+  [dir="rtl"],
+  .urdu-font,
+  .pp-text-ur,
+  .opt-ur,
+  .qc-split-right {
+    font-family: var(--font-urdu) !important;
+    line-height: 2 !important;
+    padding-top: 5px;
+  }
+
+  @media print {
+    [dir="rtl"],
+    .urdu-font,
+    .pp-text-ur {
+      font-family: var(--font-urdu) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+}
