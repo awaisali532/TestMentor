@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useUser } from "../../context/UserContext"; // Path apne hisab se adjust kar lein agar navbar bahar hai
+import { useUser } from "../../context/UserContext";
 import { useTheme } from "../../context/ThemeContext";
 import {
   Menu,
@@ -12,6 +12,7 @@ import {
   ArrowRight,
   LayoutDashboard,
 } from "lucide-react";
+import SmartButton from "../ui/SmartButton";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,7 +50,6 @@ const Navbar = () => {
   return (
     <>
       {/* --- PREMIUM FLOATING NAVBAR --- */}
-      {/* Logic: Top par width 10/12 hai. Scroll par width 11/12 (Expand) ho jati hai */}
       <header
         className={`fixed left-1/2 -translate-x-1/2 z-50 flex items-center justify-between px-6 transition-all duration-500 ease-out border border-border backdrop-blur-lg rounded-full bg-nav-bg/90
           ${
@@ -71,10 +71,10 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* DESKTOP NAV LINKS */}
-        <nav className="hidden lg:flex items-center gap-2">
-          {["/", "/about", "/contact"].map((path, idx) => {
-            const labels = ["Home", "About", "Contact"];
+        {/* DESKTOP NAV LINKS (Subjects Added + Enhanced Hover) */}
+        <nav className="hidden lg:flex items-center gap-1">
+          {["/", "/subjects", "/about", "/contact"].map((path, idx) => {
+            const labels = ["Home", "Subjects", "About", "Contact"];
             return (
               <Link
                 key={path}
@@ -83,7 +83,7 @@ const Navbar = () => {
                   ${
                     isActive(path)
                       ? "bg-linear-to-r from-accent-1 to-accent-2 text-white shadow-md shadow-accent-1/40"
-                      : "text-muted hover:text-main hover:bg-pill-bg"
+                      : "text-muted hover:text-main hover:bg-pill-bg hover:scale-105 active:scale-95"
                   }
                 `}
               >
@@ -133,7 +133,6 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              {/* 🌟 COOL LOGIN HOVER */}
               <Link
                 to="/login"
                 className="px-5 py-2 rounded-full text-sm font-semibold border border-border text-main hover:bg-main hover:text-bg-body transition-all duration-300"
@@ -141,13 +140,11 @@ const Navbar = () => {
                 Login
               </Link>
 
-              {/* 🌟 ARROW REVEAL HOVER FOR GET STARTED */}
               <Link
                 to="/register"
                 className="group flex items-center justify-center px-5 py-2 rounded-full text-sm font-semibold bg-main text-bg-body border border-main hover:shadow-lg transition-all duration-300"
               >
                 <span>Get Started</span>
-                {/* Arrow pehle width 0 aur hidden hai, hover par width 4 hogi aur show hoga */}
                 <div className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 ease-out flex items-center">
                   <ArrowRight size={16} />
                 </div>
@@ -193,16 +190,21 @@ const Navbar = () => {
           </button>
         </div>
 
-        <nav className="flex flex-col gap-2 px-6">
-          {["/", "/about", "/contact"].map((path, idx) => {
-            const labels = ["Home", "About", "Contact"];
+        {/* MOBILE NAV LINKS (Enhanced Hover) */}
+        <nav className="flex flex-col gap-2 px-4">
+          {["/", "/subjects", "/about", "/contact"].map((path, idx) => {
+            const labels = ["Home", "Subjects", "About", "Contact"];
             return (
               <Link
                 key={path}
                 to={path}
                 onClick={closeMenu}
-                className={`block py-3 text-lg transition-colors
-                  ${isActive(path) ? "text-accent-1 font-bold" : "text-main hover:text-accent-1"}
+                className={`block py-3 px-4 rounded-lg text-lg transition-all duration-300
+                  ${
+                    isActive(path)
+                      ? "text-accent-1 font-bold bg-accent-1/10"
+                      : "text-main hover:text-accent-1 hover:bg-pill-bg hover:pl-6" // hover:pl-6 gives the slide-right effect
+                  }
                 `}
               >
                 {labels[idx]}
@@ -237,13 +239,9 @@ const Navbar = () => {
               >
                 Login
               </Link>
-              <Link
-                to="/register"
-                onClick={closeMenu}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-main text-bg-body font-semibold"
-              >
-                Get Started <ArrowRight size={18} />
-              </Link>
+              <SmartButton to="/register" variant="solid">
+                Get Started
+              </SmartButton>
             </div>
           )}
         </div>

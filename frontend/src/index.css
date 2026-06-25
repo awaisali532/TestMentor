@@ -25,6 +25,18 @@
   --color-shadow: var(--shadow-color);
   --color-accent-1: #0ea5e9;
   --color-accent-2: #2dd4bf;
+
+  --animate-float: float 4s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
 }
 
 /* 2. CUSTOM FONT FACES */
