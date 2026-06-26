@@ -2,9 +2,57 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <link
+      id="app-favicon"
+      rel="icon"
+      type="image/png"
+      href="/favicon/favicon-light.png"
+      sizes="96x96"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/favicon/apple-touch-icon.png"
+    />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+
+    <script>
+      function updateFavicon() {
+        const favicon = document.getElementById("app-favicon");
+        const isDarkMode = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+
+        // ?v=3 is added to strictly bypass any leftover browser cache
+        favicon.href = isDarkMode
+          ? "/favicon/favicon-dark.png?v=3"
+          : "/favicon/favicon-light.png?v=3";
+      }
+
+      // Page load hote hi check karega
+      updateFavicon();
+
+      // Jaise hi aap computer ka theme badlenge, yeh real-time detect karega
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", updateFavicon);
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="description" content="Test Mentor" />
+    <meta name="keywords" content="Test Mentor" />
+    <meta name="author" content="Test Mentor" />
+
+    <title>Test Mentor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>
