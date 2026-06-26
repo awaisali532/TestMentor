@@ -1,9 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 @import "tailwindcss";
 
 /* 1. TAILWIND v4 THEME CONFIGURATION */
 @theme {
   /* Fonts */
-  --font-main: "Inter", sans-serif;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+  /* ✅ Updated for Tailwind v4 standard */
   --font-urdu: "Jameel Noori", "Noto Nastaliq Urdu", serif;
 
   /* Static Brand Colors */
@@ -29,10 +31,12 @@
   --animate-float: float 4s ease-in-out infinite;
 
   @keyframes float {
+
     0%,
     100% {
       transform: translateY(0);
     }
+
     50% {
       transform: translateY(-15px);
     }
@@ -53,7 +57,11 @@
   body {
     background-color: var(--bg-body);
     color: var(--text-main);
-    font-family: var(--font-main);
+    font-family: var(--font-sans);
+    /* ✅ Matches the updated variable */
+    -webkit-font-smoothing: antialiased;
+    /* ✅ Added for sharp, modern text rendering */
+    -moz-osx-font-smoothing: grayscale;
     transition:
       background-color 0.3s ease,
       color 0.3s ease;
@@ -62,6 +70,7 @@
 
 /* 3. CSS VARIABLES FOR DARK/LIGHT MODE */
 @layer base {
+
   :root,
   [data-theme="dark"] {
     --bg-body: #020617;
@@ -91,6 +100,7 @@
 /* 4. TAILWIND v4 UTILITIES */
 @utility hide-scrollbar {
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -98,6 +108,7 @@
 
 /* 5. SPECIFIC BEHAVIORS (RTL & PRINT) */
 @layer utilities {
+
   [dir="rtl"],
   .urdu-font,
   .pp-text-ur,
@@ -109,6 +120,7 @@
   }
 
   @media print {
+
     [dir="rtl"],
     .urdu-font,
     .pp-text-ur {

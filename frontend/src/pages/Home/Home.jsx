@@ -5,9 +5,8 @@ import HeroSection from "./components/HeroSection";
 import AvailableCourses from "./components/AvailableCourses";
 import WhyChoose from "./components/WhyChoose";
 import RecommendedClasses from "./components/RecommendedClasses";
-// import Mediums from "./components/Medium/Mediums";
-// import QuestionTypes from "./components/QuestionsType/QuestionsType";
-// import Footer from "../../components/layout/Footer/Footer";
+import Mediums from "./components/Mediums";
+import QuestionTypes from "./components/QuestionTypes";
 
 const Home = () => {
   return (
@@ -18,9 +17,8 @@ const Home = () => {
       <AvailableCourses />
       <WhyChoose />
       <RecommendedClasses />
-      {/* <Mediums /> */}
-      {/* <QuestionTypes /> */}
-      {/* <Footer /> */}
+      <Mediums />
+      <QuestionTypes />
     </main>
   );
 };
