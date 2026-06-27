@@ -38,9 +38,9 @@ import About from "./pages/About/About";
 import Contact from "./pages/Contact/Contact";
 import Subjects from "./pages/Subjects/Subjects";
 import SubjectDetails from "./pages/SubjectDetails/SubjectDetails";
-// import Login from "./pages/Auth/Login";
-// import Register from "./pages/Auth/Register";
-// import ForgotPassword from "./pages/Auth/ForgotPassword";
+import Login from "./pages/Auth/Login";
+import Register from "./pages/Auth/Register";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
 
 // =================================================================
 // 5. DATA ROUTER CONFIGURATION
@@ -71,11 +71,10 @@ const router = createBrowserRouter(
       {/* =========================================
         2. AUTH ROUTES
         ========================================= */}
-      {/* <Route element={<PublicRoute />}>
+
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-    </Route> */}
 
       {/* =========================================
         3. ADMIN ROUTES

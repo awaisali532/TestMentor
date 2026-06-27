@@ -27,7 +27,7 @@ const Loader = ({ text = "Loading...", fullScreen = false }) => {
       </div>
 
       {/* 4. Dynamic Pulsing Text */}
-      <p className="text-xl font-extrabold text-white animate-pulse tracking-wider drop-shadow-lg">
+      <p className="text-xl font-extrabold animate-pulse tracking-wider drop-shadow-lg text-slate-900 dark:text-white">
         {text}
       </p>
     </div>
