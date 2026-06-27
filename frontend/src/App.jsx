@@ -4,18 +4,20 @@ import {
   createRoutesFromElements,
   RouterProvider,
   Route,
+  Outlet, // ✅ 1. Outlet yahan import karna zaroori tha
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import ScrollToTop from "./components/ScrollToTop";
 
 // =================================================================
-// 1. CONTEXT PROVIDERS (Uncomment when context is ready)
+// 1. CONTEXT PROVIDERS
 // =================================================================
 import { ThemeProvider } from "./context/ThemeContext";
 import { UserProvider } from "./context/UserContext";
 import { UIProvider } from "./context/UIContext";
 
 // =================================================================
-// 2. LAYOUTS (Uncomment as we build them)
+// 2. LAYOUTS
 // =================================================================
 import PublicLayout from "./layouts/PublicLayout";
 // import AdminLayout from "./layouts/AdminLayout";
@@ -29,63 +31,70 @@ import PublicLayout from "./layouts/PublicLayout";
 // import AdminRoute from "./components/AdminRoute/AdminRoute";
 
 // =================================================================
-// 4. PAGES (Uncomment as we build them)
+// 4. PAGES
 // =================================================================
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Contact from "./pages/Contact/Contact";
-// import Subjects from "./pages/Subjects/Subjects";
-// import SubjectDetails from "./pages/Subjects/SubjectDetails/SubjectDetails";
+import Subjects from "./pages/Subjects/Subjects";
+import SubjectDetails from "./pages/SubjectDetails/SubjectDetails";
 // import Login from "./pages/Auth/Login";
 // import Register from "./pages/Auth/Register";
 // import ForgotPassword from "./pages/Auth/ForgotPassword";
 
 // =================================================================
-// 5. DATA ROUTER CONFIGURATION (For v6.4+ features like useBlocker)
+// 5. DATA ROUTER CONFIGURATION
 // =================================================================
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <>
+    <Route
+      element={
+        <>
+          <ScrollToTop />
+          <Outlet />
+        </>
+      }
+    >
+      {/* ✅ 2. Yahan se extra <> aur </> fragments nikal diye hain */}
+
       {/* =========================================
-          1. PUBLIC ROUTES (Wrapped in PublicLayout)
-          ========================================= */}
+        1. PUBLIC ROUTES (Wrapped in PublicLayout)
+        ========================================= */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        {/* <Route path="/subjects" element={<Subjects />} />
-        <Route path="/subjects/:id" element={<SubjectDetails />} /> */}
+        <Route path="/subjects" element={<Subjects />} />
+        <Route path="/subjects/:id" element={<SubjectDetails />} />
       </Route>
 
       {/* =========================================
-          2. AUTH ROUTES (No Navbar usually)
-          ========================================= */}
+        2. AUTH ROUTES
+        ========================================= */}
       {/* <Route element={<PublicRoute />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-      </Route> */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+    </Route> */}
 
       {/* =========================================
-          3. ADMIN ROUTES
-          ========================================= */}
+        3. ADMIN ROUTES
+        ========================================= */}
       {/* <Route element={<AdminRoute />}>
-        <Route element={<AdminLayout />}>
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          // Add other Admin routes here
-        </Route>
-      </Route> */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin/dashboard" element={<Dashboard />} />
+      </Route>
+    </Route> */}
 
       {/* =========================================
-          4. USER ROUTES
-          ========================================= */}
+        4. USER ROUTES
+        ========================================= */}
       {/* <Route element={<PrivateRoute />}>
-        <Route element={<UserLayout />}>
-          <Route path="/user/dashboard" element={<UserDashboard />} />
-          // Add other User routes here
-        </Route>
-      </Route> */}
-    </>,
+      <Route element={<UserLayout />}>
+        <Route path="/user/dashboard" element={<UserDashboard />} />
+      </Route>
+    </Route> */}
+    </Route>,
   ),
 );
 
