@@ -45,6 +45,7 @@ import ForgotPassword from "./pages/Auth/ForgotPassword";
 //User Pages
 import UserDashboard from "./pages/User/Dashboard/UserDashboard";
 import UserSettings from "./pages/User/Settings/UserSettings";
+import SavedPapers from "./pages/User/SavedPapers/SavedPapers";
 // =================================================================
 // 5. DATA ROUTER CONFIGURATION
 // =================================================================
@@ -97,6 +98,7 @@ const router = createBrowserRouter(
         <Route element={<UserLayout />}>
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/user/settings" element={<UserSettings />} />
+          <Route path="/user/saved-papers" element={<SavedPapers />} />
         </Route>
       </Route>
     </Route>,
