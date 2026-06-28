@@ -1,10 +1,10 @@
 import React from "react";
 
 const Loader = ({ text = "Loading...", fullScreen = false }) => {
-  // ✅ CHANGE: bg-black/40 lagaya hai. Yeh ek halka sa dark transparent shade hai bina kisi blur ke.
-  // 'fixed inset-0 z-50' ki wajah se yeh poori screen gher lega aur clicks block kar dega.
+  // ✅ FIX: 'bg-transparent' use kiya hai. Ab peeche koi andhera ya blur nahi hoga,
+  // sab kuch 100% clear nazar aayega. 'fixed inset-0' sirf clicks ko block karne ke liye hai.
   const containerStyle = fullScreen
-    ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40"
+    ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-transparent"
     : "flex flex-col items-center justify-center min-h-[60vh] w-full bg-transparent z-10 transition-all duration-300";
 
   return (
@@ -27,7 +27,7 @@ const Loader = ({ text = "Loading...", fullScreen = false }) => {
       </div>
 
       {/* 4. Dynamic Pulsing Text */}
-      <p className="text-xl font-extrabold animate-pulse tracking-wider drop-shadow-lg text-slate-900 dark:text-white">
+      <p className="text-xl font-extrabold animate-pulse tracking-wider drop-shadow-lg text-main">
         {text}
       </p>
     </div>

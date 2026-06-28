@@ -27,22 +27,28 @@ const UserDashboard = () => {
   });
 
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false); // Background refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      // ✅ Agar pehle se data nahi hai toh main loading true karo, warna sirf background refresh
-      if (recentPapers.length === 0) {
-        setLoading(true);
+      // ✅ STEP 1: CACHE CHECK (Reload par foran data dikhane ke liye)
+      const cachedData = localStorage.getItem("tm_dashboard_cache");
+
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        setSavedCount(parsedData.savedCount);
+        setRecentPapers(parsedData.recentPapers);
+        setLimitData(parsedData.limitData);
+        setLoading(false); // Cache mil gaya, loading foran khatam
+        setIsRefreshing(true); // Background refresh chalu
       } else {
-        setIsRefreshing(true);
+        setLoading(true); // Pehli dafa aane par loading zaroori hai
       }
 
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        // Parallel API Calls for speed optimization
         const [papersRes, statsRes] = await Promise.all([
           axios.get(`${BASE_URL}/api/papers/my-papers`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -52,20 +58,37 @@ const UserDashboard = () => {
           }),
         ]);
 
+        let newSavedCount = savedCount;
+        let newRecentPapers = recentPapers;
+        let newLimitData = limitData;
+
         if (papersRes.data.success) {
-          setSavedCount(papersRes.data.papers.length);
-          // Only show Top 5 recent activities on Dashboard
-          setRecentPapers(papersRes.data.papers.slice(0, 5));
+          newSavedCount = papersRes.data.papers.length;
+          newRecentPapers = papersRes.data.papers.slice(0, 5);
+
+          setSavedCount(newSavedCount);
+          setRecentPapers(newRecentPapers);
         }
 
         if (statsRes.data.success) {
           const { usage, limit } = statsRes.data;
-          setLimitData({
+          newLimitData = {
             usage: usage,
             limit: limit === -1 ? 100 : limit,
             isUnlimited: limit === -1,
-          });
+          };
+          setLimitData(newLimitData);
         }
+
+        // ✅ STEP 2: CACHE UPDATE (Naya data anay par Cache update kar do taake aglay reload par kaam aaye)
+        localStorage.setItem(
+          "tm_dashboard_cache",
+          JSON.stringify({
+            savedCount: newSavedCount,
+            recentPapers: newRecentPapers,
+            limitData: newLimitData,
+          }),
+        );
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -75,9 +98,8 @@ const UserDashboard = () => {
     };
 
     fetchData();
-  }, [BASE_URL, recentPapers.length]);
+  }, [BASE_URL]);
 
-  // Calculations
   const isFree = !limitData.isUnlimited;
   const papersGenerated = limitData.usage;
   const maxLimit = limitData.limit;
@@ -103,7 +125,6 @@ const UserDashboard = () => {
           </p>
         </div>
 
-        {/* Plan Badge */}
         <div>
           {loading ? (
             <div className="w-32 h-10 bg-border/50 rounded-full animate-pulse"></div>
@@ -137,7 +158,6 @@ const UserDashboard = () => {
                 : "Create Now"
           }
         />
-
         <DashboardActionCard
           title="Online Test"
           description="Attempt MCQs and check result."
@@ -148,7 +168,6 @@ const UserDashboard = () => {
           isLocked={false}
           buttonText="Start Quiz"
         />
-
         <DashboardActionCard
           title="Saved Papers"
           description="Access your previously created papers."
@@ -181,7 +200,6 @@ const UserDashboard = () => {
                     / {isFree ? maxLimit : "∞"}
                   </span>
                 </h3>
-
                 <div className="w-full h-2.5 bg-pill-bg border border-border rounded-full overflow-hidden mb-2">
                   <div
                     className="h-full rounded-full transition-all duration-1000 ease-out"
@@ -194,7 +212,6 @@ const UserDashboard = () => {
                     }}
                   ></div>
                 </div>
-
                 <small className="text-xs font-bold">
                   {isFree ? (
                     limitReached ? (
@@ -214,7 +231,7 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* RECENT ACTIVITY TABLE (Only Top 5) */}
+      {/* RECENT ACTIVITY TABLE */}
       <RecentActivityTable
         loading={loading}
         papers={recentPapers}
