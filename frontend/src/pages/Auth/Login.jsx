@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 import { useUser } from "../../context/UserContext";
 import loginimg from "../../assets/images/Auth/login.png";
-
+import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 // Custom Components
 import AuthLayout from "./components/AuthLayout";
 import AuthInput from "./components/AuthInput";
@@ -23,7 +23,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
-
+  const isFormDirty = email.length > 0 || password.length > 0;
+  useUnsavedChanges(isFormDirty);
   useEffect(() => {
     const savedSession = localStorage.getItem("otp_persist_login");
     if (savedSession) {

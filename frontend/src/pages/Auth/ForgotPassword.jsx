@@ -12,7 +12,7 @@ import AuthLayout from "./components/AuthLayout";
 import AuthInput from "./components/AuthInput";
 import OtpBox from "./components/OtpBox";
 import Loader from "../../components/ui/Loader";
-
+import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -24,7 +24,9 @@ const ForgotPassword = () => {
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [newPassword, setNewPassword] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
-
+  const isFormDirty =
+    email.length > 0 || otp.join("").length > 0 || newPassword.length > 0;
+  useUnsavedChanges(isFormDirty);
   useEffect(() => {
     let interval;
     if (step === 2 && resendTimer > 0) {

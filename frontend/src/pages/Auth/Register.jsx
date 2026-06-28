@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useUser } from "../../context/UserContext";
 import { validateRegisterInput } from "../../utils/validators";
 import registerimg from "../../assets/images/Auth/registerimg.png";
-
+import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 // Components
 import AuthLayout from "./components/AuthLayout";
 import AuthInput from "./components/AuthInput";
@@ -27,7 +27,9 @@ const RegisterPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-
+  const isFormDirty =
+    (name.length > 0 || email.length > 0 || password.length > 0) && step === 1;
+  useUnsavedChanges(isFormDirty);
   useEffect(() => {
     const savedSession = localStorage.getItem("otp_persist_reg");
     if (savedSession) {
