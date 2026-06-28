@@ -21,13 +21,13 @@ import { UIProvider } from "./context/UIContext";
 // =================================================================
 import PublicLayout from "./layouts/PublicLayout";
 // import AdminLayout from "./layouts/AdminLayout";
-// import UserLayout from "./layouts/UserLayout";
+import UserLayout from "./layouts/UserLayout";
 
 // =================================================================
 // 3. ROUTE GUARDS
 // =================================================================
-// import PublicRoute from "./components/PublicRoute/PublicRoute";
-// import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
+import PublicRoute from "./components/guards/PublicRoute";
+import PrivateRoute from "./components/guards/PrivateRoute";
 // import AdminRoute from "./components/AdminRoute/AdminRoute";
 
 // =================================================================
@@ -42,6 +42,8 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 
+//User Imports
+import UserDashboard from "./pages/User/Dashboard/UserDashboard";
 // =================================================================
 // 5. DATA ROUTER CONFIGURATION
 // =================================================================
@@ -72,9 +74,11 @@ const router = createBrowserRouter(
         2. AUTH ROUTES
         ========================================= */}
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Route>
 
       {/* =========================================
         3. ADMIN ROUTES
@@ -88,11 +92,11 @@ const router = createBrowserRouter(
       {/* =========================================
         4. USER ROUTES
         ========================================= */}
-      {/* <Route element={<PrivateRoute />}>
-      <Route element={<UserLayout />}>
-        <Route path="/user/dashboard" element={<UserDashboard />} />
+      <Route element={<PrivateRoute />}>
+        <Route element={<UserLayout />}>
+          <Route path="/user/dashboard" element={<UserDashboard />} />
+        </Route>
       </Route>
-    </Route> */}
     </Route>,
   ),
 );

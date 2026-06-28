@@ -8,13 +8,13 @@ import { useUser } from "../../context/UserContext";
 import { validateRegisterInput } from "../../utils/validators";
 import registerimg from "../../assets/images/Auth/registerimg.png";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
-// Components
+
 import AuthLayout from "./components/AuthLayout";
 import AuthInput from "./components/AuthInput";
 import SocialLogins from "./components/SocialLogins";
 import OtpVerification from "./components/OtpVerification";
 import Loader from "../../components/ui/Loader";
-import PasswordChecker from "./components/PasswordChecker"; // ✅ Naya component import kiya
+import PasswordChecker from "./components/PasswordChecker";
 
 const RegisterPage = () => {
   const { register } = useUser();
@@ -27,9 +27,15 @@ const RegisterPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [isSubmitted, setIsSubmitted] = useState(false); // ✅ Added
+
+  // ✅ The Guard Logic
   const isFormDirty =
-    (name.length > 0 || email.length > 0 || password.length > 0) && step === 1;
+    (name.length > 0 || email.length > 0 || password.length > 0) &&
+    step === 1 &&
+    !isSubmitted;
   useUnsavedChanges(isFormDirty);
+
   useEffect(() => {
     const savedSession = localStorage.getItem("otp_persist_reg");
     if (savedSession) {
@@ -67,6 +73,7 @@ const RegisterPage = () => {
   const handleVerificationSuccess = () => {
     localStorage.removeItem("otp_persist_reg");
     toast.success("Account created! Please log in.");
+    setIsSubmitted(true); // ✅ SUCCESS: Block warning
     navigate("/login");
   };
 
@@ -108,8 +115,6 @@ const RegisterPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-
-              {/* Password Input (Bina purane helpText ke) */}
               <AuthInput
                 icon={FaLock}
                 type="password"
@@ -118,11 +123,8 @@ const RegisterPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-
-              {/* ✅ Naya Dynamic Password Checker */}
               {password.length > 0 && <PasswordChecker password={password} />}
 
-              {/* Gender Selection */}
               <div className="mb-6">
                 <label className="block text-sm font-bold text-main mb-3">
                   Gender

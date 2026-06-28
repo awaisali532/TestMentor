@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock, FaArrowLeft, FaShieldAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
 import axios from "axios";
-import Swal from "sweetalert2"; // ✅ SweetAlert Import
+import Swal from "sweetalert2";
 
 import loginimg from "../../assets/images/Auth/login.png";
 import { validateEmail, validatePassword } from "../../utils/validators";
@@ -13,20 +13,25 @@ import AuthInput from "./components/AuthInput";
 import OtpBox from "./components/OtpBox";
 import Loader from "../../components/ui/Loader";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
+
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [newPassword, setNewPassword] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
+  const [isSubmitted, setIsSubmitted] = useState(false); // ✅ Added
+
+  // ✅ The Guard Logic
   const isFormDirty =
-    email.length > 0 || otp.join("").length > 0 || newPassword.length > 0;
+    (email.length > 0 || otp.join("").length > 0 || newPassword.length > 0) &&
+    !isSubmitted;
   useUnsavedChanges(isFormDirty);
+
   useEffect(() => {
     let interval;
     if (step === 2 && resendTimer > 0) {
@@ -88,6 +93,7 @@ const ForgotPassword = () => {
         newPassword,
       });
       toast.success("Password Reset Successfully!");
+      setIsSubmitted(true); // ✅ SUCCESS: Block warning
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       toast.error(err.response?.data?.message || "Reset Failed.");
@@ -96,7 +102,6 @@ const ForgotPassword = () => {
     }
   };
 
-  // ✅ SweetAlert2 Logic
   const handleCancel = () => {
     if (step > 1) {
       Swal.fire({
@@ -112,10 +117,12 @@ const ForgotPassword = () => {
         color: "#ffffff",
       }).then((result) => {
         if (result.isConfirmed) {
+          setIsSubmitted(true); // Ignore warning on intentional cancel
           navigate("/login");
         }
       });
     } else {
+      setIsSubmitted(true); // Ignore warning
       navigate("/login");
     }
   };
@@ -173,9 +180,7 @@ const ForgotPassword = () => {
               <p className="text-muted text-sm mb-6">
                 Code sent to <strong className="text-accent-1">{email}</strong>
               </p>
-
               <OtpBox otp={otp} setOtp={setOtp} />
-
               <button
                 type="submit"
                 disabled={otp.join("").length < 6}

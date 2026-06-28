@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useUser } from "../../context/UserContext";
 import loginimg from "../../assets/images/Auth/login.png";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
+
 // Custom Components
 import AuthLayout from "./components/AuthLayout";
 import AuthInput from "./components/AuthInput";
@@ -15,7 +16,6 @@ import OtpVerification from "./components/OtpVerification";
 import Loader from "../../components/ui/Loader";
 
 const LoginPage = () => {
-  // ✅ loginAfterVerification hook bhi nikal liya
   const { login, loginAfterVerification } = useUser();
   const navigate = useNavigate();
 
@@ -23,8 +23,12 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
-  const isFormDirty = email.length > 0 || password.length > 0;
+  const [isSubmitted, setIsSubmitted] = useState(false); // ✅ Added
+
+  // ✅ The Guard Logic
+  const isFormDirty = (email.length > 0 || password.length > 0) && !isSubmitted;
   useUnsavedChanges(isFormDirty);
+
   useEffect(() => {
     const savedSession = localStorage.getItem("otp_persist_login");
     if (savedSession) {
@@ -48,6 +52,7 @@ const LoginPage = () => {
       toast.success("Welcome back!");
       localStorage.removeItem("otp_persist_login");
 
+      setIsSubmitted(true); // ✅ SUCCESS: Block warning
       if (response.user.isSuperAdmin || response.user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
       } else {
@@ -69,16 +74,14 @@ const LoginPage = () => {
     }
   };
 
-  // ✅ BUG FIXED: No window.location.reload()
   const handleVerificationSuccess = (data) => {
     localStorage.removeItem("otp_persist_login");
     toast.success("Verified! Redirecting...");
 
     if (data.token && data.user) {
-      // Context instantly update ho jayega bina reload ke
+      setIsSubmitted(true); // ✅ SUCCESS: Block warning
       loginAfterVerification(data.user, data.token);
 
-      // Navigate to correct dashboard based on role
       if (data.user.isSuperAdmin || data.user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
       } else {
