@@ -73,10 +73,20 @@ const PatternSelector = ({
 
   const filteredPatterns = useMemo(() => {
     return patterns.filter((p) => {
-      const category = p.category || "GENERAL";
-      if (syllabusType === "FULL_BOOK")
+      const category = p.category || "GENERAL"; // Backend se aane wali category
+
+      // 1. Agar pichle page se "FULL_BOOK" select hua hai
+      if (syllabusType === "FULL_BOOK") {
+        // Sirf Full Book ya General patterns dikhao
         return category === "FULL_BOOK" || category === "GENERAL";
-      if (syllabusType === "CHAPTERS") return category !== "FULL_BOOK";
+      }
+
+      // 2. Agar pichle page se "CHAPTERS" (Chapter Wise) select hua hai
+      if (syllabusType === "CHAPTERS") {
+        // Full Book aur Half Book dono hide kar do! Sirf Chapter Wise dikhao
+        return category === "CHAPTER_WISE" || category === "GENERAL";
+      }
+
       return true;
     });
   }, [patterns, syllabusType]);

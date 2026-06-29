@@ -1,10 +1,11 @@
 import React from "react";
 
 const Loader = ({ text = "Loading...", fullScreen = false }) => {
-  // ✅ FIX: 'bg-transparent' use kiya hai. Ab peeche koi andhera ya blur nahi hoga,
-  // sab kuch 100% clear nazar aayega. 'fixed inset-0' sirf clicks ko block karne ke liye hai.
+  // ✅ FIX: 'bg-card/80' + 'backdrop-blur-sm'
+  // Yeh light mode mein light-dim aur dark mode mein dark-dim karega.
+  // Blur effect se peeche ka UI professionally out-of-focus ho jayega.
   const containerStyle = fullScreen
-    ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-transparent"
+    ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-card/80 backdrop-blur-sm"
     : "flex flex-col items-center justify-center min-h-[60vh] w-full bg-transparent z-10 transition-all duration-300";
 
   return (
@@ -26,7 +27,7 @@ const Loader = ({ text = "Loading...", fullScreen = false }) => {
         </div>
       </div>
 
-      {/* 4. Dynamic Pulsing Text */}
+      {/* 4. Dynamic Pulsing Text (Uses text-main for Theme Adaptation) */}
       <p className="text-xl font-extrabold animate-pulse tracking-wider drop-shadow-lg text-main">
         {text}
       </p>

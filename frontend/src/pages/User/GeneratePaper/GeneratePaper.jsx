@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import { useTheme } from "../../../context/ThemeContext";
 
 // Components
 import Loader from "../../../components/ui/Loader";
@@ -16,6 +17,8 @@ import ModeSelector from "./components/ModeSelector";
 const GeneratePaper = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme } = useTheme();
+
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   const defaultPaperData = {
@@ -118,7 +121,21 @@ const GeneratePaper = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden relative">
+      {/* ✅ FIX: Forced CSS Injection for Date Picker Icon in Dark Mode */}
+      <style>
+        {`
+          .tm-date-input::-webkit-calendar-picker-indicator {
+            filter: ${theme === "dark" ? "invert(1) brightness(100%)" : "none"};
+            cursor: pointer;
+            opacity: 0.6;
+          }
+          .tm-date-input::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+          }
+        `}
+      </style>
+
       {wizardLoading && (
         <Loader
           fullScreen={true}
@@ -207,14 +224,14 @@ const GeneratePaper = () => {
                   <label className="block text-sm font-bold text-main mb-2">
                     Exam Date
                   </label>
-                  {/* ✅ Native HTML5 Date Picker for Speed & Reliability */}
+                  {/* ✅ Applied tm-date-input class */}
                   <input
                     type="date"
                     value={paperData.examDate}
                     onChange={(e) =>
                       setPaperData({ ...paperData, examDate: e.target.value })
                     }
-                    className="w-full bg-bg-body border border-border text-main px-4 py-3 rounded-xl focus:outline-none focus:border-accent-1 dark:scheme-dark [&::-webkit-calendar-picker-indicator]:dark:invert"
+                    className="tm-date-input w-full bg-bg-body border border-border text-main px-4 py-3 rounded-xl focus:outline-none focus:border-accent-1"
                   />
                 </div>
               </div>
