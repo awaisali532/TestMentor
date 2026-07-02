@@ -21,13 +21,31 @@ const SyllabusSelector = ({
   const [error, setError] = useState(null);
 
   const [expandedChapters, setExpandedChapters] = useState({});
-  const [selectedTopicIds, setSelectedTopicIds] = useState([]);
+  const [selectedTopicIds, setSelectedTopicIds] = useState(
+    selectedTopics || [],
+  );
 
   const API_BASE_URL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   useEffect(() => {
+    if (selectedTopics) {
+      setSelectedTopicIds(selectedTopics);
+    }
+  }, [selectedTopics]);
+
+  useEffect(() => {
     const fetchSyllabus = async () => {
+      // ✅ Cache Check (Specific to Class + Subject)
+      const cacheKey = `tm_cache_chapters_${selectedClass}_${selectedSubject}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        setChapters(JSON.parse(cachedData));
+        setLoading(false);
+        return;
+      }
+
       const minDelay = new Promise((resolve) => setTimeout(resolve, 800));
       try {
         setLoading(true);
@@ -42,6 +60,8 @@ const SyllabusSelector = ({
           minDelay,
         ]);
         setChapters(response.data);
+        // ✅ Save to Cache
+        sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
       } catch (err) {
         console.error("Fetch Error:", err);
         setError("Failed to load syllabus.");
@@ -153,7 +173,6 @@ const SyllabusSelector = ({
         Select Topics from {selectedSubject}
       </h3>
 
-      {/* Select All Bar */}
       <div
         className={`bg-card border-2 p-4 rounded-xl mb-8 flex justify-between items-center cursor-pointer transition-all duration-300 ${isAllSelected ? "border-accent-1 bg-accent-1/5" : "border-border hover:border-accent-1 hover:shadow-md"}`}
         onClick={handleSelectAll}
@@ -174,7 +193,6 @@ const SyllabusSelector = ({
         />
       </div>
 
-      {/* Chapters Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {chapters.map((chapter) => {
           const { checked, indeterminate } = getChapterStatus(chapter);
@@ -185,7 +203,6 @@ const SyllabusSelector = ({
               key={chapter._id}
               className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-accent-1 transition-all duration-300"
             >
-              {/* Header */}
               <div
                 className="flex justify-between items-center p-4 cursor-pointer select-none"
                 onClick={() => toggleChapter(chapter._id)}
@@ -213,7 +230,6 @@ const SyllabusSelector = ({
                 </span>
               </div>
 
-              {/* Topics Body */}
               <div
                 className={`bg-pill-bg border-t border-transparent transition-all duration-300 overflow-hidden ${isExpanded ? "max-h-125 border-border overflow-y-auto" : "max-h-0"}`}
               >
@@ -248,7 +264,6 @@ const SyllabusSelector = ({
         })}
       </div>
 
-      {/* Floating Next Button */}
       <button
         className={`fixed bottom-8 right-8 w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-xl transition-all duration-300 z-50 ${selectedTopicIds.length === 0 ? "bg-gray-400 text-white opacity-50 cursor-not-allowed scale-90" : "bg-accent-1 text-white hover:scale-110 hover:-rotate-12 hover:bg-accent-2 cursor-pointer shadow-accent-1/50"}`}
         onClick={onNext}

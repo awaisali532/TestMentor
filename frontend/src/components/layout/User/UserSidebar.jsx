@@ -73,14 +73,14 @@ const UserSidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
           {/* Institute Logo */}
           <div
             className={`rounded-full bg-card border border-border flex items-center justify-center shrink-0 overflow-hidden shadow-sm transition-all duration-300 ${
-              isCollapsed ? "w-16 h-16" : "w-26 h-26 mb-3" // ✅ Standard Tailwind sizing
+              isCollapsed ? "w-16 h-16" : "w-24 h-24 mb-3" // ✅ Standard Tailwind sizing
             }`}
           >
             {user?.institute?.logo ? (
               <img
                 src={user.institute.logo}
                 alt="Institute"
-                className="w-full h-full object-contain p-1"
+                className="w-full h-full object-contain "
               />
             ) : (
               <FaUniversity

@@ -15,15 +15,17 @@ import {
   FaStar,
   FaLock,
   FaFilter,
+  FaArrowLeft,
 } from "react-icons/fa";
 import Loader from "../../../../components/ui/Loader";
-import PatternForm from "../../../Admin/PaperPatterns/PatternForm"; // Ensure path is correct based on your folder structure
+import PatternForm from "../../../Admin/PaperPatterns/PatternForm";
 
 const PatternSelector = ({
   grade,
   subject,
   onSelect,
   onNext,
+  onBack, // ✅ Added onBack
   syllabusType,
   selectedTopics,
 }) => {
@@ -39,11 +41,24 @@ const PatternSelector = ({
 
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  const fetchPatterns = async () => {
+  const fetchPatterns = async (forceRefresh = false) => {
     if (!grade || !subject) {
       setLoading(false);
       return;
     }
+
+    const cacheKey = `tm_cache_patterns_${grade}_${subject}`;
+
+    // Check cache only if not force refreshing
+    if (!forceRefresh) {
+      const cachedData = sessionStorage.getItem(cacheKey);
+      if (cachedData) {
+        setPatterns(JSON.parse(cachedData));
+        setLoading(false);
+        return;
+      }
+    }
+
     const minDelay = new Promise((resolve) => setTimeout(resolve, 800));
     try {
       setLoading(true);
@@ -57,9 +72,13 @@ const PatternSelector = ({
         minDelay,
       ]);
       setPatterns(response.data);
+      // ✅ Save to Cache
+      sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
     } catch (err) {
-      if (err.response?.status === 404) setPatterns([]);
-      else setError("Failed to load paper patterns. Please try again.");
+      if (err.response?.status === 404) {
+        setPatterns([]);
+        sessionStorage.setItem(cacheKey, JSON.stringify([])); // Cache empty array
+      } else setError("Failed to load paper patterns. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -73,20 +92,13 @@ const PatternSelector = ({
 
   const filteredPatterns = useMemo(() => {
     return patterns.filter((p) => {
-      const category = p.category || "GENERAL"; // Backend se aane wali category
-
-      // 1. Agar pichle page se "FULL_BOOK" select hua hai
+      const category = p.category || "GENERAL";
       if (syllabusType === "FULL_BOOK") {
-        // Sirf Full Book ya General patterns dikhao
         return category === "FULL_BOOK" || category === "GENERAL";
       }
-
-      // 2. Agar pichle page se "CHAPTERS" (Chapter Wise) select hua hai
       if (syllabusType === "CHAPTERS") {
-        // Full Book aur Half Book dono hide kar do! Sirf Chapter Wise dikhao
         return category === "CHAPTER_WISE" || category === "GENERAL";
       }
-
       return true;
     });
   }, [patterns, syllabusType]);
@@ -121,7 +133,15 @@ const PatternSelector = ({
             headers: { Authorization: `Bearer ${token}` },
           });
           toast.success("Preset Deleted Successfully");
-          setPatterns((prev) => prev.filter((p) => p._id !== id));
+
+          // ✅ FIX: Update State AND Cache
+          const updatedPatterns = patterns.filter((p) => p._id !== id);
+          setPatterns(updatedPatterns);
+          sessionStorage.setItem(
+            `tm_cache_patterns_${grade}_subject`,
+            JSON.stringify(updatedPatterns),
+          );
+
           if (selectedId === id) {
             setSelectedId(null);
             onSelect(null);
@@ -141,7 +161,7 @@ const PatternSelector = ({
           onSuccess={() => {
             setIsCreating(false);
             setEditingPattern(null);
-            fetchPatterns();
+            fetchPatterns(true); // ✅ FIX: Force Refresh to fetch new pattern & update cache
           }}
           onClose={() => {
             setIsCreating(false);
@@ -191,7 +211,6 @@ const PatternSelector = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-        {/* Create Custom Card */}
         <div
           onClick={() => setIsCreating(true)}
           className="bg-bg-body border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-50 hover:bg-accent-1/5 hover:border-accent-1 hover:-translate-y-1 transition-all group"
@@ -347,7 +366,14 @@ const PatternSelector = ({
         )}
       </div>
 
-      <div className="mt-10 flex justify-end border-t border-border pt-6 pb-4">
+      <div className="mt-10 flex justify-end gap-3 border-t border-border pt-6 pb-4">
+        {/* ✅ FIX: Added Back Button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 bg-pill-bg text-muted font-bold px-8 py-3.5 rounded-xl hover:bg-card hover:text-main border border-border transition-all duration-300 cursor-pointer"
+        >
+          <FaArrowLeft /> Back
+        </button>
         <button
           onClick={onNext}
           disabled={!selectedId}

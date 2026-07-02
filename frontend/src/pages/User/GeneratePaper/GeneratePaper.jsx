@@ -92,7 +92,7 @@ const GeneratePaper = () => {
 
       if (mode === "MANUAL") {
         setTimeout(
-          () => navigate("/user/manual-maker", { state: finalData }),
+          () => navigate("/user/paper-maker", { state: finalData }),
           800,
         );
       } else {
@@ -122,7 +122,6 @@ const GeneratePaper = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden relative">
-      {/* ✅ FIX: Forced CSS Injection for Date Picker Icon in Dark Mode */}
       <style>
         {`
           .tm-date-input::-webkit-calendar-picker-indicator {
@@ -195,6 +194,7 @@ const GeneratePaper = () => {
               setPaperData({ ...paperData, selectedPattern: pattern })
             }
             onNext={() => setStep(5)}
+            onBack={() => setStep(3)}
           />
         )}
 
@@ -224,7 +224,6 @@ const GeneratePaper = () => {
                   <label className="block text-sm font-bold text-main mb-2">
                     Exam Date
                   </label>
-                  {/* ✅ Applied tm-date-input class */}
                   <input
                     type="date"
                     value={paperData.examDate}
@@ -236,7 +235,10 @@ const GeneratePaper = () => {
                 </div>
               </div>
             </div>
-            <ModeSelector onSelect={handleModeSelect} />
+            <ModeSelector
+              onSelect={handleModeSelect}
+              onBack={() => setStep(4)}
+            />
           </div>
         )}
       </div>

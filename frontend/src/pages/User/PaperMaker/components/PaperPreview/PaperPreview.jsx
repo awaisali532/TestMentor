@@ -1,0 +1,185 @@
+import React from "react";
+import { FaPlusCircle, FaRegFileAlt } from "react-icons/fa";
+import McqSection from "./McqSection";
+import ShortSection from "./ShortSection";
+import LongSection from "./LongSection";
+import { useUser } from "../../../../../context/UserContext";
+
+const PaperPreview = ({
+  paperData,
+  onOpenMenu,
+  isPrintMode = false,
+  isManualMode,
+  onManualUpdate,
+  onManualDelete,
+  onSectionDelete,
+}) => {
+  const { user } = useUser();
+  const instituteLogo =
+    user?.institute?.logo?.url ||
+    user?.institute?.image ||
+    user?.institute?.logo ||
+    null;
+
+  const questions = paperData?.questions || [];
+  const mcqs = questions.filter((q) => q.type === "MCQ");
+
+  const shortQuestionsMap = {};
+  questions
+    .filter((q) => q.type === "SHORT")
+    .forEach((q) => {
+      const key = q.tabId || "General";
+      if (!shortQuestionsMap[key]) shortQuestionsMap[key] = [];
+      shortQuestionsMap[key].push(q);
+    });
+
+  const longQs = questions.filter((q) => q.type === "LONG");
+  const hasQuestions = questions.length > 0;
+  const hasSubjective =
+    Object.keys(shortQuestionsMap).length > 0 || longQs.length > 0;
+
+  const getSectionConfig = (type, index = null) => {
+    const pattern = paperData?.selectedPattern || paperData?.paperPattern;
+    const sections = pattern?.sections || [];
+    if (type === "LONG") return sections.find((s) => s.questionType === "LONG");
+    return sections.filter((s) => s.questionType === "SHORT")[index];
+  };
+
+  const getGroupedLongQuestions = () => {
+    const grouped = {};
+    longQs.forEach((q) => {
+      const parts = q.tabId ? q.tabId.split("_") : [];
+      if (parts.length >= 4) {
+        const groupKey = `${parts[0]}_${parts[1]}_${parts[2]}`;
+        if (!grouped[groupKey]) grouped[groupKey] = [];
+        grouped[groupKey].push(q);
+      } else {
+        grouped[q._id] = [q];
+      }
+    });
+    return Object.keys(grouped)
+      .sort()
+      .map((key) =>
+        grouped[key].sort((a, b) =>
+          (a.tabId || "").localeCompare(b.tabId || ""),
+        ),
+      );
+  };
+
+  const getLongInstructions = () => {
+    const pattern = paperData?.selectedPattern || paperData?.paperPattern;
+    const attemptLimit = parseInt(pattern?.longQAttemptCount || 0);
+    const available = getGroupedLongQuestions().length;
+    const compulsorySec = (pattern?.sections || [])
+      .filter((s) => s.questionType === "LONG")
+      .find((s) => s.isCompulsory === true);
+
+    let enText = "",
+      urText = "";
+    if (attemptLimit === 0 || attemptLimit >= available) {
+      enText = "Note: Attempt all questions.";
+      urText = "نوٹ: تمام سوالات حل کریں۔";
+    } else {
+      enText = `Note: Attempt any ${attemptLimit} ${attemptLimit === 1 ? "question" : "questions"}${compulsorySec ? ` (${compulsorySec.questionNo} is compulsory).` : "."}`;
+      urText = `نوٹ: کوئی سے ${attemptLimit} سوالات حل کریں${compulsorySec ? ` (${compulsorySec.questionNo} لازمی ہے)۔` : "۔"}`;
+    }
+    return { en: enText, ur: urText };
+  };
+
+  return (
+    <div
+      className={`w-full h-full box-border p-4 md:p-8 bg-card text-main transition-colors duration-300 print:p-0 print:bg-white print:text-black print:overflow-visible relative text-[0.85rem] ${
+        isManualMode
+          ? "border-[3px] border-dashed border-accent-1/50 bg-accent-1/5 shadow-inner"
+          : "shadow-sm border border-border"
+      }`}
+    >
+      {/* Ensure Top-to-Top Alignment in Edit Mode */}
+      <style>{`
+        .items-baseline {
+          align-items: flex-start !important;
+        }
+      `}</style>
+
+      {/* ✅ PERFECT WATERMARK (Sticks immediately to the screen center) */}
+      {instituteLogo && (
+        <div className="pointer-events-none sticky top-0 left-0 w-full h-0 z-0 overflow-visible print:fixed print:inset-0 print:flex print:justify-center print:items-center">
+          <div className="absolute top-[45vh] left-1/2 -translate-x-1/2 -translate-y-1/2 print:static print:transform-none">
+            <img
+              src={instituteLogo}
+              alt="Watermark"
+              className="w-87.5 h-87.5 object-contain opacity-[0.04] grayscale print:opacity-[0.06]"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* CONTENT WRAPPER */}
+      <div className="relative z-10 w-full max-w-full print:px-5">
+        {!hasQuestions ? (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-muted opacity-80 print:hidden">
+            <FaRegFileAlt className="text-6xl mb-4" />
+            <h3 className="text-xl font-bold">Paper Empty</h3>
+            <p>Add questions from the menu.</p>
+            {!isPrintMode && (
+              <button
+                onClick={onOpenMenu}
+                className="mt-5 px-6 py-2.5 bg-accent-1 text-white border-none rounded-lg cursor-pointer flex items-center gap-2 font-semibold hover:bg-accent-2 shadow-md"
+              >
+                <FaPlusCircle /> Open Menu
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <McqSection
+              mcqs={mcqs}
+              isManualMode={isManualMode}
+              onManualUpdate={onManualUpdate}
+              onManualDelete={onManualDelete}
+              onSectionDelete={onSectionDelete}
+            />
+
+            {hasSubjective && (
+              <div className="mb-6">
+                <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black font-extrabold uppercase text-[0.9rem] pb-1 mb-4">
+                  <span className="text-[0.8rem] print:text-[0.9rem]">
+                    Subjective Part
+                  </span>
+                  <span className="font-light opacity-50 text-[1.1rem]">|</span>
+                  <span
+                    className="font-[Jameel_Noori_Nastaleeq] text-[1.1rem] print:text-[1.2rem]"
+                    dir="rtl"
+                  >
+                    حصہ انشائیہ
+                  </span>
+                </div>
+
+                <ShortSection
+                  shortQuestionsMap={shortQuestionsMap}
+                  getSectionConfig={getSectionConfig}
+                  isManualMode={isManualMode}
+                  onManualUpdate={onManualUpdate}
+                  onManualDelete={onManualDelete}
+                  onSectionDelete={onSectionDelete}
+                />
+
+                <LongSection
+                  groupedLongQs={getGroupedLongQuestions()}
+                  longInstr={getLongInstructions()}
+                  shortQuestionsMap={shortQuestionsMap}
+                  isManualMode={isManualMode}
+                  onManualUpdate={onManualUpdate}
+                  onManualDelete={onManualDelete}
+                  onSectionDelete={onSectionDelete}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PaperPreview;

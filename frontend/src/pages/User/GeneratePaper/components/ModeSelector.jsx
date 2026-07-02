@@ -1,8 +1,13 @@
 import React, { useState } from "react";
-import { FaHandPointer, FaRobot, FaTachometerAlt } from "react-icons/fa";
+import {
+  FaHandPointer,
+  FaRobot,
+  FaTachometerAlt,
+  FaArrowLeft,
+} from "react-icons/fa";
 import toast from "react-hot-toast";
 
-const ModeSelector = ({ onSelect }) => {
+const ModeSelector = ({ onSelect, onBack }) => {
   const [activeMode, setActiveMode] = useState(null);
   const [autoConfig, setAutoConfig] = useState({
     difficulties: ["EASY", "MEDIUM", "HARD"],
@@ -91,7 +96,14 @@ const ModeSelector = ({ onSelect }) => {
       )}
 
       {activeMode && (
-        <div className="text-center mt-8">
+        <div className="flex justify-center gap-4 mt-8">
+          {/* ✅ FIX: Added Back Button inside Mode Selector */}
+          <button
+            onClick={onBack}
+            className="bg-pill-bg text-muted font-bold px-8 py-3.5 rounded-xl hover:text-main hover:bg-card border border-border transition-all duration-300 cursor-pointer text-lg flex items-center gap-2"
+          >
+            <FaArrowLeft /> Back
+          </button>
           <button
             onClick={handleGenerate}
             className="bg-linear-to-br from-accent-1 to-accent-2 text-white font-bold px-10 py-3.5 rounded-xl hover:-translate-y-1 hover:shadow-lg shadow-accent-1/30 transition-all duration-300 cursor-pointer text-lg"

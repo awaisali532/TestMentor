@@ -10,6 +10,16 @@ const ClassSelector = ({ selectedClass, onSelect }) => {
 
   useEffect(() => {
     const fetchClasses = async () => {
+      // ✅ Cache Check (Session Storage)
+      const cacheKey = "tm_cache_classes";
+      const cachedData = sessionStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        setClasses(JSON.parse(cachedData));
+        setLoading(false);
+        return; // Cache mil gaya, API call nahi hogi!
+      }
+
       const minDelay = new Promise((resolve) => setTimeout(resolve, 800));
       try {
         const token = localStorage.getItem("token");
@@ -27,6 +37,8 @@ const ClassSelector = ({ selectedClass, onSelect }) => {
             ),
           ].sort();
           setClasses(uniqueClasses);
+          // ✅ Save to Cache
+          sessionStorage.setItem(cacheKey, JSON.stringify(uniqueClasses));
         }
       } catch (err) {
         console.error(err);
@@ -78,11 +90,6 @@ const ClassSelector = ({ selectedClass, onSelect }) => {
               >
                 Tap to select
               </div>
-
-              {/* Decorative Shape */}
-              <div
-                className={`absolute top-[-50%] right-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle,var(--pw-accent)_0%,transparent_60%)] opacity-0 transition-all duration-500 z-0 pointer-events-none ${selectedClass === cls ? "opacity-5" : "group-hover:opacity-5 group-hover:translate-x-[-10%] group-hover:translate-y-[10%]"}`}
-              ></div>
             </div>
           ))}
         </div>
