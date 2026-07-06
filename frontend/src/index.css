@@ -1,9 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 @import "tailwindcss";
+
 html {
   /* Default is 16px (100%). We change it to 12.8px (80%) */
   font-size: 80%;
 }
+
 /* 1. TAILWIND v4 THEME CONFIGURATION */
 @theme {
   /* Fonts */
@@ -34,6 +36,7 @@ html {
   --animate-float: float 4s ease-in-out infinite;
 
   @keyframes float {
+
     0%,
     100% {
       transform: translateY(0);
@@ -42,6 +45,21 @@ html {
     50% {
       transform: translateY(-15px);
     }
+  }
+}
+
+@layer base {
+
+  /* Firefox */
+  html,
+  body,
+  * {
+    scrollbar-width: none;
+  }
+
+  /* Chrome, Safari, Edge */
+  *::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -72,6 +90,7 @@ html {
 
 /* 3. CSS VARIABLES FOR DARK/LIGHT MODE */
 @layer base {
+
   :root,
   [data-theme="dark"] {
     --bg-body: #020617;
@@ -109,6 +128,7 @@ html {
 
 /* 5. SPECIFIC BEHAVIORS (RTL & PRINT) */
 @layer utilities {
+
   [dir="rtl"],
   .urdu-font,
   .pp-text-ur,
@@ -120,6 +140,7 @@ html {
   }
 
   @media print {
+
     [dir="rtl"],
     .urdu-font,
     .pp-text-ur {

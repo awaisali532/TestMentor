@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import Swal from "sweetalert2";
+import { showConfirmAlert } from "../../../utils/AlertHelper"; // ✅ Clean Alert Helper
 
-// Components & Helpers
-import MakerTopbar from "./components/MakerTopbar";
-import MakerSidebar from "./components/MakerSidebar";
+// Components
+import PaperLayout from "./components/PaperLayout"; // ✅ Clean Wrapper
 import PaperPreview from "./components/PaperPreview/PaperPreview";
 import QuestionMenu from "./components/QuestionMenu/QuestionMenu";
 import SavePaperModal from "./components/SavePaperModal";
@@ -22,7 +21,6 @@ const PaperMaker = () => {
   const navigate = useNavigate();
   const isExiting = useRef(false);
 
-  // ✅ Issue 12 FIXED: Shifted from sessionStorage to localStorage to prevent data loss on reload
   const [paperData, setPaperData] = useState(() => {
     if (location.state) return healPaperQuestions(location.state);
     const savedData = localStorage.getItem("tm_paper_draft");
@@ -45,7 +43,6 @@ const PaperMaker = () => {
   const [saving, setSaving] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
 
-  // ✅ Auto Save Draft on Change
   useEffect(() => {
     if (!paperData) navigate("/user/generate-paper");
     else localStorage.setItem("tm_paper_draft", JSON.stringify(paperData));
@@ -55,7 +52,6 @@ const PaperMaker = () => {
     localStorage.setItem("tm_menu_state", isMenuOpen);
   }, [isMenuOpen]);
 
-  // Prevent accidental back navigation
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (!isExiting.current && paperData) {
@@ -76,7 +72,6 @@ const PaperMaker = () => {
     navigate("/user/dashboard");
   };
 
-  // ✅ Issue 5 FIXED: Print Paper in New Tab safely
   const handlePrintPaper = (mode = "SINGLE") => {
     const printPayload = { ...paperData, printSettings: { mode } };
     localStorage.setItem("tm_print_data", JSON.stringify(printPayload));
@@ -113,48 +108,43 @@ const PaperMaker = () => {
     [],
   );
 
-  const triggerDeleteAlert = (type, id, extra = null) => {
-    Swal.fire({
+  const triggerDeleteAlert = async (type, id, extra = null) => {
+    // ✅ Massive Swal.fire CSS is GONE. Using clean helper.
+    const result = await showConfirmAlert({
       title: type === "SECTION" ? "Delete Entire Section?" : "Delete Question?",
       text:
         type === "SECTION"
           ? "Are you sure you want to remove all questions in this section?"
           : "Are you sure you want to remove this question?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#334155",
       confirmButtonText: "Yes, Delete",
-      background: "#0f172a",
-      color: "#ffffff",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setPaperData((prev) => {
-          if (type === "SINGLE")
-            return {
-              ...prev,
-              questions: prev.questions.filter(
-                (q) =>
-                  (q.questionId?._id || q.questionId || q._id) !== id &&
-                  q._id !== id,
-              ),
-            };
-          if (type === "SECTION")
-            return {
-              ...prev,
-              questions: prev.questions.filter((q) => {
-                if (id === "MCQ" && q.type === "MCQ") return false;
-                if (id === "LONG" && q.type === "LONG") return false;
-                if (id === "SHORT" && q.type === "SHORT")
-                  return extra ? !q.tabId?.startsWith(extra) : false;
-                return true;
-              }),
-            };
-          return prev;
-        });
-        toast.success("Deleted successfully");
-      }
     });
+
+    if (result.isConfirmed) {
+      setPaperData((prev) => {
+        if (type === "SINGLE")
+          return {
+            ...prev,
+            questions: prev.questions.filter(
+              (q) =>
+                (q.questionId?._id || q.questionId || q._id) !== id &&
+                q._id !== id,
+            ),
+          };
+        if (type === "SECTION")
+          return {
+            ...prev,
+            questions: prev.questions.filter((q) => {
+              if (id === "MCQ" && q.type === "MCQ") return false;
+              if (id === "LONG" && q.type === "LONG") return false;
+              if (id === "SHORT" && q.type === "SHORT")
+                return extra ? !q.tabId?.startsWith(extra) : false;
+              return true;
+            }),
+          };
+        return prev;
+      });
+      toast.success("Deleted successfully");
+    }
   };
 
   const handleManualDelete = (qId) => triggerDeleteAlert("SINGLE", qId);
@@ -206,9 +196,6 @@ const PaperMaker = () => {
         totalMarks: paperData.selectedPattern?.totalMarks || 0,
         pattern: paperData.selectedPattern,
         questions: questionsToSave,
-        examLabel: paperData.examLabel || "",
-        syllabusLabel: paperData.syllabusLabel || "",
-        examDate: paperData.examDate || null,
       };
 
       const isPut = paperData._id && paperData.title === paperTitle;
@@ -233,49 +220,41 @@ const PaperMaker = () => {
     }
   };
 
-  // ✅ Issue 15 FIXED: overflow-auto, min-w-[1280px], h-screen
   return (
-    <div className="flex flex-col h-screen w-full min-w-7xl bg-bg-body overflow-auto relative font-sans text-main transition-colors duration-300">
-      {/* ✅ New Topbar Included */}
-      <MakerTopbar />
-
-      <div className="flex flex-1 overflow-hidden relative">
-        <div className="sticky top-0 h-full z-40 shrink-0">
-          <MakerSidebar
-            paperData={paperData}
-            onOpenMenu={() => setIsMenuOpen(true)}
-            isMenuOpen={isMenuOpen}
-            isCollapsed={isSidebarCollapsed}
-            toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            onCancel={handleCancelPaper}
-            onSave={handleSaveClick}
-            onPrint={handlePrintPaper}
-            isManualMode={isManualMode}
-            toggleManualMode={() => setIsManualMode(!isManualMode)}
-          />
-        </div>
-
-        <div className="flex-1 h-full flex justify-center items-start overflow-y-auto overflow-x-hidden p-4 custom-scrollbar">
-          <PaperPreview
-            paperData={paperData}
-            onOpenMenu={() => setIsMenuOpen(true)}
-            isManualMode={isManualMode}
-            onManualUpdate={handleManualUpdate}
-            onManualDelete={handleManualDelete}
-            onSectionDelete={handleSectionDelete}
-          />
-        </div>
-
-        <QuestionMenu
-          isOpen={isMenuOpen}
-          onClose={() => setIsMenuOpen(false)}
+    <>
+      {/* ✅ The UI is now clean! All layout structure is inside PaperLayout */}
+      <PaperLayout
+        paperData={paperData}
+        isSidebarCollapsed={isSidebarCollapsed}
+        toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isMenuOpen={isMenuOpen}
+        onOpenMenu={() => setIsMenuOpen(true)}
+        onCancel={handleCancelPaper}
+        onSave={handleSaveClick}
+        onPrint={handlePrintPaper}
+        isManualMode={isManualMode}
+        toggleManualMode={() => setIsManualMode(!isManualMode)}
+      >
+        <PaperPreview
           paperData={paperData}
-          isSidebarCollapsed={isSidebarCollapsed}
-          onEditPattern={() => setShowPatternEdit(true)}
-          onAddQuestionsToPaper={handleAddQuestionsToPaper}
-          selectedQuestions={paperData.questions || []}
+          onOpenMenu={() => setIsMenuOpen(true)}
+          isManualMode={isManualMode}
+          onManualUpdate={handleManualUpdate}
+          onManualDelete={handleManualDelete}
+          onSectionDelete={handleSectionDelete}
         />
-      </div>
+      </PaperLayout>
+
+      {/* Modals & Popups remain outside the layout flow naturally */}
+      <QuestionMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        paperData={paperData}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onEditPattern={() => setShowPatternEdit(true)}
+        onAddQuestionsToPaper={handleAddQuestionsToPaper}
+        selectedQuestions={paperData.questions || []}
+      />
 
       {showPatternEdit && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-2000 p-4">
@@ -299,7 +278,7 @@ const PaperMaker = () => {
           paperData.title === "Untitled Paper" ? "" : paperData.title
         }
       />
-    </div>
+    </>
   );
 };
 

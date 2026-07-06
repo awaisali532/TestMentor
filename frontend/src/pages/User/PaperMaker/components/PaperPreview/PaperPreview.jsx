@@ -1,5 +1,5 @@
 import React from "react";
-import { FaPlusCircle, FaRegFileAlt } from "react-icons/fa";
+import { FaRegFileAlt } from "react-icons/fa";
 import McqSection from "./McqSection";
 import ShortSection from "./ShortSection";
 import LongSection from "./LongSection";
@@ -88,47 +88,30 @@ const PaperPreview = ({
 
   return (
     <div
-      className={`w-full h-full box-border p-4 md:p-8 bg-card text-main transition-colors duration-300 print:p-0 print:bg-white print:text-black print:overflow-visible relative text-[0.85rem] ${
-        isManualMode
-          ? "border-[3px] border-dashed border-accent-1/50 bg-accent-1/5 shadow-inner"
-          : "shadow-sm border border-border"
-      }`}
+      className={`w-full relative text-[0.85rem] ${isManualMode ? "border-[3px] border-dashed border-accent-1/50 bg-accent-1/5 p-6 rounded-md shadow-inner" : ""}`}
     >
-      {/* Ensure Top-to-Top Alignment in Edit Mode */}
-      <style>{`
-        .items-baseline {
-          align-items: flex-start !important;
-        }
-      `}</style>
+      <style>{` .items-baseline { align-items: flex-start !important; } `}</style>
 
-      {/* ✅ PERFECT WATERMARK (Sticks immediately to the screen center) */}
+      {/* FIXED WATERMARK */}
       {instituteLogo && (
-        <div className="pointer-events-none sticky top-0 left-0 w-full h-0 z-0 overflow-visible print:fixed print:inset-0 print:flex print:justify-center print:items-center">
-          <div className="absolute top-[45vh] left-1/2 -translate-x-1/2 -translate-y-1/2 print:static print:transform-none">
+        <div className="sticky top-[50vh] w-full h-0 flex justify-center items-center pointer-events-none z-0 overflow-visible print:absolute print:inset-0 print:h-full print:top-0 print:transform-none">
+          <div className="transform -translate-y-1/2">
             <img
               src={instituteLogo}
               alt="Watermark"
-              className="w-87.5 h-87.5 object-contain opacity-[0.04] grayscale print:opacity-[0.06]"
+              className="w-100 h-100 object-contain opacity-[0.04] dark:opacity-[0.03] mix-blend-multiply dark:mix-blend-plus-lighter grayscale"
             />
           </div>
         </div>
       )}
 
-      {/* CONTENT WRAPPER */}
-      <div className="relative z-10 w-full max-w-full print:px-5">
+      {/* CONTENT LAYER */}
+      <div className="relative z-10 w-full">
         {!hasQuestions ? (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-muted opacity-80 print:hidden">
+          <div className="flex flex-col items-center justify-start pt-20 h-full text-muted opacity-80 print:hidden">
             <FaRegFileAlt className="text-6xl mb-4" />
             <h3 className="text-xl font-bold">Paper Empty</h3>
-            <p>Add questions from the menu.</p>
-            {!isPrintMode && (
-              <button
-                onClick={onOpenMenu}
-                className="mt-5 px-6 py-2.5 bg-accent-1 text-white border-none rounded-lg cursor-pointer flex items-center gap-2 font-semibold hover:bg-accent-2 shadow-md"
-              >
-                <FaPlusCircle /> Open Menu
-              </button>
-            )}
+            <p>Select questions from the menu.</p>
           </div>
         ) : (
           <>
@@ -139,10 +122,10 @@ const PaperPreview = ({
               onManualDelete={onManualDelete}
               onSectionDelete={onSectionDelete}
             />
-
             {hasSubjective && (
               <div className="mb-6">
-                <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black font-extrabold uppercase text-[0.9rem] pb-1 mb-4">
+                {/* ✅ FIX: border-main applied so it dynamically changes color based on theme */}
+                <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black font-extrabold uppercase text-[0.9rem] pb-1 mb-4 transition-colors duration-300">
                   <span className="text-[0.8rem] print:text-[0.9rem]">
                     Subjective Part
                   </span>
@@ -154,7 +137,6 @@ const PaperPreview = ({
                     حصہ انشائیہ
                   </span>
                 </div>
-
                 <ShortSection
                   shortQuestionsMap={shortQuestionsMap}
                   getSectionConfig={getSectionConfig}
@@ -163,7 +145,6 @@ const PaperPreview = ({
                   onManualDelete={onManualDelete}
                   onSectionDelete={onSectionDelete}
                 />
-
                 <LongSection
                   groupedLongQs={getGroupedLongQuestions()}
                   longInstr={getLongInstructions()}
@@ -182,4 +163,4 @@ const PaperPreview = ({
   );
 };
 
-export default PaperPreview;
+export default React.memo(PaperPreview);
