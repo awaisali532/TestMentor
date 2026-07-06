@@ -16,6 +16,10 @@ export const getCroppedImg = (imageSrc, pixelCrop) => {
     canvas.width = pixelCrop.width;
     canvas.height = pixelCrop.height;
 
+    // ✅ Ensure canvas starts fully transparent (some browsers can
+    // leave stale/black pixels behind otherwise)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     ctx.drawImage(
       image,
       pixelCrop.x,
@@ -28,14 +32,14 @@ export const getCroppedImg = (imageSrc, pixelCrop) => {
       pixelCrop.height,
     );
 
-    // Canvas ko Blob (File) mein convert karein
+    // ✅ PNG use karein taake alpha/transparency preserve rahe
     canvas.toBlob((blob) => {
       if (!blob) {
         reject(new Error("Canvas is empty"));
         return;
       }
-      blob.name = "cropped.jpeg";
+      blob.name = "cropped.png";
       resolve(blob);
-    }, "image/jpeg");
+    }, "image/png");
   });
 };

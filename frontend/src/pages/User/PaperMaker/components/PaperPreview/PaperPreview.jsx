@@ -88,18 +88,21 @@ const PaperPreview = ({
 
   return (
     <div
-      className={`w-full relative text-[0.85rem] ${isManualMode ? "border-[3px] border-dashed border-accent-1/50 bg-accent-1/5 p-6 rounded-md shadow-inner" : ""}`}
+      className={`w-full h-full relative text-[0.85rem] ${isManualMode ? "border-[3px] border-dashed border-accent-1/50 bg-accent-1/5 p-6 rounded-md shadow-inner" : ""}`}
     >
       <style>{` .items-baseline { align-items: flex-start !important; } `}</style>
 
-      {/* FIXED WATERMARK */}
+      {/* ✅ ULTIMATE CSS TRICK FIX: 
+          1. Absolute div creates a full-height track over the white canvas.
+          2. Sticky div is exactly 80vh tall and centers the image perfectly inside it.
+          3. This guarantees it works beautifully when empty AND when scrolling! */}
       {instituteLogo && (
-        <div className="sticky top-[50vh] w-full h-0 flex justify-center items-center pointer-events-none z-0 overflow-visible print:absolute print:inset-0 print:h-full print:top-0 print:transform-none">
-          <div className="transform -translate-y-1/2">
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 print:fixed print:inset-0 print:flex print:justify-center print:items-center">
+          <div className="sticky top-0 w-full h-[80vh] flex justify-center items-center print:static print:h-auto print:w-auto">
             <img
               src={instituteLogo}
               alt="Watermark"
-              className="w-100 h-100 object-contain opacity-[0.04] dark:opacity-[0.03] mix-blend-multiply dark:mix-blend-plus-lighter grayscale"
+              className="w-100 h-100 object-contain opacity-[0.1] dark:opacity-[0.1] "
             />
           </div>
         </div>
@@ -124,7 +127,6 @@ const PaperPreview = ({
             />
             {hasSubjective && (
               <div className="mb-6">
-                {/* ✅ FIX: border-main applied so it dynamically changes color based on theme */}
                 <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black font-extrabold uppercase text-[0.9rem] pb-1 mb-4 transition-colors duration-300">
                   <span className="text-[0.8rem] print:text-[0.9rem]">
                     Subjective Part

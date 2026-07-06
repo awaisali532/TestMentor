@@ -208,6 +208,8 @@ exports.updateProfile = async (req, res) => {
           folder: "questbank/avatars",
           width: 300,
           crop: "scale",
+          flags: "preserve_transparency",
+          format: "png",
         });
         user.image = result.secure_url;
       } catch (uploadError) {
@@ -345,6 +347,9 @@ exports.updateInstituteLogo = async (req, res) => {
       folder: "questbank/institute_logos",
       width: 300,
       crop: "scale",
+      format: "png",
+      background: "transparent",
+      flags: "preserve_transparency",
     });
 
     user.institute.logo = result.secure_url;
@@ -472,6 +477,9 @@ exports.updateProfileImage = async (req, res) => {
       folder: "questbank/avatars",
       width: 300,
       crop: "scale",
+      format: "png",
+      background: "transparent",
+      flags: "preserve_transparency",
     });
 
     user.image = result.secure_url;

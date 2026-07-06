@@ -77,7 +77,7 @@ const PhotoTab = ({ user }) => {
     setLoading(true);
     try {
       const formData = new FormData();
-      const fileName = cropType === "profile" ? "profile.jpg" : "logo.jpg";
+      const fileName = cropType === "profile" ? "profile.png" : "logo.png";
       const fieldName = cropType === "profile" ? "image" : "logo";
       const endpoint =
         cropType === "profile" ? "profile/image" : "institute/logo";

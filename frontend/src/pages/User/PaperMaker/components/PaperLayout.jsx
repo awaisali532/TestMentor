@@ -42,7 +42,7 @@ const PaperLayout = ({
           {/* ✅ FIX: Changed background from bg-white to bg-card and text to text-main. 
               Now the paper will beautifully turn dark when dark mode is on, 
               but will still print perfectly white (print:bg-white print:text-black). */}
-          <div className="w-full min-h-[calc(100vh-2rem)] bg-card text-main rounded-t-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] p-6 sm:p-8 mt-4 pb-20 print:mt-0 print:mb-0 print:p-0 print:shadow-none print:bg-white print:text-black print:rounded-none relative z-10 transition-colors duration-300">
+          <div className="w-full min-h-[calc(100vh-6rem)] bg-card text-main rounded-t-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] p-6 sm:p-8 mt-4 pb-20 print:mt-0 print:mb-0 print:p-0 print:shadow-none print:bg-white print:text-black print:rounded-none relative z-10 transition-colors duration-300">
             {children}
           </div>
         </div>
