@@ -30,19 +30,21 @@ const ShortSection = ({
         return (
           <div key={secKey} className="mb-5">
             <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-              <div className="flex-1 text-left text-[0.9rem]">
-                <strong className="mr-1">Q.{qNumber}</strong> Write short
-                answers to any {attemptLimit} questions.
+              <div className="flex-1 text-left text-[0.9rem] font-bold">
+                <strong className="mr-1 text-[1rem]">Q.{qNumber}</strong> Write
+                short answers to any {attemptLimit} questions.
               </div>
               <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap">
                 ({attemptLimit} x {marksPerQ} = {attemptLimit * marksPerQ})
               </div>
               <div
-                className="flex-1 text-right font-[Jameel_Noori_Nastaleeq] text-[0.9rem] print:text-[1rem]"
+                className="flex-1 text-right font-urdu font-bold text-[1.1rem]! print:text-[1rem]"
                 dir="rtl"
               >
-                <strong className="ml-1">سوال نمبر {qNumber}:</strong> کوئی سے{" "}
-                {attemptLimit} سوالات کے مختصر جوابات لکھیں۔
+                <strong className="ml-1 text-[1rem]">
+                  سوال نمبر {qNumber}:
+                </strong>{" "}
+                کوئی سے {attemptLimit} سوالات کے مختصر جوابات لکھیں۔
               </div>
               {isManualMode && (
                 <button
@@ -69,10 +71,12 @@ const ShortSection = ({
                     </button>
                   )}
                   <div className="flex items-baseline gap-2">
-                    <span className="font-extrabold min-w-6.25 text-[0.7rem]">
+                    {/* ✅ Increased size of Q.No */}
+                    <span className="font-extrabold min-w-7 text-[0.9rem]">
                       ({i + 1})
                     </span>
-                    <div className="flex-1 text-left text-[0.9rem]">
+                    {/* ✅ Made English Statement Bold */}
+                    <div className="flex-1 text-left text-[0.9rem] font-bold">
                       {isManualMode ? (
                         <EditableField
                           value={q.statement?.en || ""}
@@ -84,11 +88,13 @@ const ShortSection = ({
                         <RenderText text={q.statement?.en} />
                       )}
                     </div>
+                    {/* ✅ Applied font-urdu and made Urdu Statement Bold */}
                     <div
-                      className="flex-1 text-right font-[Jameel_Noori_Nastaleeq] text-[1rem] print:text-[1.1rem]"
+                      className="flex-1 text-right font-urdu font-bold text-[1rem] print:text-[1.1rem]"
                       dir="rtl"
                     >
-                      <span className="font-sans font-extrabold ml-2 inline-block text-[0.7rem]">
+                      {/* ✅ Increased size of Urdu Q.No */}
+                      <span className="font-sans font-extrabold ml-2 inline-block text-[0.9rem]">
                         ({i + 1})
                       </span>
                       {isManualMode ? (

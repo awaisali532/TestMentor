@@ -92,10 +92,7 @@ const PaperPreview = ({
     >
       <style>{` .items-baseline { align-items: flex-start !important; } `}</style>
 
-      {/* ✅ ULTIMATE CSS TRICK FIX: 
-          1. Absolute div creates a full-height track over the white canvas.
-          2. Sticky div is exactly 80vh tall and centers the image perfectly inside it.
-          3. This guarantees it works beautifully when empty AND when scrolling! */}
+      {/* FIXED WATERMARK */}
       {instituteLogo && (
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 print:fixed print:inset-0 print:flex print:justify-center print:items-center">
           <div className="sticky top-0 w-full h-[80vh] flex justify-center items-center print:static print:h-auto print:w-auto">
@@ -127,13 +124,15 @@ const PaperPreview = ({
             />
             {hasSubjective && (
               <div className="mb-6">
-                <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black font-extrabold uppercase text-[0.9rem] pb-1 mb-4 transition-colors duration-300">
-                  <span className="text-[0.8rem] print:text-[0.9rem]">
+                <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black uppercase pb-1 mb-4 transition-colors duration-300">
+                  {/* ✅ English Heading: Bold aur 1.1rem kar di gayi hai */}
+                  <span className="font-bold text-[1.1rem]! print:text-[1.2rem]!">
                     Subjective Part
                   </span>
                   <span className="font-light opacity-50 text-[1.1rem]">|</span>
+                  {/* ✅ Urdu Heading: Yeh pehle se bold aur 1.1rem thi */}
                   <span
-                    className="font-[Jameel_Noori_Nastaleeq] text-[1.1rem] print:text-[1.2rem]"
+                    className="font-urdu font-bold text-[1.1rem]! print:text-[1.2rem]!"
                     dir="rtl"
                   >
                     حصہ انشائیہ

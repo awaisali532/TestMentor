@@ -20,16 +20,16 @@ const LongSection = ({
     <div className="mb-5">
       <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
         <div className="flex-1 text-left text-[0.9rem]">
-          <strong>Section II (Long Questions)</strong>
+          <strong className="text-[1rem]">Section II (Long Questions)</strong>
         </div>
         <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap text-center">
           {longInstr.en}
         </div>
         <div
-          className="flex-1 text-right font-[Jameel_Noori_Nastaleeq] text-[0.9rem] print:text-[1rem]"
+          className="flex-1 text-right font-urdu font-bold text-[0.9rem] print:text-[1rem]"
           dir="rtl"
         >
-          <strong>{longInstr.ur}</strong> (حصہ دوم)
+          <strong className="text-[1rem]">{longInstr.ur}</strong> (حصہ دوم)
         </div>
         {isManualMode && (
           <button
@@ -64,10 +64,12 @@ const LongSection = ({
                   </button>
                 )}
                 <div className="flex items-baseline gap-2">
-                  <span className="font-extrabold min-w-8.75 text-[0.7rem]">
+                  {/* ✅ Increased size of Q.No */}
+                  <span className="font-extrabold min-w-10 text-[0.9rem]">
                     {label}
                   </span>
-                  <div className="flex-1 text-left text-[0.9rem]">
+                  {/* ✅ Made English Statement Bold */}
+                  <div className="flex-1 text-left text-[0.9rem] font-bold">
                     {isManualMode ? (
                       <EditableField
                         value={q.statement?.en || ""}
@@ -79,11 +81,13 @@ const LongSection = ({
                       <RenderText text={q.statement?.en} />
                     )}
                   </div>
+                  {/* ✅ Applied font-urdu and made Urdu Statement Bold */}
                   <div
-                    className="flex-1 text-right font-[Jameel_Noori_Nastaleeq] text-[1rem] print:text-[1.1rem]"
+                    className="flex-1 text-right font-urdu font-bold text-[1rem] print:text-[1.1rem]"
                     dir="rtl"
                   >
-                    <span className="font-sans font-extrabold ml-2 inline-block text-[0.7rem]">
+                    {/* ✅ Increased size of Urdu Q.No */}
+                    <span className="font-sans font-extrabold ml-2 inline-block text-[0.9rem]">
                       {urLabel}
                     </span>
                     {isManualMode ? (

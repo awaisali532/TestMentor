@@ -36,7 +36,6 @@ html {
   --animate-float: float 4s ease-in-out infinite;
 
   @keyframes float {
-
     0%,
     100% {
       transform: translateY(0);
@@ -49,7 +48,6 @@ html {
 }
 
 @layer base {
-
   /* Firefox */
   html,
   body,
@@ -67,7 +65,8 @@ html {
 @layer base {
   @font-face {
     font-family: "Jameel Noori";
-    src: url("../fonts/JameelNooriNastaleeq.ttf") format("truetype");
+    src: url("/fonts/JameelNooriNastaleeqRegular.ttf") format("truetype");
+
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -90,7 +89,6 @@ html {
 
 /* 3. CSS VARIABLES FOR DARK/LIGHT MODE */
 @layer base {
-
   :root,
   [data-theme="dark"] {
     --bg-body: #020617;
@@ -128,19 +126,18 @@ html {
 
 /* 5. SPECIFIC BEHAVIORS (RTL & PRINT) */
 @layer utilities {
-
   [dir="rtl"],
   .urdu-font,
   .pp-text-ur,
   .opt-ur,
   .qc-split-right {
     font-family: var(--font-urdu) !important;
-    line-height: 2 !important;
+    font-size: 0.9rem;
+    line-height: 1 !important;
     padding-top: 5px;
   }
 
   @media print {
-
     [dir="rtl"],
     .urdu-font,
     .pp-text-ur {
