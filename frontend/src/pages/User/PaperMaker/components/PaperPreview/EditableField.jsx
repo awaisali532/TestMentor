@@ -1,47 +1,46 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+// ✅ Global sanitizer import kiya hai (path adjust kar lena)
+import { sanitizeHTML } from "../../../../../utils/sanitize";
 
-const EditableField = ({ value, onChange, isUrdu, isSmall }) => {
-  const [localValue, setLocalValue] = useState(value);
+const EditableField = ({
+  value,
+  onChange,
+  isUrdu,
+  isSmall,
+  className = "",
+}) => {
   const textRef = useRef(null);
+  const [localValue, setLocalValue] = useState(value || "");
 
-  useEffect(() => setLocalValue(value), [value]);
-
-  // ✅ AUTO-RESIZE LOGIC (Inputs will grow as you type, just like the video)
   useEffect(() => {
-    if (!isSmall && textRef.current) {
-      textRef.current.style.height = "auto";
-      textRef.current.style.height = textRef.current.scrollHeight + "px";
-    }
-  }, [localValue, isSmall]);
+    setLocalValue(value || "");
+  }, [value]);
 
   const handleBlur = () => {
-    if (localValue !== value) onChange(localValue);
+    if (textRef.current) {
+      const rawHTML = textRef.current.innerHTML;
+      const safeHTML = sanitizeHTML(rawHTML);
+
+      if (safeHTML !== localValue) {
+        setLocalValue(safeHTML);
+        if (onChange) onChange(safeHTML);
+      }
+    }
   };
 
-  // ✅ INVISIBLE BORDERS UNTIL HOVER/CLICK
-  const baseClasses =
-    "block w-full min-w-0 bg-transparent border-2 border-transparent hover:border-dashed hover:border-gray-300 dark:hover:border-gray-600 focus:border-solid focus:border-accent-1 focus:bg-accent-1/5 outline-none print:hidden transition-all text-main placeholder-muted rounded resize-none m-0 p-1 -ml-1 overflow-hidden";
-
   const fontClasses = isUrdu
-    ? "rtl font-[Jameel_Noori_Nastaleeq] text-[1.1rem] leading-relaxed"
-    : "ltr font-sans text-[0.85rem]";
+    ? "rtl font-urdu leading-relaxed"
+    : "ltr font-sans";
 
-  return isSmall ? (
-    <input
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={handleBlur}
-      className={`w-[90%] text-[0.8rem] ${baseClasses} ${fontClasses}`}
-    />
-  ) : (
-    <textarea
+  return (
+    <span
       ref={textRef}
-      value={localValue}
-      onChange={(e) => setLocalValue(e.target.value)}
+      contentEditable={true}
+      suppressContentEditableWarning={true}
       onBlur={handleBlur}
-      rows={1}
-      style={{ verticalAlign: "top" }}
-      className={`${baseClasses} ${fontClasses}`}
+      dangerouslySetInnerHTML={{ __html: localValue }}
+      className={`outline-none inline border-b border-transparent hover:border-dashed hover:border-gray-400 focus:border-solid focus:border-accent-1 transition-all empty:before:content-['Type_here...'] empty:before:text-gray-400 ${fontClasses} ${className}`}
+      style={{ minWidth: isSmall ? "30px" : "auto", display: "inline-block" }}
     />
   );
 };

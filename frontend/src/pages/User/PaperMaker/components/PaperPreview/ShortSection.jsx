@@ -10,6 +10,8 @@ const ShortSection = ({
   onManualUpdate,
   onManualDelete,
   onSectionDelete,
+  customHeadings,
+  handleHeadingChange,
 }) => {
   const getQId = (q) => q.questionId?._id || q.questionId || q._id;
 
@@ -30,21 +32,72 @@ const ShortSection = ({
         return (
           <div key={secKey} className="mb-5">
             <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-              <div className="flex-1 text-left text-[0.9rem] font-bold">
-                <strong className="mr-1 text-[1rem]">Q.{qNumber}</strong> Write
-                short answers to any {attemptLimit} questions.
+              <div className="flex-1 text-left text-xl! font-bold">
+                {isManualMode ? (
+                  <EditableField
+                    value={
+                      customHeadings[`shortEn_${secKey}`] ||
+                      `<strong class="mr-1">Q.${qNumber}</strong> Write short answers to any ${attemptLimit} questions.`
+                    }
+                    onChange={(v) =>
+                      handleHeadingChange(`shortEn_${secKey}`, v)
+                    }
+                  />
+                ) : (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        customHeadings[`shortEn_${secKey}`] ||
+                        `<strong class="mr-1">Q.${qNumber}</strong> Write short answers to any ${attemptLimit} questions.`,
+                    }}
+                  />
+                )}
               </div>
               <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap">
-                ({attemptLimit} x {marksPerQ} = {attemptLimit * marksPerQ})
+                {isManualMode ? (
+                  <EditableField
+                    value={
+                      customHeadings[`shortMarks_${secKey}`] ||
+                      `(${attemptLimit} x ${marksPerQ} = ${attemptLimit * marksPerQ})`
+                    }
+                    onChange={(v) =>
+                      handleHeadingChange(`shortMarks_${secKey}`, v)
+                    }
+                  />
+                ) : (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        customHeadings[`shortMarks_${secKey}`] ||
+                        `(${attemptLimit} x ${marksPerQ} = ${attemptLimit * marksPerQ})`,
+                    }}
+                  />
+                )}
               </div>
               <div
-                className="flex-1 text-right font-urdu font-bold text-[1.1rem]! print:text-[1rem]"
+                className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl!"
                 dir="rtl"
               >
-                <strong className="ml-1 text-[1rem]">
-                  سوال نمبر {qNumber}:
-                </strong>{" "}
-                کوئی سے {attemptLimit} سوالات کے مختصر جوابات لکھیں۔
+                {isManualMode ? (
+                  <EditableField
+                    isUrdu
+                    value={
+                      customHeadings[`shortUr_${secKey}`] ||
+                      `<strong class="ml-1">سوال نمبر ${qNumber}:</strong> کوئی سے ${attemptLimit} سوالات کے مختصر جوابات لکھیں۔`
+                    }
+                    onChange={(v) =>
+                      handleHeadingChange(`shortUr_${secKey}`, v)
+                    }
+                  />
+                ) : (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        customHeadings[`shortUr_${secKey}`] ||
+                        `<strong class="ml-1">سوال نمبر ${qNumber}:</strong> کوئی سے ${attemptLimit} سوالات کے مختصر جوابات لکھیں۔`,
+                    }}
+                  />
+                )}
               </div>
               {isManualMode && (
                 <button
@@ -71,12 +124,8 @@ const ShortSection = ({
                     </button>
                   )}
                   <div className="flex items-baseline gap-2">
-                    {/* ✅ Increased size of Q.No */}
-                    <span className="font-extrabold min-w-7 text-[0.9rem]">
-                      ({i + 1})
-                    </span>
-                    {/* ✅ Made English Statement Bold */}
-                    <div className="flex-1 text-left text-[0.9rem] font-bold">
+                    <span className="font-extrabold min-w-7">({i + 1})</span>
+                    <div className="flex-1 text-left">
                       {isManualMode ? (
                         <EditableField
                           value={q.statement?.en || ""}
@@ -88,13 +137,8 @@ const ShortSection = ({
                         <RenderText text={q.statement?.en} />
                       )}
                     </div>
-                    {/* ✅ Applied font-urdu and made Urdu Statement Bold */}
-                    <div
-                      className="flex-1 text-right font-urdu font-bold text-[1rem] print:text-[1.1rem]"
-                      dir="rtl"
-                    >
-                      {/* ✅ Increased size of Urdu Q.No */}
-                      <span className="font-sans font-extrabold ml-2 inline-block text-[0.9rem]">
+                    <div className="flex-1 text-right font-urdu" dir="rtl">
+                      <span className="font-sans font-extrabold ml-2 inline-block">
                         ({i + 1})
                       </span>
                       {isManualMode ? (

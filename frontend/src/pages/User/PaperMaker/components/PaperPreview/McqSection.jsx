@@ -9,6 +9,8 @@ const McqSection = ({
   onManualUpdate,
   onManualDelete,
   onSectionDelete,
+  customHeadings,
+  handleHeadingChange,
 }) => {
   const getQId = (q) => q.questionId?._id || q.questionId || q._id;
 
@@ -16,33 +18,102 @@ const McqSection = ({
 
   return (
     <div className="mb-6">
-      <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black font-extrabold uppercase text-[0.9rem] pb-1 mb-4">
-        <span className="text-[0.9rem] print:text-[0.9rem]">
-          Objective Part
-        </span>
+      <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black uppercase pb-1 mb-4">
+        {/* ✅ FIX: text-xl! applied */}
+        {isManualMode ? (
+          <EditableField
+            value={customHeadings.objEn || "Objective Part"}
+            onChange={(v) => handleHeadingChange("objEn", v)}
+            className="font-bold text-xl! print:text-xl!"
+          />
+        ) : (
+          <span
+            className="font-bold text-xl! print:text-xl!"
+            dangerouslySetInnerHTML={{
+              __html: customHeadings.objEn || "Objective Part",
+            }}
+          />
+        )}
         <span className="font-light opacity-50 text-xl">|</span>
-        <span
-          className="font-urdu font-bold text-[1.1rem] print:text-[1.1rem]"
-          dir="rtl"
-        >
-          حصہ معروضی
-        </span>
+        {isManualMode ? (
+          <EditableField
+            isUrdu
+            value={customHeadings.objUr || "حصہ معروضی"}
+            onChange={(v) => handleHeadingChange("objUr", v)}
+            className="font-urdu font-bold text-xl! print:text-xl!"
+          />
+        ) : (
+          <span
+            className="font-urdu font-bold text-xl! print:text-xl!"
+            dir="rtl"
+            dangerouslySetInnerHTML={{
+              __html: customHeadings.objUr || "حصہ معروضی",
+            }}
+          />
+        )}
       </div>
 
       <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-        <div className="flex-1 text-left text-[0.9rem] font-bold">
-          <strong className="mr-1 text-[1rem]">Q.1</strong> Choose the correct
-          answer.
+        <div className="flex-1 text-left text-xl! font-bold">
+          {isManualMode ? (
+            <EditableField
+              value={
+                customHeadings.q1En ||
+                `<strong class="mr-1">Q.1</strong> Choose the correct answer.`
+              }
+              onChange={(v) => handleHeadingChange("q1En", v)}
+            />
+          ) : (
+            <span
+              dangerouslySetInnerHTML={{
+                __html:
+                  customHeadings.q1En ||
+                  `<strong class="mr-1">Q.1</strong> Choose the correct answer.`,
+              }}
+            />
+          )}
         </div>
         <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap">
-          ({mcqs.length} x 1 = {mcqs.length})
+          {isManualMode ? (
+            <EditableField
+              value={
+                customHeadings.q1Marks ||
+                `(${mcqs.length} x 1 = ${mcqs.length})`
+              }
+              onChange={(v) => handleHeadingChange("q1Marks", v)}
+            />
+          ) : (
+            <span
+              dangerouslySetInnerHTML={{
+                __html:
+                  customHeadings.q1Marks ||
+                  `(${mcqs.length} x 1 = ${mcqs.length})`,
+              }}
+            />
+          )}
         </div>
         <div
-          className="flex-1 text-right font-urdu font-bold text-[0.9rem] print:text-[1rem]"
+          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl!"
           dir="rtl"
         >
-          <strong className="ml-1 text-[1rem]">سوال نمبر 1:</strong> درست جواب
-          کا انتخاب کریں۔
+          {isManualMode ? (
+            <EditableField
+              isUrdu
+              value={
+                customHeadings.q1Ur ||
+                `<strong class="ml-1">سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔`
+              }
+              onChange={(v) => handleHeadingChange("q1Ur", v)}
+            />
+          ) : (
+            <span
+              dangerouslySetInnerHTML={{
+                __html:
+                  customHeadings.q1Ur ||
+                  `<strong class="ml-1">سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔`,
+              }}
+            />
+          )}
         </div>
         {isManualMode && (
           <button
@@ -69,12 +140,8 @@ const McqSection = ({
               </button>
             )}
             <div className="flex gap-2 w-full items-baseline">
-              {/* ✅ Increased size of Q.No */}
-              <span className="font-extrabold min-w-6 text-[0.9rem]">
-                {i + 1}.
-              </span>
-              {/* ✅ Made English Statement Bold */}
-              <div className="flex-1 text-left text-[0.9rem] font-bold">
+              <span className="font-extrabold min-w-6">{i + 1}.</span>
+              <div className="flex-1 text-left">
                 {isManualMode ? (
                   <EditableField
                     value={q.statement?.en || ""}
@@ -86,13 +153,8 @@ const McqSection = ({
                   <RenderText text={q.statement?.en} />
                 )}
               </div>
-              {/* ✅ Applied font-urdu and made Urdu Statement Bold */}
-              <div
-                className="flex-1 text-right font-urdu font-bold text-[1rem] print:text-[1.1rem]"
-                dir="rtl"
-              >
-                {/* ✅ Increased size of Urdu Q.No */}
-                <span className="font-sans font-extrabold ml-2 inline-block text-[0.9rem]">
+              <div className="flex-1 text-right font-urdu" dir="rtl">
+                <span className="font-sans font-extrabold ml-2 inline-block">
                   {i + 1}.
                 </span>
                 {isManualMode ? (
@@ -122,21 +184,17 @@ const McqSection = ({
             {q.options && (
               <div className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-x-4 gap-y-2 mt-1 pl-6 w-full">
                 {q.options.map((opt, idx) => {
-                  // ✅ FIX: Check kar rahe hain ke kahin English aur Urdu option bilkul same toh nahi
                   const isSameOption = opt.en?.trim() === opt.ur?.trim();
-
                   return (
                     <div
                       key={idx}
                       className="flex items-center gap-1 overflow-hidden"
                     >
-                      {/* ✅ (A)(B)(C)(D) */}
-                      <span className="font-extrabold text-[0.85rem] opacity-90">
+                      <span className="font-extrabold opacity-90">
                         ({String.fromCharCode(65 + idx)})
                       </span>
                       <div className="flex gap-1 items-baseline truncate">
-                        {/* ✅ English Option */}
-                        <span className="font-bold text-[0.85rem] text-left">
+                        <span className="text-left">
                           {isManualMode ? (
                             <EditableField
                               isSmall
@@ -155,10 +213,8 @@ const McqSection = ({
                             <RenderText text={opt.en} />
                           )}
                         </span>
-
-                        {/* ✅ Urdu Option: Sirf tab dikhao jab yeh English se DIFFERENT ho, ya Manual Mode on ho */}
                         {(!isSameOption || isManualMode) && (
-                          <span className="font-urdu font-bold text-[0.9rem] print:text-[1rem] dir-rtl">
+                          <span className="font-urdu dir-rtl">
                             {isManualMode ? (
                               <EditableField
                                 isSmall

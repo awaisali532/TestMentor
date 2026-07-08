@@ -11,6 +11,8 @@ const LongSection = ({
   onManualUpdate,
   onManualDelete,
   onSectionDelete,
+  customHeadings,
+  handleHeadingChange,
 }) => {
   const getQId = (q) => q.questionId?._id || q.questionId || q._id;
 
@@ -19,17 +21,61 @@ const LongSection = ({
   return (
     <div className="mb-5">
       <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-        <div className="flex-1 text-left text-[0.9rem]">
-          <strong className="text-[1rem]">Section II (Long Questions)</strong>
+        <div className="flex-1 text-left text-xl! font-bold">
+          {isManualMode ? (
+            <EditableField
+              value={
+                customHeadings.longEn ||
+                `<strong>Section II (Long Questions)</strong>`
+              }
+              onChange={(v) => handleHeadingChange("longEn", v)}
+            />
+          ) : (
+            <span
+              dangerouslySetInnerHTML={{
+                __html:
+                  customHeadings.longEn ||
+                  `<strong>Section II (Long Questions)</strong>`,
+              }}
+            />
+          )}
         </div>
         <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap text-center">
-          {longInstr.en}
+          {isManualMode ? (
+            <EditableField
+              value={customHeadings.longInstrEn || longInstr.en}
+              onChange={(v) => handleHeadingChange("longInstrEn", v)}
+            />
+          ) : (
+            <span
+              dangerouslySetInnerHTML={{
+                __html: customHeadings.longInstrEn || longInstr.en,
+              }}
+            />
+          )}
         </div>
         <div
-          className="flex-1 text-right font-urdu font-bold text-[0.9rem] print:text-[1rem]"
+          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl!"
           dir="rtl"
         >
-          <strong className="text-[1rem]">{longInstr.ur}</strong> (حصہ دوم)
+          {isManualMode ? (
+            <EditableField
+              isUrdu
+              value={
+                customHeadings.longUr ||
+                `<strong>${longInstr.ur}</strong> (حصہ دوم)`
+              }
+              onChange={(v) => handleHeadingChange("longUr", v)}
+            />
+          ) : (
+            <span
+              dangerouslySetInnerHTML={{
+                __html:
+                  customHeadings.longUr ||
+                  `<strong>${longInstr.ur}</strong> (حصہ دوم)`,
+              }}
+            />
+          )}
         </div>
         {isManualMode && (
           <button
@@ -64,12 +110,8 @@ const LongSection = ({
                   </button>
                 )}
                 <div className="flex items-baseline gap-2">
-                  {/* ✅ Increased size of Q.No */}
-                  <span className="font-extrabold min-w-10 text-[0.9rem]">
-                    {label}
-                  </span>
-                  {/* ✅ Made English Statement Bold */}
-                  <div className="flex-1 text-left text-[0.9rem] font-bold">
+                  <span className="font-extrabold min-w-10">{label}</span>
+                  <div className="flex-1 text-left">
                     {isManualMode ? (
                       <EditableField
                         value={q.statement?.en || ""}
@@ -81,13 +123,8 @@ const LongSection = ({
                       <RenderText text={q.statement?.en} />
                     )}
                   </div>
-                  {/* ✅ Applied font-urdu and made Urdu Statement Bold */}
-                  <div
-                    className="flex-1 text-right font-urdu font-bold text-[1rem] print:text-[1.1rem]"
-                    dir="rtl"
-                  >
-                    {/* ✅ Increased size of Urdu Q.No */}
-                    <span className="font-sans font-extrabold ml-2 inline-block text-[0.9rem]">
+                  <div className="flex-1 text-right font-urdu" dir="rtl">
+                    <span className="font-sans font-extrabold ml-2 inline-block">
                       {urLabel}
                     </span>
                     {isManualMode ? (
@@ -102,9 +139,7 @@ const LongSection = ({
                       <RenderText text={q.statement?.ur} />
                     )}
                   </div>
-                  <div className="font-bold ml-2 text-[0.85rem]">
-                    [{q.marks}]
-                  </div>
+                  <div className="font-bold ml-2">[{q.marks}]</div>
                 </div>
                 {q.image && q.image.url && (
                   <div className="flex justify-center my-2 w-full">

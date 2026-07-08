@@ -4,6 +4,7 @@ import McqSection from "./McqSection";
 import ShortSection from "./ShortSection";
 import LongSection from "./LongSection";
 import { useUser } from "../../../../../context/UserContext";
+import EditableField from "./EditableField";
 
 const PaperPreview = ({
   paperData,
@@ -86,13 +87,22 @@ const PaperPreview = ({
     return { en: enText, ur: urText };
   };
 
+  const customHeadings = paperData?.paperPattern?.customHeadings || {};
+  const handleHeadingChange = (key, val) => {
+    if (paperData && paperData.paperPattern) {
+      if (!paperData.paperPattern.customHeadings) {
+        paperData.paperPattern.customHeadings = {};
+      }
+      paperData.paperPattern.customHeadings[key] = val;
+    }
+  };
+
   return (
     <div
       className={`w-full h-full relative text-[0.85rem] ${isManualMode ? "border-[3px] border-dashed border-accent-1/50 bg-accent-1/5 p-6 rounded-md shadow-inner" : ""}`}
     >
       <style>{` .items-baseline { align-items: flex-start !important; } `}</style>
 
-      {/* FIXED WATERMARK */}
       {instituteLogo && (
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 print:fixed print:inset-0 print:flex print:justify-center print:items-center">
           <div className="sticky top-0 w-full h-[80vh] flex justify-center items-center print:static print:h-auto print:w-auto">
@@ -105,7 +115,6 @@ const PaperPreview = ({
         </div>
       )}
 
-      {/* CONTENT LAYER */}
       <div className="relative z-10 w-full">
         {!hasQuestions ? (
           <div className="flex flex-col items-center justify-start pt-20 h-full text-muted opacity-80 print:hidden">
@@ -121,22 +130,44 @@ const PaperPreview = ({
               onManualUpdate={onManualUpdate}
               onManualDelete={onManualDelete}
               onSectionDelete={onSectionDelete}
+              customHeadings={customHeadings}
+              handleHeadingChange={handleHeadingChange}
             />
             {hasSubjective && (
               <div className="mb-6">
                 <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black uppercase pb-1 mb-4 transition-colors duration-300">
-                  {/* ✅ English Heading: Bold aur 1.1rem kar di gayi hai */}
-                  <span className="font-bold text-[1.1rem]! print:text-[1.2rem]!">
-                    Subjective Part
-                  </span>
-                  <span className="font-light opacity-50 text-[1.1rem]">|</span>
-                  {/* ✅ Urdu Heading: Yeh pehle se bold aur 1.1rem thi */}
-                  <span
-                    className="font-urdu font-bold text-[1.1rem]! print:text-[1.2rem]!"
-                    dir="rtl"
-                  >
-                    حصہ انشائیہ
-                  </span>
+                  {/* ✅ FIX: Tailwind v4 syntax text-xl! applied */}
+                  {isManualMode ? (
+                    <EditableField
+                      value={customHeadings.subjEn || "Subjective Part"}
+                      onChange={(v) => handleHeadingChange("subjEn", v)}
+                      className="font-bold text-xl! print:text-xl!"
+                    />
+                  ) : (
+                    <span
+                      className="font-bold text-xl! print:text-xl!"
+                      dangerouslySetInnerHTML={{
+                        __html: customHeadings.subjEn || "Subjective Part",
+                      }}
+                    />
+                  )}
+                  <span className="font-light opacity-50 text-xl!">|</span>
+                  {isManualMode ? (
+                    <EditableField
+                      isUrdu
+                      value={customHeadings.subjUr || "حصہ انشائیہ"}
+                      onChange={(v) => handleHeadingChange("subjUr", v)}
+                      className="font-urdu font-bold text-xl! print:text-xl!"
+                    />
+                  ) : (
+                    <span
+                      className="font-urdu font-bold text-xl! print:text-xl!"
+                      dir="rtl"
+                      dangerouslySetInnerHTML={{
+                        __html: customHeadings.subjUr || "حصہ انشائیہ",
+                      }}
+                    />
+                  )}
                 </div>
                 <ShortSection
                   shortQuestionsMap={shortQuestionsMap}
@@ -145,6 +176,8 @@ const PaperPreview = ({
                   onManualUpdate={onManualUpdate}
                   onManualDelete={onManualDelete}
                   onSectionDelete={onSectionDelete}
+                  customHeadings={customHeadings}
+                  handleHeadingChange={handleHeadingChange}
                 />
                 <LongSection
                   groupedLongQs={getGroupedLongQuestions()}
@@ -154,6 +187,8 @@ const PaperPreview = ({
                   onManualUpdate={onManualUpdate}
                   onManualDelete={onManualDelete}
                   onSectionDelete={onSectionDelete}
+                  customHeadings={customHeadings}
+                  handleHeadingChange={handleHeadingChange}
                 />
               </div>
             )}
