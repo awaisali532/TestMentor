@@ -383,7 +383,7 @@ const QuestionMenu = ({
     [tempSelected, selectedQuestions, getSafeID],
   );
 
-  if (!show) return null;
+  // if (!show) return null;
 
   return (
     // ✅ CENTERED MODAL FIX (Issue 10)
@@ -442,7 +442,7 @@ const QuestionMenu = ({
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 pb-25 custom-scrollbar relative">
+          <div className="flex-1 overflow-hidden relative">
             <QuestionList
               filters={filters}
               activeTab={activeTab}

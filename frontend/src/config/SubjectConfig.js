@@ -50,7 +50,6 @@ export const SUBJECT_CATEGORIES = {
   // --- SCIENCE (Physics, Chem, Bio, Computer) ---
   default: [
     { value: "ANY", label: "Any / Mixed (Text + Exercise + Numerical)" },
-    { value: "MCQ_GENERAL", label: "General MCQs" },
     { value: "TEXT", label: "Theory / Text Question" },
     { value: "EXERCISE", label: "Book Exercise Question" },
     { value: "NUMERICAL", label: "Numerical / Problem" },

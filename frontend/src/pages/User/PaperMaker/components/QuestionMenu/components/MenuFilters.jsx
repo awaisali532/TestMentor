@@ -81,7 +81,7 @@ const MenuFilters = ({
         </div>
 
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50 max-h-75 overflow-y-auto animate-fade-in custom-scrollbar">
+          <div className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.15)] z-50  overflow-y-auto animate-fade-in custom-scrollbar">
             {safeOptions.length > 0 ? (
               <>
                 <div
