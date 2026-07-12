@@ -34,88 +34,95 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
   return (
     <div
       onClick={() => onToggle(question)}
-      className={`relative bg-card border-x border-b border-border p-4 md:p-5 flex justify-between items-start cursor-pointer transition-all duration-300 z-1 first-of-type:border-t hover:-translate-y-0.75 hover:border-accent-1 hover:shadow-[0_10px_25px_-5px_rgba(37,99,235,0.15)] hover:z-10 ${
-        isSelected ? "bg-emerald-500/5 border-l-4 border-l-emerald-500!" : ""
+      className={`relative bg-card border border-border rounded-lg p-4 md:p-5 flex justify-between items-start cursor-pointer transition-all duration-300 z-1 mb-3 hover:border-accent-1 hover:shadow-lg ${
+        isSelected ? "bg-emerald-500/5 border-l-4 border-l-emerald-500" : ""
       }`}
     >
-      <div className="flex-1 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full items-start">
-          <div className="text-left text-base font-medium leading-relaxed">
-            <span className="font-extrabold mr-2 text-accent-1">
-              Q.{index}{" "}
-            </span>
-            <RenderText text={textEn} />
-          </div>
-          {textUr && (
-            <div
-              className="text-right font-[Jameel_Noori_Nastaleeq] text-xl leading-relaxed"
-              dir="rtl"
+      <div className="flex-1 w-full flex gap-4">
+        {/* Left Side: Q.Num & Badges */}
+        <div className="flex flex-col items-center gap-1.5 shrink-0 mt-0.5 min-w-12.5">
+          <span className="font-extrabold text-accent-1 text-lg">
+            Q.{index}
+          </span>
+          <span
+            className={`text-[0.55rem] px-1.5 py-0.5 rounded-sm uppercase font-extrabold tracking-wider text-center ${getCategoryStyles(categoryClass)}`}
+          >
+            {categoryText}
+          </span>
+          {question.difficulty && (
+            <span
+              className={`text-[0.55rem] px-1.5 py-0.5 rounded-sm uppercase font-extrabold tracking-wider text-center ${getDiffStyles(question.difficulty)}`}
             >
-              <span className="font-extrabold ml-2.5 text-accent-1 inline-block font-sans">
-                {index}.
-              </span>
-              <RenderText text={textUr} />
-            </div>
+              {question.difficulty}
+            </span>
           )}
         </div>
 
-        {question.image?.url && (
-          <div className="flex justify-center my-4 w-full">
-            <img
-              src={question.image.url}
-              alt="Diagram"
-              className="max-w-full max-h-20 rounded-lg border border-border object-contain"
-            />
-          </div>
-        )}
-
-        {question.type === "MCQ" && question.options?.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 mt-4 pt-3 border-t border-dashed border-border">
-            {question.options.map((opt, i) => (
-              <div key={i} className="flex justify-between items-center py-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-[0.9rem] text-slate-500">
-                    ({String.fromCharCode(65 + i)})
-                  </span>
-                  <span className="text-[0.95rem]">
-                    <RenderText text={opt.en || ""} />
-                  </span>
-                </div>
-                {opt.ur && (
-                  <div
-                    className="font-[Jameel_Noori_Nastaleeq] text-[1.1rem]"
-                    dir="rtl"
-                  >
-                    <RenderText text={opt.ur} />
-                  </div>
-                )}
+        {/* Right Side: Statements & MCQs */}
+        <div className="flex-1 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full items-start">
+            {textEn && (
+              <div className="text-left text-lg font-medium leading-relaxed font-sans">
+                <RenderText text={textEn} />
               </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex gap-2">
-            <span
-              className={`text-[0.7rem] px-2.5 py-1 rounded-md uppercase font-bold tracking-wider ${getCategoryStyles(categoryClass)}`}
-            >
-              {categoryText}
-            </span>
-            {question.difficulty && (
-              <span
-                className={`text-[0.7rem] px-2.5 py-1 rounded-md uppercase font-bold tracking-wider ${getDiffStyles(question.difficulty)}`}
+            )}
+            {textUr && (
+              <div
+                className="text-right urdu-font text-xl leading-relaxed"
+                dir="rtl"
               >
-                {question.difficulty}
-              </span>
+                <RenderText text={textUr} />
+              </div>
             )}
           </div>
-          <span className="text-[0.8rem] text-slate-400 font-semibold">
-            Marks: {question.marks}
-          </span>
+
+          {question.image?.url && (
+            <div className="flex justify-center my-4 w-full">
+              <img
+                src={question.image.url}
+                alt="Diagram"
+                className="max-w-full max-h-20 rounded-lg border border-border object-contain"
+              />
+            </div>
+          )}
+
+          {/* MCQ Options in 1 Line with Duplicate Check & Increased Spacing */}
+          {question.type === "MCQ" && question.options?.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-3 border-t border-dashed border-border w-full">
+              {question.options.map((opt, i) => {
+                // ✅ Logic to check if English and Urdu options are identical
+                const isSameOption = opt.en?.trim() === opt.ur?.trim();
+
+                return (
+                  <div key={i} className="flex items-center gap-3 w-full">
+                    <span className="font-bold text-[0.9rem] text-slate-500 font-sans shrink-0 pt-0.5">
+                      ({String.fromCharCode(65 + i)})
+                    </span>
+
+                    {opt.en && (
+                      <span className="text-[1rem] font-sans wrap-break-word pt-0.5">
+                        <RenderText text={opt.en} />
+                      </span>
+                    )}
+
+                    {/* ✅ Hides Urdu if it's the exact same as English, and added ml-3 for extra space */}
+                    {opt.ur && !isSameOption && (
+                      <span
+                        className="urdu-font text-xl wrap-break-word ml-3"
+                        dir="rtl"
+                      >
+                        <RenderText text={opt.ur} />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="pl-4 flex items-center h-full">
+      <div className="pl-4 flex items-center h-full shrink-0">
         <div
           className={`w-5 h-5 border-2 rounded transition-all duration-200 ${isSelected ? "bg-emerald-500 border-emerald-500" : "border-slate-300"}`}
         ></div>
@@ -124,8 +131,6 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
   );
 };
 
-// 🔥 THE LAG KILLER: React.memo with custom comparison
-// Yeh srif tab render hoga jab is specific card ka 'isSelected' status change ho
 export default React.memo(QuestionCard, (prevProps, nextProps) => {
   return (
     prevProps.isSelected === nextProps.isSelected &&

@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import { FaCheckCircle, FaTrash, FaCheck, FaRobot } from "react-icons/fa";
 import MenuHeader from "./components/MenuHeader";
 import MenuFilters from "./components/MenuFilters";
 import TypeTabs from "./components/TypeTabs";
 import QuestionList from "./components/QuestionList";
-import MenuFooter from "./components/MenuFooter";
-import Loader from "../../../../../components/ui/Loader"; // ✅ Added Loader
-import { useTheme } from "../../../../../context/ThemeContext"; // ✅ Theme for Swal
+import Loader from "../../../../../components/ui/Loader";
+import { useTheme } from "../../../../../context/ThemeContext";
 import { getCategoriesForSubject } from "../../../../../config/SubjectConfig";
 import { generateAutoSelection } from "../../../../../utils/AutoPaperGenerator";
+import RenderText from "../../../../../components/ui/RenderText";
 
 const QuestionMenu = ({
   isOpen,
@@ -24,12 +25,12 @@ const QuestionMenu = ({
   const [categoriesList, setCategoriesList] = useState([]);
   const [difficultiesList] = useState(["Easy", "Medium", "Hard"]);
   const [loadingFilters, setLoadingFilters] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // ✅ Internal Loader State
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [customToast, setCustomToast] = useState(null);
 
   const [activeTab, setActiveTab] = useState("MCQ");
   const [activeSection, setActiveSection] = useState(null);
   const [filters, setFilters] = useState({ category: [], difficulty: [] });
-  const [show, setShow] = useState(false);
   const [tempSelected, setTempSelected] = useState([]);
   const [availablePool, setAvailablePool] = useState([]);
 
@@ -42,21 +43,19 @@ const QuestionMenu = ({
       );
   }, [paperData]);
 
-  const getSafeID = useCallback((q) => {
-    if (!q) return "";
-    return typeof q.questionId === "object"
-      ? String(q.questionId._id)
-      : String(q.questionId || q._id);
-  }, []);
+  const getSafeID = useCallback(
+    (q) =>
+      !q
+        ? ""
+        : typeof q.questionId === "object"
+          ? String(q.questionId._id)
+          : String(q.questionId || q._id),
+    [],
+  );
 
-  // Sync state when menu opens
   useEffect(() => {
     if (isOpen && paperData?.questions) setTempSelected(paperData.questions);
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (paperData?.questions) setTempSelected(paperData.questions);
-  }, [paperData?.selectedPattern]);
+  }, [isOpen, paperData]);
 
   useEffect(() => {
     if (paperData?.selectedPattern && activeSection) setActiveSection(null);
@@ -66,20 +65,14 @@ const QuestionMenu = ({
     setActiveSection(null);
   }, [activeTab]);
 
-  useEffect(() => {
-    if (isOpen) setShow(true);
-    else {
-      const timer = setTimeout(() => setShow(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
   const targetChapters = useMemo(() => {
     const pattern = paperData?.selectedPattern || paperData?.paperPattern;
     if (!pattern?.sections) return null;
     let targetSection = null;
     if (activeTab === "MCQ")
-      targetSection = pattern.sections.find((s) => s.questionType === "MCQ");
+      targetSection = pattern.sections.find(
+        (s) => String(s.questionType).toUpperCase() === "MCQ",
+      );
     else if (activeSection) {
       const realIndex = parseInt(activeSection.split("_")[1]);
       if (!isNaN(realIndex) && pattern.sections[realIndex])
@@ -95,7 +88,6 @@ const QuestionMenu = ({
     const pattern = paperData?.selectedPattern || paperData?.paperPattern;
     if (!pattern?.sections) return null;
     let targetSection = null;
-
     if (activeSection.startsWith("sec_")) {
       const realIndex = parseInt(activeSection.split("_")[1]);
       if (!isNaN(realIndex) && pattern.sections[realIndex])
@@ -125,7 +117,9 @@ const QuestionMenu = ({
       [];
     if (sections.length === 0) return 0;
     if (activeTab === "MCQ") {
-      const mcqSection = sections.find((s) => s.questionType === "MCQ");
+      const mcqSection = sections.find(
+        (s) => String(s.questionType).toUpperCase() === "MCQ",
+      );
       return mcqSection
         ? parseInt(mcqSection.totalQuestions || mcqSection.quantity || 0)
         : 0;
@@ -146,13 +140,13 @@ const QuestionMenu = ({
       setTempSelected((prev) => {
         if (prev.some((q) => getSafeID(q) === targetID))
           return prev.filter((q) => getSafeID(q) !== targetID);
-
         const limit = getCurrentLimit();
         let currentCount = 0;
         let sectionIdToSave = null;
-
         if (activeTab === "MCQ") {
-          currentCount = prev.filter((q) => q.type === "MCQ").length;
+          currentCount = prev.filter(
+            (q) => String(q.type).toUpperCase() === "MCQ",
+          ).length;
           sectionIdToSave = "MCQ";
         } else {
           if (!activeSection) {
@@ -168,7 +162,6 @@ const QuestionMenu = ({
           currentCount = prev.filter((q) => q.tabId === activeSection).length;
           sectionIdToSave = activeSection;
         }
-
         if (limit > 0 && currentCount >= limit) {
           setTimeout(
             () =>
@@ -185,14 +178,14 @@ const QuestionMenu = ({
     [activeTab, activeSection, getCurrentLimit, getSafeID],
   );
 
-  // ✅ AUTO SELECT FIX (Issue 6 & 7) - Clean Single Toast
   const handleAutoSelect = useCallback(() => {
     if (availablePool.length === 0)
       return toast.error("No questions available to auto-select!");
     const limit = getCurrentLimit();
     const currentCount =
       activeTab === "MCQ"
-        ? tempSelected.filter((q) => q.type === "MCQ").length
+        ? tempSelected.filter((q) => String(q.type).toUpperCase() === "MCQ")
+            .length
         : tempSelected.filter((q) => q.tabId === activeSection).length;
     const needed = limit - currentCount;
     if (needed <= 0) return toast.error("Section is already full!");
@@ -217,58 +210,40 @@ const QuestionMenu = ({
             : "Hard";
       }
     }
-
     const newSelection = generateAutoSelection(
       availablePool,
       needed,
       tempSelected.map((q) => q._id),
       options,
     );
-
-    if (newSelection.length === 0) {
+    if (newSelection.length === 0)
       return toast.error("Could not find suitable questions.");
-    }
-
     setTempSelected((prev) => [
       ...prev,
       ...newSelection.map((q) => ({ ...q, tabId: activeSection || "MCQ" })),
     ]);
-
-    // Beautiful single toast
-    toast.success(
-      `🤖 Auto-selected ${newSelection.length} questions successfully!`,
-      {
-        style: {
-          borderRadius: "10px",
-          background: theme === "dark" ? "#333" : "#fff",
-          color: theme === "dark" ? "#fff" : "#333",
-        },
-      },
+    setCustomToast(
+      `${newSelection.length} questions have been selected randomly.`,
     );
-  }, [
-    availablePool,
-    activeTab,
-    activeSection,
-    tempSelected,
-    getCurrentLimit,
-    theme,
-  ]);
+    setTimeout(() => setCustomToast(null), 3500);
+  }, [availablePool, activeTab, activeSection, tempSelected, getCurrentLimit]);
 
-  // ✅ STRICT VALIDATION LOGIC (Issue 8)
   const validateSelection = () => {
     let sections = paperData?.selectedPattern?.sections || [];
-
-    // 1. Check MCQ
-    const mcqSec = sections.find((s) => s.questionType === "MCQ");
+    const mcqSec = sections.find(
+      (s) => String(s.questionType).toUpperCase() === "MCQ",
+    );
     if (mcqSec) {
       const limit = parseInt(mcqSec.totalQuestions || mcqSec.quantity || 0);
-      const count = tempSelected.filter((q) => q.type === "MCQ").length;
+      const count = tempSelected.filter(
+        (q) => String(q.type).toUpperCase() === "MCQ",
+      ).length;
       if (count > 0 && count < limit)
         return `Objective Part requires exactly ${limit} MCQs, but you selected ${count}.`;
     }
-
-    // 2. Check Shorts
-    const shortSections = sections.filter((s) => s.questionType === "SHORT");
+    const shortSections = sections.filter(
+      (s) => String(s.questionType).toUpperCase() === "SHORT",
+    );
     for (let i = 0; i < shortSections.length; i++) {
       const realIndex = sections.indexOf(shortSections[i]);
       const secId = `sec_${realIndex}`;
@@ -283,9 +258,9 @@ const QuestionMenu = ({
       if (count > 0 && count < limit)
         return `Q.${i + 2} (Short Questions) requires exactly ${limit} questions, but you selected ${count}.`;
     }
-
-    // 3. Check Longs
-    const longSections = sections.filter((s) => s.questionType === "LONG");
+    const longSections = sections.filter(
+      (s) => String(s.questionType).toUpperCase() === "LONG",
+    );
     let startQNum = shortSections.length + 2;
     for (let i = 0; i < longSections.length; i++) {
       const realIndex = sections.indexOf(longSections[i]);
@@ -310,11 +285,9 @@ const QuestionMenu = ({
       }
       startQNum += limit;
     }
-
-    return null; // Passes Validation
+    return null;
   };
 
-  // ✅ CONFIRM ADD (With Loader and Validation Check)
   const handleConfirmAdd = () => {
     const errorMsg = validateSelection();
     if (errorMsg) {
@@ -325,42 +298,45 @@ const QuestionMenu = ({
         confirmButtonColor: "#3b82f6",
         background: theme === "dark" ? "#1e293b" : "#ffffff",
         color: theme === "dark" ? "#ffffff" : "#1e293b",
+        customClass: { container: "z-[99999]" }, // ✅ FIXED Z-INDEX FOR SWEETALERT IN MODAL
       });
       return;
     }
-
-    // Start processing loader
     setIsProcessing(true);
     setTimeout(() => {
       if (onAddQuestionsToPaper)
         onAddQuestionsToPaper(tempSelected, "REPLACE_ALL");
       setIsProcessing(false);
-      onClose(); // Automatically close modal after update
-    }, 500); // 500ms smooth delay for UI feel
+      onClose();
+    }, 500);
   };
 
+  // ✅ Fixed Tabs count logic using proper uppercase comparison
   const typeCounts = useMemo(() => {
     const counts = {
       MCQ: { total: 0, current: 0 },
       SHORT: { total: 0, current: 0 },
       LONG: { total: 0, current: 0 },
     };
-    (
+    const sections =
       paperData?.selectedPattern?.sections ||
       paperData?.paperPattern?.sections ||
-      []
-    ).forEach((sec) => {
+      [];
+    sections.forEach((sec) => {
+      const type = String(sec.questionType || "").toUpperCase();
       let qty = parseInt(sec.totalQuestions || sec.quantity) || 0;
-      if (sec.questionType === "LONG" && sec.hasParts) qty *= 2;
-      if (counts[sec.questionType]) counts[sec.questionType].total += qty;
+      if (type === "LONG" && sec.hasParts) qty *= 2;
+      if (counts[type]) counts[type].total += qty;
     });
     if (tempSelected) {
-      counts.MCQ.current = tempSelected.filter((q) => q.type === "MCQ").length;
+      counts.MCQ.current = tempSelected.filter(
+        (q) => String(q.type).toUpperCase() === "MCQ",
+      ).length;
       counts.SHORT.current = tempSelected.filter(
-        (q) => q.type === "SHORT",
+        (q) => String(q.type).toUpperCase() === "SHORT",
       ).length;
       counts.LONG.current = tempSelected.filter(
-        (q) => q.type === "LONG",
+        (q) => String(q.type).toUpperCase() === "LONG",
       ).length;
     }
     return counts;
@@ -369,13 +345,12 @@ const QuestionMenu = ({
   const questionsForFooter = useMemo(
     () =>
       activeTab === "MCQ"
-        ? tempSelected.filter((q) => q.type === "MCQ")
+        ? tempSelected.filter((q) => String(q.type).toUpperCase() === "MCQ")
         : activeSection
           ? tempSelected.filter((q) => q.tabId === activeSection)
           : [],
     [tempSelected, activeTab, activeSection],
   );
-
   const isSelectionChanged = useMemo(
     () =>
       JSON.stringify((selectedQuestions || []).map(getSafeID).sort()) !==
@@ -383,18 +358,13 @@ const QuestionMenu = ({
     [tempSelected, selectedQuestions, getSafeID],
   );
 
-  // if (!show) return null;
-
   return (
-    // ✅ CENTERED MODAL FIX (Issue 10)
     <div
-      className={`fixed inset-0 z-2000 flex justify-center items-center bg-black/60 backdrop-blur-[2px] pointer-events-auto transition-all duration-300 ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+      className={`fixed inset-0 z-2000 flex justify-center items-center bg-black/40 backdrop-blur-[2px] pointer-events-auto transition-all duration-300 ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
     >
-      {/* 2. CENTERED MODAL (Reference image ki tarah height/width set ki hai) */}
       <div
-        className={`relative w-[85vw] max-w-400 h-[85vh] bg-card text-main border border-border rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden transition-transform duration-300 ${isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
+        className={`relative w-[95vw] h-[95vh] bg-bg-body text-main rounded-xl shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ${isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
       >
-        {/* ✅ INSIDE PROCESSING LOADER */}
         {isProcessing && (
           <div className="absolute inset-0 bg-card/80 backdrop-blur-sm z-3000 flex justify-center items-center">
             <Loader fullScreen={false} text="Updating Paper..." />
@@ -407,30 +377,18 @@ const QuestionMenu = ({
           onEditPreset={onEditPattern}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden bg-bg-body">
-          <div className="bg-card border-b border-border pt-4 px-5 z-10 relative">
-            {/* ✅ AVAILABLE IN DB COUNT (Issue 16) */}
-            <div className="flex justify-between items-start gap-4">
-              <div className="flex-1">
-                <MenuFilters
-                  filters={filters}
-                  setFilters={setFilters}
-                  categoriesList={categoriesList}
-                  difficultiesList={difficultiesList}
-                  loading={loadingFilters}
-                />
-              </div>
-              <div className="shrink-0 mt-6 hidden sm:block">
-                <span className="text-xs font-bold text-muted uppercase tracking-wider block mb-1.5 text-right">
-                  Available Pool
-                </span>
-                <div className="text-sm font-extrabold bg-emerald-500/10 text-emerald-600 px-4 py-2.5 rounded-xl border border-emerald-500/20 flex items-center gap-2 shadow-sm">
-                  <span className="text-lg">{availablePool.length}</span>{" "}
-                  Questions
-                </div>
-              </div>
-            </div>
-
+        {/* ✅ ENTIRE BODY IS SCROLLABLE (SOLVES LAYOUT ISSUE) */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+          <div className="bg-card pt-4 px-6 z-10 relative shrink-0 border-b border-border">
+            <MenuFilters
+              filters={filters}
+              setFilters={setFilters}
+              categoriesList={categoriesList}
+              difficultiesList={difficultiesList}
+              loading={loadingFilters}
+              availablePool={availablePool}
+              onSelectQuestion={handleToggleSelect}
+            />
             <TypeTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -442,7 +400,8 @@ const QuestionMenu = ({
             />
           </div>
 
-          <div className="flex-1 overflow-hidden relative">
+          {/* 1. AVAILABLE QUESTIONS (Fixed height so virtualizer works, scroll to see more) */}
+          <div className="shrink-0">
             <QuestionList
               filters={filters}
               activeTab={activeTab}
@@ -455,27 +414,105 @@ const QuestionMenu = ({
             />
           </div>
 
-          <MenuFooter
-            count={questionsForFooter.length}
-            limit={getCurrentLimit()}
-            sectionLabel={
-              activeSection
-                ? activeSection.replace(/_/g, " ").toUpperCase()
-                : activeTab === "MCQ"
-                  ? "MCQ SECTION"
-                  : "SECTION"
-            }
-            onAdd={handleConfirmAdd}
-            onAutoSelect={handleAutoSelect}
-            isChanged={isSelectionChanged}
-            selectedQuestions={questionsForFooter}
-            onRemove={handleToggleSelect}
-            activeTab={activeTab}
-          />
+          {/* 2. ACTION BAR / BUTTONS (Moved to bottom of available list) */}
+          <div className="shrink-0 p-6 bg-card border-y border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleAutoSelect}
+                className="bg-[#10b981] hover:bg-[#059669] text-white px-8 py-3.5 rounded-lg font-extrabold text-[1rem] cursor-pointer flex items-center gap-2 transition-all shadow-md"
+              >
+                <FaRobot /> RANDOM SELECT
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <span className="text-[0.75rem] uppercase font-bold text-muted tracking-wider block mb-1">
+                  Total Selected
+                </span>
+                <span className="text-[1.2rem] font-extrabold text-main leading-none">
+                  {questionsForFooter.length}{" "}
+                  <span className="text-[0.8rem] text-muted">
+                    / {getCurrentLimit()}
+                  </span>
+                </span>
+              </div>
+              <button
+                onClick={handleConfirmAdd}
+                disabled={
+                  questionsForFooter.length === 0 && !isSelectionChanged
+                }
+                className="bg-[#3b82f6] hover:bg-[#2563eb] text-white border-none px-8 py-3.5 rounded-lg font-extrabold text-[1rem] cursor-pointer flex items-center gap-2 shadow-md transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
+              >
+                ADD QUESTIONS <FaCheck />
+              </button>
+            </div>
+          </div>
+
+          {/* 3. SELECTED QUESTIONS (Below buttons, purely scrollable) */}
+          <div className="shrink-0 bg-bg-body p-6 min-h-[40vh]">
+            <h3 className="text-[1.2rem] font-bold text-main mb-4 border-b border-border pb-3">
+              Selected Questions ({questionsForFooter.length})
+            </h3>
+            {questionsForFooter.length === 0 ? (
+              <p className="text-muted text-center italic mt-10">
+                No questions selected yet. Scroll up to add some!
+              </p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {questionsForFooter.map((q, i) => {
+                  const isUrdu = q.statement?.ur;
+                  return (
+                    <div
+                      key={q._id}
+                      className="flex justify-between items-center bg-card border border-border p-4 rounded-xl hover:border-accent-1 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-start gap-4 w-full pr-4">
+                        <span className="font-extrabold text-white bg-accent-1 px-2.5 py-1 rounded-md text-[0.95rem] mt-0.5">
+                          {i + 1}.
+                        </span>
+                        <div
+                          className={`flex-1 line-clamp-2 ${isUrdu ? "urdu-font text-xl text-right" : "text-[1rem] text-left"} leading-relaxed`}
+                        >
+                          <RenderText
+                            text={
+                              isUrdu
+                                ? q.statement.ur
+                                : q.statement?.en || "Question"
+                            }
+                          />
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleToggleSelect(q)}
+                        title="Remove"
+                        className="text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white p-3 rounded-lg transition-all shrink-0"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* CUSTOM BOUNCY TOAST (Alert) */}
+        <div
+          className={`absolute bottom-[10vh] left-1/2 -translate-x-1/2 z-5000 bg-white border border-green-200 shadow-[0_10px_40px_rgba(0,0,0,0.2)] rounded-full px-6 py-3 flex items-center gap-3 transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${customToast ? "translate-y-0 opacity-100 scale-100" : "translate-y-20 opacity-0 scale-90 pointer-events-none"}`}
+        >
+          <div className="w-8 h-8 rounded-full bg-green-100 text-green-500 flex justify-center items-center shrink-0">
+            <FaCheckCircle size={18} />
+          </div>
+          <span className="font-extrabold text-black text-[1.05rem] whitespace-nowrap">
+            Random Selection Complete!
+          </span>
+          <span className="text-slate-500 font-medium text-[0.9rem] ml-1 border-l border-slate-200 pl-3 whitespace-nowrap">
+            {customToast}
+          </span>
         </div>
       </div>
     </div>
   );
 };
-
 export default React.memo(QuestionMenu);
