@@ -34,7 +34,7 @@ const QuestionCard = ({ question, index, isSelected, onToggle }) => {
   return (
     <div
       onClick={() => onToggle(question)}
-      className={`relative bg-card border border-border rounded-lg p-4 md:p-5 flex justify-between items-start cursor-pointer transition-all duration-300 z-1 mb-3 hover:border-accent-1 hover:shadow-lg ${
+      className={`relative bg-card border border-border rounded-lg p-4 md:p-5 flex justify-between items-start cursor-pointer transition-all duration-300 z-1  hover:border-accent-1 hover:shadow-lg ${
         isSelected ? "bg-emerald-500/5 border-l-4 border-l-emerald-500" : ""
       }`}
     >
