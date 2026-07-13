@@ -39,6 +39,34 @@ const PaperMaker = () => {
   const [saving, setSaving] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
 
+  // ====================================================================
+  // ✅ MAGIC TRICK: FORCED DESKTOP VIEW ON MOBILE (PINCH-TO-ZOOM)
+  // ====================================================================
+  useEffect(() => {
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    let originalViewport = "width=device-width, initial-scale=1.0";
+
+    if (viewportMeta) {
+      originalViewport = viewportMeta.getAttribute("content");
+      // Browser ko force kar do ke wo 1280px ki desktop screen ban jaye
+      viewportMeta.setAttribute("content", "width=1280, user-scalable=yes");
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content = "width=1280, user-scalable=yes";
+      document.head.appendChild(meta);
+    }
+
+    return () => {
+      // Jab user Dashboard par wapas jaye toh wapas mobile mode on kar do
+      const viewportToRestore = document.querySelector('meta[name="viewport"]');
+      if (viewportToRestore) {
+        viewportToRestore.setAttribute("content", originalViewport);
+      }
+    };
+  }, []);
+  // ====================================================================
+
   useEffect(() => {
     if (!paperData) navigate("/user/generate-paper");
     else localStorage.setItem("tm_paper_draft", JSON.stringify(paperData));
@@ -59,15 +87,13 @@ const PaperMaker = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [paperData]);
 
-  // ✅ NEW: Logic to check if the entire paper is completed
-  // ✅ CONSOLE DEBUGGING & BULLETPROOF LOGIC
+  // ✅ Completion Logic
   const checkPaperCompletion = useCallback(() => {
     const pattern = paperData?.selectedPattern || paperData?.paperPattern;
     const sections = pattern?.sections || [];
 
     if (!sections || sections.length === 0) return false;
 
-    console.log("========== PAPER COMPLETION DEBUG ==========");
     let isComplete = true;
     const questions = paperData?.questions || [];
 
@@ -102,20 +128,10 @@ const PaperMaker = () => {
         ).length;
       }
 
-      console.log(
-        `[Section ${i + 1}] Type: ${type} | Required Limit: ${limit} | Added: ${currentCount}`,
-      );
-
       if (currentCount < limit) {
         isComplete = false;
       }
     }
-
-    console.log(
-      "--> FINAL RESULT: Paper is",
-      isComplete ? "COMPLETE ✅" : "INCOMPLETE ❌",
-    );
-    console.log("============================================");
 
     return isComplete;
   }, [paperData]);
@@ -307,7 +323,6 @@ const PaperMaker = () => {
     setShowSaveModal(true);
   };
 
-  // ✅ NEW: Receive formData from Modal and update payload
   const handleConfirmSave = async (formData) => {
     setSaving(true);
     try {
@@ -321,7 +336,6 @@ const PaperMaker = () => {
         tabId: q.tabId,
       }));
 
-      // Update paperData pattern with new time if changed
       const updatedPattern = {
         ...paperData.selectedPattern,
         timeAllowed: formData.timeAllowed,
@@ -329,7 +343,7 @@ const PaperMaker = () => {
 
       const payload = {
         title: formData.title,
-        examLabel: formData.category, // Storing category in examLabel
+        examLabel: formData.category,
         examDate: formData.examDate,
         subject: paperData.subject?._id || paperData.subject,
         grade: paperData.grade,
@@ -339,8 +353,10 @@ const PaperMaker = () => {
       };
 
       const isPut = paperData._id && paperData.title !== "Untitled Paper";
+      const endpoint = isPut ? `${paperData._id}` : "save";
+
       const res = await axios[isPut ? "put" : "post"](
-        `${BASE_URL}/api/papers/${isPut ? `update/${paperData._id}` : "save"}`,
+        `${BASE_URL}/api/papers/${endpoint}`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -362,7 +378,6 @@ const PaperMaker = () => {
 
   return (
     <>
-      {/* Passed isPaperComplete to Layout so Sidebar can use it */}
       <PaperLayout
         paperData={paperData}
         isSidebarCollapsed={isSidebarCollapsed}

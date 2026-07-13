@@ -53,6 +53,8 @@ const QuestionList = ({
   const processedQuestions = useMemo(() => {
     if (!allQuestions || allQuestions.length === 0) return [];
     let lastTopicId = null;
+
+    // 1. FILTERING LOGIC
     const filtered = allQuestions.filter((q) => {
       if (filters.difficulty?.length > 0) {
         const diffs = filters.difficulty.map((d) =>
@@ -63,15 +65,18 @@ const QuestionList = ({
           .trim();
         if (!diffs.includes(qDiff)) return false;
       }
+
       if (requiredChapters?.length > 0) {
         const qChapterId = String(q.chapter?._id || q.chapter);
         const reqChaps = requiredChapters.map((c) => String(c));
         if (!reqChaps.includes(qChapterId)) return false;
       }
+
       const activeCategories =
         requiredCategory && requiredCategory !== "ANY"
           ? [requiredCategory]
           : filters.category || [];
+
       if (activeCategories.length > 0 && !activeCategories.includes("ANY")) {
         let rawQCats = q.category || q.questionCategory;
         if (!rawQCats) return false;
@@ -83,9 +88,31 @@ const QuestionList = ({
         });
         if (!matchesAnyCategory) return false;
       }
+
+      if (filters.searchTerm && filters.searchTerm.trim() !== "") {
+        const searchWords = filters.searchTerm
+          .toLowerCase()
+          .trim()
+          .split(/\s+/);
+        const enText = q.statement?.en?.toLowerCase() || "";
+        const urText = q.statement?.ur || "";
+
+        const enMatch = searchWords.every((word) => {
+          try {
+            return new RegExp(`\\b${word}`, "i").test(enText);
+          } catch (e) {
+            return enText.includes(word);
+          }
+        });
+
+        const urMatch = searchWords.every((word) => urText.includes(word));
+        if (!enMatch && !urMatch) return false;
+      }
+
       return true;
     });
 
+    // 2. MAPPING & SMART SORTING LOGIC
     return filtered.map((q) => {
       const topicObj = q.topics?.[0];
       const topicId = topicObj?._id || "unknown";
@@ -95,10 +122,44 @@ const QuestionList = ({
           ? `${rawName.en} ${rawName.ur ? `(${rawName.ur})` : ""}`
           : rawName
         : "General Questions";
+
       const showHeader = topicId !== lastTopicId;
       lastTopicId = topicId;
+
+      // ✅ SMART CATEGORY PRIORITY ALGORITHM
+      let prioritizedCategories = q.category || q.questionCategory || [];
+      if (!Array.isArray(prioritizedCategories)) {
+        prioritizedCategories = [prioritizedCategories];
+      }
+
+      const activeFilters = filters.category || [];
+      if (activeFilters.length > 0 && !activeFilters.includes("ANY")) {
+        const upperFilters = activeFilters.map((f) =>
+          String(f).toUpperCase().trim(),
+        );
+
+        // Sort categories based on their index in the activeFilters array
+        prioritizedCategories = [...prioritizedCategories].sort((a, b) => {
+          const valA = String(a).toUpperCase().trim();
+          const valB = String(b).toUpperCase().trim();
+          const idxA = upperFilters.indexOf(valA);
+          const idxB = upperFilters.indexOf(valB);
+
+          // Agar dono selected filter hain toh unki tarteeb dekho
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          // Agar sirf A filter mein hai toh usay uper le jao
+          if (idxA !== -1) return -1;
+          // Agar sirf B filter mein hai toh usay uper le jao
+          if (idxB !== -1) return 1;
+          // Warna dono ko jahan hain wahein rehne do
+          return 0;
+        });
+      }
+
       return {
         ...q,
+        category: prioritizedCategories, // Updated for priority
+        questionCategory: prioritizedCategories, // Updated for priority (handling both keys)
         showHeader,
         topicDisplayName: topicObj?.topicNumber
           ? `${topicObj.topicNumber} - ${topicName}`
@@ -107,7 +168,6 @@ const QuestionList = ({
     });
   }, [allQuestions, filters, requiredChapters, requiredCategory]);
 
-  // ✅ FIXED: Using useEffect to safely pass data to parent (Auto Select Pool)
   useEffect(() => {
     if (onDataLoaded) {
       onDataLoaded(processedQuestions);
@@ -140,9 +200,11 @@ const QuestionList = ({
     );
   if (processedQuestions.length === 0)
     return (
-      <div className="p-10 text-muted text-center">
+      <div className="p-10 text-muted text-center mt-10">
         <FaInbox className="text-4xl mx-auto mb-3 opacity-50" />
-        No questions found.
+        {filters.searchTerm
+          ? "No questions match your search."
+          : "No questions found."}
       </div>
     );
 
@@ -151,7 +213,6 @@ const QuestionList = ({
       ref={parentRef}
       className="w-full h-[55vh] overflow-y-auto custom-scrollbar px-6 pt-2 bg-bg-body"
     >
-      {/* ✅ FIXED: Using Tailwind classes where possible, leaving only dynamic math in style */}
       <div
         className="w-full relative"
         style={{ height: `${rowVirtualizer.getTotalSize()}px` }}

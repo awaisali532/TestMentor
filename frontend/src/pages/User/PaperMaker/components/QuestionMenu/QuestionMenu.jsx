@@ -197,31 +197,42 @@ const QuestionMenu = ({
     [activeTab, activeSection, getCurrentLimit, getSafeID],
   );
 
+  // ✅ SMART RANDOM SELECT (Acts as a Shuffle/Refresh button)
   const handleAutoSelect = useCallback(() => {
     if (availablePool.length === 0)
       return toast.error("No questions available to auto-select!");
+
     const limit = getCurrentLimit();
+    if (limit <= 0) return toast.error("Invalid limit for this section.");
 
-    const currentCount =
-      activeTab === "MCQ"
-        ? tempSelected.filter((q) => String(q.type).toUpperCase() === "MCQ")
-            .length
-        : tempSelected.filter(
-            (q) =>
-              q.tabId === activeSection ||
-              String(q.tabId) === activeSection.replace("sec_", ""),
-          ).length;
+    // 1. Separate current tab's questions from other tabs
+    const isMCQ = activeTab === "MCQ";
+    const legacyId = activeSection ? activeSection.replace("sec_", "") : "";
 
-    const needed = limit - currentCount;
-    if (needed <= 0) return toast.error("Section is already full!");
+    const currentTabQuestions = tempSelected.filter((q) =>
+      isMCQ
+        ? String(q.type).toUpperCase() === "MCQ"
+        : q.tabId === activeSection || String(q.tabId) === legacyId,
+    );
 
+    const otherTabQuestions = tempSelected.filter((q) =>
+      isMCQ
+        ? String(q.type).toUpperCase() !== "MCQ"
+        : q.tabId !== activeSection && String(q.tabId) !== legacyId,
+    );
+
+    const currentSelectedIds = currentTabQuestions.map((q) => q._id);
+    let excludeIds = otherTabQuestions.map((q) => q._id); // Baki tabs ke sawalon ko hamesha ignore karein
+
+    // 2. Options for Long Questions Part (b)
     let options = { avoidChapters: [], targetDifficulty: null };
     if (
+      !isMCQ &&
       activeTab === "LONG" &&
       activeSection?.includes("_") &&
       activeSection.split("_")[3] === "b"
     ) {
-      const questionA = tempSelected.find(
+      const questionA = otherTabQuestions.find(
         (q) => q.tabId === activeSection.replace("_b", "_a"),
       );
       if (questionA) {
@@ -235,21 +246,35 @@ const QuestionMenu = ({
             : "Hard";
       }
     }
+
+    // 3. Smart Exclusion (Shuffle feature)
+    // Agar pool mein itne extra sawal hain ke hum purane (reject kiye gaye) questions ko chhor kar naye de sakein, toh unhe bhi exclude kardo.
+    const availableForThisTab = availablePool.filter(
+      (q) => !excludeIds.includes(q._id),
+    );
+    if (availableForThisTab.length >= limit + currentSelectedIds.length) {
+      excludeIds = [...excludeIds, ...currentSelectedIds];
+    }
+
+    // 4. Always fetch the FULL limit (This completely replaces the old selection for this tab)
     const newSelection = generateAutoSelection(
       availablePool,
-      needed,
-      tempSelected.map((q) => q._id),
+      limit,
+      excludeIds,
       options,
     );
+
     if (newSelection.length === 0)
       return toast.error("Could not find suitable questions.");
-    setTempSelected((prev) => [
-      ...prev,
-      ...newSelection.map((q) => ({ ...q, tabId: activeSection || "MCQ" })),
-    ]);
-    setCustomToast(
-      `${newSelection.length} questions have been selected randomly.`,
-    );
+
+    // 5. Update state: Keep other tabs safe, replace current tab with fresh selection
+    const formattedSelection = newSelection.map((q) => ({
+      ...q,
+      tabId: activeSection || "MCQ",
+    }));
+    setTempSelected([...otherTabQuestions, ...formattedSelection]);
+
+    setCustomToast(`Fresh Random Questions Selected!`);
     setTimeout(() => setCustomToast(null), 3500);
   }, [availablePool, activeTab, activeSection, tempSelected, getCurrentLimit]);
 
