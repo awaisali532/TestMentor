@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaSave, FaTimes, FaExclamationTriangle } from "react-icons/fa";
+import { FaTimes, FaPlus, FaExclamationTriangle } from "react-icons/fa";
 import Loader from "../../../../components/ui/Loader";
 
 const SavePaperModal = ({
@@ -7,104 +7,196 @@ const SavePaperModal = ({
   onClose,
   onConfirm,
   loading,
-  initialTitle,
+  paperData, // PaperMaker se paperData yahan receive ho raha hai
 }) => {
-  const [paperTitle, setPaperTitle] = useState("");
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "",
+    timeAllowed: "",
+    examDate: "",
+    totalMarks: 0,
+  });
 
+  // Modal open hotay hi purana data utha kar pre-fill karna
   useEffect(() => {
-    if (isOpen) setPaperTitle(initialTitle || "");
-  }, [isOpen, initialTitle]);
+    if (isOpen && paperData) {
+      const today = new Date().toISOString().split("T")[0];
+      setFormData({
+        title:
+          paperData.title === "Untitled Paper" ? "" : paperData.title || "",
+        category: paperData.examLabel || paperData.syllabusLabel || "",
+        timeAllowed: paperData.selectedPattern?.timeAllowed || "",
+        examDate: paperData.examDate || today,
+        totalMarks: paperData.selectedPattern?.totalMarks || 0,
+      });
+    }
+  }, [isOpen, paperData]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!paperTitle.trim()) return;
-    onConfirm(paperTitle);
+  const isSystemPreset = paperData?.selectedPattern?.isSystemPreset;
+
+  // Edit / Overwrite warning logic
+  const originalTitle =
+    paperData?.title === "Untitled Paper" ? "" : paperData?.title;
+  const isEditing = !!originalTitle;
+  const isNameChanged =
+    isEditing && formData.title.trim() !== originalTitle.trim();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isEditing = !!initialTitle;
-  const isNameChanged = initialTitle && paperTitle !== initialTitle;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (
+      !formData.title.trim() ||
+      !formData.category.trim() ||
+      !formData.timeAllowed.trim() ||
+      !formData.examDate
+    ) {
+      return; // HTML 'required' property will handle the warnings automatically
+    }
+    // Sara data combine kar ke parent (PaperMaker) ko bhej do
+    onConfirm(formData);
+  };
 
   return (
     <>
       {loading && <Loader fullScreen={true} text="Saving Paper..." />}
 
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-3000">
-        <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-fade-in-up">
-          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h3 className="m-0 text-lg text-slate-800 font-bold">
-              {isEditing ? "Update Paper" : "Save Paper"}
-            </h3>
+      <div className="fixed inset-0 z-3000 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="bg-white dark:bg-card w-full max-w-lg rounded-xl shadow-2xl overflow-hidden scale-in-center">
+          {/* Header - Exact Purple matching the Screenshot */}
+          <div className="bg-[#2d1b6b] px-6 py-4 flex justify-between items-center">
+            <h2 className="text-white text-lg font-bold m-0">Save Paper</h2>
             <button
+              type="button"
               onClick={onClose}
               disabled={loading}
-              className="bg-transparent border-none text-lg cursor-pointer text-slate-500 hover:text-slate-800 transition-colors"
+              className="text-white/70 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
             >
-              <FaTimes />
+              <FaTimes size={20} />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="p-6">
-              <label className="block font-semibold mb-2 text-sm text-slate-700">
-                Paper Title / Name
+          {/* Form Body */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* Paper Name */}
+            <div>
+              <label className="block text-[0.95rem] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Paper Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                placeholder="e.g. 9th Class Physics Mid-Term"
-                value={paperTitle}
-                onChange={(e) => setPaperTitle(e.target.value)}
-                autoFocus
+                name="title"
                 required
+                value={formData.title}
+                onChange={handleChange}
                 disabled={loading}
-                className="w-full p-3 border border-slate-300 rounded-lg text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                placeholder="e.g. 9th physics ch 3 academy"
+                className="w-full bg-white dark:bg-bg-body border border-slate-300 dark:border-border text-slate-900 dark:text-main px-3 py-2.5 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
               />
+            </div>
 
-              {!isEditing && (
-                <p className="text-xs text-slate-400 mt-2">
-                  Give a unique name to find it later easily.
-                </p>
-              )}
+            {/* Paper Category */}
+            <div>
+              <label className="block text-[0.95rem] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Paper Category <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="category"
+                required
+                value={formData.category}
+                onChange={handleChange}
+                disabled={loading}
+                placeholder="e.g. chapter test"
+                className="w-full bg-white dark:bg-bg-body border border-slate-300 dark:border-border text-slate-900 dark:text-main px-3 py-2.5 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+              />
+            </div>
 
-              {isEditing && !isNameChanged && (
-                <p className="text-[0.85rem] text-blue-600 bg-blue-600/10 p-2.5 rounded-md mt-3">
-                  This will <b>overwrite</b> the existing paper.
-                </p>
-              )}
-
-              {isEditing && isNameChanged && (
-                <p className="text-[0.85rem] text-amber-600 bg-amber-500/10 p-2.5 rounded-md mt-3 flex items-center gap-2">
-                  <FaExclamationTriangle className="text-base shrink-0" />
-                  <span>
-                    Name changed. This will be saved as a <b>NEW</b> paper.
-                  </span>
-                </p>
+            {/* Time Allowed */}
+            <div>
+              <label className="block text-[0.95rem] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                Time Allowed <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="timeAllowed"
+                required
+                value={formData.timeAllowed}
+                onChange={handleChange}
+                disabled={isSystemPreset || loading} // Locked for admin presets
+                placeholder="e.g. 45 mints"
+                className={`w-full border px-3 py-2.5 rounded-md transition-all focus:outline-none ${
+                  isSystemPreset
+                    ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 cursor-not-allowed"
+                    : "bg-white dark:bg-bg-body border-slate-300 dark:border-border text-slate-900 dark:text-main focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                }`}
+              />
+              {isSystemPreset && (
+                <span className="text-[0.75rem] text-slate-500 mt-1.5 block font-medium">
+                  *Time is locked for Admin Presets.
+                </span>
               )}
             </div>
 
-            <div className="p-4 bg-slate-50 flex justify-end gap-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                className="px-5 py-2.5 rounded-lg font-semibold cursor-pointer border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                Cancel
-              </button>
+            {/* Date & Total Marks Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[0.95rem] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                  Paper Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="examDate"
+                  required
+                  value={formData.examDate}
+                  onChange={handleChange}
+                  disabled={loading}
+                  className="w-full bg-white dark:bg-bg-body border border-slate-300 dark:border-border text-slate-900 dark:text-main px-3 py-2.5 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[0.95rem] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                  Total Marks <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.totalMarks}
+                  disabled // Hamesha read-only rahega
+                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-400 px-3 py-2.5 rounded-md cursor-not-allowed text-center font-bold"
+                />
+              </div>
+            </div>
+
+            {/* Warning Messages (From your original file) */}
+            {isEditing && !isNameChanged && (
+              <p className="text-[0.85rem] text-blue-600 bg-blue-600/10 p-2.5 rounded-md mt-1 mb-0 border border-blue-600/20">
+                This will <b>overwrite</b> your existing saved paper.
+              </p>
+            )}
+
+            {isEditing && isNameChanged && (
+              <p className="text-[0.85rem] text-amber-600 bg-amber-500/10 p-2.5 rounded-md mt-1 mb-0 flex items-center gap-2 border border-amber-500/20">
+                <FaExclamationTriangle className="text-base shrink-0" />
+                <span>
+                  Name changed. This will be saved as a <b>NEW</b> paper.
+                </span>
+              </p>
+            )}
+
+            {/* Submit Button aligned to right */}
+            <div className="flex justify-end pt-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2.5 rounded-lg font-semibold cursor-pointer border-none flex items-center gap-2 bg-emerald-500 text-white shadow-md hover:bg-emerald-600 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                className="bg-[#4a77e5] hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-md flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
               >
-                <FaSave />
-                {loading
-                  ? " Saving..."
-                  : isEditing
-                    ? isNameChanged
-                      ? " Save as New"
-                      : " Update Paper"
-                    : " Save Paper"}
+                <FaPlus size={14} />
+                {loading ? "SAVING..." : "SAVE PAPER"}
               </button>
             </div>
           </form>

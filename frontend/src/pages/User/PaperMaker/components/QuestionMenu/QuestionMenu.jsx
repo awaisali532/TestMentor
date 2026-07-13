@@ -116,20 +116,33 @@ const QuestionMenu = ({
       paperData?.paperPattern?.sections ||
       [];
     if (sections.length === 0) return 0;
+
     if (activeTab === "MCQ") {
       const mcqSection = sections.find(
         (s) => String(s.questionType).toUpperCase() === "MCQ",
       );
       return mcqSection
-        ? parseInt(mcqSection.totalQuestions || mcqSection.quantity || 0)
+        ? parseInt(
+            mcqSection.totalQuestions ||
+              mcqSection.quantity ||
+              mcqSection.toAttempt ||
+              0,
+          )
         : 0;
     }
+
     if (!activeSection) return 0;
+
     const realIndex = parseInt(activeSection.split("_")[1]);
     if (!isNaN(realIndex) && sections[realIndex]) {
       return activeTab === "LONG"
         ? 1
-        : parseInt(sections[realIndex].totalQuestions || 0);
+        : parseInt(
+            sections[realIndex].totalQuestions ||
+              sections[realIndex].quantity ||
+              sections[realIndex].toAttempt ||
+              0,
+          );
     }
     return 0;
   }, [paperData, activeTab, activeSection]);
@@ -140,9 +153,11 @@ const QuestionMenu = ({
       setTempSelected((prev) => {
         if (prev.some((q) => getSafeID(q) === targetID))
           return prev.filter((q) => getSafeID(q) !== targetID);
+
         const limit = getCurrentLimit();
         let currentCount = 0;
         let sectionIdToSave = null;
+
         if (activeTab === "MCQ") {
           currentCount = prev.filter(
             (q) => String(q.type).toUpperCase() === "MCQ",
@@ -159,9 +174,13 @@ const QuestionMenu = ({
             );
             return prev;
           }
-          currentCount = prev.filter((q) => q.tabId === activeSection).length;
+          const legacyId = activeSection.replace("sec_", "");
+          currentCount = prev.filter(
+            (q) => q.tabId === activeSection || String(q.tabId) === legacyId,
+          ).length;
           sectionIdToSave = activeSection;
         }
+
         if (limit > 0 && currentCount >= limit) {
           setTimeout(
             () =>
@@ -182,11 +201,17 @@ const QuestionMenu = ({
     if (availablePool.length === 0)
       return toast.error("No questions available to auto-select!");
     const limit = getCurrentLimit();
+
     const currentCount =
       activeTab === "MCQ"
         ? tempSelected.filter((q) => String(q.type).toUpperCase() === "MCQ")
             .length
-        : tempSelected.filter((q) => q.tabId === activeSection).length;
+        : tempSelected.filter(
+            (q) =>
+              q.tabId === activeSection ||
+              String(q.tabId) === activeSection.replace("sec_", ""),
+          ).length;
+
     const needed = limit - currentCount;
     if (needed <= 0) return toast.error("Section is already full!");
 
@@ -229,61 +254,25 @@ const QuestionMenu = ({
   }, [availablePool, activeTab, activeSection, tempSelected, getCurrentLimit]);
 
   const validateSelection = () => {
-    let sections = paperData?.selectedPattern?.sections || [];
-    const mcqSec = sections.find(
-      (s) => String(s.questionType).toUpperCase() === "MCQ",
-    );
-    if (mcqSec) {
-      const limit = parseInt(mcqSec.totalQuestions || mcqSec.quantity || 0);
-      const count = tempSelected.filter(
+    const limit = getCurrentLimit();
+    let currentCount = 0;
+    let sectionName = "";
+
+    if (activeTab === "MCQ") {
+      currentCount = tempSelected.filter(
         (q) => String(q.type).toUpperCase() === "MCQ",
       ).length;
-      if (count > 0 && count < limit)
-        return `Objective Part requires exactly ${limit} MCQs, but you selected ${count}.`;
+      sectionName = "Objective Part (MCQs)";
+    } else {
+      const legacyId = activeSection ? activeSection.replace("sec_", "") : "";
+      currentCount = tempSelected.filter(
+        (q) => q.tabId === activeSection || String(q.tabId) === legacyId,
+      ).length;
+      sectionName = activeSection ? "Current Question Part" : "Current Section";
     }
-    const shortSections = sections.filter(
-      (s) => String(s.questionType).toUpperCase() === "SHORT",
-    );
-    for (let i = 0; i < shortSections.length; i++) {
-      const realIndex = sections.indexOf(shortSections[i]);
-      const secId = `sec_${realIndex}`;
-      const limit = parseInt(
-        shortSections[i].totalQuestions || shortSections[i].quantity || 0,
-      );
-      let count = tempSelected.filter((q) => q.tabId === secId).length;
-      if (count === 0)
-        count = tempSelected.filter(
-          (q) => String(q.tabId) === String(realIndex),
-        ).length;
-      if (count > 0 && count < limit)
-        return `Q.${i + 2} (Short Questions) requires exactly ${limit} questions, but you selected ${count}.`;
-    }
-    const longSections = sections.filter(
-      (s) => String(s.questionType).toUpperCase() === "LONG",
-    );
-    let startQNum = shortSections.length + 2;
-    for (let i = 0; i < longSections.length; i++) {
-      const realIndex = sections.indexOf(longSections[i]);
-      const limit = parseInt(
-        longSections[i].totalQuestions || longSections[i].quantity || 0,
-      );
-      const sec = longSections[i];
-      for (let j = 0; j < limit; j++) {
-        const qNum = startQNum + j;
-        if (sec.hasParts) {
-          const countA = tempSelected.filter(
-            (q) => q.tabId === `long_${realIndex}_${j}_a`,
-          ).length;
-          const countB = tempSelected.filter(
-            (q) => q.tabId === `long_${realIndex}_${j}_b`,
-          ).length;
-          if (countA === 1 && countB === 0)
-            return `In Q.${qNum}, you selected part (a) but part (b) is missing!`;
-          if (countB === 1 && countA === 0)
-            return `In Q.${qNum}, you selected part (b) but part (a) is missing!`;
-        }
-      }
-      startQNum += limit;
+
+    if (currentCount < limit) {
+      return `Please fill the section completely! ${sectionName} requires exactly ${limit} questions, but you have selected ${currentCount}.`;
     }
     return null;
   };
@@ -292,13 +281,18 @@ const QuestionMenu = ({
     const errorMsg = validateSelection();
     if (errorMsg) {
       Swal.fire({
-        icon: "error",
-        title: "Incomplete Section",
+        icon: "warning",
+        title: "Action Required",
         text: errorMsg,
         confirmButtonColor: "#3b82f6",
         background: theme === "dark" ? "#1e293b" : "#ffffff",
         color: theme === "dark" ? "#ffffff" : "#1e293b",
-        customClass: { container: "z-[99999]" }, // ✅ FIXED Z-INDEX FOR SWEETALERT IN MODAL
+        customClass: { container: "z-[99999]" },
+        // ✅ FIXED Issue 1: SweetAlert ko jabardasti sab se uper lane ke liye
+        didOpen: () => {
+          const container = document.querySelector(".swal2-container");
+          if (container) container.style.zIndex = "99999";
+        },
       });
       return;
     }
@@ -307,11 +301,9 @@ const QuestionMenu = ({
       if (onAddQuestionsToPaper)
         onAddQuestionsToPaper(tempSelected, "REPLACE_ALL");
       setIsProcessing(false);
-      onClose();
     }, 500);
   };
 
-  // ✅ Fixed Tabs count logic using proper uppercase comparison
   const typeCounts = useMemo(() => {
     const counts = {
       MCQ: { total: 0, current: 0 },
@@ -324,7 +316,8 @@ const QuestionMenu = ({
       [];
     sections.forEach((sec) => {
       const type = String(sec.questionType || "").toUpperCase();
-      let qty = parseInt(sec.totalQuestions || sec.quantity) || 0;
+      let qty =
+        parseInt(sec.totalQuestions || sec.quantity || sec.toAttempt) || 0;
       if (type === "LONG" && sec.hasParts) qty *= 2;
       if (counts[type]) counts[type].total += qty;
     });
@@ -347,10 +340,15 @@ const QuestionMenu = ({
       activeTab === "MCQ"
         ? tempSelected.filter((q) => String(q.type).toUpperCase() === "MCQ")
         : activeSection
-          ? tempSelected.filter((q) => q.tabId === activeSection)
+          ? tempSelected.filter(
+              (q) =>
+                q.tabId === activeSection ||
+                String(q.tabId) === activeSection.replace("sec_", ""),
+            )
           : [],
     [tempSelected, activeTab, activeSection],
   );
+
   const isSelectionChanged = useMemo(
     () =>
       JSON.stringify((selectedQuestions || []).map(getSafeID).sort()) !==
@@ -377,7 +375,6 @@ const QuestionMenu = ({
           onEditPreset={onEditPattern}
         />
 
-        {/* ✅ ENTIRE BODY IS SCROLLABLE (SOLVES LAYOUT ISSUE) */}
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
           <div className="bg-card pt-4 px-6 z-10 relative shrink-0 border-b border-border">
             <MenuFilters
@@ -400,7 +397,6 @@ const QuestionMenu = ({
             />
           </div>
 
-          {/* 1. AVAILABLE QUESTIONS (Fixed height so virtualizer works, scroll to see more) */}
           <div className="shrink-0">
             <QuestionList
               filters={filters}
@@ -414,7 +410,6 @@ const QuestionMenu = ({
             />
           </div>
 
-          {/* 2. ACTION BAR / BUTTONS (Moved to bottom of available list) */}
           <div className="shrink-0 p-6 bg-card border-y border-border flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
               <button
@@ -458,36 +453,60 @@ const QuestionMenu = ({
                 No questions selected yet. Scroll up to add some!
               </p>
             ) : (
-              <div className="flex flex-col gap-3">
+              // ✅ FIXED: Gap removed, added top border for seamless table look
+              <div className="flex flex-col border-t border-border">
                 {questionsForFooter.map((q, i) => {
-                  const isUrdu = q.statement?.ur;
+                  const textEn = q.statement?.en || "";
+                  const textUr = q.statement?.ur || "";
+
+                  const originalIndex = availablePool.findIndex(
+                    (poolQ) => getSafeID(poolQ) === getSafeID(q),
+                  );
+                  const qNumberDisplay =
+                    originalIndex !== -1 ? `Q.${originalIndex + 1}` : "Q.?";
+
                   return (
+                    // ✅ DESIGN UPDATED: No rounded corners, no gaps, minimal padding, simple border-b
                     <div
                       key={q._id}
-                      className="flex justify-between items-center bg-card border border-border p-4 rounded-xl hover:border-accent-1 hover:shadow-md transition-all"
+                      className="flex justify-between items-center bg-card border-b border-border py-2 px-3 hover:bg-pill-bg/30 transition-colors"
                     >
-                      <div className="flex items-start gap-4 w-full pr-4">
-                        <span className="font-extrabold text-white bg-accent-1 px-2.5 py-1 rounded-md text-[0.95rem] mt-0.5">
-                          {i + 1}.
-                        </span>
-                        <div
-                          className={`flex-1 line-clamp-2 ${isUrdu ? "urdu-font text-xl text-right" : "text-[1rem] text-left"} leading-relaxed`}
-                        >
-                          <RenderText
-                            text={
-                              isUrdu
-                                ? q.statement.ur
-                                : q.statement?.en || "Question"
-                            }
-                          />
+                      <div className="flex items-center gap-4 w-full pr-4">
+                        {/* Numbering Column */}
+                        <div className="flex flex-col items-center gap-1 shrink-0">
+                          <span className="font-extrabold text-white bg-accent-1 px-2 py-0.5 rounded text-[0.85rem] leading-none">
+                            {i + 1}.
+                          </span>
+                          <span className="text-[0.6rem] font-bold text-muted bg-pill-bg px-1.5 py-0.5 rounded leading-none">
+                            {qNumberDisplay}
+                          </span>
+                        </div>
+
+                        {/* Statements Column (English & Urdu Both in 1 Row) */}
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full items-center">
+                          {textEn && (
+                            <div className="text-[0.9rem] font-medium leading-relaxed font-sans text-left line-clamp-2">
+                              <RenderText text={textEn} />
+                            </div>
+                          )}
+                          {textUr && (
+                            <div
+                              className="urdu-font text-lg leading-relaxed text-right line-clamp-2"
+                              dir="rtl"
+                            >
+                              <RenderText text={textUr} />
+                            </div>
+                          )}
                         </div>
                       </div>
+
+                      {/* Trash Button - Made more compact */}
                       <button
                         onClick={() => handleToggleSelect(q)}
                         title="Remove"
-                        className="text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white p-3 rounded-lg transition-all shrink-0"
+                        className="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded transition-all shrink-0"
                       >
-                        <FaTrash />
+                        <FaTrash size={14} />
                       </button>
                     </div>
                   );
@@ -497,7 +516,6 @@ const QuestionMenu = ({
           </div>
         </div>
 
-        {/* CUSTOM BOUNCY TOAST (Alert) */}
         <div
           className={`absolute bottom-[10vh] left-1/2 -translate-x-1/2 z-5000 bg-white border border-green-200 shadow-[0_10px_40px_rgba(0,0,0,0.2)] rounded-full px-6 py-3 flex items-center gap-3 transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${customToast ? "translate-y-0 opacity-100 scale-100" : "translate-y-20 opacity-0 scale-90 pointer-events-none"}`}
         >

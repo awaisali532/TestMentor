@@ -36,7 +36,6 @@ const SyllabusSelector = ({
 
   useEffect(() => {
     const fetchSyllabus = async () => {
-      // ✅ Cache Check (Specific to Class + Subject)
       const cacheKey = `tm_cache_chapters_${selectedClass}_${selectedSubject}`;
       const cachedData = sessionStorage.getItem(cacheKey);
 
@@ -60,7 +59,6 @@ const SyllabusSelector = ({
           minDelay,
         ]);
         setChapters(response.data);
-        // ✅ Save to Cache
         sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
       } catch (err) {
         console.error("Fetch Error:", err);
@@ -79,6 +77,7 @@ const SyllabusSelector = ({
   const isAllSelected =
     allTopicIds.length > 0 && allTopicIds.length === selectedTopicIds.length;
 
+  // ✅ SMART HALF-BOOK LOGIC ADDED HERE
   const updateSelection = (newIds) => {
     setSelectedTopicIds(newIds);
     let label = "Select Syllabus";
@@ -86,17 +85,30 @@ const SyllabusSelector = ({
 
     if (newIds.length > 0) {
       const totalChaptersCount = chapters.length;
+
+      // Ginte hain ke user ne kitne chapters select kiye (jin mein kam az kam 1 topic select ho)
       const selectedChaptersCount = chapters.filter((ch) =>
         ch.topics.some((t) => newIds.includes(t._id)),
       ).length;
 
-      if (selectedChaptersCount === totalChaptersCount) {
-        label = "Full Syllabus (Custom)";
+      // 1. Full Book Check
+      if (
+        selectedChaptersCount === totalChaptersCount ||
+        newIds.length === allTopicIds.length
+      ) {
+        label =
+          newIds.length === allTopicIds.length
+            ? "Full Syllabus"
+            : "Full Syllabus (Custom)";
         type = "FULL_BOOK";
-      } else if (newIds.length === allTopicIds.length) {
-        label = "Full Syllabus";
-        type = "FULL_BOOK";
-      } else {
+      }
+      // 2. Half Book Check (Ceil Math lagaya gaya hai, e.g. 9/2 = 5)[cite: 10]
+      else if (selectedChaptersCount === Math.ceil(totalChaptersCount / 2)) {
+        label = "Half Book";
+        type = "HALF_BOOK";
+      }
+      // 3. Chapter Wise Check
+      else {
         const involvedChapters = chapters
           .filter((ch) => ch.topics.some((t) => newIds.includes(t._id)))
           .map((ch) => `CH-${ch.chapterNumber}`);
@@ -104,6 +116,8 @@ const SyllabusSelector = ({
         type = "CHAPTERS";
       }
     }
+
+    // Parent element ko naya Type bhej rahe hain
     onSelectionChange(newIds, label, type);
   };
 

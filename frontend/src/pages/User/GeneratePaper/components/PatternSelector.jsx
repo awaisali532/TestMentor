@@ -96,10 +96,17 @@ const PatternSelector = ({
       if (syllabusType === "FULL_BOOK") {
         return category === "FULL_BOOK" || category === "GENERAL";
       }
+      if (syllabusType === "HALF_BOOK") {
+        return (
+          category === "HALF_BOOK" ||
+          category === "CHAPTER_WISE" ||
+          category === "GENERAL"
+        );
+      }
       if (syllabusType === "CHAPTERS") {
         return category === "CHAPTER_WISE" || category === "GENERAL";
       }
-      return true;
+      return false; // Default fallback for unknown types
     });
   }, [patterns, syllabusType]);
 

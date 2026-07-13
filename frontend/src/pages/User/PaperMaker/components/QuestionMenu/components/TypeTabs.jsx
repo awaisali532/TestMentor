@@ -34,8 +34,12 @@ const TypeTabs = ({
     if (!sections || sections.length === 0) return [];
 
     const subTabs = [];
+
+    // ✅ FIXED: Case-insensitive check for questionType
     const relevantSections = sections.filter(
-      (s) => s.questionType === activeTab,
+      (s) =>
+        String(s.questionType || "").toUpperCase() ===
+        String(activeTab).toUpperCase(),
     );
 
     if (activeTab === "MCQ") return [];
@@ -58,8 +62,9 @@ const TypeTabs = ({
     }
 
     if (activeTab === "LONG") {
+      // ✅ FIXED: Case-insensitive check for counting shorts
       const shortSectionsCount = sections.filter(
-        (s) => s.questionType === "SHORT",
+        (s) => String(s.questionType || "").toUpperCase() === "SHORT",
       ).length;
       let startQNum = shortSectionsCount + 2;
 
@@ -135,7 +140,11 @@ const TypeTabs = ({
             >
               {tab.label}
               <span
-                className={`text-[0.75px] px-1.5 py-0.5 rounded border ${isFull ? "bg-emerald-500/15 text-emerald-500 border-emerald-500" : "bg-card border-border"}`}
+                className={`text-[0.75rem] px-1.5 py-0.5 rounded border ${
+                  isFull
+                    ? "bg-emerald-500/15 text-emerald-500 border-emerald-500"
+                    : "bg-card border-border"
+                }`}
               >
                 {countData.current}/{countData.total}
               </span>
@@ -165,7 +174,9 @@ const TypeTabs = ({
               >
                 {sub.label}
                 <span
-                  className={`text-[0.75rem] font-bold ${isActive ? "text-white/90" : "opacity-70"}`}
+                  className={`text-[0.75rem] font-bold ${
+                    isActive ? "text-white/90" : "opacity-70"
+                  }`}
                 >
                   ({sub.countLabel})
                 </span>

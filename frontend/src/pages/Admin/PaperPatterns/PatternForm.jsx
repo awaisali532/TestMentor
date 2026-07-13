@@ -410,6 +410,7 @@ const PatternForm = ({
     setFormData({ ...formData, sections: updated });
   };
 
+  // ✅ FIXED: Bulletproof Request Handling (Protects from Route Errors)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name) return toast.error("Pattern Name is required");
@@ -420,23 +421,22 @@ const PatternForm = ({
       const payload = {
         ...formData,
         gradeLevel: formData.className,
-        isSystemPreset: !isUserMode,
+        isSystemPreset: false, // Since User is editing, it should be false
         createdBy: user?._id,
       };
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      const res = patternToEdit
-        ? await axios.put(
-            `${BASE_URL}/api/patterns/${patternToEdit._id}`,
-            payload,
-            config,
-          )
-        : await axios.post(`${BASE_URL}/api/patterns`, payload, config);
+      const isPut = patternToEdit && patternToEdit._id;
+      const endpoint = isPut
+        ? `${BASE_URL}/api/patterns/${patternToEdit._id}`
+        : `${BASE_URL}/api/patterns`;
 
-      toast.success(
-        isUserMode ? "Custom Pattern Saved!" : "System Pattern Created!",
-      );
+      const res = isPut
+        ? await axios.put(endpoint, payload, config)
+        : await axios.post(endpoint, payload, config);
+
+      toast.success("Pattern Saved!");
       if (onSuccess) onSuccess(res.data);
       onClose();
     } catch (err) {
@@ -458,8 +458,9 @@ const PatternForm = ({
       <div className="flex items-center gap-4 mb-6 border-b border-border pb-4">
         {!isUserMode && (
           <button
+            type="button"
             onClick={handleSafeBack}
-            className="p-2 bg-pill-bg text-muted hover:text-main rounded-lg transition-colors"
+            className="p-2 bg-pill-bg text-muted hover:text-main rounded-lg transition-colors cursor-pointer"
           >
             <FaArrowLeft />
           </button>
@@ -499,14 +500,14 @@ const PatternForm = ({
           <button
             type="button"
             onClick={handleSafeBack}
-            className="px-6 py-2.5 rounded-xl font-bold bg-pill-bg text-muted hover:text-main transition-colors"
+            className="px-6 py-2.5 rounded-xl font-bold bg-pill-bg text-muted hover:text-main transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 rounded-xl font-bold bg-accent-1 text-white hover:bg-accent-2 transition-colors flex items-center gap-2 cursor-pointer shadow-lg shadow-accent-1/30"
+            className="px-6 py-2.5 rounded-xl font-bold bg-accent-1 text-white hover:bg-accent-2 transition-colors flex items-center gap-2 cursor-pointer shadow-lg shadow-accent-1/30 disabled:bg-slate-500 disabled:cursor-not-allowed"
           >
             {loading ? (
               "Saving..."

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef } from "react";
+import React, { useMemo, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import axios from "axios";
@@ -48,9 +48,6 @@ const QuestionList = ({
     queryFn: fetchQuestions,
     staleTime: Infinity,
     cacheTime: 1000 * 60 * 60,
-    onSuccess: (data) => {
-      if (onDataLoaded) onDataLoaded(data);
-    },
   });
 
   const processedQuestions = useMemo(() => {
@@ -110,6 +107,13 @@ const QuestionList = ({
     });
   }, [allQuestions, filters, requiredChapters, requiredCategory]);
 
+  // ✅ FIXED: Using useEffect to safely pass data to parent (Auto Select Pool)
+  useEffect(() => {
+    if (onDataLoaded) {
+      onDataLoaded(processedQuestions);
+    }
+  }, [processedQuestions, onDataLoaded]);
+
   const rowVirtualizer = useVirtualizer({
     count: processedQuestions.length,
     getScrollElement: () => parentRef.current,
@@ -143,17 +147,14 @@ const QuestionList = ({
     );
 
   return (
-    // ✅ The fixed 55vh container for Available Questions ensures layout flows nicely down
     <div
       ref={parentRef}
       className="w-full h-[55vh] overflow-y-auto custom-scrollbar px-6 pt-2 bg-bg-body"
     >
+      {/* ✅ FIXED: Using Tailwind classes where possible, leaving only dynamic math in style */}
       <div
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-          width: "100%",
-          position: "relative",
-        }}
+        className="w-full relative"
+        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const q = processedQuestions[virtualRow.index];
@@ -165,13 +166,8 @@ const QuestionList = ({
               key={virtualRow.key}
               data-index={virtualRow.index}
               ref={rowVirtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
+              className="absolute top-0 left-0 w-full"
+              style={{ transform: `translateY(${virtualRow.start}px)` }}
             >
               {q.showHeader && (
                 <div className="bg-[#1e3a8a] text-white text-center font-bold px-4 py-2.5 text-[1.1rem] rounded-md mb-3 mt-1 uppercase tracking-wide">

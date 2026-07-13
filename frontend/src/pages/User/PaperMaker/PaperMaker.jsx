@@ -2,18 +2,14 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { showConfirmAlert } from "../../../utils/AlertHelper"; // ✅ Clean Alert Helper
+import { showConfirmAlert } from "../../../utils/AlertHelper";
 
 // Components
-import PaperLayout from "./components/PaperLayout"; // ✅ Clean Wrapper
+import PaperLayout from "./components/PaperLayout";
 import PaperPreview from "./components/PaperPreview/PaperPreview";
 import QuestionMenu from "./components/QuestionMenu/QuestionMenu";
 import SavePaperModal from "./components/SavePaperModal";
 import PatternForm from "../../Admin/PaperPatterns/PatternForm";
-import {
-  healPaperQuestions,
-  syncPatternUpdate,
-} from "../../../utils/paperHelpers";
 
 const PaperMaker = () => {
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -22,7 +18,7 @@ const PaperMaker = () => {
   const isExiting = useRef(false);
 
   const [paperData, setPaperData] = useState(() => {
-    if (location.state) return healPaperQuestions(location.state);
+    if (location.state) return location.state;
     const savedData = localStorage.getItem("tm_paper_draft");
     if (savedData) {
       try {
@@ -63,6 +59,69 @@ const PaperMaker = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [paperData]);
 
+  // ✅ NEW: Logic to check if the entire paper is completed
+  // ✅ CONSOLE DEBUGGING & BULLETPROOF LOGIC
+  const checkPaperCompletion = useCallback(() => {
+    const pattern = paperData?.selectedPattern || paperData?.paperPattern;
+    const sections = pattern?.sections || [];
+
+    if (!sections || sections.length === 0) return false;
+
+    console.log("========== PAPER COMPLETION DEBUG ==========");
+    let isComplete = true;
+    const questions = paperData?.questions || [];
+
+    for (let i = 0; i < sections.length; i++) {
+      const sec = sections[i];
+      const type = String(sec.questionType || "")
+        .toUpperCase()
+        .trim();
+      let limit = parseInt(
+        sec.totalQuestions || sec.quantity || sec.toAttempt || 0,
+      );
+
+      if (type === "LONG" && sec.hasParts) limit *= 2;
+
+      let currentCount = 0;
+
+      if (type === "MCQ") {
+        currentCount = questions.filter(
+          (q) =>
+            String(q.type || "")
+              .toUpperCase()
+              .trim() === "MCQ",
+        ).length;
+      } else if (type === "SHORT") {
+        currentCount = questions.filter(
+          (q) =>
+            String(q.tabId) === `sec_${i}` || String(q.tabId) === String(i),
+        ).length;
+      } else if (type === "LONG") {
+        currentCount = questions.filter((q) =>
+          String(q.tabId).startsWith(`long_${i}`),
+        ).length;
+      }
+
+      console.log(
+        `[Section ${i + 1}] Type: ${type} | Required Limit: ${limit} | Added: ${currentCount}`,
+      );
+
+      if (currentCount < limit) {
+        isComplete = false;
+      }
+    }
+
+    console.log(
+      "--> FINAL RESULT: Paper is",
+      isComplete ? "COMPLETE ✅" : "INCOMPLETE ❌",
+    );
+    console.log("============================================");
+
+    return isComplete;
+  }, [paperData]);
+
+  const isPaperComplete = checkPaperCompletion();
+
   if (!paperData) return null;
 
   const handleCancelPaper = () => {
@@ -79,20 +138,92 @@ const PaperMaker = () => {
   };
 
   const handlePatternUpdate = useCallback((incomingData) => {
-    if (!incomingData) return setShowPatternEdit(false);
-    const updatedPattern = incomingData.data || incomingData;
-    if (!updatedPattern || !updatedPattern.sections)
-      return toast.error("Failed to update pattern structure.");
-    setPaperData((prev) => syncPatternUpdate(prev, updatedPattern));
+    if (!incomingData) {
+      setShowPatternEdit(false);
+      return;
+    }
+
+    let updatedPattern = incomingData;
+    if (incomingData.pattern) updatedPattern = incomingData.pattern;
+    else if (incomingData.data && incomingData.data.sections)
+      updatedPattern = incomingData.data;
+
+    if (!updatedPattern || !updatedPattern.sections) {
+      toast.error("Failed to parse the updated pattern structure.");
+      setShowPatternEdit(false);
+      return;
+    }
+
+    setPaperData((prev) => {
+      const oldPattern = prev.selectedPattern;
+      let currentQuestions = [...(prev.questions || [])];
+
+      if (oldPattern && oldPattern.sections) {
+        updatedPattern.sections.forEach((newSec, index) => {
+          const oldSec = oldPattern.sections[index];
+          if (oldSec) {
+            const oldLimit = parseInt(
+              oldSec.totalQuestions || oldSec.quantity || oldSec.toAttempt || 0,
+            );
+            const newLimit = parseInt(
+              newSec.totalQuestions || newSec.quantity || newSec.toAttempt || 0,
+            );
+
+            let isCategoryChanged =
+              (oldSec.questionCategory || "ANY") !==
+              (newSec.questionCategory || "ANY");
+
+            if (String(newSec.questionType).toUpperCase() === "LONG") {
+              if (oldSec.hasParts !== newSec.hasParts) {
+                isCategoryChanged = true;
+              } else if (newSec.hasParts) {
+                const oldSubs = (oldSec.subQuestions || [])
+                  .map((s) => s.questionCategory || "ANY")
+                  .join(",");
+                const newSubs = (newSec.subQuestions || [])
+                  .map((s) => s.questionCategory || "ANY")
+                  .join(",");
+                if (oldSubs !== newSubs) isCategoryChanged = true;
+              }
+            }
+
+            if (oldLimit !== newLimit || isCategoryChanged) {
+              const type = String(newSec.questionType).toUpperCase();
+              if (type === "MCQ") {
+                currentQuestions = currentQuestions.filter(
+                  (q) => String(q.type).toUpperCase() !== "MCQ",
+                );
+              } else if (type === "SHORT") {
+                const secId = `sec_${index}`;
+                const altId = String(index);
+                currentQuestions = currentQuestions.filter(
+                  (q) => q.tabId !== secId && String(q.tabId) !== altId,
+                );
+              } else if (type === "LONG") {
+                currentQuestions = currentQuestions.filter(
+                  (q) => !String(q.tabId).startsWith(`long_${index}`),
+                );
+              }
+            }
+          }
+        });
+      }
+
+      return {
+        ...prev,
+        selectedPattern: updatedPattern,
+        questions: currentQuestions,
+      };
+    });
+
     setShowPatternEdit(false);
-    toast.success("Pattern Updated Successfully!");
   }, []);
 
   const handleAddQuestionsToPaper = useCallback(
     (incomingQuestions, typeToUpdate) => {
       if (typeToUpdate === "REPLACE_ALL") {
         setPaperData((prev) => ({ ...prev, questions: incomingQuestions }));
-        toast.success("Paper Updated Successfully!");
+        toast.success("Questions added to paper!");
         return;
       }
       setPaperData((prev) => {
@@ -102,14 +233,13 @@ const PaperMaker = () => {
         return { ...prev, questions: [...keepQuestions, ...incomingQuestions] };
       });
       if (incomingQuestions.length > 0)
-        toast.success(`${typeToUpdate} Added Successfully!`);
-      else toast(`${typeToUpdate} Cleared!`, { icon: "🗑️" });
+        toast.success(`Questions Added Successfully!`);
+      else toast(`Selection Cleared!`, { icon: "🗑️" });
     },
     [],
   );
 
   const triggerDeleteAlert = async (type, id, extra = null) => {
-    // ✅ Massive Swal.fire CSS is GONE. Using clean helper.
     const result = await showConfirmAlert({
       title: type === "SECTION" ? "Delete Entire Section?" : "Delete Question?",
       text:
@@ -171,12 +301,14 @@ const PaperMaker = () => {
   };
 
   const handleSaveClick = () => {
-    if (!paperData.questions || paperData.questions.length === 0)
-      return toast.error("Paper is empty!");
+    if (!isPaperComplete) {
+      return toast.error("Please complete your paper first before saving!");
+    }
     setShowSaveModal(true);
   };
 
-  const handleConfirmSave = async (paperTitle) => {
+  // ✅ NEW: Receive formData from Modal and update payload
+  const handleConfirmSave = async (formData) => {
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
@@ -189,16 +321,24 @@ const PaperMaker = () => {
         tabId: q.tabId,
       }));
 
+      // Update paperData pattern with new time if changed
+      const updatedPattern = {
+        ...paperData.selectedPattern,
+        timeAllowed: formData.timeAllowed,
+      };
+
       const payload = {
-        title: paperTitle,
+        title: formData.title,
+        examLabel: formData.category, // Storing category in examLabel
+        examDate: formData.examDate,
         subject: paperData.subject?._id || paperData.subject,
         grade: paperData.grade,
-        totalMarks: paperData.selectedPattern?.totalMarks || 0,
-        pattern: paperData.selectedPattern,
+        totalMarks: formData.totalMarks,
+        pattern: updatedPattern,
         questions: questionsToSave,
       };
 
-      const isPut = paperData._id && paperData.title === paperTitle;
+      const isPut = paperData._id && paperData.title !== "Untitled Paper";
       const res = await axios[isPut ? "put" : "post"](
         `${BASE_URL}/api/papers/${isPut ? `update/${paperData._id}` : "save"}`,
         payload,
@@ -222,7 +362,7 @@ const PaperMaker = () => {
 
   return (
     <>
-      {/* ✅ The UI is now clean! All layout structure is inside PaperLayout */}
+      {/* Passed isPaperComplete to Layout so Sidebar can use it */}
       <PaperLayout
         paperData={paperData}
         isSidebarCollapsed={isSidebarCollapsed}
@@ -234,6 +374,7 @@ const PaperMaker = () => {
         onPrint={handlePrintPaper}
         isManualMode={isManualMode}
         toggleManualMode={() => setIsManualMode(!isManualMode)}
+        isPaperComplete={isPaperComplete}
       >
         <PaperPreview
           paperData={paperData}
@@ -245,7 +386,6 @@ const PaperMaker = () => {
         />
       </PaperLayout>
 
-      {/* Modals & Popups remain outside the layout flow naturally */}
       <QuestionMenu
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
@@ -274,9 +414,7 @@ const PaperMaker = () => {
         onClose={() => setShowSaveModal(false)}
         onConfirm={handleConfirmSave}
         loading={saving}
-        initialTitle={
-          paperData.title === "Untitled Paper" ? "" : paperData.title
-        }
+        paperData={paperData}
       />
     </>
   );

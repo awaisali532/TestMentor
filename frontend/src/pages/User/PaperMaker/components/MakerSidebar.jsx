@@ -21,6 +21,7 @@ const MakerSidebar = ({
   onPrint,
   isManualMode,
   toggleManualMode,
+  isPaperComplete,
 }) => {
   const [activeTab, setActiveTab] = useState("menu");
   const { user } = useUser();
@@ -28,9 +29,11 @@ const MakerSidebar = ({
   const instituteName =
     user?.institute?.name || user?.instituteName || "Institute Panel";
   const username = user?.name || user?.username || "User";
+
   useEffect(() => {
     if (activeTab === "menu") onOpenMenu();
   }, []);
+
   useEffect(() => {
     if (!isMenuOpen && activeTab === "menu") setActiveTab("");
   }, [isMenuOpen, activeTab]);
@@ -59,21 +62,21 @@ const MakerSidebar = ({
   };
 
   return (
-    // ✅ CHANGED: Added rounded-2xl, shadow-lg, overflow-hidden to make it float perfectly
+    // ✅ REMOVED overflow-hidden so tooltip can escape the sidebar boundaries
     <div
-      className={`relative h-full bg-card rounded-2xl shadow-xl border border-border flex flex-col transition-all duration-300 z-40 shrink-0 overflow-hidden ${isCollapsed ? "w-20" : "w-65"}`}
+      className={`relative h-full bg-card rounded-2xl shadow-xl border border-border flex flex-col transition-all duration-300 z-100 shrink-0 ${isCollapsed ? "w-20" : "w-65"}`}
     >
       <div
         className={`flex flex-col items-center text-center transition-all duration-300 ${isCollapsed ? "p-4 min-h-24" : "pt-8 pb-5 px-3 min-h-44"}`}
       >
         <div
-          className={`rounded-full bg-bg-body border-2 border-border flex items-center justify-center text-accent-1 overflow-hidden shadow-sm transition-all duration-300 ${isCollapsed ? "size-12 text-xl mb-1" : "size-28 text-4xl mb-4"}`}
+          className={`rounded-full bg-bg-body border-2 border-border flex items-center justify-center text-accent-1 overflow-hidden shadow-sm transition-all duration-300 ${isCollapsed ? "w-12 h-12 text-xl mb-1" : "w-28 h-28 text-4xl mb-4"}`}
         >
           {user?.institute?.logo ? (
             <img
               src={user.institute.logo}
               alt="Institute"
-              className="w-full h-full object-contain "
+              className="w-full h-full object-contain"
             />
           ) : (
             <FaUniversity />
@@ -81,7 +84,7 @@ const MakerSidebar = ({
         </div>
         {!isCollapsed && (
           <div className="animate-fade-in flex flex-col items-center">
-            <h3 className="m-0 text-lg font-extrabold text-main uppercase tracking-wide truncate max-w-48">
+            <h3 className="m-0 text-lg font-extrabold text-main uppercase tracking-wide truncate max-w-47.5">
               {username}
             </h3>
             <span className="text-xs text-muted mt-1 font-semibold uppercase">
@@ -93,8 +96,9 @@ const MakerSidebar = ({
 
       <div className="h-px bg-border mx-6 mb-4 opacity-60"></div>
 
+      {/* ✅ REMOVED overflow-y-auto temporarily if clipping happens, added visible classes */}
       <div
-        className={`flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2 pb-4 transition-all duration-300 custom-scrollbar ${isCollapsed ? "px-2 items-center" : "px-4"} ${isMenuOpen ? "opacity-50 pointer-events-none grayscale" : ""}`}
+        className={`flex-1 flex flex-col gap-2 pb-4 transition-all duration-300 ${isCollapsed ? "px-2 items-center" : "px-4"} ${isMenuOpen ? "opacity-50 pointer-events-none grayscale" : ""}`}
       >
         <MenuItem
           icon={<FaBars />}
@@ -112,15 +116,35 @@ const MakerSidebar = ({
           isCollapsed={isCollapsed}
           onClick={handleNavigation}
         />
-        <MenuItem
-          icon={<FaSave />}
-          label="Save Paper"
-          tab="save"
-          activeTab={activeTab}
-          isCollapsed={isCollapsed}
-          onClick={handleNavigation}
-          color="text-emerald-500"
-        />
+
+        {/* Save Paper Button with Visible Tooltip */}
+        <div className="relative group w-full">
+          <button
+            onClick={() => handleNavigation("save")}
+            disabled={!isPaperComplete}
+            className={`flex items-center gap-4 rounded-xl border-none text-sm font-semibold transition-all duration-200 w-full ${isCollapsed ? "w-12 h-12 justify-center p-0" : "px-4 py-3 text-left"} ${
+              isPaperComplete
+                ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-md cursor-pointer"
+                : "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-70"
+            }`}
+          >
+            <div className="w-6 flex justify-center text-lg">
+              <FaSave />
+            </div>
+            {!isCollapsed && <span className="truncate">Save Paper</span>}
+          </button>
+
+          {/* ✅ FIXED TOOLTIP: Added z-[99999] and removed parent hidden overflows */}
+          {!isPaperComplete && (
+            <div
+              className={`absolute left-full top-1/2 -translate-y-1/2 ml-4 px-4 py-2.5 bg-slate-800 text-white text-[0.8rem] font-bold rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-99999 pointer-events-none ${isCollapsed ? "ml-5" : ""}`}
+            >
+              Please complete your paper first to save it.
+              <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-slate-800 rotate-45"></div>
+            </div>
+          )}
+        </div>
+
         <div className="h-4"></div>
         <MenuItem
           icon={<FaPrint />}
@@ -141,7 +165,7 @@ const MakerSidebar = ({
         <div className="h-4"></div>
         <button
           onClick={confirmExit}
-          className={`flex items-center gap-4 rounded-xl border-none bg-transparent text-sm font-semibold cursor-pointer transition-all duration-200 text-red-500 hover:bg-red-500/10 ${isCollapsed ? "size-12 justify-center p-0" : "w-full px-4 py-3 text-left"}`}
+          className={`flex items-center gap-4 rounded-xl border-none bg-transparent text-sm font-semibold cursor-pointer transition-all duration-200 text-red-500 hover:bg-red-500/10 ${isCollapsed ? "w-12 h-12 justify-center p-0" : "w-full px-4 py-3 text-left"}`}
         >
           <div className="w-6 flex justify-center text-lg">
             <FaTimes />
@@ -167,7 +191,7 @@ const MenuItem = ({
     <button
       onClick={() => onClick(tab)}
       title={isCollapsed ? label : ""}
-      className={`flex items-center gap-4 rounded-xl border-none bg-transparent text-sm font-semibold cursor-pointer transition-all duration-200 ${isCollapsed ? "size-12 justify-center p-0" : "w-full px-4 py-3 text-left"} ${isActive ? "bg-accent-1/10 text-accent-1 font-bold dark:bg-accent-1/20" : `hover:bg-pill-bg hover:translate-x-1 ${color}`}`}
+      className={`flex items-center gap-4 rounded-xl border-none bg-transparent text-sm font-semibold cursor-pointer transition-all duration-200 ${isCollapsed ? "w-12 h-12 justify-center p-0" : "w-full px-4 py-3 text-left"} ${isActive ? "bg-accent-1/10 text-accent-1 font-bold dark:bg-accent-1/20" : `hover:bg-pill-bg hover:translate-x-1 ${color}`}`}
     >
       <div
         className={`w-6 flex justify-center text-lg ${isActive ? "text-accent-1" : color}`}
