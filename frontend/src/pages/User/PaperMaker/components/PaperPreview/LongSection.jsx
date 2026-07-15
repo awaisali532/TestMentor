@@ -19,9 +19,9 @@ const LongSection = ({
   if (!groupedLongQs || groupedLongQs.length === 0) return null;
 
   return (
-    <div className="mb-5">
+    <div className="mb-5 long-q-item">
       <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-        <div className="flex-1 text-left text-xl! font-bold">
+        <div className="flex-1 text-left text-xl! font-bold pp-hd-en">
           {isManualMode ? (
             <EditableField
               value={
@@ -40,7 +40,7 @@ const LongSection = ({
             />
           )}
         </div>
-        <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap text-center">
+        <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap text-center pp-hd-en">
           {isManualMode ? (
             <EditableField
               value={customHeadings.longInstrEn || longInstr.en}
@@ -55,7 +55,7 @@ const LongSection = ({
           )}
         </div>
         <div
-          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl!"
+          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-hd-ur"
           dir="rtl"
         >
           {isManualMode ? (
@@ -110,8 +110,11 @@ const LongSection = ({
                   </button>
                 )}
                 <div className="flex items-baseline gap-2">
-                  <span className="font-extrabold min-w-10">{label}</span>
-                  <div className="flex-1 text-left">
+                  <span className="font-extrabold min-w-10 pp-text-en">
+                    {label}
+                  </span>
+                  {/* ✅ FONT CLASS ADDED HERE */}
+                  <div className="flex-1 text-left pp-text-en">
                     {isManualMode ? (
                       <EditableField
                         value={q.statement?.en || ""}
@@ -123,7 +126,11 @@ const LongSection = ({
                       <RenderText text={q.statement?.en} />
                     )}
                   </div>
-                  <div className="flex-1 text-right font-urdu" dir="rtl">
+                  {/* ✅ FONT CLASS ADDED HERE */}
+                  <div
+                    className="flex-1 text-right font-urdu pp-text-ur"
+                    dir="rtl"
+                  >
                     <span className="font-sans font-extrabold ml-2 inline-block">
                       {urLabel}
                     </span>
@@ -139,7 +146,7 @@ const LongSection = ({
                       <RenderText text={q.statement?.ur} />
                     )}
                   </div>
-                  <div className="font-bold ml-2">[{q.marks}]</div>
+                  <div className="font-bold ml-2 pp-text-en">[{q.marks}]</div>
                 </div>
                 {q.image && q.image.url && (
                   <div className="flex justify-center my-2 w-full">

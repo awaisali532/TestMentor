@@ -19,16 +19,15 @@ const McqSection = ({
   return (
     <div className="mb-6">
       <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black uppercase pb-1 mb-4">
-        {/* ✅ FIX: text-xl! applied */}
         {isManualMode ? (
           <EditableField
             value={customHeadings.objEn || "Objective Part"}
             onChange={(v) => handleHeadingChange("objEn", v)}
-            className="font-bold text-xl! print:text-xl!"
+            className="font-bold text-xl! print:text-xl! pp-hd-en"
           />
         ) : (
           <span
-            className="font-bold text-xl! print:text-xl!"
+            className="font-bold text-xl! print:text-xl! pp-hd-en"
             dangerouslySetInnerHTML={{
               __html: customHeadings.objEn || "Objective Part",
             }}
@@ -40,11 +39,11 @@ const McqSection = ({
             isUrdu
             value={customHeadings.objUr || "حصہ معروضی"}
             onChange={(v) => handleHeadingChange("objUr", v)}
-            className="font-urdu font-bold text-xl! print:text-xl!"
+            className="font-urdu font-bold text-xl! print:text-xl! pp-hd-ur"
           />
         ) : (
           <span
-            className="font-urdu font-bold text-xl! print:text-xl!"
+            className="font-urdu font-bold text-xl! print:text-xl! pp-hd-ur"
             dir="rtl"
             dangerouslySetInnerHTML={{
               __html: customHeadings.objUr || "حصہ معروضی",
@@ -54,7 +53,7 @@ const McqSection = ({
       </div>
 
       <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-        <div className="flex-1 text-left text-xl! font-bold">
+        <div className="flex-1 text-left text-xl! font-bold pp-hd-en">
           {isManualMode ? (
             <EditableField
               value={
@@ -73,7 +72,7 @@ const McqSection = ({
             />
           )}
         </div>
-        <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap">
+        <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap pp-hd-en">
           {isManualMode ? (
             <EditableField
               value={
@@ -93,7 +92,7 @@ const McqSection = ({
           )}
         </div>
         <div
-          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl!"
+          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-hd-ur"
           dir="rtl"
         >
           {isManualMode ? (
@@ -129,7 +128,7 @@ const McqSection = ({
         {mcqs.map((q, i) => (
           <div
             key={getQId(q)}
-            className="relative flex flex-col gap-1.5 border-b border-dotted border-border print:border-black pb-3 w-full"
+            className="relative flex flex-col gap-1.5 border-b border-dotted border-border print:border-black pb-3 w-full mcq-item"
           >
             {isManualMode && (
               <button
@@ -140,8 +139,11 @@ const McqSection = ({
               </button>
             )}
             <div className="flex gap-2 w-full items-baseline">
-              <span className="font-extrabold min-w-6">{i + 1}.</span>
-              <div className="flex-1 text-left">
+              <span className="font-extrabold min-w-6 pp-text-en">
+                {i + 1}.
+              </span>
+              {/* ✅ FONT CLASS ADDED HERE */}
+              <div className="flex-1 text-left pp-text-en">
                 {isManualMode ? (
                   <EditableField
                     value={q.statement?.en || ""}
@@ -153,7 +155,8 @@ const McqSection = ({
                   <RenderText text={q.statement?.en} />
                 )}
               </div>
-              <div className="flex-1 text-right font-urdu" dir="rtl">
+              {/* ✅ FONT CLASS ADDED HERE */}
+              <div className="flex-1 text-right font-urdu pp-text-ur" dir="rtl">
                 <span className="font-sans font-extrabold ml-2 inline-block">
                   {i + 1}.
                 </span>
@@ -190,11 +193,11 @@ const McqSection = ({
                       key={idx}
                       className="flex items-center gap-1 overflow-hidden"
                     >
-                      <span className="font-extrabold opacity-90">
+                      <span className="font-extrabold opacity-90 pp-text-en">
                         ({String.fromCharCode(65 + idx)})
                       </span>
                       <div className="flex gap-1 items-baseline truncate">
-                        <span className="text-left">
+                        <span className="text-left pp-text-en">
                           {isManualMode ? (
                             <EditableField
                               isSmall
@@ -214,7 +217,7 @@ const McqSection = ({
                           )}
                         </span>
                         {(!isSameOption || isManualMode) && (
-                          <span className="font-urdu dir-rtl">
+                          <span className="font-urdu dir-rtl pp-text-ur">
                             {isManualMode ? (
                               <EditableField
                                 isSmall

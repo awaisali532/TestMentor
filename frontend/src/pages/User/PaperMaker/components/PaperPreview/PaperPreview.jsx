@@ -103,9 +103,10 @@ const PaperPreview = ({
     >
       <style>{` .items-baseline { align-items: flex-start !important; } `}</style>
 
-      {instituteLogo && (
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 print:fixed print:inset-0 print:flex print:justify-center print:items-center">
-          <div className="sticky top-0 w-full h-[80vh] flex justify-center items-center print:static print:h-auto print:w-auto">
+      {/* ✅ WATERMARK FIX: isPrintMode میں یہ چھپ جائے گا تاکہ ڈبل نہ ہو */}
+      {instituteLogo && !isPrintMode && (
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 print:hidden">
+          <div className="sticky top-0 w-full h-[80vh] flex justify-center items-center">
             <img
               src={instituteLogo}
               alt="Watermark"
@@ -136,7 +137,6 @@ const PaperPreview = ({
             {hasSubjective && (
               <div className="mb-6">
                 <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black uppercase pb-1 mb-4 transition-colors duration-300">
-                  {/* ✅ FIX: Tailwind v4 syntax text-xl! applied */}
                   {isManualMode ? (
                     <EditableField
                       value={customHeadings.subjEn || "Subjective Part"}

@@ -29,7 +29,7 @@ const PaperMaker = () => {
     }
     return null;
   });
-
+  console.log("Paper data here", paperData);
   const [isMenuOpen, setIsMenuOpen] = useState(
     () => localStorage.getItem("tm_menu_state") === "true",
   );
@@ -48,7 +48,6 @@ const PaperMaker = () => {
 
     if (viewportMeta) {
       originalViewport = viewportMeta.getAttribute("content");
-      // Browser ko force kar do ke wo 1280px ki desktop screen ban jaye
       viewportMeta.setAttribute("content", "width=1280, user-scalable=yes");
     } else {
       const meta = document.createElement("meta");
@@ -58,7 +57,6 @@ const PaperMaker = () => {
     }
 
     return () => {
-      // Jab user Dashboard par wapas jaye toh wapas mobile mode on kar do
       const viewportToRestore = document.querySelector('meta[name="viewport"]');
       if (viewportToRestore) {
         viewportToRestore.setAttribute("content", originalViewport);
@@ -87,7 +85,6 @@ const PaperMaker = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [paperData]);
 
-  // ✅ Completion Logic
   const checkPaperCompletion = useCallback(() => {
     const pattern = paperData?.selectedPattern || paperData?.paperPattern;
     const sections = pattern?.sections || [];
@@ -147,10 +144,14 @@ const PaperMaker = () => {
     navigate("/user/dashboard");
   };
 
+  // ✅ FIX: Added a slight timeout to ensure localStorage is flushed before new tab opens
   const handlePrintPaper = (mode = "SINGLE") => {
     const printPayload = { ...paperData, printSettings: { mode } };
     localStorage.setItem("tm_print_data", JSON.stringify(printPayload));
-    window.open("/user/print-paper", "_blank");
+
+    setTimeout(() => {
+      window.open("/user/print-paper", "_blank");
+    }, 150);
   };
 
   const handlePatternUpdate = useCallback((incomingData) => {

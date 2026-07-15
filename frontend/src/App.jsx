@@ -48,6 +48,8 @@ import UserSettings from "./pages/User/Settings/UserSettings";
 import SavedPapers from "./pages/User/SavedPapers/SavedPapers";
 import GeneratePaper from "./pages/User/GeneratePaper/GeneratePaper";
 import PaperMaker from "./pages/User/PaperMaker/PaperMaker";
+import PrintLayout from "./pages/User/PrintLayout/PrintLayout";
+
 // =================================================================
 // 5. DATA ROUTER CONFIGURATION
 // =================================================================
@@ -107,6 +109,7 @@ const router = createBrowserRouter(
       </Route>
       <Route element={<PrivateRoute />}>
         <Route path="/user/paper-maker" element={<PaperMaker />} />
+        <Route path="/user/print-paper" element={<PrintLayout />} />
       </Route>
     </Route>,
   ),

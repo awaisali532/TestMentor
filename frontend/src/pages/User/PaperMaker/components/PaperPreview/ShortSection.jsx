@@ -30,9 +30,9 @@ const ShortSection = ({
         const marksPerQ = parseInt(secConfig?.marksPerQuestion || 2);
 
         return (
-          <div key={secKey} className="mb-5">
+          <div key={secKey} className="mb-5 short-q-item">
             <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-              <div className="flex-1 text-left text-xl! font-bold">
+              <div className="flex-1 text-left text-xl! font-bold pp-hd-en">
                 {isManualMode ? (
                   <EditableField
                     value={
@@ -53,7 +53,7 @@ const ShortSection = ({
                   />
                 )}
               </div>
-              <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap">
+              <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap pp-hd-en">
                 {isManualMode ? (
                   <EditableField
                     value={
@@ -75,7 +75,7 @@ const ShortSection = ({
                 )}
               </div>
               <div
-                className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl!"
+                className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-hd-ur"
                 dir="rtl"
               >
                 {isManualMode ? (
@@ -124,8 +124,11 @@ const ShortSection = ({
                     </button>
                   )}
                   <div className="flex items-baseline gap-2">
-                    <span className="font-extrabold min-w-7">({i + 1})</span>
-                    <div className="flex-1 text-left">
+                    <span className="font-extrabold min-w-7 pp-text-en">
+                      ({i + 1})
+                    </span>
+                    {/* ✅ FONT CLASS ADDED HERE */}
+                    <div className="flex-1 text-left pp-text-en">
                       {isManualMode ? (
                         <EditableField
                           value={q.statement?.en || ""}
@@ -137,7 +140,11 @@ const ShortSection = ({
                         <RenderText text={q.statement?.en} />
                       )}
                     </div>
-                    <div className="flex-1 text-right font-urdu" dir="rtl">
+                    {/* ✅ FONT CLASS ADDED HERE */}
+                    <div
+                      className="flex-1 text-right font-urdu pp-text-ur"
+                      dir="rtl"
+                    >
                       <span className="font-sans font-extrabold ml-2 inline-block">
                         ({i + 1})
                       </span>

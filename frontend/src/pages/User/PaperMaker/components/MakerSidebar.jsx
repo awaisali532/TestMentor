@@ -31,7 +31,10 @@ const MakerSidebar = ({
   const username = user?.name || user?.username || "User";
 
   useEffect(() => {
-    if (activeTab === "menu") onOpenMenu();
+    // ✅ SAFETY FIX: Check if onOpenMenu exists and is a function before calling
+    if (activeTab === "menu" && typeof onOpenMenu === "function") {
+      onOpenMenu();
+    }
   }, []);
 
   useEffect(() => {
@@ -40,16 +43,19 @@ const MakerSidebar = ({
 
   const handleNavigation = (tab) => {
     if (tab === "edit") {
-      toggleManualMode();
+      if (typeof toggleManualMode === "function") toggleManualMode();
       setActiveTab(!isManualMode ? "edit" : "");
       return;
     }
     if (isMenuOpen && tab !== "menu") return;
     setActiveTab(tab);
-    if (tab === "menu") onOpenMenu();
-    if (tab === "save" && onSave) onSave();
-    if (tab === "print_single" && onPrint) onPrint("SINGLE");
-    if (tab === "print_dh" && onPrint) onPrint("DUAL_H");
+
+    // ✅ SAFETY FIX: Added typeof checks for all prop functions to prevent crashes[cite: 15]
+    if (tab === "menu" && typeof onOpenMenu === "function") onOpenMenu();
+    if (tab === "save" && typeof onSave === "function") onSave();
+    if (tab === "print_single" && typeof onPrint === "function")
+      onPrint("SINGLE");
+    if (tab === "print_dh" && typeof onPrint === "function") onPrint("DUAL_H");
   };
 
   const confirmExit = async () => {
@@ -58,11 +64,10 @@ const MakerSidebar = ({
       text: "All progress will be lost. You will return to Dashboard.",
       confirmButtonText: "Discard & Exit",
     });
-    if (result.isConfirmed && onCancel) onCancel();
+    if (result.isConfirmed && typeof onCancel === "function") onCancel();
   };
 
   return (
-    // ✅ REMOVED overflow-hidden so tooltip can escape the sidebar boundaries
     <div
       className={`relative h-full bg-card rounded-2xl shadow-xl border border-border flex flex-col transition-all duration-300 z-100 shrink-0 ${isCollapsed ? "w-20" : "w-65"}`}
     >
@@ -96,7 +101,6 @@ const MakerSidebar = ({
 
       <div className="h-px bg-border mx-6 mb-4 opacity-60"></div>
 
-      {/* ✅ REMOVED overflow-y-auto temporarily if clipping happens, added visible classes */}
       <div
         className={`flex-1 flex flex-col gap-2 pb-4 transition-all duration-300 ${isCollapsed ? "px-2 items-center" : "px-4"} ${isMenuOpen ? "opacity-50 pointer-events-none grayscale" : ""}`}
       >
@@ -117,7 +121,6 @@ const MakerSidebar = ({
           onClick={handleNavigation}
         />
 
-        {/* Save Paper Button with Visible Tooltip */}
         <div className="relative group w-full">
           <button
             onClick={() => handleNavigation("save")}
@@ -134,7 +137,6 @@ const MakerSidebar = ({
             {!isCollapsed && <span className="truncate">Save Paper</span>}
           </button>
 
-          {/* ✅ FIXED TOOLTIP: Added z-[99999] and removed parent hidden overflows */}
           {!isPaperComplete && (
             <div
               className={`absolute left-full top-1/2 -translate-y-1/2 ml-4 px-4 py-2.5 bg-slate-800 text-white text-[0.8rem] font-bold rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-99999 pointer-events-none ${isCollapsed ? "ml-5" : ""}`}
