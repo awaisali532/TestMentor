@@ -5,16 +5,29 @@ import PaperPreview from "../../../../pages/User/PaperMaker/components/PaperPrev
 
 const PrintableSheet = forwardRef(
   ({ paperData, settings, instituteInfo, isDual }, ref) => {
-    // Height ko thora maintain rakha hai taake paper jaisa feel aaye
+    // Aspect-ratio matching min-heights
     const getPaperMinHeight = () => {
       if (isDual) {
         if (settings.paperSize === "legal" || settings.paperSize === "letter")
           return "min-h-[216mm]";
-        return "min-h-[210mm]";
+        return "min-h-[210mm]"; // A4 Landscape height
       } else {
         if (settings.paperSize === "legal") return "min-h-[356mm]";
         if (settings.paperSize === "letter") return "min-h-[279mm]";
-        return "min-h-[297mm]";
+        return "min-h-[297mm]"; // A4 Portrait height
+      }
+    };
+
+    // Realistic paper widths for on-screen preview (responsive using max-w-full)
+    const getPaperWidthClass = () => {
+      if (isDual) {
+        if (settings.paperSize === "legal") return "w-full max-w-[356mm]";
+        if (settings.paperSize === "letter") return "w-full max-w-[279mm]";
+        return "w-full max-w-[297mm]"; // A4 Landscape
+      } else {
+        if (settings.paperSize === "legal" || settings.paperSize === "letter")
+          return "w-full max-w-[216mm]";
+        return "w-full max-w-[210mm]"; // A4 Portrait
       }
     };
 
@@ -38,11 +51,36 @@ const PrintableSheet = forwardRef(
       </div>
     );
 
+    const Watermark = ({ isCopy2 = false }) => {
+      if (settings.watermark === "none") return null;
+
+      const watermarkClass = isDual
+        ? isCopy2
+          ? "watermark-overlay copy-2-watermark"
+          : "watermark-overlay copy-1-watermark"
+        : "watermark-overlay single-watermark";
+
+      return (
+        <div className={watermarkClass}>
+          {settings.watermark === "logo" && instituteInfo.logo ? (
+            <img
+              src={instituteInfo.logo}
+              alt="Watermark"
+              className="w-full object-contain grayscale"
+            />
+          ) : settings.watermark === "confidential" ? (
+            <h1 className="text-[3rem] font-bold uppercase -rotate-45 text-center leading-none">
+              {instituteInfo.name}
+            </h1>
+          ) : null}
+        </div>
+      );
+    };
+
     return (
       <div
         ref={ref}
-        // ✅ FULL SCREEN WIDTH FIX: w-[210mm] ki jagah w-full laga diya hai
-        className={`bg-white text-black shadow-2xl mx-auto relative overflow-visible box-border print:m-0 print:p-0 print:w-full print:shadow-none print:bg-transparent w-full ${getPaperMinHeight()} print-wrapper-scope`}
+        className={`bg-white text-black shadow-2xl mx-auto relative overflow-visible box-border print:m-0 print:p-0 print:w-full print:shadow-none print:bg-transparent ${getPaperWidthClass()} ${getPaperMinHeight()} print-wrapper-scope`}
         style={{
           color: settings.fontColor,
           fontWeight: settings.fontWeight,
@@ -53,51 +91,87 @@ const PrintableSheet = forwardRef(
           line-height: ${settings.lineHeight};
         }
         .print-wrapper-scope .pp-text-en {
-          font-size: ${settings.engFontSize}px;
+          font-size: ${settings.engFontSize}px !important;
         }
         .print-wrapper-scope .pp-text-ur {
-          font-size: ${settings.urduFontSize}px;
+          font-size: ${settings.urduFontSize}px !important;
         }
         .print-wrapper-scope .math-jax-output,
         .print-wrapper-scope .katex,
         .print-wrapper-scope .MathJax {
           font-size: ${settings.eqFontSize}px !important;
         }
-      `}</style>
-        {settings.watermark === "logo" && instituteInfo.logo && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none z-0">
-            <img
-              src={instituteInfo.logo}
-              alt="Watermark"
-              className="w-100 h-100 object-contain grayscale"
-            />
-          </div>
-        )}
+        
+        /* Watermark screen layout rules */
+        .watermark-overlay {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0.1;
+          pointer-events: none;
+          z-index: 0;
+          width: 55%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
 
-        {settings.watermark === "confidential" && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none z-0 overflow-hidden">
-            <h1 className="text-[4rem] font-bold uppercase -rotate-45 text-center leading-none whitespace-nowrap">
-              {instituteInfo.name}
-            </h1>
-          </div>
-        )}
+        /* Repeating fixed watermark in print media */
+        @media print {
+          .watermark-overlay {
+            position: fixed !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 0 !important;
+            opacity: 0.08 !important;
+            width: ${isDual ? "28%" : "55%"} !important;
+            display: flex !important;
+          }
+          ${
+            isDual
+              ? `
+            .copy-1-watermark {
+              left: 25% !important;
+            }
+            .copy-2-watermark {
+              left: 75% !important;
+            }
+          `
+              : `
+            .single-watermark {
+              left: 50% !important;
+            }
+          `
+          }
+        }
+      `}</style>
 
         {isDual ? (
-          <div className="flex w-full h-full">
-            <div className="w-[48%] p-[10mm] border-r border-dashed border-slate-400 print:border-black flex flex-col relative">
+          <div className="flex w-full h-full relative">
+            {/* Left Copy (Exactly 50% width) */}
+            <div className="w-1/2 p-[10mm] flex flex-col relative min-h-full">
+              <Watermark isCopy2={false} />
               <ThePaperContent />
             </div>
-            <div className="w-[4%] flex justify-center relative print:hidden">
-              <span className="absolute top-12.5 bg-white px-1 text-slate-500 text-xl z-20">
-                ✂
-              </span>
+
+            {/* Absolute Centered Dashed Cut Line */}
+            <div className="absolute top-0 bottom-0 left-1/2 w-0 border-l border-dashed border-slate-400 print:border-black -translate-x-1/2 pointer-events-none z-20"></div>
+
+            {/* Scissor Icon (Centered guide, hidden in print) */}
+            <div className="absolute top-12.5 left-1/2 -translate-x-1/2 bg-white px-2 py-1 text-slate-500 text-sm z-30 border border-slate-200 rounded-full shadow-sm print:hidden">
+              ✂
             </div>
-            <div className="w-[48%] p-[10mm] flex flex-col relative">
+
+            {/* Right Copy (Exactly 50% width) */}
+            <div className="w-1/2 p-[10mm] flex flex-col relative min-h-full">
+              <Watermark isCopy2={true} />
               <ThePaperContent />
             </div>
           </div>
         ) : (
-          <div className="w-full h-full p-[12mm] flex flex-col relative">
+          <div className="w-full h-full p-[12mm] flex flex-col relative min-h-full">
+            <Watermark />
             <ThePaperContent />
           </div>
         )}

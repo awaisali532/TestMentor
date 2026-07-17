@@ -146,11 +146,24 @@ const PrintLayout = () => {
     logo: user?.institute?.logo || null,
   };
 
-  // Injecting page size rules for printing engine
-  const pageStyle = `@page { size: ${settings.paperSize} ${isDual ? "landscape" : "portrait"}; margin: 0 !important; }`;
+  // Injecting page size rules and global print style overrides for printing engine
+  const pageStyle = `
+    @page { 
+      size: ${settings.paperSize} ${isDual ? "landscape" : "portrait"}; 
+      margin: 0 !important; 
+    }
+    @media print {
+      html, body, #root {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        background: white !important;
+      }
+    }
+  `;
 
   return (
-    <div className="min-h-screen bg-slate-200 flex flex-col font-sans overflow-hidden">
+    <div className="min-h-screen bg-slate-200 flex flex-col font-sans overflow-hidden print:h-auto print:min-h-0 print:overflow-visible print:bg-white">
       <Toaster position="top-center" containerStyle={{ zIndex: 100000 }} />
       <style>{pageStyle}</style>
 
