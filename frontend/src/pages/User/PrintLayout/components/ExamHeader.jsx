@@ -9,23 +9,6 @@ const ExamHeader = ({ paperData, settings, institute }) => {
     })
     .replace(/ /g, "-");
 
-  const pattern = paperData.selectedPattern || paperData.paperPattern || {};
-
-  const getExamTypeLabel = () => {
-    if (paperData.examLabel?.trim() !== "") return paperData.examLabel;
-    switch (pattern.type) {
-      case "FULL_BOOK":
-        return "Full Book Test";
-      case "HALF_BOOK":
-        return "Half Book Test";
-      case "CHAPTER_WISE":
-        return "Chapter Wise Test";
-      default:
-        return "Test Session";
-    }
-  };
-
-  // ✅ SMART FALLBACK: Agar topics khali hain toh examLabel (CH-1) show karega
   const getSyllabusText = () => {
     if (
       paperData.syllabusLabel &&
@@ -70,7 +53,8 @@ const ExamHeader = ({ paperData, settings, institute }) => {
   );
 
   return (
-    <div className="w-full font-serif text-black relative box-border print:text-black">
+    // ✅ FIX 5: Changed to font-sans to match website theme
+    <div className="w-full font-sans text-black relative box-border print:text-black">
       <div className="flex items-center justify-between pt-2">
         <div className="flex-1 text-center">
           <h1
@@ -106,7 +90,7 @@ const ExamHeader = ({ paperData, settings, institute }) => {
           <ExamField label="Subject Name" value={paperData.subject} flex={3} />
           <ExamField
             label="Time Allowed"
-            value={pattern.timeAllowed || "2:00 Hours"}
+            value={paperData.selectedPattern?.timeAllowed || "2:00 Hours"}
             flex={2}
           />
           <ExamField
@@ -124,6 +108,7 @@ const ExamHeader = ({ paperData, settings, institute }) => {
               value={getSyllabusText()}
               flex={3}
             />
+            {/* ✅ FIX 4: Exam Label ab sirf wohi dikhayega jo user ne type kiya hai */}
             <div
               className="relative border border-black h-7 flex items-center px-2 mt-2 bg-transparent"
               style={{ flex: 1 }}
@@ -132,7 +117,7 @@ const ExamHeader = ({ paperData, settings, institute }) => {
                 Exam
               </span>
               <span className="font-bold w-full text-center uppercase text-xs text-black">
-                {getExamTypeLabel()}
+                {paperData.examLabel?.trim() || ""}
               </span>
             </div>
           </div>

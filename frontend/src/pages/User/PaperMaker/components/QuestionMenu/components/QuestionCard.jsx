@@ -8,7 +8,6 @@ const QuestionCard = ({
   onToggle,
   medium = "BOTH",
 }) => {
-  // ✅ CONSOLE LOG: Debug data format for statements
   useEffect(() => {
     console.log(`[Q.${index}] Statement Data:`, question.statement);
   }, [question.statement, index]);
@@ -48,8 +47,8 @@ const QuestionCard = ({
   return (
     <div
       onClick={() => onToggle(question)}
-      // ✅ Original Classes Restored completely
-      className={`relative bg-card border-b border-border py-1.5 px-2 flex gap-2 items-start cursor-pointer transition-colors ${
+      // ✅ BORDER FIX: border-b-[2px] aur opacity theek kar di hai taake zoom karne par gayab na ho
+      className={`relative bg-card border-b-2 border-border/80 py-1.5 px-2 flex gap-2 items-start cursor-pointer transition-colors ${
         isSelected ? "bg-emerald-500/10" : ""
       }`}
     >
@@ -76,7 +75,6 @@ const QuestionCard = ({
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* ✅ Dynamic Grid: if Both it takes 2 cols, if Single it takes 1 col (full width of its space) */}
         <div
           className={`grid grid-cols-1 ${medium === "BOTH" ? "md:grid-cols-2" : ""} gap-4 w-full items-start`}
         >
@@ -94,7 +92,6 @@ const QuestionCard = ({
             </div>
           )}
 
-          {/* Smart Fallback: Agar text nahi hai toh empty nahi chhorega */}
           {showUr && !textUr && textEn && medium === "UR" && (
             <div className="text-left text-[0.95rem] font-medium leading-snug font-sans opacity-60">
               <RenderText text={textEn} />{" "}

@@ -32,9 +32,9 @@ const PrintLayout = () => {
 
   // Settings state (Medium removed as per instructions)
   const [settings, setSettings] = useState({
-    lineHeight: isDual ? 0.8 : 1,
-    urduFontSize: isDual ? 10 : 10,
-    engFontSize: isDual ? 10 : 10,
+    lineHeight: isDual ? 1 : 1.2,
+    urduFontSize: isDual ? 12 : 11,
+    engFontSize: isDual ? 11 : 10,
     eqFontSize: isDual ? 10 : 10,
     headerSize: isDual ? 0.8 : 1,
     fontColor: "#000000",

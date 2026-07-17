@@ -19,9 +19,9 @@ const LongSection = ({
   if (!groupedLongQs || groupedLongQs.length === 0) return null;
 
   return (
-    <div className="mb-5 long-q-item">
+    <div className="mb-5 break-inside-avoid">
       <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-        <div className="flex-1 text-left text-xl! font-bold pp-hd-en">
+        <div className="flex-1 text-left text-xl! font-bold pp-text-en">
           {isManualMode ? (
             <EditableField
               value={
@@ -40,7 +40,7 @@ const LongSection = ({
             />
           )}
         </div>
-        <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap text-center pp-hd-en">
+        <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap text-center pp-text-en">
           {isManualMode ? (
             <EditableField
               value={customHeadings.longInstrEn || longInstr.en}
@@ -55,7 +55,7 @@ const LongSection = ({
           )}
         </div>
         <div
-          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-hd-ur"
+          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-text-ur"
           dir="rtl"
         >
           {isManualMode ? (
@@ -99,7 +99,7 @@ const LongSection = ({
             return (
               <div
                 key={getQId(q)}
-                className="relative flex flex-col mb-2 w-full"
+                className="relative flex flex-col mb-2 w-full break-inside-avoid"
               >
                 {isManualMode && (
                   <button
@@ -109,11 +109,13 @@ const LongSection = ({
                     <FaTrash />
                   </button>
                 )}
-                <div className="flex items-baseline gap-2">
+
+                {/* ✅ ALIGNMENT FIX: items-baseline ki jagah items-start */}
+                <div className="flex items-start gap-2">
                   <span className="font-extrabold min-w-10 pp-text-en">
                     {label}
                   </span>
-                  {/* ✅ FONT CLASS ADDED HERE */}
+
                   <div className="flex-1 text-left pp-text-en">
                     {isManualMode ? (
                       <EditableField
@@ -126,7 +128,7 @@ const LongSection = ({
                       <RenderText text={q.statement?.en} />
                     )}
                   </div>
-                  {/* ✅ FONT CLASS ADDED HERE */}
+
                   <div
                     className="flex-1 text-right font-urdu pp-text-ur"
                     dir="rtl"

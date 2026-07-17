@@ -30,9 +30,9 @@ const ShortSection = ({
         const marksPerQ = parseInt(secConfig?.marksPerQuestion || 2);
 
         return (
-          <div key={secKey} className="mb-5 short-q-item">
+          <div key={secKey} className="mb-5 break-inside-avoid">
             <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-              <div className="flex-1 text-left text-xl! font-bold pp-hd-en">
+              <div className="flex-1 text-left text-xl! font-bold pp-text-en">
                 {isManualMode ? (
                   <EditableField
                     value={
@@ -53,7 +53,7 @@ const ShortSection = ({
                   />
                 )}
               </div>
-              <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap pp-hd-en">
+              <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap pp-text-en">
                 {isManualMode ? (
                   <EditableField
                     value={
@@ -75,7 +75,7 @@ const ShortSection = ({
                 )}
               </div>
               <div
-                className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-hd-ur"
+                className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-text-ur"
                 dir="rtl"
               >
                 {isManualMode ? (
@@ -113,7 +113,7 @@ const ShortSection = ({
               {sectionQs.map((q, i) => (
                 <div
                   key={getQId(q)}
-                  className="relative flex flex-col mb-2 w-full"
+                  className="relative flex flex-col mb-2 w-full break-inside-avoid"
                 >
                   {isManualMode && (
                     <button
@@ -123,11 +123,13 @@ const ShortSection = ({
                       <FaTrash />
                     </button>
                   )}
-                  <div className="flex items-baseline gap-2">
+
+                  {/* ✅ ALIGNMENT FIX: items-baseline ki jagah items-start */}
+                  <div className="flex items-start gap-2">
                     <span className="font-extrabold min-w-7 pp-text-en">
                       ({i + 1})
                     </span>
-                    {/* ✅ FONT CLASS ADDED HERE */}
+
                     <div className="flex-1 text-left pp-text-en">
                       {isManualMode ? (
                         <EditableField
@@ -140,7 +142,7 @@ const ShortSection = ({
                         <RenderText text={q.statement?.en} />
                       )}
                     </div>
-                    {/* ✅ FONT CLASS ADDED HERE */}
+
                     <div
                       className="flex-1 text-right font-urdu pp-text-ur"
                       dir="rtl"

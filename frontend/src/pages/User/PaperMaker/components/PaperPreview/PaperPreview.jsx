@@ -103,7 +103,7 @@ const PaperPreview = ({
     >
       <style>{` .items-baseline { align-items: flex-start !important; } `}</style>
 
-      {/* ✅ WATERMARK FIX: isPrintMode میں یہ چھپ جائے گا تاکہ ڈبل نہ ہو */}
+      {/* ✅ WATERMARK FIX: Jab print mode hoga toh ye gayab ho jayega */}
       {instituteLogo && !isPrintMode && (
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 print:hidden">
           <div className="sticky top-0 w-full h-[80vh] flex justify-center items-center">
