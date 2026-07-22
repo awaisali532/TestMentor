@@ -36,7 +36,7 @@ const RenderText = ({ text }) => {
               <span
                 key={index}
                 dangerouslySetInnerHTML={{ __html: html }}
-                className="mx-1 inline-block"
+                className="mx-1 inline-block math-jax-output"
                 style={{ direction: "ltr", unicodeBidi: "isolate" }}
               />
             );

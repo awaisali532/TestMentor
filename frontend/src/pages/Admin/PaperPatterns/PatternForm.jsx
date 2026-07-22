@@ -268,6 +268,10 @@ const PatternForm = ({
         confirmButtonText: "Discard",
         background: "#0f172a",
         color: "#ffffff",
+        // ✅ BUG FIX: Z-Index increased so it stays above the Pattern modal
+        didOpen: (popup) => {
+          popup.parentElement.style.zIndex = "99999";
+        },
       }).then((result) => {
         if (result.isConfirmed) onClose();
       });
@@ -329,6 +333,10 @@ const PatternForm = ({
       confirmButtonText: "Yes, Delete",
       background: "#0f172a",
       color: "#ffffff",
+      // ✅ BUG FIX: Z-Index increased here as well
+      didOpen: (popup) => {
+        popup.parentElement.style.zIndex = "99999";
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         setFormData({
@@ -410,20 +418,32 @@ const PatternForm = ({
     setFormData({ ...formData, sections: updated });
   };
 
-  // ✅ FIXED: Bulletproof Request Handling (Protects from Route Errors)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name) return toast.error("Pattern Name is required");
     if (!formData.subject) return toast.error("Please select a Subject");
 
     setLoading(true);
+
+    const payload = {
+      ...formData,
+      gradeLevel: formData.className,
+      isSystemPreset: false,
+      createdBy: user?._id,
+    };
+
+    // ✅ LOGIC RESTORED: User Mode (PaperMaker) mein Global API request bypass hogi.
+    // Ye sirf paper ke andar update hoga aur jab paper save hoga tou database mein sath jayega.
+    if (isUserMode) {
+      toast.success("Pattern Updated Successfully for this paper!");
+      if (onSuccess) onSuccess(payload);
+      onClose();
+      setLoading(false);
+      return; // Aagay API block kar di
+    }
+
+    // Ye sirf Admin panel ke liye chalega
     try {
-      const payload = {
-        ...formData,
-        gradeLevel: formData.className,
-        isSystemPreset: false, // Since User is editing, it should be false
-        createdBy: user?._id,
-      };
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
@@ -436,7 +456,7 @@ const PatternForm = ({
         ? await axios.put(endpoint, payload, config)
         : await axios.post(endpoint, payload, config);
 
-      toast.success("Pattern Saved!");
+      toast.success("Pattern Saved to Global Database!");
       if (onSuccess) onSuccess(res.data);
       onClose();
     } catch (err) {

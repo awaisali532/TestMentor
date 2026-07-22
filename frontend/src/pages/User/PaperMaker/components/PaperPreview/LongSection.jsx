@@ -19,9 +19,10 @@ const LongSection = ({
   if (!groupedLongQs || groupedLongQs.length === 0) return null;
 
   return (
-    <div className="mb-5 break-inside-avoid">
-      <div className="flex justify-between items-center border-b border-dashed border-border print:border-black pb-2 mb-3">
-        <div className="flex-1 text-left text-xl! font-bold pp-text-en">
+    // ✅ FIX: mb-5 -> mb-4 print:mb-2
+    <div className="mb-4 print:mb-2">
+      <div className="flex justify-between items-center border-b border-dashed border-slate-800 print:border-black pb-1 mb-2 print:mb-1">
+        <div className="flex-1 text-left font-bold pp-text-en">
           {isManualMode ? (
             <EditableField
               value={
@@ -55,7 +56,7 @@ const LongSection = ({
           )}
         </div>
         <div
-          className="flex-1 text-right font-urdu font-bold text-xl! print:text-xl! pp-text-ur"
+          className="flex-1 text-right font-urdu font-bold pp-text-ur"
           dir="rtl"
         >
           {isManualMode ? (
@@ -87,7 +88,8 @@ const LongSection = ({
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* ✅ FIX: gap-2 -> gap-2 print:gap-0.5 */}
+      <div className="flex flex-col gap-2 print:gap-0.5">
         {groupedLongQs.map((group, groupIndex) => {
           const qNum = 2 + Object.keys(shortQuestionsMap).length + groupIndex;
           return group.map((q) => {
@@ -99,7 +101,8 @@ const LongSection = ({
             return (
               <div
                 key={getQId(q)}
-                className="relative flex flex-col mb-2 w-full break-inside-avoid"
+                // ✅ FIX: mb-2 -> mb-2 print:mb-0.5
+                className="relative flex flex-col mb-2 print:mb-0.5 w-full break-inside-avoid"
               >
                 {isManualMode && (
                   <button
@@ -110,7 +113,6 @@ const LongSection = ({
                   </button>
                 )}
 
-                {/* ✅ ALIGNMENT FIX: items-baseline ki jagah items-start */}
                 <div className="flex items-start gap-2">
                   <span className="font-extrabold min-w-10 pp-text-en">
                     {label}
@@ -133,7 +135,7 @@ const LongSection = ({
                     className="flex-1 text-right font-urdu pp-text-ur"
                     dir="rtl"
                   >
-                    <span className="font-sans font-extrabold ml-2 inline-block">
+                    <span className="font-sans font-extrabold ml-2 inline-block pp-text-ur">
                       {urLabel}
                     </span>
                     {isManualMode ? (
@@ -151,11 +153,11 @@ const LongSection = ({
                   <div className="font-bold ml-2 pp-text-en">[{q.marks}]</div>
                 </div>
                 {q.image && q.image.url && (
-                  <div className="flex justify-center my-2 w-full">
+                  <div className="flex justify-center my-1 w-full">
                     <img
                       src={q.image.url}
                       alt="Diagram"
-                      className="max-w-[80%] max-h-20 object-contain border border-border print:max-w-[60%] print:border-none"
+                      className="max-w-[80%] max-h-16 object-contain border border-border print:max-w-[60%] print:border-none"
                     />
                   </div>
                 )}

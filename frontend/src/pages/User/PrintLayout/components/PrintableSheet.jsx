@@ -5,30 +5,20 @@ import PaperPreview from "../../../../pages/User/PaperMaker/components/PaperPrev
 
 const PrintableSheet = forwardRef(
   ({ paperData, settings, instituteInfo, isDual }, ref) => {
-    // Aspect-ratio matching min-heights
     const getPaperMinHeight = () => {
       if (isDual) {
         if (settings.paperSize === "legal" || settings.paperSize === "letter")
           return "min-h-[216mm]";
-        return "min-h-[210mm]"; // A4 Landscape height
+        return "min-h-[210mm]";
       } else {
         if (settings.paperSize === "legal") return "min-h-[356mm]";
         if (settings.paperSize === "letter") return "min-h-[279mm]";
-        return "min-h-[297mm]"; // A4 Portrait height
+        return "min-h-[297mm]";
       }
     };
 
-    // Realistic paper widths for on-screen preview (responsive using max-w-full)
     const getPaperWidthClass = () => {
-      if (isDual) {
-        if (settings.paperSize === "legal") return "w-full max-w-[356mm]";
-        if (settings.paperSize === "letter") return "w-full max-w-[279mm]";
-        return "w-full max-w-[297mm]"; // A4 Landscape
-      } else {
-        if (settings.paperSize === "legal" || settings.paperSize === "letter")
-          return "w-full max-w-[216mm]";
-        return "w-full max-w-[210mm]"; // A4 Portrait
-      }
+      return "w-full";
     };
 
     const ThePaperContent = () => (
@@ -39,12 +29,12 @@ const PrintableSheet = forwardRef(
             settings={settings}
             institute={instituteInfo}
           />
-          <div className="mt-4">
+          <div className="mt-2 print:mt-1">
             <PaperPreview paperData={paperData} isPrintMode={true} />
           </div>
         </div>
         {settings.showAnswerKey && (
-          <div className="mt-10 break-before-page pt-4 border-t border-dashed border-black">
+          <div className="mt-8 break-before-page pt-4 border-t border-dashed border-black">
             <AnswerKey paperData={paperData} />
           </div>
         )}
@@ -80,7 +70,7 @@ const PrintableSheet = forwardRef(
     return (
       <div
         ref={ref}
-        className={`bg-white text-black shadow-2xl mx-auto relative overflow-visible box-border print:m-0 print:p-0 print:w-full print:shadow-none print:bg-transparent ${getPaperWidthClass()} ${getPaperMinHeight()} print-wrapper-scope`}
+        className={`bg-white text-black shadow-2xl mx-auto relative overflow-visible box-border print:m-0 print:w-full print:shadow-none print:bg-transparent print:block print:min-h-0 ${getPaperWidthClass()} ${getPaperMinHeight()} print-wrapper-scope`}
         style={{
           color: settings.fontColor,
           fontWeight: settings.fontWeight,
@@ -90,19 +80,25 @@ const PrintableSheet = forwardRef(
         .print-wrapper-scope {
           line-height: ${settings.lineHeight};
         }
-        .print-wrapper-scope .pp-text-en {
+        .print-wrapper-scope .pp-text-en,
+        .print-wrapper-scope .pp-text-en * {
           font-size: ${settings.engFontSize}px !important;
         }
-        .print-wrapper-scope .pp-text-ur {
+        .print-wrapper-scope .pp-text-ur,
+        .print-wrapper-scope .pp-text-ur * {
           font-size: ${settings.urduFontSize}px !important;
         }
         .print-wrapper-scope .math-jax-output,
+        .print-wrapper-scope .math-jax-output *,
         .print-wrapper-scope .katex,
-        .print-wrapper-scope .MathJax {
+        .print-wrapper-scope .katex *,
+        .print-wrapper-scope .katex-html,
+        .print-wrapper-scope .katex-html *,
+        .print-wrapper-scope .MathJax,
+        .print-wrapper-scope .MathJax * {
           font-size: ${settings.eqFontSize}px !important;
         }
         
-        /* Watermark screen layout rules */
         .watermark-overlay {
           position: absolute;
           top: 50%;
@@ -117,7 +113,6 @@ const PrintableSheet = forwardRef(
           align-items: center;
         }
 
-        /* Repeating fixed watermark in print media */
         @media print {
           .watermark-overlay {
             position: fixed !important;
@@ -148,29 +143,32 @@ const PrintableSheet = forwardRef(
       `}</style>
 
         {isDual ? (
-          <div className="flex w-full h-full relative">
-            {/* Left Copy (Exactly 50% width) */}
-            <div className="w-1/2 p-[10mm] flex flex-col relative min-h-full">
+          /* ✅ FIX: Added gap and horizontal padding so both sides don't stick together */
+          <div className="flex w-full h-full relative justify-between px-2 print:px-1">
+            <div
+              className="w-[49%] p-3 sm:p-4 print:p-1 flex flex-col relative min-h-full"
+              style={{ zoom: 0.75 }}
+            >
               <Watermark isCopy2={false} />
               <ThePaperContent />
             </div>
 
-            {/* Absolute Centered Dashed Cut Line */}
             <div className="absolute top-0 bottom-0 left-1/2 w-0 border-l border-dashed border-slate-400 print:border-black -translate-x-1/2 pointer-events-none z-20"></div>
 
-            {/* Scissor Icon (Centered guide, hidden in print) */}
             <div className="absolute top-12.5 left-1/2 -translate-x-1/2 bg-white px-2 py-1 text-slate-500 text-sm z-30 border border-slate-200 rounded-full shadow-sm print:hidden">
               ✂
             </div>
 
-            {/* Right Copy (Exactly 50% width) */}
-            <div className="w-1/2 p-[10mm] flex flex-col relative min-h-full">
+            <div
+              className="w-[49%] p-3 sm:p-4 print:p-1 flex flex-col relative min-h-full"
+              style={{ zoom: 0.75 }}
+            >
               <Watermark isCopy2={true} />
               <ThePaperContent />
             </div>
           </div>
         ) : (
-          <div className="w-full h-full p-[12mm] flex flex-col relative min-h-full">
+          <div className="w-full h-full p-4 sm:p-6 print:p-0 flex flex-col print:block relative min-h-full print:min-h-0">
             <Watermark />
             <ThePaperContent />
           </div>

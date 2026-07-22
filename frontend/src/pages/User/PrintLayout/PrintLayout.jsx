@@ -16,7 +16,6 @@ const PrintLayout = () => {
   const { user } = useUser();
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // Data fetching fallback (Bulletproof for Tab reloads)
   const [paperData, setPaperData] = useState(() => {
     if (location.state) return location.state;
     const localData = localStorage.getItem("tm_print_data");
@@ -30,7 +29,6 @@ const PrintLayout = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
-  // Settings state (Medium removed as per instructions)
   const [settings, setSettings] = useState({
     lineHeight: isDual ? 1 : 1.2,
     urduFontSize: isDual ? 12 : 11,
@@ -146,11 +144,10 @@ const PrintLayout = () => {
     logo: user?.institute?.logo || null,
   };
 
-  // Injecting page size rules and global print style overrides for printing engine
   const pageStyle = `
     @page { 
-      size: ${settings.paperSize} ${isDual ? "landscape" : "portrait"}; 
-      margin: 0 !important; 
+    size: auto;
+    margin: 5mm  ;
     }
     @media print {
       html, body, #root {
@@ -158,15 +155,16 @@ const PrintLayout = () => {
         min-height: 0 !important;
         overflow: visible !important;
         background: white !important;
+        display: block !important;
       }
     }
   `;
 
   return (
-    <div className="min-h-screen bg-slate-200 flex flex-col font-sans overflow-hidden print:h-auto print:min-h-0 print:overflow-visible print:bg-white">
+    <div className="min-h-screen bg-slate-200 flex flex-col font-sans overflow-hidden print:block print:h-auto print:min-h-0 print:overflow-visible print:bg-white">
+      {" "}
       <Toaster position="top-center" containerStyle={{ zIndex: 100000 }} />
       <style>{pageStyle}</style>
-
       <SavePaperModal
         isOpen={showSaveModal}
         onClose={() => setShowSaveModal(false)}
@@ -176,8 +174,6 @@ const PrintLayout = () => {
         }
         isSaving={isSaving}
       />
-
-      {/* TOP SETTINGS BAR */}
       <PrintSettingsBar
         settings={settings}
         setSettings={setSettings}
@@ -188,9 +184,9 @@ const PrintLayout = () => {
         isSaved={isSaved}
         isSaving={isSaving}
       />
-
-      {/* PREVIEW AREA (With padding to push it below the fixed navbar) */}
-      <div className="flex-1 overflow-y-auto px-4 py-8 mt-25 print:mt-0 print:p-0 print:overflow-visible flex justify-center">
+      {/* ✅ FIX: mt-18 ko mt-32 kar diya gaya hai taake paper settings bar ke peechay na chhupe */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center">
+        {" "}
         <PrintableSheet
           ref={componentRef}
           paperData={paperData}
