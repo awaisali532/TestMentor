@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import { FaCheckCircle, FaTrash, FaCheck, FaRobot } from "react-icons/fa";
@@ -147,57 +153,77 @@ const QuestionMenu = ({
     return 0;
   }, [paperData, activeTab, activeSection]);
 
+  // ✅ BULLETPROOF LOGIC: Stale Closure ko hamesha ke liye khatam kar diya
+  const stateRef = useRef({
+    activeTab,
+    activeSection,
+    tempSelected,
+    getCurrentLimit,
+  });
+
+  useEffect(() => {
+    stateRef.current = {
+      activeTab,
+      activeSection,
+      tempSelected,
+      getCurrentLimit,
+    };
+  }, [activeTab, activeSection, tempSelected, getCurrentLimit]);
+
   const handleToggleSelect = useCallback(
     (clickedQuestion) => {
-      const targetID = String(clickedQuestion._id);
-      setTempSelected((prev) => {
-        if (prev.some((q) => getSafeID(q) === targetID))
-          return prev.filter((q) => getSafeID(q) !== targetID);
+      // Hamesha bilkul latest data read karega bina reload hue
+      const {
+        activeTab: currentTab,
+        activeSection: currentSec,
+        tempSelected: currentSel,
+        getCurrentLimit: currentLimitFn,
+      } = stateRef.current;
 
-        const limit = getCurrentLimit();
-        let currentCount = 0;
-        let sectionIdToSave = null;
+      const targetID = getSafeID(clickedQuestion);
+      const isRemoving = currentSel.some((q) => getSafeID(q) === targetID);
 
-        if (activeTab === "MCQ") {
-          currentCount = prev.filter(
-            (q) => String(q.type).toUpperCase() === "MCQ",
-          ).length;
-          sectionIdToSave = "MCQ";
-        } else {
-          if (!activeSection) {
-            setTimeout(
-              () =>
-                toast.error(
-                  "Please select a Question Number (Q.2, Q.3) first!",
-                ),
-              0,
-            );
-            return prev;
-          }
-          const legacyId = activeSection.replace("sec_", "");
-          currentCount = prev.filter(
-            (q) => q.tabId === activeSection || String(q.tabId) === legacyId,
-          ).length;
-          sectionIdToSave = activeSection;
+      if (isRemoving) {
+        setTempSelected((prev) =>
+          prev.filter((q) => getSafeID(q) !== targetID),
+        );
+        return;
+      }
+
+      const limit = currentLimitFn();
+      let currentCount = 0;
+      let sectionIdToSave = null;
+
+      if (currentTab === "MCQ") {
+        currentCount = currentSel.filter(
+          (q) => String(q.type).toUpperCase() === "MCQ",
+        ).length;
+        sectionIdToSave = "MCQ";
+      } else {
+        if (!currentSec) {
+          toast.error("Please select a Question Number (Q.2, Q.3) first!");
+          return;
         }
+        const legacyId = currentSec.replace("sec_", "");
+        currentCount = currentSel.filter(
+          (q) => q.tabId === currentSec || String(q.tabId) === legacyId,
+        ).length;
+        sectionIdToSave = currentSec;
+      }
 
-        if (limit > 0 && currentCount >= limit) {
-          setTimeout(
-            () =>
-              toast.error(
-                `Limit Reached! (${currentCount}/${limit}) selected.`,
-              ),
-            0,
-          );
-          return prev;
-        }
-        return [...prev, { ...clickedQuestion, tabId: sectionIdToSave }];
-      });
+      if (limit > 0 && currentCount >= limit) {
+        toast.error(`Limit Reached! (${currentCount}/${limit}) selected.`);
+        return;
+      }
+
+      setTempSelected((prev) => [
+        ...prev,
+        { ...clickedQuestion, tabId: sectionIdToSave },
+      ]);
     },
-    [activeTab, activeSection, getCurrentLimit, getSafeID],
+    [getSafeID], // Khali dependency, ye kabhi purana data nahi le ga
   );
 
-  // ✅ SMART RANDOM SELECT (Acts as a Shuffle/Refresh button)
   const handleAutoSelect = useCallback(() => {
     if (availablePool.length === 0)
       return toast.error("No questions available to auto-select!");
@@ -205,7 +231,6 @@ const QuestionMenu = ({
     const limit = getCurrentLimit();
     if (limit <= 0) return toast.error("Invalid limit for this section.");
 
-    // 1. Separate current tab's questions from other tabs
     const isMCQ = activeTab === "MCQ";
     const legacyId = activeSection ? activeSection.replace("sec_", "") : "";
 
@@ -222,9 +247,8 @@ const QuestionMenu = ({
     );
 
     const currentSelectedIds = currentTabQuestions.map((q) => q._id);
-    let excludeIds = otherTabQuestions.map((q) => q._id); // Baki tabs ke sawalon ko hamesha ignore karein
+    let excludeIds = otherTabQuestions.map((q) => q._id);
 
-    // 2. Options for Long Questions Part (b)
     let options = { avoidChapters: [], targetDifficulty: null };
     if (
       !isMCQ &&
@@ -247,8 +271,6 @@ const QuestionMenu = ({
       }
     }
 
-    // 3. Smart Exclusion (Shuffle feature)
-    // Agar pool mein itne extra sawal hain ke hum purane (reject kiye gaye) questions ko chhor kar naye de sakein, toh unhe bhi exclude kardo.
     const availableForThisTab = availablePool.filter(
       (q) => !excludeIds.includes(q._id),
     );
@@ -256,7 +278,6 @@ const QuestionMenu = ({
       excludeIds = [...excludeIds, ...currentSelectedIds];
     }
 
-    // 4. Always fetch the FULL limit (This completely replaces the old selection for this tab)
     const newSelection = generateAutoSelection(
       availablePool,
       limit,
@@ -267,7 +288,6 @@ const QuestionMenu = ({
     if (newSelection.length === 0)
       return toast.error("Could not find suitable questions.");
 
-    // 5. Update state: Keep other tabs safe, replace current tab with fresh selection
     const formattedSelection = newSelection.map((q) => ({
       ...q,
       tabId: activeSection || "MCQ",
@@ -313,7 +333,6 @@ const QuestionMenu = ({
         background: theme === "dark" ? "#1e293b" : "#ffffff",
         color: theme === "dark" ? "#ffffff" : "#1e293b",
         customClass: { container: "z-[99999]" },
-        // ✅ FIXED Issue 1: SweetAlert ko jabardasti sab se uper lane ke liye
         didOpen: () => {
           const container = document.querySelector(".swal2-container");
           if (container) container.style.zIndex = "99999";
@@ -468,7 +487,6 @@ const QuestionMenu = ({
             </div>
           </div>
 
-          {/* 3. SELECTED QUESTIONS (Below buttons, purely scrollable) */}
           <div className="shrink-0 bg-bg-body p-6 min-h-[40vh]">
             <h3 className="text-[1.2rem] font-bold text-main mb-4 border-b border-border pb-3">
               Selected Questions ({questionsForFooter.length})
@@ -478,7 +496,6 @@ const QuestionMenu = ({
                 No questions selected yet. Scroll up to add some!
               </p>
             ) : (
-              // ✅ FIXED: Gap removed, added top border for seamless table look
               <div className="flex flex-col border-t border-border">
                 {questionsForFooter.map((q, i) => {
                   const textEn = q.statement?.en || "";
@@ -491,13 +508,11 @@ const QuestionMenu = ({
                     originalIndex !== -1 ? `Q.${originalIndex + 1}` : "Q.?";
 
                   return (
-                    // ✅ DESIGN UPDATED: No rounded corners, no gaps, minimal padding, simple border-b
                     <div
                       key={q._id}
                       className="flex justify-between items-center bg-card border-b border-border py-2 px-3 hover:bg-pill-bg/30 transition-colors"
                     >
                       <div className="flex items-center gap-4 w-full pr-4">
-                        {/* Numbering Column */}
                         <div className="flex flex-col items-center gap-1 shrink-0">
                           <span className="font-extrabold text-white bg-accent-1 px-2 py-0.5 rounded text-[0.85rem] leading-none">
                             {i + 1}.
@@ -507,7 +522,6 @@ const QuestionMenu = ({
                           </span>
                         </div>
 
-                        {/* Statements Column (English & Urdu Both in 1 Row) */}
                         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full items-center">
                           {textEn && (
                             <div className="text-[0.9rem] font-medium leading-relaxed font-sans text-left line-clamp-2">
@@ -525,7 +539,6 @@ const QuestionMenu = ({
                         </div>
                       </div>
 
-                      {/* Trash Button - Made more compact */}
                       <button
                         onClick={() => handleToggleSelect(q)}
                         title="Remove"

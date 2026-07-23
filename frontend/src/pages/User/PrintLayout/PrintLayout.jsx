@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import { useUser } from "../../../context/UserContext";
 import toast, { Toaster } from "react-hot-toast";
+import Swal from "sweetalert2"; // ✅ FIX: SweetAlert2 import for smart warning
 
 import PrintSettingsBar from "./components/PrintSettingsBar";
 import PrintableSheet from "./components/PrintableSheet";
@@ -48,6 +49,32 @@ const PrintLayout = () => {
     contentRef: componentRef,
     documentTitle: paperData?.title || "Exam_Paper",
   });
+
+  // ✅ SMART WARNING LOGIC: Print button interceptor
+  const handlePrintClick = () => {
+    // 🔥 YAHAN APNI LOGIC LAGAYEIN: Jo condition aapne Save button disable karne ke liye lagayi hai
+    // Example: const isPaperComplete = paperData.totalMarks === requiredMarks;
+    const isPaperComplete = false; // Isko apni original condition se replace karein
+
+    if (!isPaperComplete) {
+      Swal.fire({
+        title: "Paper Incomplete!",
+        text: "Aap ka paper abhi mukammal nahi hai. Kya aap waqai is adhoore paper ka draft print karna chahte hain?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Print Draft",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          handlePrint(); // User ne warning ke baad bhi allow kar diya
+        }
+      });
+    } else {
+      handlePrint(); // Paper complete hai, direct print karo
+    }
+  };
 
   const handleSaveClick = () => {
     if (isSaved) return toast.success("Paper is already saved.");
@@ -146,8 +173,8 @@ const PrintLayout = () => {
 
   const pageStyle = `
     @page { 
-    size: auto;
-    margin: 5mm  ;
+      size: auto;
+      margin: 5mm;
     }
     @media print {
       html, body, #root {
@@ -162,7 +189,6 @@ const PrintLayout = () => {
 
   return (
     <div className="min-h-screen bg-slate-200 flex flex-col font-sans overflow-hidden print:block print:h-auto print:min-h-0 print:overflow-visible print:bg-white">
-      {" "}
       <Toaster position="top-center" containerStyle={{ zIndex: 100000 }} />
       <style>{pageStyle}</style>
       <SavePaperModal
@@ -177,16 +203,16 @@ const PrintLayout = () => {
       <PrintSettingsBar
         settings={settings}
         setSettings={setSettings}
-        onPrint={handlePrint}
+        onPrint={
+          handlePrintClick
+        } /* ✅ FIX: Changed from handlePrint to handlePrintClick */
         onBack={handleBack}
         onEdit={handleEdit}
         onSave={handleSaveClick}
         isSaved={isSaved}
         isSaving={isSaving}
       />
-      {/* ✅ FIX: mt-18 ko mt-32 kar diya gaya hai taake paper settings bar ke peechay na chhupe */}
       <div className="flex-1 overflow-y-auto px-4 py-6 mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center">
-        {" "}
         <PrintableSheet
           ref={componentRef}
           paperData={paperData}
