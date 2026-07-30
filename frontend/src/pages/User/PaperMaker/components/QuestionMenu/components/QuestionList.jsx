@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import axios from "axios";
@@ -198,8 +198,33 @@ const QuestionList = ({
     );
   }, []);
 
+  const [showSlowNotice, setShowSlowNotice] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (isLoading) {
+      setShowSlowNotice(false);
+      timer = setTimeout(() => {
+        setShowSlowNotice(true);
+      }, 3500);
+    } else {
+      setShowSlowNotice(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
   if (isLoading)
-    return <Loader fullScreen={false} text="Loading Questions..." />;
+    return (
+      <Loader
+        fullScreen={false}
+        text="Loading Questions..."
+        subText={
+          showSlowNotice
+            ? "Aap ka internet connection slow hai ya server respond karne mein waqt le raha hai, barae meherbani thora intezar karein..."
+            : null
+        }
+      />
+    );
   if (isError)
     return (
       <div className="p-5 text-red-500 text-center font-bold">

@@ -29,7 +29,7 @@ const EditableField = ({
   };
 
   const fontClasses = isUrdu
-    ? "rtl font-urdu leading-relaxed"
+    ? `rtl font-urdu ${isSmall ? "leading-tight" : "leading-relaxed"}`
     : "ltr font-sans";
 
   return (

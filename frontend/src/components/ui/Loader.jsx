@@ -1,6 +1,6 @@
 import React from "react";
 
-const Loader = ({ text = "Loading...", fullScreen = false }) => {
+const Loader = ({ text = "Loading...", subText = null, fullScreen = false }) => {
   // ✅ FIX: 'bg-card/80' + 'backdrop-blur-sm'
   // Yeh light mode mein light-dim aur dark mode mein dark-dim karega.
   // Blur effect se peeche ka UI professionally out-of-focus ho jayega.
@@ -31,6 +31,13 @@ const Loader = ({ text = "Loading...", fullScreen = false }) => {
       <p className="text-xl font-extrabold animate-pulse tracking-wider drop-shadow-lg text-main">
         {text}
       </p>
+
+      {/* 5. Optional Explanation SubText */}
+      {subText && (
+        <p className="mt-3 text-sm text-amber-500 font-semibold animate-fade-in text-center max-w-md bg-amber-500/10 px-4 py-2 rounded-lg border border-amber-500/20">
+          ⚠️ {subText}
+        </p>
+      )}
     </div>
   );
 };

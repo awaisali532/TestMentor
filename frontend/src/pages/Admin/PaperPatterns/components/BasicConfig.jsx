@@ -55,6 +55,21 @@ const BasicConfig = ({
         </div>
         <div>
           <label className="block text-sm font-bold text-main mb-1">
+            Paper Medium / Language
+          </label>
+          <select
+            name="medium"
+            value={formData.medium || "BOTH"}
+            onChange={handleChange}
+            className="w-full bg-bg-body border border-border text-main px-4 py-2.5 rounded-xl focus:outline-none focus:border-accent-1 transition-all"
+          >
+            <option value="BOTH">Both (English & Urdu)</option>
+            <option value="ENGLISH">English Medium Only</option>
+            <option value="URDU">Urdu Medium Only</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-bold text-main mb-1">
             Class
           </label>
           <select

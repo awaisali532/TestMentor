@@ -14,6 +14,7 @@ const PaperPreview = ({
   onManualUpdate,
   onManualDelete,
   onSectionDelete,
+  separateObjective = false,
 }) => {
   const { user } = useUser();
   const instituteLogo =
@@ -97,9 +98,15 @@ const PaperPreview = ({
     }
   };
 
+  const paperMedium =
+    paperData?.selectedPattern?.medium ||
+    paperData?.paperPattern?.medium ||
+    paperData?.medium ||
+    "BOTH";
+
   return (
     <div
-      className={`w-full h-full relative text-[0.85rem] ${isManualMode ? "border-[3px] border-dashed border-accent-1/50 bg-accent-1/5 p-6 rounded-md shadow-inner" : ""}`}
+      className={`w-full h-full relative text-[0.85rem] transition-all duration-200 ${isManualMode ? "ring-2 ring-dashed ring-accent-1/60 rounded-sm bg-accent-1/[0.02]" : ""}`}
     >
       <style>{` .items-baseline { align-items: flex-start !important; } `}</style>
 
@@ -133,40 +140,53 @@ const PaperPreview = ({
               onSectionDelete={onSectionDelete}
               customHeadings={customHeadings}
               handleHeadingChange={handleHeadingChange}
+              paperMedium={paperMedium}
             />
+            {separateObjective && mcqs.length > 0 && hasSubjective && (
+              <div
+                className="w-full print:block"
+                style={{ pageBreakAfter: "always", breakAfter: "page" }}
+              />
+            )}
             {hasSubjective && (
               <div className="mb-6">
                 <div className="flex justify-center items-center gap-4 border-b-2 border-main print:border-black uppercase pb-1 mb-4 transition-colors duration-300">
-                  {isManualMode ? (
-                    <EditableField
-                      value={customHeadings.subjEn || "Subjective Part"}
-                      onChange={(v) => handleHeadingChange("subjEn", v)}
-                      className="font-bold text-xl! print:text-xl!"
-                    />
-                  ) : (
-                    <span
-                      className="font-bold text-xl! print:text-xl!"
-                      dangerouslySetInnerHTML={{
-                        __html: customHeadings.subjEn || "Subjective Part",
-                      }}
-                    />
+                  {paperMedium !== "URDU" && (
+                    isManualMode ? (
+                      <EditableField
+                        value={customHeadings.subjEn || "Subjective Part"}
+                        onChange={(v) => handleHeadingChange("subjEn", v)}
+                        className="font-bold text-xl! print:text-xl!"
+                      />
+                    ) : (
+                      <span
+                        className="font-bold text-xl! print:text-xl!"
+                        dangerouslySetInnerHTML={{
+                          __html: customHeadings.subjEn || "Subjective Part",
+                        }}
+                      />
+                    )
                   )}
-                  <span className="font-light opacity-50 text-xl!">|</span>
-                  {isManualMode ? (
-                    <EditableField
-                      isUrdu
-                      value={customHeadings.subjUr || "حصہ انشائیہ"}
-                      onChange={(v) => handleHeadingChange("subjUr", v)}
-                      className="font-urdu font-bold text-xl! print:text-xl!"
-                    />
-                  ) : (
-                    <span
-                      className="font-urdu font-bold text-xl! print:text-xl!"
-                      dir="rtl"
-                      dangerouslySetInnerHTML={{
-                        __html: customHeadings.subjUr || "حصہ انشائیہ",
-                      }}
-                    />
+                  {paperMedium === "BOTH" && (
+                    <span className="font-light opacity-50 text-xl!">|</span>
+                  )}
+                  {paperMedium !== "ENGLISH" && (
+                    isManualMode ? (
+                      <EditableField
+                        isUrdu
+                        value={customHeadings.subjUr || "حصہ انشائیہ"}
+                        onChange={(v) => handleHeadingChange("subjUr", v)}
+                        className="font-urdu font-bold text-xl! print:text-xl!"
+                      />
+                    ) : (
+                      <span
+                        className="font-urdu font-bold text-xl! print:text-xl!"
+                        dir="rtl"
+                        dangerouslySetInnerHTML={{
+                          __html: customHeadings.subjUr || "حصہ انشائیہ",
+                        }}
+                      />
+                    )
                   )}
                 </div>
                 <ShortSection
@@ -178,6 +198,7 @@ const PaperPreview = ({
                   onSectionDelete={onSectionDelete}
                   customHeadings={customHeadings}
                   handleHeadingChange={handleHeadingChange}
+                  paperMedium={paperMedium}
                 />
                 <LongSection
                   groupedLongQs={getGroupedLongQuestions()}
@@ -189,6 +210,7 @@ const PaperPreview = ({
                   onSectionDelete={onSectionDelete}
                   customHeadings={customHeadings}
                   handleHeadingChange={handleHeadingChange}
+                  paperMedium={paperMedium}
                 />
               </div>
             )}

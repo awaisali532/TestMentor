@@ -13,6 +13,7 @@ const LongSection = ({
   onSectionDelete,
   customHeadings,
   handleHeadingChange,
+  paperMedium = "BOTH",
 }) => {
   const getQId = (q) => q.questionId?._id || q.questionId || q._id;
 
@@ -22,25 +23,27 @@ const LongSection = ({
     // ✅ FIX: mb-5 -> mb-4 print:mb-2
     <div className="mb-4 print:mb-2">
       <div className="flex justify-between items-center border-b border-dashed border-slate-800 print:border-black pb-1 mb-2 print:mb-1">
-        <div className="flex-1 text-left font-bold pp-text-en">
-          {isManualMode ? (
-            <EditableField
-              value={
-                customHeadings.longEn ||
-                `<strong>Section II (Long Questions)</strong>`
-              }
-              onChange={(v) => handleHeadingChange("longEn", v)}
-            />
-          ) : (
-            <span
-              dangerouslySetInnerHTML={{
-                __html:
+        {paperMedium !== "URDU" && (
+          <div className="flex-1 text-left font-bold pp-text-en">
+            {isManualMode ? (
+              <EditableField
+                value={
                   customHeadings.longEn ||
-                  `<strong>Section II (Long Questions)</strong>`,
-              }}
-            />
-          )}
-        </div>
+                  `<strong>Section II (Long Questions)</strong>`
+                }
+                onChange={(v) => handleHeadingChange("longEn", v)}
+              />
+            ) : (
+              <span
+                dangerouslySetInnerHTML={{
+                  __html:
+                    customHeadings.longEn ||
+                    `<strong>Section II (Long Questions)</strong>`,
+                }}
+              />
+            )}
+          </div>
+        )}
         <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap text-center pp-text-en">
           {isManualMode ? (
             <EditableField
@@ -55,29 +58,31 @@ const LongSection = ({
             />
           )}
         </div>
-        <div
-          className="flex-1 text-right font-urdu font-bold pp-text-ur"
-          dir="rtl"
-        >
-          {isManualMode ? (
-            <EditableField
-              isUrdu
-              value={
-                customHeadings.longUr ||
-                `<strong>${longInstr.ur}</strong> (حصہ دوم)`
-              }
-              onChange={(v) => handleHeadingChange("longUr", v)}
-            />
-          ) : (
-            <span
-              dangerouslySetInnerHTML={{
-                __html:
+        {paperMedium !== "ENGLISH" && (
+          <div
+            className="flex-1 text-right font-urdu font-bold pp-text-ur"
+            dir="rtl"
+          >
+            {isManualMode ? (
+              <EditableField
+                isUrdu
+                value={
                   customHeadings.longUr ||
-                  `<strong>${longInstr.ur}</strong> (حصہ دوم)`,
-              }}
-            />
-          )}
-        </div>
+                  `<strong>${longInstr.ur}</strong> (حصہ دوم)`
+                }
+                onChange={(v) => handleHeadingChange("longUr", v)}
+              />
+            ) : (
+              <span
+                dangerouslySetInnerHTML={{
+                  __html:
+                    customHeadings.longUr ||
+                    `<strong>${longInstr.ur}</strong> (حصہ دوم)`,
+                }}
+              />
+            )}
+          </div>
+        )}
         {isManualMode && (
           <button
             className="ml-4 bg-red-500/10 text-red-500 border border-red-500/30 px-3 py-1 rounded-md text-xs font-bold cursor-pointer flex items-center gap-1 hover:bg-red-500 hover:text-white print:hidden"
@@ -114,42 +119,48 @@ const LongSection = ({
                 )}
 
                 <div className="flex items-start gap-2">
-                  <span className="font-extrabold min-w-10 pp-text-en">
-                    {label}
-                  </span>
+                  {paperMedium !== "URDU" && (
+                    <>
+                      <span className="font-extrabold min-w-10 pp-text-en">
+                        {label}
+                      </span>
 
-                  <div className="flex-1 text-left pp-text-en">
-                    {isManualMode ? (
-                      <EditableField
-                        value={q.statement?.en || ""}
-                        onChange={(val) =>
-                          onManualUpdate(getQId(q), "statement", "en", val)
-                        }
-                      />
-                    ) : (
-                      <RenderText text={q.statement?.en} />
-                    )}
-                  </div>
+                      <div className="flex-1 text-left pp-text-en">
+                        {isManualMode ? (
+                          <EditableField
+                            value={q.statement?.en || ""}
+                            onChange={(val) =>
+                              onManualUpdate(getQId(q), "statement", "en", val)
+                            }
+                          />
+                        ) : (
+                          <RenderText text={q.statement?.en} />
+                        )}
+                      </div>
+                    </>
+                  )}
 
-                  <div
-                    className="flex-1 text-right font-urdu pp-text-ur"
-                    dir="rtl"
-                  >
-                    <span className="font-sans font-extrabold ml-2 inline-block pp-text-ur">
-                      {urLabel}
-                    </span>
-                    {isManualMode ? (
-                      <EditableField
-                        isUrdu
-                        value={q.statement?.ur || ""}
-                        onChange={(val) =>
-                          onManualUpdate(getQId(q), "statement", "ur", val)
-                        }
-                      />
-                    ) : (
-                      <RenderText text={q.statement?.ur} />
-                    )}
-                  </div>
+                  {paperMedium !== "ENGLISH" && (
+                    <div
+                      className="flex-1 text-right font-urdu pp-text-ur"
+                      dir="rtl"
+                    >
+                      <span className="font-sans font-extrabold ml-2 inline-block pp-text-ur">
+                        {urLabel}
+                      </span>
+                      {isManualMode ? (
+                        <EditableField
+                          isUrdu
+                          value={q.statement?.ur || ""}
+                          onChange={(val) =>
+                            onManualUpdate(getQId(q), "statement", "ur", val)
+                          }
+                        />
+                      ) : (
+                        <RenderText text={q.statement?.ur} />
+                      )}
+                    </div>
+                  )}
                   <div className="font-bold ml-2 pp-text-en">[{q.marks}]</div>
                 </div>
                 {q.image && q.image.url && (

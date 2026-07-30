@@ -51,6 +51,7 @@ const PatternForm = ({
   const defaultState = {
     name: "",
     category: "GENERAL",
+    medium: "BOTH",
     className: preFilledGrade || "9th",
     subject: "",
     totalMarks: 12,

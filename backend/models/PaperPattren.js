@@ -77,11 +77,18 @@ const PaperPatternSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // ✅ NEW FIELD: Pattern Category (For Filtering)
+    // ✅ Pattern Category (For Filtering)
     category: {
       type: String,
       enum: ["FULL_BOOK", "HALF_BOOK", "CHAPTER_WISE", "GENERAL"],
       default: "GENERAL",
+    },
+
+    // ✅ Paper Language Medium (ENGLISH, URDU, BOTH)
+    medium: {
+      type: String,
+      enum: ["BOTH", "ENGLISH", "URDU"],
+      default: "BOTH",
     },
 
     gradeLevel: {

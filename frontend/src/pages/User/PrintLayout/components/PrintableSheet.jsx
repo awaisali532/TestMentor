@@ -30,7 +30,11 @@ const PrintableSheet = forwardRef(
             institute={instituteInfo}
           />
           <div className="mt-2 print:mt-1">
-            <PaperPreview paperData={paperData} isPrintMode={true} />
+            <PaperPreview
+              paperData={paperData}
+              isPrintMode={true}
+              separateObjective={settings.separateObjective}
+            />
           </div>
         </div>
         {settings.showAnswerKey && (
@@ -79,10 +83,12 @@ const PrintableSheet = forwardRef(
         <style>{`
         .print-wrapper-scope {
           line-height: ${settings.lineHeight};
+          font-family: "Plus Jakarta Sans", var(--font-sans), sans-serif !important;
         }
         .print-wrapper-scope .pp-text-en,
         .print-wrapper-scope .pp-text-en * {
           font-size: ${settings.engFontSize}px !important;
+          font-family: "Plus Jakarta Sans", var(--font-sans), sans-serif !important;
         }
         .print-wrapper-scope .pp-text-ur,
         .print-wrapper-scope .pp-text-ur * {

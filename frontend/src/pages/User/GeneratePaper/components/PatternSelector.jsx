@@ -145,7 +145,7 @@ const PatternSelector = ({
           const updatedPatterns = patterns.filter((p) => p._id !== id);
           setPatterns(updatedPatterns);
           sessionStorage.setItem(
-            `tm_cache_patterns_${grade}_subject`,
+            `tm_cache_patterns_${grade}_${subject}`,
             JSON.stringify(updatedPatterns),
           );
 
@@ -165,10 +165,13 @@ const PatternSelector = ({
       <div className="animate-fade-in-up">
         <PatternForm
           editingPattern={editingPattern}
-          onSuccess={() => {
+          onSuccess={(savedPatternData) => {
             setIsCreating(false);
             setEditingPattern(null);
-            fetchPatterns(true); // ✅ FIX: Force Refresh to fetch new pattern & update cache
+            // ✅ Clear session cache for this grade & subject so fresh data is fetched
+            const cacheKey = `tm_cache_patterns_${grade}_${subject}`;
+            sessionStorage.removeItem(cacheKey);
+            fetchPatterns(true); // ✅ Force Refresh
           }}
           onClose={() => {
             setIsCreating(false);
@@ -176,7 +179,7 @@ const PatternSelector = ({
           }}
           preFilledGrade={grade}
           preFilledSubject={subject}
-          isUserMode={true}
+          isUserMode={false} // ✅ FIX: Must be false so pattern is saved to global database!
           userSelectedTopics={selectedTopics}
         />
       </div>
@@ -243,25 +246,43 @@ const PatternSelector = ({
               <div
                 key={p._id}
                 onClick={() => handleCardClick(p)}
-                className={`relative bg-card border rounded-2xl p-5 pt-12 cursor-pointer transition-all duration-300 ${isSelected ? "border-accent-1 bg-accent-1/5 shadow-[0_0_0_2px_rgba(37,99,235,0.2)]" : "border-border hover:border-accent-1/50 hover:shadow-lg hover:-translate-y-1"}`}
+                className={`relative bg-card border rounded-2xl p-5 pt-14 cursor-pointer transition-all duration-300 ${isSelected ? "border-accent-1 bg-accent-1/5 shadow-[0_0_0_2px_rgba(37,99,235,0.2)]" : "border-border hover:border-accent-1/50 hover:shadow-lg hover:-translate-y-1"}`}
               >
                 {isSelected && (
-                  <div className="absolute top-4 left-4 text-accent-1 text-xl">
+                  <div className="absolute top-3.5 left-3 text-accent-1 text-xl z-10">
                     <FaCheckCircle />
                   </div>
                 )}
 
                 <div
-                  className={`absolute top-4 flex items-center gap-2 ${isSelected ? "left-12" : "left-4"}`}
+                  className={`absolute top-3 flex items-center gap-1.5 flex-wrap max-w-[calc(100%-90px)] ${isSelected ? "left-10" : "left-3"}`}
                 >
                   <span
-                    className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase ${p.category === "FULL_BOOK" ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"}`}
+                    className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${p.category === "FULL_BOOK" ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"}`}
                   >
                     {categoryLabel}
                   </span>
+
+                  {/* ✅ Paper Medium Badge (Compact Text: URDU, ENGLISH, BOTH) */}
+                  <span
+                    className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase border ${
+                      p.medium === "URDU"
+                        ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                        : p.medium === "ENGLISH"
+                          ? "bg-blue-500/10 text-blue-500 border-blue-500/30"
+                          : "bg-purple-500/10 text-purple-500 border-purple-500/30"
+                    }`}
+                  >
+                    {p.medium === "URDU"
+                      ? "Urdu"
+                      : p.medium === "ENGLISH"
+                        ? "English"
+                        : "Both"}
+                  </span>
+
                   {p.longQAttemptCount > 0 && (
-                    <span className="bg-pill-bg text-muted border border-border px-2 py-1 rounded-full text-[10px] font-bold">
-                      Complex Long
+                    <span className="bg-pill-bg text-muted border border-border px-2 py-0.5 rounded-full text-[10px] font-bold">
+                      Complex
                     </span>
                   )}
                 </div>

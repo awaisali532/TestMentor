@@ -85,14 +85,12 @@ const SavedPapers = () => {
   };
 
   const handleEdit = async (paper) => {
-    const loadingToast = toast.loading("Loading for edit...");
+    setActionLoading("editing");
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(`${BASE_URL}/api/papers/${paper._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      toast.dismiss(loadingToast);
 
       if (res.data.success) {
         const fullData = res.data.paper;
@@ -106,8 +104,10 @@ const SavedPapers = () => {
         navigate("/user/paper-maker", { state: makerData, keepData: true });
       }
     } catch (err) {
-      toast.dismiss(loadingToast);
+      console.error(err);
       toast.error("Cannot open for editing.");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -164,7 +164,9 @@ const SavedPapers = () => {
           text={
             actionLoading === "printing"
               ? "Preparing Paper for Print..."
-              : "Deleting Paper..."
+              : actionLoading === "editing"
+                ? "Loading Paper into Editor..."
+                : "Deleting Paper..."
           }
         />
       )}

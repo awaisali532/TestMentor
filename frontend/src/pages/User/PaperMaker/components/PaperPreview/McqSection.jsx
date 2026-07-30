@@ -11,6 +11,7 @@ const McqSection = ({
   onSectionDelete,
   customHeadings,
   handleHeadingChange,
+  paperMedium = "BOTH",
 }) => {
   const getQId = (q) => q.questionId?._id || q.questionId || q._id;
 
@@ -19,59 +20,67 @@ const McqSection = ({
   return (
     <div className="mb-4 print:mb-2">
       <div className="flex justify-center items-center gap-4 border-b-2 border-slate-800 print:border-black uppercase pb-1 mb-3 print:mb-1.5">
-        {isManualMode ? (
-          <EditableField
-            value={customHeadings.objEn || "Objective Part"}
-            onChange={(v) => handleHeadingChange("objEn", v)}
-            className="font-bold pp-text-en"
-          />
-        ) : (
-          <span
-            className="font-bold pp-text-en"
-            dangerouslySetInnerHTML={{
-              __html: customHeadings.objEn || "Objective Part",
-            }}
-          />
+        {paperMedium !== "URDU" && (
+          isManualMode ? (
+            <EditableField
+              value={customHeadings.objEn || "Objective Part"}
+              onChange={(v) => handleHeadingChange("objEn", v)}
+              className="font-bold pp-text-en"
+            />
+          ) : (
+            <span
+              className="font-bold pp-text-en"
+              dangerouslySetInnerHTML={{
+                __html: customHeadings.objEn || "Objective Part",
+              }}
+            />
+          )
         )}
-        <span className="font-light opacity-50 text-xl">|</span>
-        {isManualMode ? (
-          <EditableField
-            isUrdu
-            value={customHeadings.objUr || "حصہ معروضی"}
-            onChange={(v) => handleHeadingChange("objUr", v)}
-            className="font-urdu font-bold pp-text-ur"
-          />
-        ) : (
-          <span
-            className="font-urdu font-bold pp-text-ur"
-            dir="rtl"
-            dangerouslySetInnerHTML={{
-              __html: customHeadings.objUr || "حصہ معروضی",
-            }}
-          />
+        {paperMedium === "BOTH" && (
+          <span className="font-light opacity-50 text-xl">|</span>
+        )}
+        {paperMedium !== "ENGLISH" && (
+          isManualMode ? (
+            <EditableField
+              isUrdu
+              value={customHeadings.objUr || "حصہ معروضی"}
+              onChange={(v) => handleHeadingChange("objUr", v)}
+              className="font-urdu font-bold pp-text-ur"
+            />
+          ) : (
+            <span
+              className="font-urdu font-bold pp-text-ur"
+              dir="rtl"
+              dangerouslySetInnerHTML={{
+                __html: customHeadings.objUr || "حصہ معروضی",
+              }}
+            />
+          )
         )}
       </div>
 
       <div className="flex justify-between items-center border-b border-dashed border-slate-800 print:border-black pb-1 mb-2 print:mb-1">
-        <div className="flex-1 text-left font-bold pp-text-en">
-          {isManualMode ? (
-            <EditableField
-              value={
-                customHeadings.q1En ||
-                `<strong class="mr-1">Q.1</strong> Choose the correct answer.`
-              }
-              onChange={(v) => handleHeadingChange("q1En", v)}
-            />
-          ) : (
-            <span
-              dangerouslySetInnerHTML={{
-                __html:
+        {paperMedium !== "URDU" && (
+          <div className="flex-1 text-left font-bold pp-text-en">
+            {isManualMode ? (
+              <EditableField
+                value={
                   customHeadings.q1En ||
-                  `<strong class="mr-1">Q.1</strong> Choose the correct answer.`,
-              }}
-            />
-          )}
-        </div>
+                  `<strong class="mr-1">Q.1</strong> Choose the correct answer.`
+                }
+                onChange={(v) => handleHeadingChange("q1En", v)}
+              />
+            ) : (
+              <span
+                dangerouslySetInnerHTML={{
+                  __html:
+                    customHeadings.q1En ||
+                    `<strong class="mr-1">Q.1</strong> Choose the correct answer.`,
+                }}
+              />
+            )}
+          </div>
+        )}
         <div className="font-bold text-[0.7rem] px-2 whitespace-nowrap pp-text-en">
           {isManualMode ? (
             <EditableField
@@ -91,29 +100,31 @@ const McqSection = ({
             />
           )}
         </div>
-        <div
-          className="flex-1 text-right font-urdu font-bold pp-text-ur"
-          dir="rtl"
-        >
-          {isManualMode ? (
-            <EditableField
-              isUrdu
-              value={
-                customHeadings.q1Ur ||
-                `<strong class="ml-1">سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔`
-              }
-              onChange={(v) => handleHeadingChange("q1Ur", v)}
-            />
-          ) : (
-            <span
-              dangerouslySetInnerHTML={{
-                __html:
+        {paperMedium !== "ENGLISH" && (
+          <div
+            className="flex-1 text-right font-urdu font-bold pp-text-ur"
+            dir="rtl"
+          >
+            {isManualMode ? (
+              <EditableField
+                isUrdu
+                value={
                   customHeadings.q1Ur ||
-                  `<strong class="ml-1">سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔`,
-              }}
-            />
-          )}
-        </div>
+                  `<strong class="ml-1">سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔`
+                }
+                onChange={(v) => handleHeadingChange("q1Ur", v)}
+              />
+            ) : (
+              <span
+                dangerouslySetInnerHTML={{
+                  __html:
+                    customHeadings.q1Ur ||
+                    `<strong class="ml-1">سوال نمبر 1:</strong> درست جواب کا انتخاب کریں۔`,
+                }}
+              />
+            )}
+          </div>
+        )}
         {isManualMode && (
           <button
             className="ml-4 bg-red-500/10 text-red-500 border border-red-500/30 px-3 py-1 rounded-md text-xs font-bold cursor-pointer flex items-center gap-1 hover:bg-red-500 hover:text-white print:hidden"
@@ -140,42 +151,48 @@ const McqSection = ({
             )}
 
             <div className="flex gap-2 w-full items-start">
-              <span className="font-extrabold min-w-6 shrink-0 pp-text-en">
-                {i + 1}.
-              </span>
+              {paperMedium !== "URDU" && (
+                <>
+                  <span className="font-extrabold min-w-6 shrink-0 pp-text-en">
+                    {i + 1}.
+                  </span>
 
-              <div className="flex-1 min-w-0 text-left pp-text-en">
-                {isManualMode ? (
-                  <EditableField
-                    value={q.statement?.en || ""}
-                    onChange={(val) =>
-                      onManualUpdate(getQId(q), "statement", "en", val)
-                    }
-                  />
-                ) : (
-                  <RenderText text={q.statement?.en} />
-                )}
-              </div>
+                  <div className="flex-1 min-w-0 text-left pp-text-en">
+                    {isManualMode ? (
+                      <EditableField
+                        value={q.statement?.en || ""}
+                        onChange={(val) =>
+                          onManualUpdate(getQId(q), "statement", "en", val)
+                        }
+                      />
+                    ) : (
+                      <RenderText text={q.statement?.en} />
+                    )}
+                  </div>
+                </>
+              )}
 
-              <div
-                className="flex-1 min-w-0 text-right font-urdu pp-text-ur"
-                dir="rtl"
-              >
-                <span className="font-sans font-extrabold ml-2 inline-block pp-text-ur">
-                  {i + 1}.
-                </span>
-                {isManualMode ? (
-                  <EditableField
-                    value={q.statement?.ur || ""}
-                    isUrdu
-                    onChange={(val) =>
-                      onManualUpdate(getQId(q), "statement", "ur", val)
-                    }
-                  />
-                ) : (
-                  <RenderText text={q.statement?.ur} />
-                )}
-              </div>
+              {paperMedium !== "ENGLISH" && (
+                <div
+                  className="flex-1 min-w-0 text-right font-urdu pp-text-ur"
+                  dir="rtl"
+                >
+                  <span className="font-sans font-extrabold ml-2 inline-block pp-text-ur">
+                    {i + 1}.
+                  </span>
+                  {isManualMode ? (
+                    <EditableField
+                      value={q.statement?.ur || ""}
+                      isUrdu
+                      onChange={(val) =>
+                        onManualUpdate(getQId(q), "statement", "ur", val)
+                      }
+                    />
+                  ) : (
+                    <RenderText text={q.statement?.ur} />
+                  )}
+                </div>
+              )}
             </div>
 
             {q.image && q.image.url && (
@@ -202,27 +219,30 @@ const McqSection = ({
                       </span>
 
                       <div className="flex flex-1 gap-1 items-start min-w-0 whitespace-normal break-normal">
-                        <div className="flex-1 min-w-0 text-left pp-text-en">
-                          {isManualMode ? (
-                            <EditableField
-                              isSmall
-                              value={opt.en || ""}
-                              onChange={(val) =>
-                                onManualUpdate(
-                                  getQId(q),
-                                  "options",
-                                  "en",
-                                  val,
-                                  idx,
-                                )
-                              }
-                            />
-                          ) : (
-                            <RenderText text={opt.en} />
-                          )}
-                        </div>
-                        {(!isSameOption || isManualMode) && (
-                          <div className="flex-1 min-w-0 text-right font-urdu dir-rtl pp-text-ur">
+                        {paperMedium !== "URDU" && (
+                          <div className="flex-1 min-w-0 text-left pp-text-en">
+                            {isManualMode ? (
+                              <EditableField
+                                isSmall
+                                value={opt.en || ""}
+                                onChange={(val) =>
+                                  onManualUpdate(
+                                    getQId(q),
+                                    "options",
+                                    "en",
+                                    val,
+                                    idx,
+                                  )
+                                }
+                              />
+                            ) : (
+                              <RenderText text={opt.en} />
+                            )}
+                          </div>
+                        )}
+
+                        {paperMedium !== "ENGLISH" && (!isSameOption || isManualMode || paperMedium === "URDU") && (
+                          <div className="flex-1 min-w-0 text-right font-urdu dir-rtl pp-text-ur !pt-0">
                             {isManualMode ? (
                               <EditableField
                                 isSmall

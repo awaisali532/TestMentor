@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import {
   FaBars,
   FaEdit,
@@ -50,12 +51,33 @@ const MakerSidebar = ({
     if (isMenuOpen && tab !== "menu") return;
     setActiveTab(tab);
 
-    // ✅ SAFETY FIX: Added typeof checks for all prop functions to prevent crashes[cite: 15]
+    // ✅ SAFETY FIX: Added typeof checks for all prop functions to prevent crashes
     if (tab === "menu" && typeof onOpenMenu === "function") onOpenMenu();
     if (tab === "save" && typeof onSave === "function") onSave();
-    if (tab === "print_single" && typeof onPrint === "function")
-      onPrint("SINGLE");
-    if (tab === "print_dh" && typeof onPrint === "function") onPrint("DUAL_H");
+
+    if (tab === "print_single" || tab === "print_dh") {
+      const mode = tab === "print_single" ? "SINGLE" : "DUAL_H";
+      if (!isPaperComplete) {
+        Swal.fire({
+          title: "Paper Incomplete!",
+          text: "Aap ka paper abhi mukammal nahi hai. Kya aap waqai is adhoore paper ka draft print karna chahte hain?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#0ea5e9",
+          cancelButtonColor: "#64748b",
+          confirmButtonText: "Yes, Print Draft",
+          cancelButtonText: "Cancel",
+          background: "#0f172a",
+          color: "#ffffff",
+        }).then((result) => {
+          if (result.isConfirmed && typeof onPrint === "function") {
+            onPrint(mode);
+          }
+        });
+      } else {
+        if (typeof onPrint === "function") onPrint(mode);
+      }
+    }
   };
 
   const confirmExit = async () => {

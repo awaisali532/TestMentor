@@ -8,7 +8,8 @@ const createPattern = async (req, res) => {
   try {
     const {
       name,
-      category, // ✅ Receive Category
+      category,
+      medium, // ✅ Destructured medium
       gradeLevel,
       subject,
       totalMarks,
@@ -20,6 +21,23 @@ const createPattern = async (req, res) => {
 
     if (!name || !gradeLevel || !subject || !totalMarks || !sections) {
       return res.status(400).json({ error: "Please fill all required fields" });
+    }
+
+    // ✅ Resolve subject ID if passed as string name
+    let targetSubjectId = subject;
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(subject);
+
+    if (!isValidObjectId) {
+      const subjectDoc = await Subject.findOne({
+        $or: [{ subjectName: subject }, { name: subject }],
+      });
+
+      if (!subjectDoc) {
+        return res
+          .status(400)
+          .json({ error: `Subject '${subject}' not found in database.` });
+      }
+      targetSubjectId = subjectDoc._id;
     }
 
     let systemFlag = false;
@@ -40,9 +58,10 @@ const createPattern = async (req, res) => {
 
     const newPattern = new PaperPattern({
       name,
-      category: category || "GENERAL", // ✅ Set Default if missing
+      category: category || "GENERAL",
+      medium: medium || "BOTH",
       gradeLevel,
-      subject,
+      subject: targetSubjectId,
       totalMarks,
       timeAllowed,
       isPairingSpecific: isPairingSpecific || false,

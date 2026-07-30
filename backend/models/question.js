@@ -121,5 +121,10 @@ const questionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// ✅ PERFORMANCE INDEXES: Subject+Type is the primary filter combo
+questionSchema.index({ subject: 1, type: 1 }); // Main filter (subject + MCQ/SHORT/LONG)
+questionSchema.index({ subject: 1, questionCategory: 1 }); // Category filter
+questionSchema.index({ subject: 1 }); // Fallback subject-only queries
+
 module.exports =
   mongoose.models.Question || mongoose.model("Question", questionSchema);

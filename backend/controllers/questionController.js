@@ -96,7 +96,7 @@ const toTitleCase = (str) => {
 };
 
 // ==========================================
-// 4. GET QUESTIONS BY FILTER
+// 4. GET QUESTIONS BY FILTER (OPTIMIZED ✅)
 // ==========================================
 const getQuestionsByFilter = async (req, res) => {
   try {
@@ -106,22 +106,23 @@ const getQuestionsByFilter = async (req, res) => {
     if (!grade || !subject)
       return res.status(400).json({ error: "Grade/Subject missing" });
 
-    let subjectDoc;
+    // ✅ FIX 1: Skip Subject pre-lookup if subject is already a valid ObjectId
+    // Frontend always sends subject._id, so no extra DB round-trip needed
+    let subjectObjectId;
     if (mongoose.Types.ObjectId.isValid(subject)) {
-      subjectDoc = await Subject.findById(subject);
+      subjectObjectId = new mongoose.Types.ObjectId(subject);
     } else {
-      subjectDoc = await Subject.findOne({
+      // Fallback: name-based lookup (legacy support)
+      const subjectDoc = await Subject.findOne({
         className: grade,
         subjectName: subject,
-      });
+      }).select("_id").lean();
+      if (!subjectDoc) return res.status(404).json({ error: "Subject not found" });
+      subjectObjectId = subjectDoc._id;
     }
 
-    if (!subjectDoc) {
-      return res.status(404).json({ error: "Subject not found" });
-    }
-
-    let query = { subject: subjectDoc._id };
-
+    // ✅ FIX 2: Build query using index-friendly fields (subject + type hits compound index)
+    let query = { subject: subjectObjectId };
     if (type && type !== "ALL") query.type = type;
 
     const normalizeArray = (val) =>
@@ -152,7 +153,22 @@ const getQuestionsByFilter = async (req, res) => {
       query.topics = { $in: topicObjectIds };
     }
 
-    const questions = await Question.find(query)
+    // ✅ FIX 3: Only fetch fields needed for QuestionCard display (not full document)
+    // Removed: boardTags, classLevel, image.public_id, questionData (only needed in admin edit)
+    const projection = {
+      statement: 1,
+      type: 1,
+      questionCategory: 1,
+      difficulty: 1,
+      marks: 1,
+      important: 1,
+      options: 1,
+      topics: 1,
+      chapter: 1,
+      "image.url": 1,
+    };
+
+    const questions = await Question.find(query, projection)
       .populate("topics", "name topicNumber")
       .populate("chapter", "name chapterNumber")
       .lean();
@@ -163,7 +179,9 @@ const getQuestionsByFilter = async (req, res) => {
       query.topics = {
         $in: chapterArray.map((id) => new mongoose.Types.ObjectId(id)),
       };
-      const fallbackQuestions = await Question.find(query).lean();
+      const fallbackQuestions = await Question.find(query, projection)
+        .populate("topics", "name topicNumber")
+        .lean();
       if (fallbackQuestions.length > 0) {
         return res.status(200).json(fallbackQuestions);
       }
