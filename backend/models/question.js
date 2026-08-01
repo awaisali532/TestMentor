@@ -121,10 +121,11 @@ const questionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// ✅ PERFORMANCE INDEXES: Subject+Type is the primary filter combo
-questionSchema.index({ subject: 1, type: 1 }); // Main filter (subject + MCQ/SHORT/LONG)
-questionSchema.index({ subject: 1, questionCategory: 1 }); // Category filter
-questionSchema.index({ subject: 1 }); // Fallback subject-only queries
+// ✅ COVERED & COMPOUND SCALABILITY INDEXES
+questionSchema.index({ subject: 1, type: 1, difficulty: 1, questionCategory: 1 }, { name: "idx_subject_type_diff_cat" });
+questionSchema.index({ subject: 1, type: 1, topics: 1 }, { name: "idx_subject_type_topics" });
+questionSchema.index({ subject: 1, type: 1, chapter: 1 }, { name: "idx_subject_type_chapter" });
+questionSchema.index({ subject: 1, questionCategory: 1 });
 
 module.exports =
   mongoose.models.Question || mongoose.model("Question", questionSchema);

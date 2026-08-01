@@ -1,5 +1,6 @@
 const Question = require("../models/question");
 const Topic = require("../models/topic");
+const Chapter = require("../models/chapter");
 const Subject = require("../models/subjectModel");
 const cloudinary = require("../config/cloudinary");
 const mongoose = require("mongoose");
@@ -98,7 +99,10 @@ const toTitleCase = (str) => {
 // ==========================================
 // 4. GET QUESTIONS BY FILTER (OPTIMIZED ✅)
 // ==========================================
+// 4. GET QUESTIONS BY FILTER (WITH PERFORMANCE INSTRUMENTATION)
+// ==========================================
 const getQuestionsByFilter = async (req, res) => {
+  const backendStart = performance.now();
   try {
     const { grade, subject, type, category, difficulty, topics, chapters } =
       req.body;
@@ -106,13 +110,13 @@ const getQuestionsByFilter = async (req, res) => {
     if (!grade || !subject)
       return res.status(400).json({ error: "Grade/Subject missing" });
 
-    // ✅ FIX 1: Skip Subject pre-lookup if subject is already a valid ObjectId
-    // Frontend always sends subject._id, so no extra DB round-trip needed
+    const prepStart = performance.now();
+
+    // Subject pre-lookup
     let subjectObjectId;
     if (mongoose.Types.ObjectId.isValid(subject)) {
       subjectObjectId = new mongoose.Types.ObjectId(subject);
     } else {
-      // Fallback: name-based lookup (legacy support)
       const subjectDoc = await Subject.findOne({
         className: grade,
         subjectName: subject,
@@ -121,7 +125,6 @@ const getQuestionsByFilter = async (req, res) => {
       subjectObjectId = subjectDoc._id;
     }
 
-    // ✅ FIX 2: Build query using index-friendly fields (subject + type hits compound index)
     let query = { subject: subjectObjectId };
     if (type && type !== "ALL") query.type = type;
 
@@ -153,25 +156,46 @@ const getQuestionsByFilter = async (req, res) => {
       query.topics = { $in: topicObjectIds };
     }
 
-    // ✅ FIX 3: Only fetch fields needed for QuestionCard display (not full document)
-    // Removed: boardTags, classLevel, image.public_id, questionData (only needed in admin edit)
-    const projection = {
-      statement: 1,
-      type: 1,
-      questionCategory: 1,
-      difficulty: 1,
-      marks: 1,
-      important: 1,
-      options: 1,
-      topics: 1,
-      chapter: 1,
-      "image.url": 1,
-    };
+    // Support 2-Stage Projection Mode (metadata-only candidate mode for 90% payload reduction at 100k+ scale)
+    const isMetadataMode = req.body.projectionMode === "metadata";
+    const projection = isMetadataMode
+      ? {
+          type: 1,
+          questionCategory: 1,
+          difficulty: 1,
+          marks: 1,
+          topics: 1,
+          chapter: 1,
+        }
+      : {
+          statement: 1,
+          type: 1,
+          questionCategory: 1,
+          difficulty: 1,
+          marks: 1,
+          important: 1,
+          options: 1,
+          topics: 1,
+          chapter: 1,
+          "image.url": 1,
+        };
 
-    const questions = await Question.find(query, projection)
+    const prepTimeMs = Math.round(performance.now() - prepStart);
+
+    // Instrument Database Query & Population
+    const dbStart = performance.now();
+    let queryBuilder = Question.find(query, projection);
+
+    // Apply limit ONLY if explicitly requested by caller
+    if (req.body.limit) {
+      queryBuilder = queryBuilder.limit(parseInt(req.body.limit));
+    }
+
+    let questions = await queryBuilder
       .populate("topics", "name topicNumber")
       .populate("chapter", "name chapterNumber")
       .lean();
+    let dbTimeMs = Math.round(performance.now() - dbStart);
 
     // Fallback Check: If no results with Chapter, try using IDs as Topics
     if (questions.length === 0 && chapterArray.length > 0) {
@@ -179,15 +203,34 @@ const getQuestionsByFilter = async (req, res) => {
       query.topics = {
         $in: chapterArray.map((id) => new mongoose.Types.ObjectId(id)),
       };
+      const fallbackStart = performance.now();
       const fallbackQuestions = await Question.find(query, projection)
         .populate("topics", "name topicNumber")
         .lean();
+      dbTimeMs += Math.round(performance.now() - fallbackStart);
       if (fallbackQuestions.length > 0) {
-        return res.status(200).json(fallbackQuestions);
+        questions = fallbackQuestions;
       }
     }
 
-    res.status(200).json(questions);
+    const totalBackendTimeMs = Math.round(performance.now() - backendStart);
+
+    const performanceMetrics = {
+      prepTimeMs,
+      dbTimeMs,
+      totalBackendTimeMs,
+      count: questions.length,
+    };
+
+    console.log(
+      `[PROFILER] type=${type || "ALL"} | count=${questions.length} | prep=${prepTimeMs}ms | db=${dbTimeMs}ms | totalBackend=${totalBackendTimeMs}ms`
+    );
+
+    res.status(200).json({
+      success: true,
+      questions,
+      performance: performanceMetrics,
+    });
   } catch (err) {
     console.error("Server Error:", err);
     res.status(500).json({ error: err.message });
@@ -574,6 +617,25 @@ const getQuestionsByChapter = async (req, res) => {
   }
 };
 
+const getQuestionsByIds = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Missing or invalid question IDs array" });
+    }
+
+    const objectIds = ids.map((id) => new mongoose.Types.ObjectId(id));
+    const questions = await Question.find({ _id: { $in: objectIds } })
+      .populate("topics", "name topicNumber")
+      .populate("chapter", "name chapterNumber")
+      .lean();
+
+    res.status(200).json({ success: true, questions });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllQuestions,
   getMenuQuestions,
@@ -587,4 +649,5 @@ module.exports = {
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
   getQuestionsByChapter,
+  getQuestionsByIds,
 };

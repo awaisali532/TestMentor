@@ -16,12 +16,16 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const paperPatternRoutes = require("./routes/paperPatternRoutes");
 const paperRoutes = require("./routes/paperRoutes"); // ✅ Loaded correctly
 const usageRoutes = require("./routes/usageRoutes");
+const compression = require("compression");
+const mongoSanitize = require("express-mongo-sanitize");
+const rateLimit = require("express-rate-limit");
+
 dotenv.config();
 connectDB();
 
 const app = express();
 
-// Middleware
+// 1. CORS MUST ALWAYS BE FIRST so HTTP OPTIONS preflight requests succeed!
 app.use(
   cors({
     origin: [
@@ -34,7 +38,29 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 2. Enable Gzip/Brotli compression
+app.use(compression());
+
+// 3. Express 5 Compatible NoSQL Injection Sanitizer (Sanitizes body & params safely)
+app.use((req, res, next) => {
+  if (req.body) mongoSanitize.sanitize(req.body);
+  if (req.params) mongoSanitize.sanitize(req.params);
+  next();
+});
+
+// 4. Rate Limiter for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: { error: "Too many requests from this IP, please try again after 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", apiLimiter);
 
 // Routes Mounting
 app.use("/api/auth", authRoutes);

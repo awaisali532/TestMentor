@@ -39,7 +39,10 @@ const QuestionList = ({
     const res = await axios.post(`${BASE_URL}/api/questions/filter`, payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.data.sort((a, b) => {
+    const questionsList = Array.isArray(res.data)
+      ? res.data
+      : res.data?.questions || [];
+    return questionsList.sort((a, b) => {
       const topicNumA = a.topics?.[0]?.topicNumber || "0";
       const topicNumB = b.topics?.[0]?.topicNumber || "0";
       return topicNumA.localeCompare(topicNumB, undefined, { numeric: true });

@@ -17,6 +17,7 @@ const {
   deleteQuestionsBulk,
   deleteAllQuestionsInTopic,
   getQuestionsByChapter,
+  getQuestionsByIds,
 } = require("../controllers/questionController");
 
 // Apply Protection (All routes require login)
@@ -31,6 +32,7 @@ router.get("/menu-data", getMenuQuestions);
 
 // 🔥 CHANGE: GET -> POST (To handle large syllabus arrays)
 router.post("/filter", getQuestionsByFilter);
+router.post("/batch-details", getQuestionsByIds);
 
 router.get("/", getAllQuestions);
 router.get("/topic/:topicId", getQuestionsByTopic);
