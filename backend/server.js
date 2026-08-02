@@ -56,7 +56,9 @@ app.use((req, res, next) => {
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
-  message: { error: "Too many requests from this IP, please try again after 15 minutes." },
+  message: {
+    error: "Too many requests from this IP, please try again after 15 minutes.",
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });

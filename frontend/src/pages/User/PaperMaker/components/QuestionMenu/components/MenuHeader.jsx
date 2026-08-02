@@ -55,18 +55,6 @@ const MenuHeader = ({ paperData, onClose, onEditPreset }) => {
             <FaEdit /> <span className="hidden sm:inline">Edit Pattern</span>
           </button>
         )}
-        <div className="w-px h-6.25 bg-border mx-1"></div>
-        <button
-          onClick={toggleTheme}
-          title="Toggle Theme"
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-bg-body border border-border text-main text-[1.1rem] cursor-pointer transition-all hover:bg-pill-bg hover:-translate-y-0.5 hover:shadow-md"
-        >
-          {theme === "dark" ? (
-            <FaSun className="text-amber-500" />
-          ) : (
-            <FaMoon className="text-indigo-500" />
-          )}
-        </button>
         <button
           onClick={onClose}
           title="Close Menu"

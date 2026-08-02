@@ -1,7 +1,28 @@
-import React from "react";
-import { FaEye, FaPrint, FaEdit, FaTrash } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  FaEye,
+  FaPrint,
+  FaEdit,
+  FaTrash,
+  FaChevronDown,
+  FaFileAlt,
+  FaCopy,
+} from "react-icons/fa";
 
 const SavedPapersList = ({ papers, onView, onEdit, onDelete, onPrint }) => {
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div className="bg-card border border-border rounded-2xl overflow-x-auto shadow-sm animate-fade-in">
       <table className="w-full text-left border-collapse min-w-250">
@@ -54,7 +75,9 @@ const SavedPapersList = ({ papers, onView, onEdit, onDelete, onPrint }) => {
               {/* 5. Subject */}
               <td className="p-4">
                 <span className="bg-blue-500/10 text-blue-500 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap dark:bg-blue-500/20 dark:text-blue-400">
-                  {paper.subject}
+                  {typeof paper.subject === "object"
+                    ? paper.subject?.subjectName || "Subject"
+                    : paper.subject}
                 </span>
               </td>
 
@@ -75,25 +98,63 @@ const SavedPapersList = ({ papers, onView, onEdit, onDelete, onPrint }) => {
                 {paper.user?.name || "You"}
               </td>
 
-              {/* 9. Inline Action Buttons (✅ FIX: Always Visible) */}
+              {/* 9. Inline Action Buttons */}
               <td className="p-4 text-right pr-6">
-                <div className="flex items-center justify-end gap-2 transition-all duration-300">
+                <div className="flex items-center justify-end gap-2 relative">
+                  {/* VIEW BUTTON */}
                   <button
                     onClick={() => onView(paper._id)}
                     className="p-2 bg-bg-body text-muted hover:text-accent-1 hover:bg-accent-1/10 border border-border hover:border-accent-1/30 rounded-lg transition-all"
-                    title="View"
+                    title="View Paper"
                   >
                     <FaEye size={14} />
                   </button>
 
-                  <button
-                    onClick={() => onPrint(paper)}
-                    className="p-2 bg-bg-body text-muted hover:text-green-500 hover:bg-green-500/10 border border-border hover:border-green-500/30 rounded-lg transition-all"
-                    title="Print"
+                  {/* PRINT DROPDOWN BUTTON */}
+                  <div
+                    className="relative"
+                    ref={openDropdownId === paper._id ? menuRef : null}
                   >
-                    <FaPrint size={14} />
-                  </button>
+                    <button
+                      onClick={() =>
+                        setOpenDropdownId(
+                          openDropdownId === paper._id ? null : paper._id,
+                        )
+                      }
+                      className="p-2 bg-bg-body text-muted hover:text-green-500 hover:bg-green-500/10 border border-border hover:border-green-500/30 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                      title="Print Options"
+                    >
+                      <FaPrint size={14} />
+                      <FaChevronDown size={9} className="opacity-70" />
+                    </button>
 
+                    {openDropdownId === paper._id && (
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in p-1 text-left">
+                        <button
+                          onClick={() => {
+                            setOpenDropdownId(null);
+                            onPrint(paper, "SINGLE");
+                          }}
+                          className="w-full px-3 py-2 text-xs font-bold text-main hover:bg-pill-bg rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                        >
+                          <FaFileAlt className="text-green-500 text-sm shrink-0" />
+                          <span>Single Print (1-Sided)</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setOpenDropdownId(null);
+                            onPrint(paper, "DUAL_H");
+                          }}
+                          className="w-full px-3 py-2 text-xs font-bold text-main hover:bg-pill-bg rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                        >
+                          <FaCopy className="text-blue-500 text-sm shrink-0" />
+                          <span>Double Print (2-Sided)</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* EDIT BUTTON */}
                   <button
                     onClick={() => onEdit(paper)}
                     className="p-2 bg-bg-body text-muted hover:text-yellow-500 hover:bg-yellow-500/10 border border-border hover:border-yellow-500/30 rounded-lg transition-all"
@@ -102,6 +163,7 @@ const SavedPapersList = ({ papers, onView, onEdit, onDelete, onPrint }) => {
                     <FaEdit size={14} />
                   </button>
 
+                  {/* DELETE BUTTON */}
                   <button
                     onClick={() => onDelete(paper._id)}
                     className="p-2 bg-bg-body text-muted hover:text-red-500 hover:bg-red-500/10 border border-border hover:border-red-500/30 rounded-lg transition-all"

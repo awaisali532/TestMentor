@@ -100,9 +100,9 @@ const NotificationDropdown = () => {
           className={badgeCount > 0 ? "animate-bell-shake text-accent-1" : ""}
         />
 
-        {/* ✅ BADGE DISPLAY */}
+        {/* ✅ BADGE DISPLAY (Redesigned for clean visibility) */}
         {badgeCount > 0 && (
-          <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-card shadow-sm">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[20px] h-[20px] px-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-bg-body shadow-md shadow-red-500/30 leading-none">
             {badgeCount > 9 ? "9+" : badgeCount}
           </span>
         )}
@@ -160,7 +160,7 @@ const NotificationDropdown = () => {
                     )}
                   </div>
                   <div
-                    className={`flex-1 ${lang === "ur" ? "text-right font-[Jameel_Noori_Nastaleeq] text-lg leading-relaxed" : "text-left text-sm"}`}
+                    className={`flex-1 ${lang === "ur" ? "text-right urdu-font text-xl leading-relaxed" : "text-left text-sm"}`}
                   >
                     <p className="text-main mb-1">
                       {lang === "ur" ? item.messageUr : item.messageEn}

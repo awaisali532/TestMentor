@@ -201,6 +201,17 @@ const QuestionMenu = ({
         sectionIdToSave = "MCQ";
       } else {
         if (!currentSec) {
+          Swal.fire({
+            icon: "warning",
+            title: "Question Number Required",
+            text: "Pehle uper se Question Number (Q.2, Q.3) select karein!",
+            confirmButtonColor: "#3b82f6",
+            customClass: { container: "z-[99999]" },
+            didOpen: () => {
+              const container = document.querySelector(".swal2-container");
+              if (container) container.style.zIndex = "99999";
+            },
+          });
           toast.error("Please select a Question Number (Q.2, Q.3) first!");
           return;
         }
@@ -212,6 +223,17 @@ const QuestionMenu = ({
       }
 
       if (limit > 0 && currentCount >= limit) {
+        Swal.fire({
+          icon: "warning",
+          title: "Limit Reached!",
+          text: `Selected limit reached (${currentCount}/${limit}). Is section ke liye mazeed questions select nahi kiye ja sakte.`,
+          confirmButtonColor: "#3b82f6",
+          customClass: { container: "z-[99999]" },
+          didOpen: () => {
+            const container = document.querySelector(".swal2-container");
+            if (container) container.style.zIndex = "99999";
+          },
+        });
         toast.error(`Limit Reached! (${currentCount}/${limit}) selected.`);
         return;
       }
@@ -440,6 +462,12 @@ const QuestionMenu = ({
               selectedQuestions={tempSelected}
             />
           </div>
+
+          {activeTab !== "MCQ" && !activeSection && (
+            <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-700 dark:text-amber-300 px-6 py-2.5 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
+              <span>⚠️</span> Please select a Question Number (Q.2, Q.3 etc.) above before picking questions for that section!
+            </div>
+          )}
 
           <div className="shrink-0">
             <QuestionList

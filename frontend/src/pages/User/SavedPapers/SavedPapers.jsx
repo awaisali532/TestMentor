@@ -59,9 +59,29 @@ const SavedPapers = () => {
   }, [BASE_URL]);
 
   // --- 2. ACTIONS ---
-  const handleView = (id) => navigate(`/user/view-paper/${id}`);
+  const handleView = async (paperId) => {
+    setActionLoading("printing");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${BASE_URL}/api/papers/${paperId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const handlePrint = async (paperSummary) => {
+      if (res.data.success) {
+        const fullPaper = res.data.paper;
+        const printPayload = { ...fullPaper, printSettings: { mode: "SINGLE" } };
+        localStorage.setItem("tm_print_data", JSON.stringify(printPayload));
+        window.open("/user/print-paper", "_blank");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not load paper for viewing.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePrint = async (paperSummary, mode = "SINGLE") => {
     setActionLoading("printing");
     try {
       const token = localStorage.getItem("token");
@@ -73,13 +93,15 @@ const SavedPapers = () => {
       );
 
       if (res.data.success) {
-        navigate("/user/print-paper", { state: res.data.paper });
-      } else {
-        setActionLoading(null);
+        const fullPaper = res.data.paper;
+        const printPayload = { ...fullPaper, printSettings: { mode } };
+        localStorage.setItem("tm_print_data", JSON.stringify(printPayload));
+        window.open("/user/print-paper", "_blank");
       }
     } catch (err) {
       console.error(err);
       toast.error("Could not load paper for printing.");
+    } finally {
       setActionLoading(null);
     }
   };
@@ -96,12 +118,15 @@ const SavedPapers = () => {
         const fullData = res.data.paper;
         const makerData = {
           ...fullData,
-          selectedPattern: fullData.paperPattern,
+          selectedPattern: fullData.pattern || fullData.paperPattern,
           questions: fullData.questions,
           examLabel: fullData.examLabel,
           syllabusLabel: fullData.syllabusLabel,
+          grade: fullData.grade,
+          subject: fullData.subject,
         };
-        navigate("/user/paper-maker", { state: makerData, keepData: true });
+        localStorage.setItem("tm_paper_draft", JSON.stringify(makerData));
+        navigate("/user/paper-maker", { state: makerData });
       }
     } catch (err) {
       console.error(err);
