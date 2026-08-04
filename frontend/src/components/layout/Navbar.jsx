@@ -177,21 +177,21 @@ const Navbar = () => {
       )}
 
       <div
-        className={`fixed top-3 right-3 bottom-3 z-50 h-[calc(100vh-24px)] w-72 bg-bg-body border border-border rounded-2xl shadow-2xl overflow-hidden transform transition-transform duration-400 ease-out flex flex-col
+        className={`fixed top-3 right-3 bottom-3 z-50 h-[calc(100dvh-24px)] max-h-[calc(100dvh-24px)] w-72 bg-bg-body border border-border rounded-2xl shadow-2xl overflow-hidden transform transition-transform duration-400 ease-out flex flex-col
           ${isOpen ? "translate-x-0" : "translate-x-[calc(100%+24px)]"}
         `}
       >
-        <div className="flex justify-end p-5">
+        <div className="flex justify-end p-4 shrink-0">
           <button
             onClick={closeMenu}
-            className="text-main p-2 hover:rotate-90 transition-transform"
+            className="text-main p-2 hover:rotate-90 transition-transform cursor-pointer"
           >
-            <X size={26} />
+            <X size={24} />
           </button>
         </div>
 
-        {/* MOBILE NAV LINKS (Enhanced Hover) */}
-        <nav className="flex flex-col gap-2 px-4">
+        {/* MOBILE NAV LINKS (Scrollable on small mobile viewports) */}
+        <nav className="flex-1 overflow-y-auto flex flex-col gap-2 px-4 custom-scrollbar">
           {["/", "/subjects", "/about", "/contact"].map((path, idx) => {
             const labels = ["Home", "Subjects", "About", "Contact"];
             return (
@@ -203,7 +203,7 @@ const Navbar = () => {
                   ${
                     isActive(path)
                       ? "text-accent-1 font-bold bg-accent-1/10"
-                      : "text-main hover:text-accent-1 hover:bg-pill-bg hover:pl-6" // hover:pl-6 gives the slide-right effect
+                      : "text-main hover:text-accent-1 hover:bg-pill-bg hover:pl-6"
                   }
                 `}
               >
@@ -213,29 +213,30 @@ const Navbar = () => {
           })}
         </nav>
 
-        <div className="mt-auto p-6 border-t border-border">
+        {/* BOTTOM ACTION BUTTONS (Pinned & shrink-0 so never cut off on real mobile) */}
+        <div className="shrink-0 p-4 border-t border-border bg-bg-body pb-5">
           {user ? (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <Link
                 to={getDashboardLink()}
                 onClick={closeMenu}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-linear-to-r from-blue-500 to-cyan-500 text-white font-semibold"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-linear-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm"
               >
-                Dashboard <LayoutDashboard size={18} />
+                Dashboard <LayoutDashboard size={16} />
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-danger text-white font-semibold"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-danger text-white font-semibold text-sm cursor-pointer"
               >
-                Logout <LogOut size={18} />
+                Logout <LogOut size={16} />
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <Link
                 to="/login"
                 onClick={closeMenu}
-                className="w-full py-3 text-center rounded-full border border-border text-main font-semibold hover:bg-main hover:text-bg-body transition-colors"
+                className="w-full py-2.5 text-center rounded-full border border-border text-main font-semibold text-sm hover:bg-main hover:text-bg-body transition-colors"
               >
                 Login
               </Link>
