@@ -47,7 +47,10 @@ const LoginModal = ({
         <button
           onClick={() => {
             onClose(); // Pehle modal band karo
-            navigate("/login"); // Phir login page par bhejo
+            const currentPath = window.location.pathname + window.location.search;
+            navigate("/login", {
+              state: { redirectAfterLogin: currentPath },
+            });
           }}
           className="w-full bg-linear-to-r from-accent-1 to-accent-2 text-white border-none py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-1/40 cursor-pointer"
         >

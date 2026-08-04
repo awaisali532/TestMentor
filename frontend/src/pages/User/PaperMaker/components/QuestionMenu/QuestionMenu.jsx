@@ -424,10 +424,10 @@ const QuestionMenu = ({
 
   return (
     <div
-      className={`fixed inset-0 z-2000 flex justify-center items-center bg-black/40 backdrop-blur-[2px] pointer-events-auto transition-all duration-300 ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+      className={`fixed inset-0 z-2000 flex justify-center items-center p-2 sm:p-4 bg-black/50 backdrop-blur-xs pointer-events-auto transition-all duration-300 ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
     >
       <div
-        className={`relative w-[95vw] h-[95vh] bg-bg-body text-main rounded-xl shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ${isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
+        className={`relative w-[96vw] sm:w-[95vw] max-h-[92vh] sm:max-h-[95vh] h-full mt-3 sm:mt-0 bg-bg-body text-main rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ${isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
       >
         {isProcessing && (
           <div className="absolute inset-0 bg-card/80 backdrop-blur-sm z-3000 flex justify-center items-center">

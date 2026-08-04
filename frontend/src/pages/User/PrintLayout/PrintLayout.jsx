@@ -190,7 +190,7 @@ const PrintLayout = () => {
         isSaved={isSaved}
         isSaving={isSaving}
       />
-      <div className="flex-1 overflow-y-auto px-4 py-6 mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center">
+      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-4 sm:py-6 mt-16 md:mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center pb-12 sm:pb-8">
         <PrintableSheet
           ref={componentRef}
           paperData={paperData}

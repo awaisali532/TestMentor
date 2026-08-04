@@ -1,5 +1,5 @@
-import React from "react";
-import { FaPrint, FaArrowLeft, FaEdit, FaSave } from "react-icons/fa";
+import React, { useState } from "react";
+import { FaPrint, FaArrowLeft, FaEdit, FaSave, FaSlidersH, FaChevronUp, FaChevronDown } from "react-icons/fa";
 
 const PrintSettingsBar = ({
   settings,
@@ -11,6 +11,8 @@ const PrintSettingsBar = ({
   isSaved,
   isSaving,
 }) => {
+  const [showMobileControls, setShowMobileControls] = useState(false);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setSettings((prev) => ({
@@ -27,10 +29,56 @@ const PrintSettingsBar = ({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-1000 bg-white border-b border-slate-200 shadow-md p-3 print:hidden">
-      <div className="max-w-7xl mx-auto flex flex-col gap-3">
-        {/* ROW 1: Controls */}
-        <div className="flex flex-wrap gap-4 items-end">
+    <div className="fixed top-0 left-0 right-0 z-1000 bg-white border-b border-slate-200 shadow-md p-2.5 sm:p-3 print:hidden">
+      <div className="max-w-7xl mx-auto flex flex-col gap-2.5">
+        {/* MOBILE COMPACT TOP BAR */}
+        <div className="flex md:hidden items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <button
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-slate-200 text-slate-700 rounded hover:opacity-90 transition-opacity cursor-pointer"
+              onClick={onBack}
+            >
+              <FaArrowLeft size={11} /> Back
+            </button>
+            <button
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-slate-100 border border-slate-300 text-slate-700 rounded hover:bg-slate-200 transition-colors cursor-pointer"
+              onClick={() => setShowMobileControls(!showMobileControls)}
+            >
+              <FaSlidersH size={11} className="text-blue-600" />
+              <span>Settings</span>
+              {showMobileControls ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-amber-500 text-white rounded hover:opacity-90 transition-opacity cursor-pointer"
+              onClick={onEdit}
+            >
+              <FaEdit size={11} /> Edit
+            </button>
+            {!isSaved && (
+              <button
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold bg-emerald-500 text-white rounded hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                onClick={onSave}
+                disabled={isSaving}
+              >
+                <FaSave size={11} /> {isSaving ? "..." : "Save"}
+              </button>
+            )}
+            <button
+              className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-700 text-white shadow-md rounded hover:opacity-90 transition-opacity cursor-pointer"
+              onClick={onPrint}
+            >
+              <FaPrint size={11} /> PRINT
+            </button>
+          </div>
+        </div>
+
+        {/* FULL CONTROLS (Always visible on desktop, toggleable on mobile) */}
+        <div className={`${showMobileControls ? "flex" : "hidden md:flex"} flex-col gap-3 pt-1 md:pt-0`}>
+          {/* ROW 1: Controls */}
+          <div className="flex flex-wrap gap-3 sm:gap-4 items-end">
           <div className="flex-1 min-w-17.5">
             <label className="block text-xs font-bold text-slate-500 mb-1">
               Urdu Px
@@ -205,6 +253,7 @@ const PrintSettingsBar = ({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

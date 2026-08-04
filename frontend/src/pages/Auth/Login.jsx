@@ -53,8 +53,11 @@ const LoginPage = () => {
       localStorage.removeItem("otp_persist_login");
 
       setIsSubmitted(true); // ✅ SUCCESS: Block warning
+      const targetPath = location.state?.redirectAfterLogin || location.state?.from;
       if (response.user.isSuperAdmin || response.user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
+      } else if (targetPath) {
+        navigate(targetPath, { replace: true });
       } else {
         navigate("/user/dashboard", { replace: true });
       }
@@ -82,8 +85,11 @@ const LoginPage = () => {
       setIsSubmitted(true); // ✅ SUCCESS: Block warning
       loginAfterVerification(data.user, data.token);
 
+      const targetPath = location.state?.redirectAfterLogin || location.state?.from;
       if (data.user.isSuperAdmin || data.user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
+      } else if (targetPath) {
+        navigate(targetPath, { replace: true });
       } else {
         navigate("/user/dashboard", { replace: true });
       }

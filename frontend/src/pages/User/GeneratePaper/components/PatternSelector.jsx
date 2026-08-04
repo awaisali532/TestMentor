@@ -94,7 +94,8 @@ const PatternSelector = ({
     return patterns.filter((p) => {
       const category = p.category || "GENERAL";
       if (syllabusType === "FULL_BOOK") {
-        return category === "FULL_BOOK" || category === "GENERAL";
+        // ✅ FIX: Strict Full Book filter — do NOT include GENERAL to prevent pairing mismatch & auto-gen failure
+        return category === "FULL_BOOK";
       }
       if (syllabusType === "HALF_BOOK") {
         return (

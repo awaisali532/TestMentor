@@ -60,7 +60,6 @@ const SavedPapers = () => {
 
   // --- 2. ACTIONS ---
   const handleView = async (paperId) => {
-    setActionLoading("printing");
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(`${BASE_URL}/api/papers/${paperId}`, {
@@ -76,8 +75,6 @@ const SavedPapers = () => {
     } catch (err) {
       console.error(err);
       toast.error("Could not load paper for viewing.");
-    } finally {
-      setActionLoading(null);
     }
   };
 

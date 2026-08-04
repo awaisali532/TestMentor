@@ -12,6 +12,8 @@ import LoginModal from "../../components/ui/LoginModal"; // ✅ Global Modal
 import ChapterAccordion from "./components/ChapterAccordion";
 import CourseSidebar from "./components/CourseSidebar";
 
+import Swal from "sweetalert2";
+
 const SubjectDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,24 +27,20 @@ const SubjectDetails = () => {
   // --- SMART FETCHING WITH DYNAMIC SWR CACHING ---
   useEffect(() => {
     const fetchSubjectDetails = async () => {
-      // 1. Har subject ke liye ek unique cache key banayi
       const cacheKey = `subjectDetailsData_${id}`;
       const cachedData = sessionStorage.getItem(cacheKey);
 
-      // 2. Agar data memory mein mojood hai toh foran dikha do (No Loading Screen)
       if (cachedData) {
         setData(JSON.parse(cachedData));
         setLoading(false);
       }
 
-      // 3. Background mein hamesha fresh data mangwao
       try {
         const res = await axios.get(
           `${BASE_URL}/api/subjects/${id}/full-details`,
         );
         const freshData = res.data;
 
-        // 4. Agar naya data purane se mukhtalif hai toh UI aur Cache dono update karo
         if (JSON.stringify(freshData) !== cachedData) {
           setData(freshData);
           sessionStorage.setItem(cacheKey, JSON.stringify(freshData));
@@ -51,7 +49,6 @@ const SubjectDetails = () => {
         console.error(err);
         toast.error("Failed to load subject details.");
       } finally {
-        // Agar pehli dafa load ho raha hai (cache nahi tha), tabhi loading false karo
         if (!cachedData) {
           setLoading(false);
         }
@@ -65,7 +62,14 @@ const SubjectDetails = () => {
     if (!user) {
       setShowLoginPopup(true);
     } else {
-      navigate(`/test/topic/${topicId}`);
+      Swal.fire({
+        icon: "info",
+        title: "🚀 Feature Under Progress",
+        text: "Online topic-wise practice tests are currently under development. Stay tuned for upcoming updates!",
+        confirmButtonColor: "#0ea5e9",
+        background: "#1e293b",
+        color: "#ffffff",
+      });
     }
   };
 

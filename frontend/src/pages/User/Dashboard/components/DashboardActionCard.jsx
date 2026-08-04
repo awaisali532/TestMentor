@@ -59,7 +59,7 @@ const DashboardActionCard = ({
       {/* Button Section */}
       {isLocked ? (
         <button className="w-full text-center p-3 rounded-xl font-bold text-muted bg-pill-bg border border-dashed border-border cursor-not-allowed text-sm">
-          Limit Reached (Upgrade)
+          {buttonText || "Limit Reached (Upgrade)"}
         </button>
       ) : (
         <Link

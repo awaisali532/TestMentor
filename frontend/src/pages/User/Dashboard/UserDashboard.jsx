@@ -160,13 +160,13 @@ const UserDashboard = () => {
         />
         <DashboardActionCard
           title="Online Test"
-          description="Attempt MCQs and check result."
+          description="Attempt MCQs and check result (Coming Soon)."
           icon={<FaLaptopCode />}
-          tag="Practice"
+          tag="Under Progress"
           colorTheme="purple"
-          link="/user/online-test"
-          isLocked={false}
-          buttonText="Start Quiz"
+          link="#"
+          isLocked={true}
+          buttonText="Under Progress ⏳"
         />
         <DashboardActionCard
           title="Saved Papers"
