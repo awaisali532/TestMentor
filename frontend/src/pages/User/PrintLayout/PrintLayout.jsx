@@ -190,7 +190,7 @@ const PrintLayout = () => {
         isSaved={isSaved}
         isSaving={isSaving}
       />
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-4 sm:py-6 mt-16 md:mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center pb-12 sm:pb-8">
+      <div className="flex-1 max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar px-2 sm:px-4 py-4 sm:py-6 mt-16 md:mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center pb-12 sm:pb-8">
         <PrintableSheet
           ref={componentRef}
           paperData={paperData}

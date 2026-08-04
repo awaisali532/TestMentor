@@ -177,8 +177,8 @@ const Navbar = () => {
       )}
 
       <div
-        className={`fixed top-0 right-0 h-screen w-72 bg-bg-body border-l border-border z-50 transform transition-transform duration-400 ease-out flex flex-col
-          ${isOpen ? "translate-x-0 shadow-2xl" : "translate-x-full"}
+        className={`fixed top-3 right-3 bottom-3 z-50 h-[calc(100vh-24px)] w-72 bg-bg-body border border-border rounded-2xl shadow-2xl overflow-hidden transform transition-transform duration-400 ease-out flex flex-col
+          ${isOpen ? "translate-x-0" : "translate-x-[calc(100%+24px)]"}
         `}
       >
         <div className="flex justify-end p-5">

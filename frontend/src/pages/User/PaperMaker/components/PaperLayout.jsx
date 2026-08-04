@@ -38,8 +38,8 @@ const PaperLayout = ({
         </div>
 
         {/* PAPER CANVAS */}
-        <div className="flex-1 h-full overflow-y-auto px-4 custom-scrollbar relative">
-          <div className="w-full min-h-[calc(100vh-6rem)] bg-card text-main rounded-t-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] p-6 sm:p-8 mt-4 pb-20 print:mt-0 print:mb-0 print:p-0 print:shadow-none print:bg-white print:text-black print:rounded-none relative z-10 transition-colors duration-300">
+        <div className="flex-1 h-full max-h-[calc(100vh-4.5rem)] overflow-y-auto px-2 sm:px-4 custom-scrollbar relative">
+          <div className="w-full min-h-[calc(100vh-6.5rem)] bg-card text-main rounded-t-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] p-4 sm:p-8 mt-3 pb-16 print:mt-0 print:mb-0 print:p-0 print:shadow-none print:bg-white print:text-black print:rounded-none relative z-10 transition-colors duration-300">
             {children}
           </div>
         </div>

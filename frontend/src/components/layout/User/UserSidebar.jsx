@@ -27,10 +27,10 @@ const UserSidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
 
   return (
     <aside
-      className={`fixed top-2 left-2 z-50 bg-card border border-border shadow-2xl flex flex-col transition-all duration-300 ease-in-out
-      rounded-2xl my-2 ml-2 h-[calc(100vh-16px)]
+      className={`fixed top-3 left-3 bottom-3 z-50 bg-card border border-border shadow-2xl flex flex-col transition-all duration-300 ease-in-out
+      rounded-2xl h-[calc(100vh-24px)]
       lg:relative lg:top-0 lg:left-0 lg:z-40 lg:my-4 lg:ml-4 lg:h-[calc(100vh-32px)] lg:shadow-sm
-      ${isOpen ? "translate-x-0" : "-translate-x-[calc(100%+16px)]"}
+      ${isOpen ? "translate-x-0" : "-translate-x-[calc(100%+24px)]"}
       ${isCollapsed ? "w-20" : "w-64"}
     `}
     >
