@@ -8,12 +8,14 @@ const PrintableSheet = forwardRef(
     const getPaperMinHeight = () => {
       if (isDual) {
         if (settings.paperSize === "legal" || settings.paperSize === "letter")
-          return "min-h-[216mm]";
-        return "min-h-[210mm]";
+          return "min-h-[calc(100vh-10rem)] md:min-h-[216mm]";
+        return "min-h-[calc(100vh-10rem)] md:min-h-[210mm]";
       } else {
-        if (settings.paperSize === "legal") return "min-h-[356mm]";
-        if (settings.paperSize === "letter") return "min-h-[279mm]";
-        return "min-h-[297mm]";
+        if (settings.paperSize === "legal")
+          return "min-h-[calc(100vh-10rem)] md:min-h-[356mm]";
+        if (settings.paperSize === "letter")
+          return "min-h-[calc(100vh-10rem)] md:min-h-[279mm]";
+        return "min-h-[calc(100vh-10rem)] md:min-h-[297mm]";
       }
     };
 
@@ -74,7 +76,7 @@ const PrintableSheet = forwardRef(
     return (
       <div
         ref={ref}
-        className={`bg-white text-black shadow-2xl mx-auto relative overflow-visible box-border print:m-0 print:w-full print:shadow-none print:bg-transparent print:block print:min-h-0 ${getPaperWidthClass()} ${getPaperMinHeight()} print-wrapper-scope`}
+        className={`bg-white text-black shadow-2xl mx-auto relative h-auto overflow-visible box-border print:m-0 print:w-full print:shadow-none print:bg-transparent print:block print:min-h-0 ${getPaperWidthClass()} ${getPaperMinHeight()} print-wrapper-scope`}
         style={{
           color: settings.fontColor,
           fontWeight: settings.fontWeight,
@@ -83,12 +85,12 @@ const PrintableSheet = forwardRef(
         <style>{`
         .print-wrapper-scope {
           line-height: ${settings.lineHeight};
-          font-family: "Plus Jakarta Sans", var(--font-sans), sans-serif !important;
+          font-family: var(--font-sans), sans-serif !important;
         }
         .print-wrapper-scope .pp-text-en,
         .print-wrapper-scope .pp-text-en * {
           font-size: ${settings.engFontSize}px !important;
-          font-family: "Plus Jakarta Sans", var(--font-sans), sans-serif !important;
+          font-family: var(--font-sans), sans-serif !important;
         }
         .print-wrapper-scope .pp-text-ur,
         .print-wrapper-scope .pp-text-ur * {
@@ -150,9 +152,9 @@ const PrintableSheet = forwardRef(
 
         {isDual ? (
           /* ✅ FIX: Added gap and horizontal padding so both sides don't stick together */
-          <div className="flex w-full h-full relative justify-between px-2 print:px-1">
+          <div className="flex w-full h-auto min-h-full relative justify-between px-2 print:px-1">
             <div
-              className="w-[49%] p-3 sm:p-4 print:p-1 flex flex-col relative min-h-full"
+              className="w-[49%] p-3 sm:p-4 print:p-1 flex flex-col relative h-auto min-h-full"
               style={{ zoom: 0.75 }}
             >
               <Watermark isCopy2={false} />
@@ -166,7 +168,7 @@ const PrintableSheet = forwardRef(
             </div>
 
             <div
-              className="w-[49%] p-3 sm:p-4 print:p-1 flex flex-col relative min-h-full"
+              className="w-[49%] p-3 sm:p-4 print:p-1 flex flex-col relative h-auto min-h-full"
               style={{ zoom: 0.75 }}
             >
               <Watermark isCopy2={true} />
@@ -174,7 +176,7 @@ const PrintableSheet = forwardRef(
             </div>
           </div>
         ) : (
-          <div className="w-full h-full p-4 sm:p-6 print:p-0 flex flex-col print:block relative min-h-full print:min-h-0">
+          <div className="w-full h-auto min-h-full p-4 sm:p-6 print:p-0 flex flex-col print:block relative print:min-h-0">
             <Watermark />
             <ThePaperContent />
           </div>

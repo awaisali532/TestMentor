@@ -31,7 +31,7 @@ const PrintLayout = () => {
   const [showSaveModal, setShowSaveModal] = useState(false);
 
   const [settings, setSettings] = useState({
-    lineHeight: isDual ? 1 : 1.2,
+    lineHeight: isDual ? 1.2 : 1.2,
     urduFontSize: isDual ? 12 : 11,
     engFontSize: isDual ? 11 : 10,
     eqFontSize: isDual ? 10 : 10,
@@ -190,7 +190,7 @@ const PrintLayout = () => {
         isSaved={isSaved}
         isSaving={isSaving}
       />
-      <div className="flex-1 max-h-[calc(100vh-4rem)] md:max-h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar px-2 sm:px-4 py-4 sm:py-6 mt-16 md:mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center pb-12 sm:pb-8">
+      <div className="flex-1 w-full min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar px-2 sm:px-4 py-4 sm:py-6 mt-16 md:mt-32 print:block print:mt-0 print:p-0 print:overflow-visible flex justify-center pb-12 sm:pb-8">
         <PrintableSheet
           ref={componentRef}
           paperData={paperData}

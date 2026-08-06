@@ -100,7 +100,7 @@ const UserDashboard = () => {
     fetchData();
   }, [BASE_URL]);
 
-  const isFree = !limitData.isUnlimited;
+  const isFree = !(user?.isSuperAdmin || user?.role === "admin" || user?.planType === "premium" || user?.planType === "paid") && !limitData.isUnlimited;
   const papersGenerated = limitData.usage;
   const maxLimit = limitData.limit;
   const limitReached = isFree && papersGenerated >= maxLimit;
