@@ -8,10 +8,14 @@ const {
   getPaperById,
   updatePaper, // ✅ Ab ye Controller se mil jayega
   deletePaper,
+  clearAdminTestPapers,
 } = require("../controllers/paperController");
 
 // Create New
 router.post("/save", protect, savePaper);
+
+// Clear Admin Test Papers
+router.delete("/clear-test-papers", protect, clearAdminTestPapers);
 
 // ✅ Update Existing
 router.put("/:id", protect, updatePaper);

@@ -20,7 +20,7 @@ import { UIProvider } from "./context/UIContext";
 // 2. LAYOUTS
 // =================================================================
 import PublicLayout from "./layouts/PublicLayout";
-// import AdminLayout from "./layouts/AdminLayout";
+import AdminLayout from "./layouts/AdminLayout";
 import UserLayout from "./layouts/UserLayout";
 
 // =================================================================
@@ -28,7 +28,7 @@ import UserLayout from "./layouts/UserLayout";
 // =================================================================
 import PublicRoute from "./components/guards/PublicRoute";
 import PrivateRoute from "./components/guards/PrivateRoute";
-// import AdminRoute from "./components/AdminRoute/AdminRoute";
+import AdminRoute from "./components/guards/AdminRoute";
 
 // =================================================================
 // 4. PAGES
@@ -42,7 +42,7 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 
-//User Pages
+// User Pages
 import UserDashboard from "./pages/User/Dashboard/UserDashboard";
 import UserSettings from "./pages/User/Settings/UserSettings";
 import SavedPapers from "./pages/User/SavedPapers/SavedPapers";
@@ -50,6 +50,17 @@ import GeneratePaper from "./pages/User/GeneratePaper/GeneratePaper";
 import PaperMaker from "./pages/User/PaperMaker/PaperMaker";
 import PrintLayout from "./pages/User/PrintLayout/PrintLayout";
 import AutoPaper from "./pages/User/AutoPaper/AutoPaper";
+
+// Admin Pages (Exact 9 Options)
+import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
+import QuestionBank from "./pages/Admin/QuestionBank/QuestionBank";
+import AdminSubjects from "./pages/Admin/Subjects/AdminSubjects";
+import PaperPatterns from "./pages/Admin/PaperPatterns/PaperPatterns";
+import UserManagement from "./pages/Admin/UserManagement/UserManagement";
+import SiteSettings from "./pages/Admin/SiteSettings/SiteSettings";
+import RecentActivity from "./pages/Admin/RecentActivity/RecentActivity";
+import ProfileSettings from "./pages/Admin/ProfileSettings/ProfileSettings";
+import AdminNotifications from "./pages/Admin/Notifications/AdminNotifications";
 
 // =================================================================
 // 5. DATA ROUTER CONFIGURATION
@@ -64,8 +75,6 @@ const router = createBrowserRouter(
         </>
       }
     >
-      {/* ✅ 2. Yahan se extra <> aur </> fragments nikal diye hain */}
-
       {/* =========================================
         1. PUBLIC ROUTES (Wrapped in PublicLayout)
         ========================================= */}
@@ -80,7 +89,6 @@ const router = createBrowserRouter(
       {/* =========================================
         2. AUTH ROUTES
         ========================================= */}
-
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -88,13 +96,21 @@ const router = createBrowserRouter(
       </Route>
 
       {/* =========================================
-        3. ADMIN ROUTES
+        3. ADMIN ROUTES (Protected by AdminRoute & AdminLayout)
         ========================================= */}
-      {/* <Route element={<AdminRoute />}>
-      <Route element={<AdminLayout />}>
-        <Route path="/admin/dashboard" element={<Dashboard />} />
+      <Route element={<AdminRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/question-bank" element={<QuestionBank />} />
+          <Route path="/admin/subjects" element={<AdminSubjects />} />
+          <Route path="/admin/paper-patterns" element={<PaperPatterns />} />
+          <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/site-settings" element={<SiteSettings />} />
+          <Route path="/admin/recent-activity" element={<RecentActivity />} />
+          <Route path="/admin/profile-settings" element={<ProfileSettings />} />
+          <Route path="/admin/notifications" element={<AdminNotifications />} />
+        </Route>
       </Route>
-    </Route> */}
 
       {/* =========================================
         4. USER ROUTES

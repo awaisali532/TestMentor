@@ -15,7 +15,7 @@ import { useUser } from "../../../context/UserContext";
 
 const UserSidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
   const { user } = useUser();
-  const isPremium = user?.planType === "premium" || user?.planType === "paid";
+  const isPremium = user?.isSuperAdmin || user?.role === "admin" || user?.planType === "premium" || user?.planType === "paid";
 
   const navLinks = [
     { name: "Dashboard", path: "/user/dashboard", icon: FaHome },
@@ -29,7 +29,7 @@ const UserSidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
     <aside
       className={`fixed top-3 left-3 bottom-3 z-50 bg-card border border-border shadow-2xl flex flex-col transition-all duration-300 ease-in-out
       rounded-2xl h-[calc(100dvh-24px)] max-h-[calc(100dvh-24px)]
-      lg:relative lg:top-0 lg:left-0 lg:z-40 lg:my-4 lg:ml-4 lg:h-[calc(100vh-32px)] lg:max-h-[calc(100vh-32px)] lg:shadow-sm
+      lg:relative lg:top-0 lg:left-0 lg:z-40 lg:my-4 lg:ml-4 lg:h-[calc(100vh-32px)] lg:max-h-[calc(100vh-32px)] lg:shadow-sm lg:translate-x-0
       ${isOpen ? "translate-x-0" : "-translate-x-[calc(100%+24px)]"}
       ${isCollapsed ? "w-20" : "w-64"}
     `}

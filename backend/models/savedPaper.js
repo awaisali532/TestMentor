@@ -17,6 +17,7 @@ const SavedPaperSchema = new mongoose.Schema(
     syllabusLabel: { type: String, default: "Full Book" },
     paperPattern: { type: Object, required: true },
     examDate: { type: Date },
+    isTestPaper: { type: Boolean, default: false },
 
     // ✅ QUESTIONS (SNAPSHOT STRATEGY)
     questions: [

@@ -51,6 +51,8 @@ const savePaper = async (req, res) => {
       });
     }
 
+    const isAdminUser = req.user.isSuperAdmin || req.user.role === "admin";
+
     // --- Create Object ---
     const newPaper = new SavedPaper({
       user: req.user.id,
@@ -58,11 +60,12 @@ const savePaper = async (req, res) => {
       subject, // Expecting ID String
       grade,
       totalMarks,
-      paperPattern: pattern, // Full Object Snapshot
-      questions: questions, // Full Object Snapshot
       examLabel: examLabel || "",
-      syllabusLabel: syllabusLabel || "",
+      syllabusLabel: syllabusLabel || "Full Book",
+      paperPattern: pattern,
       examDate: examDate || null,
+      questions: questions,
+      isTestPaper: isAdminUser || req.body.isTestPaper || false,
     });
 
     const saved = await newPaper.save();
@@ -200,10 +203,27 @@ const deletePaper = async (req, res) => {
   }
 };
 
+// =================================================
+// 6. CLEAR ADMIN TEST PAPERS
+// =================================================
+const clearAdminTestPapers = async (req, res) => {
+  try {
+    if (!req.user || (!req.user.isSuperAdmin && req.user.role !== "admin")) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+    await SavedPaper.deleteMany({ user: req.user.id, isTestPaper: true });
+    res.json({ success: true, message: "Admin test papers cleared successfully!" });
+  } catch (error) {
+    console.error("Clear Test Papers Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 module.exports = {
   savePaper,
   getMyPapers,
   getPaperById,
   updatePaper,
   deletePaper,
+  clearAdminTestPapers,
 };

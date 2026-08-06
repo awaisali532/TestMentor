@@ -74,10 +74,46 @@ exports.getUsageStats = async (req, res) => {
     res.json({
       success: true,
       usage: user.usage.papersGenerated,
-      limit: currentLimit, // Ab ye 5 bhi ho sakta hai ya 10 (agar admin ne change kia ho)
+      limit: currentLimit,
       plan: user.planType,
     });
   } catch (error) {
+    res.status(500).json({ error: "Server Error" });
+  }
+};
+
+// ==========================================
+// 3. RESET ADMIN TEST USAGE (Called when Admin exits User Mode)
+// ==========================================
+exports.resetAdminTestUsage = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Only allow admins to reset their own usage
+    if (!user.isSuperAdmin && user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    const previousCount = req.body.previousCount;
+
+    if (typeof previousCount === "number" && previousCount >= 0) {
+      // Restore to the count they had before entering User Mode
+      user.usage.papersGenerated = previousCount;
+    } else {
+      // Fallback: just reset to 0 if no previous count provided
+      user.usage.papersGenerated = 0;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Admin test usage reset successfully",
+      usage: user.usage.papersGenerated,
+    });
+  } catch (error) {
+    console.error("Reset Admin Test Usage Error:", error);
     res.status(500).json({ error: "Server Error" });
   }
 };

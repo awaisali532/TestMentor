@@ -7,6 +7,7 @@ import {
   FaLock,
   FaSignOutAlt,
   FaCrown,
+  FaFlask,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useUser } from "../../../context/UserContext";
@@ -21,7 +22,8 @@ const ProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const isPremium = user?.planType === "premium" || user?.planType === "paid";
+  const isPremium = user?.isSuperAdmin || user?.role === "admin" || user?.planType === "premium" || user?.planType === "paid";
+  const isAdminTestMode = user?.isSuperAdmin || user?.role === "admin";
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -118,39 +120,51 @@ const ProfileDropdown = () => {
               {user?.name || "Student"}
             </p>
             <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">
-              {isPremium ? "Premium" : "Free Plan"}
+              {isAdminTestMode ? "Admin Test Mode" : isPremium ? "Premium" : "Free Plan"}
             </p>
           </div>
 
           <div className="p-2 space-y-1">
-            <Link
-              to="/user/settings?tab=personal"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
-            >
-              <FaUser /> Personal Data
-            </Link>
-            <Link
-              to="/user/settings?tab=institute"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
-            >
-              <FaBuilding /> Institute Data
-            </Link>
-            <Link
-              to="/user/settings?tab=photo"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
-            >
-              <FaCamera /> Update Photo
-            </Link>
-            <Link
-              to="/user/settings?tab=password"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
-            >
-              <FaLock /> Change Password
-            </Link>
+            {isAdminTestMode ? (
+              <div className="flex flex-col items-center gap-2 py-3 px-2 text-center">
+                <FaFlask className="text-amber-500" size={22} />
+                <p className="text-xs font-bold text-amber-500">Test Mode Active</p>
+                <p className="text-[10px] text-muted leading-relaxed">
+                  Settings are locked. You can only test paper generation.
+                </p>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/user/settings?tab=personal"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
+                >
+                  <FaUser /> Personal Data
+                </Link>
+                <Link
+                  to="/user/settings?tab=institute"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
+                >
+                  <FaBuilding /> Institute Data
+                </Link>
+                <Link
+                  to="/user/settings?tab=photo"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
+                >
+                  <FaCamera /> Update Photo
+                </Link>
+                <Link
+                  to="/user/settings?tab=password"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted hover:text-accent-1 hover:bg-pill-bg rounded-lg transition-colors"
+                >
+                  <FaLock /> Change Password
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="p-2 border-t border-border">
@@ -168,3 +182,4 @@ const ProfileDropdown = () => {
 };
 
 export default ProfileDropdown;
+

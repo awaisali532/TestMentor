@@ -1,18 +1,20 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
-import { FaBars, FaMoon, FaSun } from "react-icons/fa";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { FaBars, FaMoon, FaSun, FaUserShield } from "react-icons/fa";
+import axios from "axios";
 
-// Import your custom hooks context if you have one, else standard approach
-// Assuming standard theme handling is available, if not just skip theme logic or use what's provided
 import { useTheme } from "../../../context/ThemeContext";
+import { useUser } from "../../../context/UserContext";
 
 // Child Components
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileDropdown from "./ProfileDropdown";
 
 const Topbar = ({ onMenuClick }) => {
-  const { isDarkMode, toggleTheme } = useTheme(); // Adjust if context names differ
+  const { user } = useUser();
+  const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Dynamic Title based on URL
   const getPageTitle = () => {
@@ -49,6 +51,44 @@ const Topbar = ({ onMenuClick }) => {
 
       {/* RIGHT SIDE: Controls & Profile */}
       <div className="flex items-center gap-2 sm:gap-4">
+        {/* Prominent Admin Switch Link (Only shown if user is admin or isSuperAdmin) */}
+        {user && (user.isSuperAdmin || user.role === "admin") && (
+          <button
+            onClick={async () => {
+              const token = localStorage.getItem("token");
+              const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+              const prevCount = parseInt(localStorage.getItem("admin_test_mode_prev_count") || "0", 10);
+              try {
+                if (token) {
+                  // 1. Delete all test papers
+                  await axios.delete(`${BASE_URL}/api/papers/clear-test-papers`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  // 2. Reset usage count back to what it was before entering User Mode
+                  await axios.post(
+                    `${BASE_URL}/api/usage/reset-admin-test`,
+                    { previousCount: prevCount },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                }
+              } catch (e) {
+                console.log("Cleanup test mode error", e);
+              } finally {
+                // 3. Clear local caches
+                localStorage.removeItem("tm_dashboard_cache");
+                localStorage.removeItem("admin_test_mode_prev_count");
+                sessionStorage.clear();
+                navigate("/admin/dashboard");
+              }
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 to-amber-500/10 text-red-500 border border-red-500/30 text-xs font-extrabold hover:bg-red-500 hover:text-white transition-all shadow-xs group cursor-pointer"
+            title="Switch back to Admin Control Center and reset test mode data"
+          >
+            <FaUserShield size={13} className="group-hover:rotate-12 transition-transform" />
+            <span className="hidden sm:inline">Return to Admin Panel</span>
+          </button>
+        )}
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
