@@ -68,12 +68,12 @@ html {
 
 /* 2. CUSTOM FONT FACES */
 @layer base {
+  /* Primary: Local TTF (works locally + Vercel since it's git-tracked)  */
+  /* Fallback: Google Fonts Noto Nastaliq (100% reliable on all hosts)   */
   @font-face {
     font-family: "Jameel Noori";
     src:
-      url("https://cdn.jsdelivr.net/gh/MehrType/Jameel-Noori-Nastaleeq@1.0.0/font/JameelNooriNastaleeqRegular.woff2") format("woff2"),
       url("/fonts/JameelNooriNastaleeqRegular.ttf") format("truetype");
-
     font-weight: normal;
     font-style: normal;
     font-display: swap;
