@@ -1,8 +1,30 @@
-import React from "react";
+import React, { memo } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 
-const RenderText = ({ text }) => {
+// In-Memory Global KaTeX Cache (0ms Instant Lookup - Prevents UI Hang)
+const katexCache = new Map();
+
+const getKatexHtml = (formula) => {
+  if (katexCache.has(formula)) {
+    return katexCache.get(formula);
+  }
+  try {
+    const html = katex.renderToString(formula, {
+      throwOnError: false,
+      displayMode: false,
+      strict: false,
+    });
+    katexCache.set(formula, html);
+    return html;
+  } catch (error) {
+    const fallback = `<span class="text-red-500">$${formula}$</span>`;
+    katexCache.set(formula, fallback);
+    return fallback;
+  }
+};
+
+const RenderText = memo(({ text }) => {
   if (!text) return null;
 
   const safeText = String(text);
@@ -18,37 +40,33 @@ const RenderText = ({ text }) => {
             <span
               key={index}
               dir={isUrdu ? "rtl" : "ltr"}
-              className={`${isUrdu ? "font-[Jameel_Noori_Nastaleeq] text-lg leading-loose" : "font-sans"} wrap-break-word whitespace-pre-wrap`}
-              dangerouslySetInnerHTML={{ __html: part.replace(/\n/g, "<br/>") }}
+              className={`${
+                isUrdu
+                  ? "font-[Jameel_Noori_Nastaleeq] text-lg leading-loose"
+                  : "font-sans"
+              } wrap-break-word whitespace-pre-wrap`}
+              dangerouslySetInnerHTML={{
+                __html: part.replace(/\n/g, "<br/>"),
+              }}
             />
           );
         }
 
-        // Odd Index = Math Formulas
+        // Odd Index = Math Formulas (0ms Cache Lookup)
         else {
-          try {
-            const html = katex.renderToString(part, {
-              throwOnError: false,
-              displayMode: false,
-              strict: false,
-            });
-            return (
-              <span
-                key={index}
-                dangerouslySetInnerHTML={{ __html: html }}
-                className="mx-1 inline-block math-jax-output"
-                style={{ direction: "ltr", unicodeBidi: "isolate" }}
-              />
-            );
-          } catch (error) {
-            return (
-              <span key={index} className="text-red-500">{`$${part}$`}</span>
-            );
-          }
+          const html = getKatexHtml(part);
+          return (
+            <span
+              key={index}
+              dangerouslySetInnerHTML={{ __html: html }}
+              className="mx-1 inline-block math-jax-output"
+              style={{ direction: "ltr", unicodeBidi: "isolate" }}
+            />
+          );
         }
       })}
     </span>
   );
-};
+});
 
 export default RenderText;

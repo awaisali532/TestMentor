@@ -2,55 +2,89 @@ const User = require("../models/user");
 const Subject = require("../models/subjectModel");
 const Question = require("../models/question");
 const ClassModel = require("../models/classLevel");
+const SavedPaper = require("../models/savedPaper");
 
 exports.getDashboardStats = async (req, res) => {
   try {
     // 1. Basic Counts
-    const [totalUsers, totalSubjects, totalClasses, totalQuestions] =
-      await Promise.all([
-        User.countDocuments(),
-        Subject.countDocuments(),
-        // If you don't have ClassModel yet, keep this 0 or remove it
-        ClassModel ? ClassModel.countDocuments() : 0,
-        Question.countDocuments(),
-      ]);
+    const [
+      totalUsers,
+      premiumUsers,
+      totalSubjects,
+      totalClasses,
+      totalQuestions,
+      totalPapersGenerated,
+      recentUsers,
+      recentPapers,
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({
+        $or: [
+          { role: { $in: ["admin", "superadmin"] } },
+          { isSuperAdmin: true },
+          { isPremium: true },
+        ],
+      }),
+      Subject.countDocuments(),
+      ClassModel ? ClassModel.countDocuments() : 0,
+      Question.countDocuments(),
+      SavedPaper ? SavedPaper.countDocuments({ isTestPaper: { $ne: true } }) : 0,
+      User.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select("name email role createdAt image avatar"),
+      SavedPaper ? SavedPaper.find({ isTestPaper: { $ne: true } })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("user", "name email")
+        .select("title subject grade totalMarks createdAt user") : [],
+    ]);
 
     // 2. Aggregation: Questions Per Subject (For the Graph)
-    // This groups questions by subjectId, counts them, and joins with Subject table to get the name.
     const subjectStats = await Question.aggregate([
       {
         $group: {
-          _id: "$subjectId", // Group by Subject ID
-          count: { $sum: 1 }, // Count questions
+          _id: "$subject",
+          count: { $sum: 1 },
         },
       },
       {
         $lookup: {
-          from: "subjects", // The collection name in MongoDB (usually plural)
+          from: "subjects",
           localField: "_id",
           foreignField: "_id",
           as: "subjectInfo",
         },
       },
       {
-        $unwind: "$subjectInfo", // Convert array to object
+        $unwind: { path: "$subjectInfo", preserveNullAndEmptyArrays: true },
       },
       {
         $project: {
-          label: "$subjectInfo.subjectName", // Get Name
-          count: "$count", // Get Count
+          label: {
+            $cond: {
+              if: { $gt: [{ $strLenCP: { $ifNull: ["$subjectInfo.className", ""] } }, 0] },
+              then: { $concat: ["$subjectInfo.subjectName", " (", "$subjectInfo.className", ")"] },
+              else: { $ifNull: ["$subjectInfo.subjectName", "Unassigned"] }
+            }
+          },
+          count: "$count",
         },
       },
-      { $sort: { count: -1 } }, // Sort by highest count
-      { $limit: 5 }, // Only take top 5 for the graph
+      { $sort: { count: -1 } },
+      { $limit: 6 },
     ]);
 
     res.json({
       totalUsers,
+      premiumUsers,
       activeSubjects: totalSubjects,
       classLevels: totalClasses,
       totalQuestions,
-      graphData: subjectStats, // Send this new array to frontend
+      totalPapersGenerated,
+      recentUsers,
+      recentPapers,
+      graphData: subjectStats,
     });
   } catch (error) {
     console.error("Dashboard Stats Error:", error);

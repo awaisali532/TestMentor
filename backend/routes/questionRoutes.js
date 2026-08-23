@@ -8,7 +8,8 @@ const {
   getAllQuestions,
   getMenuQuestions,
   getQuestionFilters,
-  getQuestionsByFilter, // ✅ Yeh wohi function hai
+  getSubjectCategories,
+  getQuestionsByFilter,
   addQuestion,
   updateQuestion,
   deleteQuestion,
@@ -28,6 +29,7 @@ router.use(protect);
 // =======================
 
 router.get("/filters", getQuestionFilters);
+router.get("/categories", getSubjectCategories);
 router.get("/menu-data", getMenuQuestions);
 
 // 🔥 CHANGE: GET -> POST (To handle large syllabus arrays)

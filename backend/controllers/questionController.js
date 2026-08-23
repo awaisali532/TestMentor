@@ -14,6 +14,7 @@ function escapeRegex(text) {
 // Helper: Safe JSON Parse
 const safeParse = (data, fallback) => {
   if (!data) return fallback;
+  if (typeof data === "object") return data;
   try {
     return JSON.parse(data);
   } catch (e) {
@@ -78,15 +79,47 @@ const getMenuQuestions = async (req, res) => {
 };
 
 // ==========================================
-// 3. GET FILTERS
+// 3. GET FILTERS & SUBJECT CATEGORIES
 // ==========================================
+const {
+  getCategoriesForSubjectName,
+  VALID_CATEGORIES,
+} = require("../config/subjectCategories");
+
 const getQuestionFilters = async (req, res) => {
   try {
-    const categories = Question.schema.path("questionCategory").enumValues;
-    const difficulties = Question.schema.path("difficulty").enumValues;
-    res.status(200).json({ success: true, categories, difficulties });
+    const difficulties = ["Easy", "Medium", "Hard"];
+    res.status(200).json({
+      success: true,
+      categories: VALID_CATEGORIES,
+      difficulties,
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: "Failed to fetch filters" });
+  }
+};
+
+const getSubjectCategories = async (req, res) => {
+  try {
+    const { subjectId, subjectName } = req.query;
+    let targetSubjectName = subjectName || "";
+
+    if (!targetSubjectName && subjectId) {
+      const subjectDoc = await Subject.findById(subjectId).lean();
+      if (subjectDoc) {
+        targetSubjectName = subjectDoc.subjectName;
+      }
+    }
+
+    const categories = getCategoriesForSubjectName(targetSubjectName);
+    res.status(200).json({
+      success: true,
+      subjectName: targetSubjectName,
+      categories,
+    });
+  } catch (err) {
+    console.error("Error in getSubjectCategories:", err);
+    res.status(500).json({ error: "Failed to resolve subject categories" });
   }
 };
 
@@ -99,34 +132,51 @@ const toTitleCase = (str) => {
 // ==========================================
 // 4. GET QUESTIONS BY FILTER (OPTIMIZED ✅)
 // ==========================================
-// 4. GET QUESTIONS BY FILTER (WITH PERFORMANCE INSTRUMENTATION)
+// 4. GET QUESTIONS BY FILTER (OPTIMIZED & FLEXIBLE ✅)
 // ==========================================
 const getQuestionsByFilter = async (req, res) => {
   const backendStart = performance.now();
+  const prepStart = performance.now();
   try {
-    const { grade, subject, type, category, difficulty, topics, chapters } =
-      req.body;
+    const {
+      grade,
+      classLevel,
+      subject,
+      type,
+      category,
+      difficulty,
+      topics,
+      chapters,
+      search,
+    } = req.body;
 
-    if (!grade || !subject)
-      return res.status(400).json({ error: "Grade/Subject missing" });
+    const targetGrade = grade || classLevel;
+    let query = {};
 
-    const prepStart = performance.now();
-
-    // Subject pre-lookup
-    let subjectObjectId;
-    if (mongoose.Types.ObjectId.isValid(subject)) {
-      subjectObjectId = new mongoose.Types.ObjectId(subject);
-    } else {
-      const subjectDoc = await Subject.findOne({
-        className: grade,
-        subjectName: subject,
-      }).select("_id").lean();
-      if (!subjectDoc) return res.status(404).json({ error: "Subject not found" });
-      subjectObjectId = subjectDoc._id;
+    if (targetGrade) {
+      query.classLevel = targetGrade;
     }
 
-    let query = { subject: subjectObjectId };
-    if (type && type !== "ALL") query.type = type;
+    // Subject pre-lookup if provided
+    if (subject) {
+      if (mongoose.Types.ObjectId.isValid(subject)) {
+        query.subject = new mongoose.Types.ObjectId(subject);
+      } else if (targetGrade) {
+        const subjectDoc = await Subject.findOne({
+          className: targetGrade,
+          subjectName: subject,
+        })
+          .select("_id")
+          .lean();
+        if (subjectDoc) {
+          query.subject = subjectDoc._id;
+        }
+      }
+    }
+
+    if (type && type !== "ALL") {
+      query.type = type;
+    }
 
     const normalizeArray = (val) =>
       !val ? [] : Array.isArray(val) ? val : [val];
@@ -154,6 +204,15 @@ const getQuestionsByFilter = async (req, res) => {
         (id) => new mongoose.Types.ObjectId(id),
       );
       query.topics = { $in: topicObjectIds };
+    }
+
+    // Live text search across English & Urdu statements
+    if (search && search.trim()) {
+      const escaped = escapeRegex(search.trim());
+      query.$or = [
+        { "statement.en": { $regex: escaped, $options: "i" } },
+        { "statement.ur": { $regex: escaped, $options: "i" } },
+      ];
     }
 
     // Support 2-Stage Projection Mode (metadata-only candidate mode for 90% payload reduction at 100k+ scale)
@@ -244,8 +303,10 @@ const addQuestion = async (req, res) => {
   try {
     const {
       topics,
-      chapterId,
-      subjectId,
+      chapterId: rawChapterId,
+      chapter,
+      subjectId: rawSubjectId,
+      subject,
       classLevel,
       type,
       difficulty,
@@ -257,6 +318,9 @@ const addQuestion = async (req, res) => {
       questionCategory,
       questionData,
     } = req.body;
+
+    const subjectId = rawSubjectId || subject;
+    const chapterId = rawChapterId || chapter;
 
     if (!subjectId || subjectId === "undefined")
       return res.status(400).json({ error: "Subject ID missing." });
@@ -437,7 +501,11 @@ const updateQuestion = async (req, res) => {
 
     const updatedQ = await Question.findByIdAndUpdate(id, updateData, {
       new: true,
-    });
+    })
+      .populate("topics", "name topicNumber")
+      .populate("chapter", "name chapterNumber")
+      .lean();
+
     res.json(updatedQ);
   } catch (err) {
     console.error("Update Error:", err);
@@ -640,6 +708,7 @@ module.exports = {
   getAllQuestions,
   getMenuQuestions,
   getQuestionFilters,
+  getSubjectCategories,
   getQuestionsByFilter,
   addQuestion,
   updateQuestion,

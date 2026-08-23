@@ -2,6 +2,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 html {
   /* Default is 16px (100%). We change it to 12.8px (80%) */
   font-size: 80%;
@@ -95,7 +97,7 @@ html {
 /* 3. CSS VARIABLES FOR DARK/LIGHT MODE */
 @layer base {
 
-  :root,
+  .dark,
   [data-theme="dark"] {
     --bg-body: #020617;
     --nav-bg: rgba(15, 23, 42, 0.9);
@@ -108,16 +110,18 @@ html {
     --shadow-color: rgba(0, 0, 0, 0.5);
   }
 
+  :root:not(.dark),
+  .light,
   [data-theme="light"] {
     --bg-body: #f8fafc;
-    --nav-bg: rgba(255, 255, 255, 0.9);
+    --nav-bg: rgba(255, 255, 255, 0.95);
     --sidebar-bg: #ffffff;
     --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --pill-bg: rgba(0, 0, 0, 0.05);
-    --border-color: rgba(0, 0, 0, 0.1);
-    --shadow-color: rgba(0, 0, 0, 0.1);
+    --text-main: #0f172a;
+    --text-muted: #334155;
+    --pill-bg: #e2e8f0;
+    --border-color: #cbd5e1;
+    --shadow-color: rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -127,6 +131,49 @@ html {
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Override global scrollbar-hide for specific pages (e.g. Question Bank) */
+@utility show-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #10b981 transparent;
+
+  &::-webkit-scrollbar {
+    display: block !important;
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #10b981 transparent;
+  }
+
+  *::-webkit-scrollbar {
+    display: block !important;
+    width: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 999px;
   }
 }
 
@@ -154,4 +201,32 @@ html {
       print-color-adjust: exact;
     }
   }
+}
+
+/* ── Question Bank Page: Re-enable scrollbar ─────────────────────────────── */
+/* Applied via useEffect on <html> when QuestionBank mounts                   */
+html.qbank-page,
+html.qbank-page body,
+html.qbank-page * {
+  scrollbar-width: thin !important;
+  scrollbar-color: #10b981 transparent !important;
+}
+
+html.qbank-page *::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+html.qbank-page *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.qbank-page *::-webkit-scrollbar-thumb {
+  background: #10b981;
+  border-radius: 999px;
+}
+
+html.qbank-page *::-webkit-scrollbar-thumb:hover {
+  background: #059669;
 }

@@ -1,31 +1,5 @@
 const mongoose = require("mongoose");
-
-// ✅ CONSTANT: Shared Categories List (Consistent with PaperPattern)
-const QUESTION_CATEGORIES = [
-  "ANY", // Mixed / Random
-  "EXAMPLE", // Sample Qs
-  "TEXT", // General Short/Text
-  "EXERCISE", // Book Exercise
-  "MCQ_GENERAL", // Standard MCQs
-  "NUMERICAL", // Physics/Chem/Math
-  "THEORY", // Long Questions
-  "CONCEPTUAL", // Reasoning
-  "DIAGRAM", // Drawing/Labeling
-  "THEOREM", // Math Masla
-  "SUMMARY", // English Poem
-  "ESSAY", // Mazmoon
-  "LETTER", // Khat/Application
-  "STORY", // Kahani
-  "TRANSLATION", // Urdu to Eng / Eng to Urdu
-  "POETRY", // Tashreeh
-  "IDIOMS", // Muhawaray
-  "PAIR_OF_WORDS", // Jorey
-  "CHANGE_OF_VOICE", // Active/Passive
-  "GRAMMAR", // Direct/Indirect etc.
-  "COMPREHENSION", // Passage
-  "STANZA", // Poem Stanza
-  "REVIEW", // Review Exercise
-];
+const { VALID_CATEGORIES } = require("../config/subjectCategories");
 
 const questionSchema = new mongoose.Schema(
   {
@@ -52,7 +26,7 @@ const questionSchema = new mongoose.Schema(
     classLevel: { type: String, required: true },
 
     // ==========================================
-    // 2. TYPES & CATEGORIES (UPDATED ✅)
+    // 2. TYPES & CATEGORIES (Clean & Validated ✅)
     // ==========================================
     type: {
       type: String,
@@ -60,12 +34,19 @@ const questionSchema = new mongoose.Schema(
       required: true,
     },
 
-    // 🔥 CHANGED: String -> [String] (Array)
     questionCategory: {
       type: [String],
-      enum: QUESTION_CATEGORIES,
-      default: ["TEXT"], // Default ab array hoga
-      index: true, // Filtering k liye fast hoga
+      validate: {
+        validator: function (val) {
+          return (
+            Array.isArray(val) &&
+            val.every((item) => VALID_CATEGORIES.includes(item))
+          );
+        },
+        message: (props) => `${props.value} contains invalid question category!`,
+      },
+      default: ["TEXT"],
+      index: true,
     },
 
     difficulty: {

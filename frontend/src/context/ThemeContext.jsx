@@ -17,8 +17,13 @@ export const ThemeProvider = ({ children }) => {
   );
 
   useEffect(() => {
-    // <html> tag par theme lagana best practice hai
+    // Apply both data-theme attribute and dark class for 100% Tailwind v4 compatibility
     document.documentElement.setAttribute("data-theme", theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
     localStorage.setItem("app-theme", theme);
   }, [theme]);
 
