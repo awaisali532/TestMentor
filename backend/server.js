@@ -22,6 +22,11 @@ const rateLimit = require("express-rate-limit");
 
 dotenv.config();
 
+// Initiate background connection immediately on server boot
+connectDB().catch((err) => {
+  console.error("Initial MongoDB boot connection error:", err.message);
+});
+
 const app = express();
 
 // Enable Trust Proxy for Vercel / Reverse Proxy (Required by express-rate-limit)

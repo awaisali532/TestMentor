@@ -17,9 +17,9 @@ const connectDB = async () => {
     const opts = {
       bufferCommands: false, // Don't hang for 10s if connection drops; fail fast or await connection
       maxPoolSize: 10, // Recommended pool size for serverless functions
-      serverSelectionTimeoutMS: 8000,
+      minPoolSize: 1, // Keep at least 1 warm socket ready for zero-latency queries
+      serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      family: 4,
     };
 
     cached.promise = mongoose
