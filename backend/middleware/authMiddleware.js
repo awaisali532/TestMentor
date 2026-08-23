@@ -9,13 +9,25 @@ const protect = async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
+    token = req.headers.authorization.split(" ")[1];
+    let decoded;
+
+    // Step A: Verify JWT Signature & Expiry
     try {
-      token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      return res
+        .status(401)
+        .json({ message: "Not authorized, token failed or expired" });
+    }
 
-      const userId = decoded.id || decoded.userId || decoded._id;
-      if (!userId) return res.status(401).json({ message: "Invalid Token" });
+    const userId = decoded.id || decoded.userId || decoded._id;
+    if (!userId) {
+      return res.status(401).json({ message: "Invalid Token payload" });
+    }
 
+    // Step B: Fetch user from Database (Protected from causing 401 on DB connection issue)
+    try {
       req.user = await User.findById(userId).select("-password");
 
       if (!req.user) {
@@ -28,16 +40,20 @@ const protect = async (req, res, next) => {
           .json({ message: "Your account has been banned." });
       }
 
-      next();
-    } catch (error) {
-      res.status(401).json({ message: "Not authorized, token failed" });
+      return next();
+    } catch (dbError) {
+      console.error("Database error in protect middleware:", dbError.message);
+      return res.status(500).json({
+        message: "Internal server error during authentication check",
+      });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: "Not authorized, no token" });
+    return res.status(401).json({ message: "Not authorized, no token" });
   }
 };
+
 
 // 2. Check if Role is Admin
 const admin = (req, res, next) => {

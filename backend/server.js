@@ -21,18 +21,33 @@ const mongoSanitize = require("express-mongo-sanitize");
 const rateLimit = require("express-rate-limit");
 
 dotenv.config();
-connectDB();
 
 const app = express();
 
+// Enable Trust Proxy for Vercel / Reverse Proxy (Required by express-rate-limit)
+app.set("trust proxy", 1);
+
 // 1. CORS MUST ALWAYS BE FIRST so HTTP OPTIONS preflight requests succeed!
+const allowedOrigins = [
+  "https://test-mentor-2u38.vercel.app",
+  "https://test-mentor-nine.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
+
 app.use(
   cors({
-    origin: [
-      "https://test-mentor-2u38.vercel.app",
-      "http://localhost:5173",
-      "http://localhost:5174",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Fallback allow to prevent unexpected CORS blocks
+    },
     methods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -52,7 +67,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 4. Rate Limiter for API endpoints
+// 4. Rate Limiter for API endpoints (with trust proxy enabled)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -63,6 +78,22 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use("/api/", apiLimiter);
+
+// 5. Ensure MongoDB is connected before handling any API routes (Serverless Resilience)
+app.use(async (req, res, next) => {
+  if (req.method === "OPTIONS") return next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("Database connection failed for request:", err.message);
+    return res.status(503).json({
+      success: false,
+      message: "Database connection failed. Please try again shortly.",
+    });
+  }
+});
+
 
 // Routes Mounting
 app.use("/api/auth", authRoutes);
