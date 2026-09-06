@@ -9,14 +9,20 @@ const chapterSchema = new mongoose.Schema(
     },
     chapterNumber: { type: Number, required: true }, // e.g., 1
 
-    // ✅ UPDATE 1: Name is now an Object (English + Urdu)
     name: {
-      en: { type: String, required: true, trim: true }, // English (Required)
-      ur: { type: String, trim: true }, // Urdu (Optional)
+      en: { type: String, trim: true, default: "" },
+      ur: { type: String, trim: true, default: "" },
     },
   },
   { timestamps: true }
 );
+
+// Require at least one language name
+chapterSchema.pre("validate", function () {
+  if (!this.name?.en?.trim() && !this.name?.ur?.trim()) {
+    this.invalidate("name", "Either English or Urdu chapter name is required");
+  }
+});
 
 // Prevent duplicate chapter numbers in the same subject
 chapterSchema.index({ subject: 1, chapterNumber: 1 }, { unique: true });

@@ -52,39 +52,44 @@ const getChaptersByFilter = async (req, res) => {
 // 2. ADD CHAPTER (Single)
 // ==========================================
 // ==========================================
+// ==========================================
 // 2. ADD CHAPTER (Single) - UPDATED
 // ==========================================
 const addChapter = async (req, res) => {
   try {
     const { subjectId, chapterNumber, name } = req.body;
 
-    if (!subjectId || !chapterNumber || !name || !name.en) {
-      return res
-        .status(400)
-        .json({ error: "Subject, Chapter No, and English Name are required" });
+    const enName = typeof name === "object" ? name?.en : typeof name === "string" ? name : "";
+    const urName = typeof name === "object" ? name?.ur : "";
+
+    if (!subjectId || chapterNumber === undefined || (!enName?.trim() && !urName?.trim())) {
+      return res.status(400).json({
+        error: "Subject ID, Chapter Number, and Chapter Title are required",
+      });
     }
 
-    const exists = await Chapter.findOne({ subject: subjectId, chapterNumber });
+    const num = Number(chapterNumber);
+    const exists = await Chapter.findOne({ subject: subjectId, chapterNumber: num });
     if (exists) {
       return res
         .status(400)
-        .json({ error: `Chapter ${chapterNumber} already exists!` });
+        .json({ error: `Chapter ${num} already exists in this subject!` });
     }
 
     const newChapter = new Chapter({
       subject: subjectId,
-      chapterNumber,
+      chapterNumber: num,
       name: {
-        en: name.en,
-        ur: name.ur || "",
+        en: enName ? enName.trim() : (urName ? urName.trim() : ""),
+        ur: urName ? urName.trim() : "",
       },
     });
     await newChapter.save();
 
-    // ✅ CHANGED HERE: Used dynamic chapterNumber instead of fixed "0.0"
+    // Default Topic
     const defaultTopic = new Topic({
       chapter: newChapter._id,
-      topicNumber: `${chapterNumber}.0`, // e.g., if Chapter is 5, this becomes "5.0"
+      topicNumber: `${num}.0`,
       name: {
         en: "General / Exercise Questions",
         ur: "جنرل / مشقی سوالات",
@@ -156,16 +161,26 @@ const updateChapter = async (req, res) => {
   try {
     const { chapterNumber, name } = req.body;
 
+    const enName = typeof name === "object" ? name?.en : typeof name === "string" ? name : "";
+    const urName = typeof name === "object" ? name?.ur : "";
+
+    if (!enName?.trim() && !urName?.trim()) {
+      return res.status(400).json({ error: "Chapter name (English or Urdu) is required" });
+    }
+
+    const updateDoc = {};
+    if (chapterNumber !== undefined) {
+      updateDoc.chapterNumber = Number(chapterNumber);
+    }
+    updateDoc.name = {
+      en: enName ? enName.trim() : (urName ? urName.trim() : ""),
+      ur: urName ? urName.trim() : "",
+    };
+
     const updatedChapter = await Chapter.findByIdAndUpdate(
       req.params.id,
-      {
-        chapterNumber,
-        name: {
-          en: name.en,
-          ur: name.ur,
-        },
-      },
-      { new: true, runValidators: true },
+      updateDoc,
+      { new: true, runValidators: true }
     );
 
     if (!updatedChapter) {
@@ -174,12 +189,13 @@ const updateChapter = async (req, res) => {
 
     res.json(updatedChapter);
   } catch (error) {
+    console.error("Update Chapter Error:", error);
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ error: "Chapter Number already exists in this Subject!" });
     }
-    res.status(500).json({ error: "Update failed" });
+    res.status(500).json({ error: error.message || "Update failed" });
   }
 };
 

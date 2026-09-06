@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import {
   X,
   Plus,
   Trash2,
-  Image as ImageIcon,
   CheckCircle2,
   Sparkles,
   Layers,
   FileText,
   Tag,
   Repeat,
+  HelpCircle,
 } from "lucide-react";
 
 const AddQuestionModal = ({
@@ -180,6 +181,10 @@ const AddQuestionModal = ({
 
   // 4. Fetch Subject-Specific Categories from Backend API Endpoint
   useEffect(() => {
+    if (!subjectId) {
+      setAvailableCategories([]);
+      return;
+    }
     const fetchCategories = async () => {
       try {
         setLoadingCategories(true);
@@ -213,13 +218,13 @@ const AddQuestionModal = ({
     fetchCategories();
   }, [subjectId, API_URL]);
 
-  // Filter subjects by selected Class and sort by click popularity
-  const modalAvailableSubjects = React.useMemo(() => {
+  // Filter subjects by selected Class
+  const modalAvailableSubjects = useMemo(() => {
     const rawList = classLevel
       ? (filtersData?.subjects || []).filter(
           (s) =>
-            s.className?.toLowerCase().trim() ===
-            classLevel.toLowerCase().trim()
+            String(s.className || "").toLowerCase().trim() ===
+            String(classLevel).toLowerCase().trim()
         )
       : filtersData?.subjects || [];
 
@@ -232,7 +237,7 @@ const AddQuestionModal = ({
         const countB = clicks[b._id] || 0;
         return countB - countA;
       });
-    } catch (e) {
+    } catch {
       return rawList;
     }
   }, [filtersData?.subjects, classLevel]);
@@ -251,83 +256,80 @@ const AddQuestionModal = ({
     });
   };
 
+  // Option text change for MCQ
   const handleOptionTextChange = (index, lang, value) => {
-    setOptions((prev) =>
-      prev.map((opt, i) =>
-        i === index
-          ? { ...opt, text: { ...opt.text, [lang]: value } }
-          : opt
-      )
-    );
+    setOptions((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        text: {
+          ...updated[index].text,
+          [lang]: value,
+        },
+      };
+      return updated;
+    });
   };
 
+  // Set Correct Radio Option
   const handleSetCorrectOption = (index) => {
     setOptions((prev) =>
-      prev.map((opt, i) => ({ ...opt, isCorrect: i === index }))
+      prev.map((opt, i) => ({
+        ...opt,
+        isCorrect: i === index,
+      }))
     );
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // 1. Hierarchy Validations
-    if (!subjectId) {
-      Swal.fire("Missing Subject", "Please select a Subject.", "warning");
-      return;
-    }
-    if (!chapterId) {
-      Swal.fire("Missing Chapter", "Please select a Chapter.", "warning");
-      return;
-    }
-    if (!topicId) {
-      Swal.fire("Missing Topic", "Please select a Topic.", "warning");
-      return;
+    if (!subjectId) return Swal.fire("Warning", "Please select a Subject!", "warning");
+    if (!chapterId) return Swal.fire("Warning", "Please select a Chapter!", "warning");
+    if (!topicId) return Swal.fire("Warning", "Please select a Topic!", "warning");
+
+    // Statement Validation
+    if (!statementEn.trim() && !statementUr.trim()) {
+      return Swal.fire("Warning", "Question statement cannot be completely empty!", "warning");
     }
 
-    // 2. English Statement Validation
-    if (!statementEn || !statementEn.trim()) {
-      Swal.fire(
-        "Missing English Statement",
-        "Please enter the English Question Statement.",
+    // Compulsory Urdu rule for Class 9th & 10th
+    if ((classLevel === "9th" || classLevel === "10th") && !statementUr.trim()) {
+      return Swal.fire(
+        "Urdu Compulsory",
+        `Urdu statement is strictly mandatory for Class ${classLevel}!`,
         "warning"
       );
-      return;
     }
 
-    // 3. Robust Compulsory Urdu Validation for Class 9th & 10th
-    const normClass = String(classLevel || "").toLowerCase().trim();
-    const isCompulsoryUrdu =
-      normClass.includes("9") || normClass.includes("10");
-
-    if (isCompulsoryUrdu) {
-      if (!statementUr || !statementUr.trim()) {
-        Swal.fire({
-          icon: "warning",
-          title: "Urdu Statement Required!",
-          text: `For Class ${classLevel || "9th/10th"}, Urdu Question Statement is mandatory.`,
-        });
-        return;
+    // MCQ Options Validation
+    if (type === "MCQ") {
+      const hasCorrect = options.some((opt) => opt.isCorrect);
+      if (!hasCorrect) {
+        return Swal.fire("Warning", "Please mark at least one option as correct!", "warning");
       }
 
-      if (type === "MCQ") {
-        const hasEmptyUrduOption = options.some((opt) => {
-          const urText = opt.text?.ur || opt.ur || "";
-          return !urText.trim();
-        });
-
-        if (hasEmptyUrduOption) {
-          Swal.fire({
-            icon: "warning",
-            title: "Urdu MCQ Options Required!",
-            text: `For Class ${classLevel || "9th/10th"}, all MCQ Urdu Options (A, B, C, D) are mandatory.`,
-          });
-          return;
+      for (let i = 0; i < 4; i++) {
+        const enVal = options[i].text?.en?.trim() || "";
+        const urVal = options[i].text?.ur?.trim() || "";
+        if (!enVal && !urVal) {
+          return Swal.fire(
+            "Incomplete Options",
+            `Option ${String.fromCharCode(65 + i)} is empty!`,
+            "warning"
+          );
+        }
+        if ((classLevel === "9th" || classLevel === "10th") && !urVal) {
+          return Swal.fire(
+            "Urdu Options Compulsory",
+            `Option ${String.fromCharCode(65 + i)} (Urdu) is mandatory for ${classLevel}!`,
+            "warning"
+          );
         }
       }
     }
 
     const payload = {
-      retainSelection: retainSelection && !initialData,
       classLevel,
       subject: subjectId,
       chapter: chapterId,
@@ -337,13 +339,16 @@ const AddQuestionModal = ({
       difficulty,
       marks: Number(marks),
       important,
-      statement: { en: statementEn, ur: statementUr },
+      statement: {
+        en: statementEn.trim(),
+        ur: statementUr.trim(),
+      },
       options:
         type === "MCQ"
           ? options.map((opt) => ({
-              en: opt.text?.en || opt.en || "",
-              ur: opt.text?.ur || opt.ur || "",
-              isCorrect: !!opt.isCorrect,
+              en: opt.text.en.trim(),
+              ur: opt.text.ur.trim(),
+              isCorrect: opt.isCorrect,
             }))
           : [],
     };
@@ -372,36 +377,43 @@ const AddQuestionModal = ({
     return "";
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      <div className="bg-card border border-border w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden my-4 animate-in fade-in zoom-in-95 duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[999] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div className="bg-card border border-border w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden my-4 animate-scale-up flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-base font-bold text-main">
-              {initialData ? "Edit Question" : "Add New Question"}
-            </h2>
+        <div className="px-6 py-4 bg-pill-bg/60 border-b border-border flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="size-9 rounded-xl bg-accent-1/10 text-accent-1 flex items-center justify-center font-bold">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-main">
+                {initialData ? "Edit Question" : "Add New Question"}
+              </h2>
+              <p className="text-xs text-muted">
+                {initialData ? "Update question content and options" : "Add single question to the question bank"}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Sticky Mode Toggle Button */}
             {!initialData && (
-              <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
+              <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-accent-1 bg-accent-1/10 px-3 py-1.5 rounded-xl border border-accent-1/20 hover:bg-accent-1/15 transition-colors">
                 <Repeat className="w-3.5 h-3.5" />
-                <span>Retain Selection (Continuous Entry)</span>
+                <span className="hidden sm:inline">Continuous Entry Mode</span>
                 <input
                   type="checkbox"
                   checked={retainSelection}
                   onChange={(e) => setRetainSelection(e.target.checked)}
-                  className="rounded border-emerald-400 text-emerald-600 focus:ring-emerald-500"
+                  className="rounded border-border text-accent-1 focus:ring-accent-1 cursor-pointer"
                 />
               </label>
             )}
 
             <button
               onClick={onClose}
-              className="text-muted hover:text-main p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="text-muted hover:text-main p-2 rounded-xl hover:bg-pill-bg transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -409,23 +421,29 @@ const AddQuestionModal = ({
         </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 max-h-[85vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
           {/* Section 1: Hierarchy & Classification */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-emerald-600" />
-              1. Classification & Hierarchy
+          <div className="bg-pill-bg/40 border border-border rounded-2xl p-4 md:p-5 space-y-4">
+            <h3 className="text-xs font-extrabold text-main uppercase tracking-wider flex items-center gap-2">
+              <Layers className="w-4 h-4 text-accent-1" />
+              <span>1. Classification & Hierarchy</span>
             </h3>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
-                  Class Level *
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
+                  Class Level <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={classLevel}
-                  onChange={(e) => setClassLevel(e.target.value)}
+                  onChange={(e) => {
+                    setClassLevel(e.target.value);
+                    setSubjectId("");
+                    setChapterId("");
+                    setTopicId("");
+                  }}
                   required
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-2xs"
+                  className="w-full text-xs font-bold bg-card border border-border rounded-xl px-3 py-2.5 text-main focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all cursor-pointer"
                 >
                   <option value="9th">Class 9th</option>
                   <option value="10th">Class 10th</option>
@@ -435,14 +453,18 @@ const AddQuestionModal = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Subject *
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
+                  Subject <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={subjectId}
-                  onChange={(e) => setSubjectId(e.target.value)}
+                  onChange={(e) => {
+                    setSubjectId(e.target.value);
+                    setChapterId("");
+                    setTopicId("");
+                  }}
                   required
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-2xs"
+                  className="w-full text-xs font-bold bg-card border border-border rounded-xl px-3 py-2.5 text-main focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all cursor-pointer"
                 >
                   <option value="">
                     {modalAvailableSubjects.length === 0
@@ -451,7 +473,6 @@ const AddQuestionModal = ({
                   </option>
                   {modalAvailableSubjects.map((s, i) => (
                     <option key={s._id || i} value={s._id}>
-                      {i === 0 ? "⭐ " : ""}
                       {s.subjectName} ({s.className})
                     </option>
                   ))}
@@ -459,15 +480,18 @@ const AddQuestionModal = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Chapter *
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
+                  Chapter <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={chapterId}
-                  onChange={(e) => setChapterId(e.target.value)}
+                  onChange={(e) => {
+                    setChapterId(e.target.value);
+                    setTopicId("");
+                  }}
                   required
                   disabled={!subjectId}
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 disabled:opacity-50 shadow-2xs"
+                  className="w-full text-xs font-bold bg-card border border-border rounded-xl px-3 py-2.5 text-main focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 disabled:opacity-50 transition-all cursor-pointer"
                 >
                   <option value="">Select Chapter</option>
                   {modalChapters.map((ch, i) => (
@@ -479,15 +503,15 @@ const AddQuestionModal = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Topic *
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
+                  Topic <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={topicId}
                   onChange={(e) => setTopicId(e.target.value)}
                   required
                   disabled={!chapterId}
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 disabled:opacity-50 shadow-2xs"
+                  className="w-full text-xs font-bold bg-card border border-border rounded-xl px-3 py-2.5 text-main focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 disabled:opacity-50 transition-all cursor-pointer"
                 >
                   <option value="">Select Topic</option>
                   {modalTopics.map((t, i) => (
@@ -501,42 +525,43 @@ const AddQuestionModal = ({
             </div>
           </div>
 
-          {/* Section 2: Type, Difficulties & Multi-Select Categories */}
-          <div className="space-y-3 pt-3 border-t border-border/60">
-            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Tag className="w-4 h-4 text-emerald-600" />
-              2. Question Type & Categories
+          {/* Section 2: Type, Difficulty, Marks & Multi-Select Categories */}
+          <div className="bg-pill-bg/40 border border-border rounded-2xl p-4 md:p-5 space-y-4">
+            <h3 className="text-xs font-extrabold text-main uppercase tracking-wider flex items-center gap-2">
+              <Tag className="w-4 h-4 text-accent-1" />
+              <span>2. Question Format & Details</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Question Format *
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
+                  Format <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={type}
                   onChange={(e) => {
-                    setType(e.target.value);
-                    if (e.target.value === "MCQ") setMarks(1);
-                    else if (e.target.value === "SHORT") setMarks(2);
+                    const newType = e.target.value;
+                    setType(newType);
+                    if (newType === "MCQ") setMarks(1);
+                    else if (newType === "SHORT") setMarks(2);
                     else setMarks(5);
                   }}
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-2xs"
+                  className="w-full text-xs font-bold bg-card border border-border rounded-xl px-3 py-2.5 text-main focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all cursor-pointer"
                 >
-                  <option value="MCQ">Multiple Choice (MCQ)</option>
+                  <option value="MCQ">Multiple Choice Question (MCQ)</option>
                   <option value="SHORT">Short Question</option>
-                  <option value="LONG">Long / Detailed Question</option>
+                  <option value="LONG">Long Question</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
                   Difficulty Level
                 </label>
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-2xs"
+                  className="w-full text-xs font-bold bg-card border border-border rounded-xl px-3 py-2.5 text-main focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all cursor-pointer"
                 >
                   <option value="Easy">Easy</option>
                   <option value="Medium">Medium</option>
@@ -545,7 +570,7 @@ const AddQuestionModal = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
                   Marks
                 </label>
                 <input
@@ -554,26 +579,32 @@ const AddQuestionModal = ({
                   max="50"
                   value={marks}
                   onChange={(e) => setMarks(e.target.value)}
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-2xs"
+                  className="w-full text-xs font-bold bg-card border border-border rounded-xl px-3 py-2.5 text-main focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all"
                 />
               </div>
             </div>
 
-            {/* Backend Subject-Specific Multi-Select Category Chips */}
+            {/* Subject-Specific Categories */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Categories for Selected Subject (Select Multi) *
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-muted uppercase">
+                  Subject Categories (Multi-Select) <span className="text-red-500">*</span>
+                </label>
+                <span className="text-[11px] text-muted">
+                  Click to toggle tags
+                </span>
+              </div>
+
               {loadingCategories ? (
-                <div className="text-xs text-muted animate-pulse">
+                <div className="text-xs text-muted p-3 animate-pulse bg-card border border-border rounded-xl">
                   Loading categories for subject...
                 </div>
               ) : availableCategories.length === 0 ? (
-                <div className="text-xs text-muted italic">
+                <div className="text-xs text-muted italic p-3 bg-card border border-border rounded-xl">
                   Select a subject to view allowed categories.
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-300 dark:border-slate-700">
+                <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-3 bg-card border border-border rounded-xl custom-scrollbar">
                   {availableCategories.map((cat) => {
                     const isSelected = selectedCategories.includes(cat.value);
                     return (
@@ -581,10 +612,10 @@ const AddQuestionModal = ({
                         type="button"
                         key={cat.value}
                         onClick={() => handleToggleCategory(cat.value)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                           isSelected
-                            ? "bg-emerald-600 text-white shadow-xs"
-                            : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:text-slate-900"
+                            ? "bg-accent-1 text-white shadow-xs"
+                            : "bg-pill-bg border border-border text-muted hover:text-main hover:border-slate-400"
                         }`}
                       >
                         {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -598,42 +629,44 @@ const AddQuestionModal = ({
           </div>
 
           {/* Section 3: Question Statements (Dual Medium) */}
-          <div className="space-y-3 pt-3 border-t border-border/60">
-            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <FileText className="w-4 h-4 text-emerald-600" />
-              3. Question Statements (English & Urdu)
+          <div className="bg-pill-bg/40 border border-border rounded-2xl p-4 md:p-5 space-y-4">
+            <h3 className="text-xs font-extrabold text-main uppercase tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4 text-accent-1" />
+              <span>3. Question Statements</span>
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-muted mb-1.5 uppercase">
                   Statement (English)
                 </label>
                 <textarea
-                  rows="5"
+                  rows="4"
                   placeholder="Enter English question text..."
                   value={statementEn}
                   onChange={(e) => setStatementEn(e.target.value)}
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-2xs resize-y"
+                  className="w-full text-xs font-medium bg-card border border-border rounded-xl p-3 text-main placeholder:text-muted focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all resize-y"
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 text-right">
-                  <span>سوال (Urdu Statement)</span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-muted uppercase">
+                    سوال کا متن (Urdu Statement)
+                  </label>
                   {(classLevel === "9th" || classLevel === "10th") && (
-                    <span className="inline-flex items-center gap-1 ml-2 text-[10px] font-extrabold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/60 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-800">
+                    <span className="text-[10px] font-extrabold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/20">
                       * Compulsory for {classLevel}
                     </span>
                   )}
-                </label>
+                </div>
                 <textarea
-                  rows="5"
+                  rows="4"
                   dir="rtl"
-                  placeholder="اردو سوال درج کریں..."
+                  placeholder="اردو سوال یہاں درج کریں..."
                   value={statementUr}
                   onChange={(e) => setStatementUr(e.target.value)}
-                  className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 font-urdu shadow-2xs resize-y"
+                  className="w-full text-sm font-medium bg-card border border-border rounded-xl p-3 text-main font-urdu placeholder:text-muted focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all resize-y leading-relaxed"
                 ></textarea>
               </div>
             </div>
@@ -641,16 +674,16 @@ const AddQuestionModal = ({
 
           {/* Section 4: MCQ Options (If Type === MCQ) */}
           {type === "MCQ" && (
-            <div className="space-y-3 pt-3 border-t border-border/60">
+            <div className="bg-pill-bg/40 border border-border rounded-2xl p-4 md:p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  4. MCQ Options (Select Correct Answer)
+                <h3 className="text-xs font-extrabold text-main uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-accent-1" />
+                  <span>4. MCQ Options (Select Correct Answer)</span>
                 </h3>
 
                 {(classLevel === "9th" || classLevel === "10th") && (
-                  <span className="text-[10px] font-extrabold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-950/60 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-800">
-                    * All Urdu Options Compulsory for {classLevel}
+                  <span className="text-[10px] font-extrabold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/20">
+                    * Urdu Options Compulsory for {classLevel}
                   </span>
                 )}
               </div>
@@ -659,31 +692,31 @@ const AddQuestionModal = ({
                 {options.map((opt, i) => (
                   <div
                     key={i}
-                    className={`p-3 rounded-2xl border transition-all ${
+                    className={`p-3.5 rounded-2xl border transition-all ${
                       opt.isCorrect
-                        ? "bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-400 dark:border-emerald-800"
-                        : "bg-white dark:bg-slate-800/40 border-slate-300 dark:border-slate-700"
+                        ? "bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/20"
+                        : "bg-card border-border hover:border-slate-400 dark:hover:border-slate-600"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-900 dark:text-slate-100">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-extrabold text-main">
                         <input
                           type="radio"
                           name="correctOption"
                           checked={opt.isCorrect}
                           onChange={() => handleSetCorrectOption(i)}
-                          className="text-emerald-600 focus:ring-emerald-500"
+                          className="text-accent-1 focus:ring-accent-1 cursor-pointer"
                         />
                         <span>Option {String.fromCharCode(65 + i)}</span>
                         {opt.isCorrect && (
-                          <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
+                          <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-md font-extrabold">
                             Correct Answer
                           </span>
                         )}
                       </label>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <input
                         type="text"
                         placeholder={`Option ${String.fromCharCode(65 + i)} (English)`}
@@ -691,17 +724,17 @@ const AddQuestionModal = ({
                         onChange={(e) =>
                           handleOptionTextChange(i, "en", e.target.value)
                         }
-                        className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 shadow-2xs"
+                        className="w-full text-xs font-semibold bg-pill-bg border border-border rounded-xl px-3.5 py-2 text-main placeholder:text-muted focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all"
                       />
                       <input
                         type="text"
                         dir="rtl"
-                        placeholder={`آپشن ${String.fromCharCode(65 + i)} (Urdu)`}
+                        placeholder={`آپشن ${String.fromCharCode(65 + i)} (اردو)`}
                         value={opt.text?.ur || opt.ur || ""}
                         onChange={(e) =>
                           handleOptionTextChange(i, "ur", e.target.value)
                         }
-                        className="w-full text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 font-urdu shadow-2xs"
+                        className="w-full text-xs font-semibold bg-pill-bg border border-border rounded-xl px-3.5 py-2 text-main font-urdu placeholder:text-muted focus:outline-none focus:border-accent-1 focus:ring-1 focus:ring-accent-1/30 transition-all"
                       />
                     </div>
                   </div>
@@ -711,11 +744,11 @@ const AddQuestionModal = ({
           )}
 
           {/* Modal Footer Buttons */}
-          <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-border flex items-center justify-end gap-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-muted hover:text-main bg-slate-100 dark:bg-slate-800 transition-colors"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-muted hover:text-main bg-pill-bg hover:bg-pill-bg/80 border border-border transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -723,7 +756,7 @@ const AddQuestionModal = ({
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-accent-1 hover:bg-accent-1/90 active:scale-98 shadow-md shadow-accent-1/20 transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
             >
               {saving && (
                 <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -739,7 +772,8 @@ const AddQuestionModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
